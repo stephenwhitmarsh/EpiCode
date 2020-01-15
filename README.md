@@ -16,7 +16,8 @@ _MATLAB code to analyze projects of the research group:_
  * Make analysis pipelines and parameters visible and comparable between projects.
  * Reduce repetition/duplication of code (and work)
  * Backup and version control, and a way to update between computers/servers.
- * Single solution for interfacing with in-house developed software (MUSE) and externally developed software ([Spyking-Circus](https://github.com/spyking-circus)).
+ * Single solution for interfacing with in-house (MUSE) and external software ([Spyking-Circus](https://github.com/spyking-circus)).
+ * Facilitate use of [FieldTrip](https://github.com/fieldtrip/fieldtrip).
  * Facilitate documentation and publication of methodology.
 
 ## Design
