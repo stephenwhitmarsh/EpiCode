@@ -1,0 +1,22 @@
+MLIB - Version History
+-----------------------------------------------------------------------------------------------------------
+Version 6, uploaded to Matlab Central File Exchange on May 9, 2014
+-----------------------------------------------------------------------------------------------------------
+Note: I renamed checkunit.m to mcheck.m for the sake of consistency
+
+Changes to mcheck.m:
+- all arrays are now double precision
+- criterion values for quality criteria (SNR99, SNR95, dmax and dmin) were adjusted to match when all distributions are Gaussian and equal-variance
+- debugged depiction of amplitude over time in subplot(445)
+-  added total spike count and firing rate to subplot 444
+
+Changes to msdf.m:
+- changed output array 'sdf' in line 48 from single to double precision
+- included a boxcar (moving average) filter kernel and delete exGaussSimple
+
+Changes to mwave.m:
+- replaced function interp with function interp1
+- added new argument 'pol'
+-----------------------------------------------------------------------------------------------------------
+regarding previous versions of MLIB, please see histories contained in individual functions
+-----------------------------------------------------------------------------------------------------------

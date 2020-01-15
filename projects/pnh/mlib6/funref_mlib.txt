@@ -1,0 +1,229 @@
+FUNCTION REFERENCE MLIB
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+unitForMLIBTesting.mat
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+single structure 'spx' holding waveforms of a nice single unit as well as event markers and their
+time stamps
+
+the data is from a six-stimulus yes-no task as described in:
+Stüttgen, MC, Yildiz, A, Güntürkün, O (2011). Adaptive criterion setting in perceptual decision
+making. Journal of the Experimental Analysis of Behavior 96:155-176.
+
+1: ini, 2-7: stimuli, 8: choice keys on, 9: food, 10: food omission, 11: punishment, 12-14: left,
+center, right key pecks, respectively
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+unitForMLIBTesting2.mat
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+as above, but each data channel holds a vector of ALL detected waveforms, whether spikes or artifacts
+both chan9 and chan10 hold nice units
+
+chan9 has markers 1 (good SU) and 2 (medium SU),
+chan10 has markers 0 (trash), 1 (good SU), 2 (medium SU), and 3 (bad MU)
+event markers are as delivered by Spike2 (variable chan32); use 97-110 to construct psths
+97: ini, 98-103: stimuli, 104: choice keys on, 105: food, 106: food omission, 107: punishment, 108-110:
+left, center, right key pecks, respectively
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mcheck.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+previously named 'checkunit.m', renamed to mcheck simply for consistency
+code for checking spike sorting quality
+
+-------- try the first (simpler) example file
+load unitForMLIBTesting
+
+% input waveforms only
+mcheck(spx.adc)
+
+% input both waveforms and waveform timestamps
+mcheck(spx.adc,'timevec',spx.timings)
+
+% all of the above, plus event timestamps
+mcheck(spx.adc,'timevec',spx.timings,'tevents',spx.eventtimings(spx.eventmarkers==13))
+
+--------
+% now try the other file
+clear all
+load unitForMLIBTesting2
+
+% input all waveforms from channel 9; the result looks messy
+mcheck(chan9.adc)
+
+% now input only waveforms which have been classfied into cluster 1 during spike sorting
+mcheck(chan9.adc,'markvec',chan9.markers,'target',1)
+
+% as above, but additionally provide spike timestamps
+mcheck(chan9.adc,'markvec',chan9.markers,'target',1,'timevec',chan9.timings)
+
+% as above, but also provide timestamps for a PSTH
+mcheck(chan9.adc,'markvec',chan9.markers,'target',1,'timevec',chan9.timings,'tevents',chan32.timings(chan32.markers(:,1)==97))
+
+for more information on use, type 'help mcheck' into the command window
+
+subplot(4,4,1) shows up to 5,000 waveforms
+subplot(4,4,2) shows the frequency distributions of the noise amplitude (first bin of all waveforms, blue),
+               the negative peak amplitudes (green) and the positive peak amplitudes (red);
+               generally, all distributions should be approximately normal and sufficiently separated from each other
+subplot(4,4,3) show the SD (blue) and the skewness (red) of the voltage distributions as a function of time (waveform
+               ticks); solid lines denote mean SD and mean skewness; dashed red lines denote skewness of +/- 0.5;
+               ideally, skewness should be  0, but variation within these boundaries is deemed acceptable for single 
+               neurons' waveform variability; standard deviation is expressed as percentage of the mean noise SD 
+              (SD in the first five ticks), and the lower its variability, the better
+subplot(4,4,4) gives some indices on unit quality
+               SNR(dmax/dmin) gives the signal-to-noise ratio measured as the distance between mean noise an mean
+                    signal amplitudes as shown in subplot(4,4,2)
+               SNR99% expresses signal-to-noise ratio as the distance between the mean positive and the mean negative 
+                    peak amplitudes, divided by the distance of the 0.5th and 99.5th percentile (which spans ~6 SDs in 
+                    a normal distribution)
+               SNR95%, as SNR99%, but for the 2.5th and 97.5th percentile (which spans ~4 SDs in a normal distribution)
+               
+               SKEW(max/min) gives the maximum and minimum skewness values for the central portion of the waveforms
+                    (tick 5 to tick end-5)
+               ISI <4 ms provides the fraction of waveforms with interspike intervals less than 4 ms
+               
+               FNneg/FNpos estimates the fraction of false negatives (missed spikes) if the amplitude threshold used
+                    for spike detection was in the negative range (FNneg) and the positive range (FNpos), respectively;
+                    see subplot(4,4,15:16) for explanation; the colored traffic lights (green, yellow, red) indicate 
+                    whether I would consider this value to be optimal (green, candidate for high-quality single unit),
+                    worth analyzing at all (yellow, potentially multi unit), or trash (red)
+subplot(4,4,5) blue: cumulative spike count as a function of experiment time (if timevec is provided)
+               red:  peak-to-peak amplitude of the spike waveform as a function of time (if timevec is provided)
+subplot(4,4,6) plots the minute-wise firing rate of the unit as a function of experiment time (black bars), together 
+                    with the spike amplitudes (red dots); the red line is a regression of time vs. spike amplitude; if 
+                    negative, the amplitude tended to decrease over the course of the experiment (timevec must be provided)
+subplot(4,4,7) plots the interspike-interval distribution from 0 to 500 ms in 10-ms bins (if timevec is provided)
+
+subplot(4,4,8) plots the interspike-interval distribution from 0 to 50 ms in 1-ms bins  (if timevec is provided)
+
+subplot(4,4,9) is a density plot of the spike waveforms; the frequency of specific time-voltage combinations is color-coded;
+                    the plot allows to assess the 'purity' of the waveform distribution better than a simple waveform 
+                    overlay as in subplot(4,4,1)
+subplot(4,4,10) does the same as subplot(4,4,9), but the frequency axis (color-coded) is logarithmic to highlight less 
+                    frequently occurring waveforms whose shape differs from that of the target single unit
+subplot(4,4,11:12) plots the first, middle and last 200 spikes in the file (if timevec is provided)
+
+subplot(4,4,13) plots a PSTH (+/-200 ms) for an arbitrary event whose time stamps is specified with 'tevents'
+
+subplot(4,4,14) plots the waveforms in the immediate vicinity (+/-20 ms) of the event specified in tevents to assess whether
+                      the event induced any artifacts resembling spike waveforms (this is particularly useful when recording
+                      from freely moving animals)
+subplot(4,4,15) shows the distribution of the minimum amplitudes of all waveforms (same as in subplot(4,4,2)) and a fitted 
+                      normal distribution; the fit is used to estimate the fraction of false negatives (missed spikes) due 
+                      to a spike detection threshold which may have been to conservative; if there is a sizable fraction of 
+                      false negatives, the distribution will appear truncated to the right at the voltage value where the 
+                      spike detection threshold is located; the resulting is estimate is returned in subplot(4,4,4) as FNneg
+subplot(4,4,16) does the same, but should be used when the spike detection threshold was set to a positive value
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mpsth.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+construct PSTH; optional plotting of PSTH and raster display
+
+% a simple example
+load unitForMLIBTesting
+psth = mpsth(spx.timings,spx.eventtimings(spx.eventmarkers==1));
+plot(psth(:,1),psth(:,2))
+
+% again, but directly plot PSTH and raster
+mpsth(spx.timings,spx.eventtimings(spx.eventmarkers==1),'chart',2);
+
+% same, but scale in units of firing rate
+mpsth(spx.timings,spx.eventtimings(spx.eventmarkers==1),'chart',2,'fr',1);
+
+type help mpsth for further information on input arguments
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+msdf.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+convert PSTH to spike-density function; PSTH should be in units of spikes/sec
+
+% a simple example
+load unitForMLIBTesting
+% first generate a PSTH with mpsth; scale in units of firing rate
+psth = mpsth(spx.timings,spx.eventtimings(spx.eventmarkers==1),'fr',1);
+ftype = 'Gauss';
+w     = 50;
+sdf   = msdf(psth,ftype,w);
+figure
+plot(sdf(:,1),sdf(:,2))
+
+type help mpsth for further information on input arguments
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mraster.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+build (and optionally plot) a raster display
+needs output 'trialspx' from mpsth
+
+load unitForMLIBTesting
+
+% first use mpsth
+[psth trialspx] = mpsth(spx.timings,spx.eventtimings(spx.eventmarkers==1));
+
+[rastmat,timevec] = mraster(trialspx,1000,1000,'chart');
+
+type help mraster for further information on input arguments
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mroc.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+computes the area under the ROC curve (non-parametrically) for
+two samples, e.g. spike count distributions
+note that mroc.m works faithfully only with vectors containing exclusively integers
+
+% first generate two vectors with each element being a spike count
+spx1 = round(normrnd(20,5,50,1));
+spx2 = round(normrnd(30,5,50,1));
+auroc = mroc(spx2,spx1);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mnspx.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+counts the number of spikes in a specified time window relative to a specific event
+the output argument (nspx) can e.g. be used as one of two inputs to mroc.m
+
+load unitForMLIBTesting
+
+% now get (and plot) the distribution of spike counts relative to the start of event 9 (food reward) and the following 2000 ms
+nspx = mnspx(spx.timings,spx.eventtimings(spx.eventmarkers==9),0,2000)
+hist(nspx,0.5:max(nspx)+0.5)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mwa.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+compute the area under the ROC curve for spike count distributions for a range of analysis window durations and window positions
+
+for an example, confer Figure 3 and associated manuscript text in:
+Stüttgen MC, Schwarz C (2008) Psychophysical and neurometric detection performance under stimulus uncertainty.
+Nature Neuroscience 11(9): 1091-1098
+
+and type help mwa for more information
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mwave.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+computes the widths of the first and second response peaks of a spike waveform (full width at half maximum)
+
+% for a sampling frequency of 20 KHz, the command should read:
+[fwhm1,fwhm2] = mwave(mean(spx.adc'),50)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+mreshape.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+this function actually has nothing to do with neurophysiology but still comes handy!
+mreshape.m takes a one-dimensional cell array ('data') with each cell holding a vector of values and reshapes into a two-dimensional 
+matrix with the first column holding all values from all vectors (across rows) and the second column holding a vector specifying 
+which cell the values come from
+
+can be used in conjunction with the statistics functions kruskalwallis.m or anovan.m or mes1way.m (latter is from the MES Toolbox,
+available at File Exchange, too)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+test_msdf.m
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+a nice little tool which allows visualizing the effects of various filter kernels of msdf on real and simulated spike trains
+
+-----------------
+for any further questions or bug reports or wish lists, please contact me at maik.stuettgen@rub.de
