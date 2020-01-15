@@ -1,95 +1,81 @@
-%% Analysis script
+%% Analysis script for Spike x Sleep x SUA project
 %
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
-% requires bandpassFilter.m from Mario
-% requires releaseDec2015 from Neuralynx website
 
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/hspike/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
-% addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/MatlabImportExport_v6.0.0'))
+%% Add path
+
+if isunix
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
+end
+
+if ispc
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
+end
+
 ft_defaults
-
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\hspike
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
-ft_defaults
-
-% addpath /network/lustre/iss01/charpier/stephen.whitmarsh/WhitmarshEpilepsy/mlib6/
-% addpath /network/lustre/iss01/charpier/stephen.whitmarsh/WhitmarshEpilepsy/subaxis/
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
-% maxNumCompThreads(4)
 
 
-%% General analyses
-% TODO: do overview will all units in spikeratestatsSleepStage
-% TODO: add saving of results in plotHypnogramStats
-ipatient                                                = 1;
-config                                                  = hspike_setparams([]);
-[MuseStruct_micro, MuseStruct_macro]                    = readMuseMarkers_parts(config{ipatient}, false);
-[MuseStruct_micro, MuseStruct_macro]                    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-[MuseStruct_micro, MuseStruct_macro]                    = MuseMarkers_update_filepath_parts(config{ipatient},MuseStruct_micro, MuseStruct_macro);
-config{ipatient}                                        = writeSpykingCircus_parts(config{ipatient}, MuseStruct_micro, true, false);
+%% TODO: 
+% add saving of results in plotHypnogramStats
 
-[SpikeRawSleep, SpikeTrialsSleep]                       = readSpykingCircusSleepStage(config{ipatient}, MuseStruct_micro, false, 'all');
-[Staged, Hypnogram, MuseStruct_micro, MuseStruct_macro] = plotHypnogramStats(config{ipatient}, MuseStruct_micro, MuseStruct_macro);
-[SpikeStatsSleepStage]                                  = spikeratestatsSleepStage(config{ipatient}, SpikeRawSleep, SpikeTrialsSleep, Hypnogram, true);
+%% General analyses, looping over patients
 
 for ipatient = 1
     
-    config = hspike_setparams([]);
+    % load settings
+    config = hspike_setparams;
     
     % export hypnogram to muse
     export_hypnogram(config{ipatient});
     
     % read muse markers
-    [MuseStruct_micro, MuseStruct_macro] = readMuseMarkers_parts(config{ipatient}, true);
-    
-   % update paths for different OS if needed
-    [MuseStruct_micro, MuseStruct_macro] = MuseMarkers_update_filepath_parts(config{ipatient},MuseStruct_micro, MuseStruct_macro);
+    [MuseStruct] = readMuseMarkers(config{ipatient}, true);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro] = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, true);
     
     % automatically detect spikes
-    detectSpikes(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true, true); 
-    
-    % HUGE ARTEGACTS IN 14_20-31
-    MuseStruct_micro{1}{5}.markers = rmfield(MuseStruct_micro{1}{5}.markers,'SpikeDetect');
+    detectSpikes(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true, true);
     
     % plot hypnogram
-    % CORRECT Y-ORDER OF SLEEP STAGES AS IN SPIKE CODE
-    plotHypnogram(config{ipatient},MuseStruct_micro)
+    plotHypnogram(config{ipatient},MuseStruct);
     
     % plot analysis of events vs. hypnogram
-    [Staged, Hypnogram, MuseStruct_micro, MuseStruct_macro] = plotHypnogramStats(config{ipatient}, MuseStruct_micro, MuseStruct_macro);
-    
+    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, true);
+     
     % calculate TFR
-    TFR = doTFR(config{ipatient},MuseStruct_micro,MuseStruct_macro,true);
+    TFR = doTFR(config{ipatient}, MuseStruct, true);
     
     % write data concatinated for SC, and update config with sampleinfo
     % FIX CODE SO THAT SELECTED CHANNELS ARE PROPERLY SELECTED,
     % INDEPENDENTLY FROM WHAT IS IN MUSESTRUCT.filenames
     config{ipatient} = writeSpykingCircus_parts(config{ipatient}, MuseStruct_micro, false, false);
     
-    % write parameters for spyking circus   
+    % write parameters for spyking circus
     writeSpykingCircusParameters_parts(config{ipatient})
     
-    % read spyking circus results 
+    % read spyking circus results
     % (first load sampleinfo with writeSpykingCirucs
     [SpikeRaw, SpikeTrials] = readSpykingCircus_parts(config{ipatient}, MuseStruct_micro, true, 'all');
-     
+    
     % read and plot spikerate overview, and get the stats
     [stats, ~, ~, ~] = spikeratestats_parts(config{ipatient}, SpikeRaw, SpikeTrials, true);
     
-    % read spyking circus results 
+    % read spyking circus results
     % (first load sampleinfo with writeSpykingCirucs
     [SpikeRawSleep, SpikeTrialsSleep] = readSpykingCircusSleepStage(config{ipatient}, MuseStruct_micro, true, 'all');
-        
+    
     % read and plot spikerate overview, and get the stats
     [SpikeStatsSleepStage] = spikeratestatsSleepStage(config{ipatient}, SpikeRawSleep, SpikeTrialsSleep, Hypnogram, true);
     
@@ -98,26 +84,12 @@ for ipatient = 1
     
     % TFR
     TFR = doTFR(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true);
-
+    
     TFRlog = TFR;
     TFRlog.powspctrm = TFRlog.powspctr
-        % plot TFR
-     
-    fig = figure;
-    cfgtemp               = [];
-    cfgtemp.channel         = 'all';
-    cfgtemp.ylim = [1 40];
-    cfgtemp.baseline        = [TFR{1}.time(1)+120 TFR{1}.time(end)-120];
-    cfgtemp.baselinetype    = 'relative';
-    cfgtemp.colorbar        = 'no';
-    cfgtemp.colorbar        = 'yes';
-%     cfgtemp.zlim            = 'maxabs';
-%     cfgtemp.xlim            = config{ipatient}.;
-%     cfgtemp.title           = 'Relative change from Baseline';
-    cfgtemp.parameter       = 'powspctrm';
-    cfgtemp.colormap        = parula(5000);
-    cfgtemp.renderer        = 'painters';
-    ft_singleplotTFR(cfgtemp,TFR{1});
+    % plot TFR
+    
+
     
     
     
@@ -126,18 +98,18 @@ for ipatient = 1
     
     % append nights
     cfg = [];
-    cfg.keepsampleinfo = 'no'; 
+    cfg.keepsampleinfo = 'no';
     dat_micro_append{1} = ft_appenddata(cfg,dat_micro{1}{1},dat_micro{2}{1},dat_micro{3}{1});
-    dat_macro_append{1} = ft_appenddata(cfg,dat_macro{1}{1},dat_macro{2}{1},dat_macro{3}{1});    
+    dat_macro_append{1} = ft_appenddata(cfg,dat_macro{1}{1},dat_macro{2}{1},dat_macro{3}{1});
     dat_micro_append{2} = ft_appenddata(cfg,dat_micro{1}{2},dat_micro{2}{2},dat_micro{3}{2});
     dat_macro_append{2} = ft_appenddata(cfg,dat_macro{1}{2},dat_macro{2}{2},dat_macro{3}{2});
-
+    
     % average
     dat_micro_avg{1} = ft_timelockanalysis([],dat_micro_append{1});
     dat_macro_avg{1} = ft_timelockanalysis([],dat_macro_append{1});
     dat_micro_avg{2} = ft_timelockanalysis([],dat_micro_append{2});
     dat_macro_avg{2} = ft_timelockanalysis([],dat_macro_append{2});
-
+    
     % plot LFP
     fig = figure;
     
@@ -154,7 +126,7 @@ for ipatient = 1
     subplot(2,2,3); hold;
     plot(dat_micro_avg{1}.time, dat_micro_avg{1}.avg','k')
     ylim([-650,500]);
-    y = ylim;    
+    y = ylim;
     plot([0 0],[y(1), y(2)],'k:');
     title('Manual Spike Detection Macro');
     axis tight
@@ -204,22 +176,22 @@ for ipatient = 1
     TFR_micro{2}                    = ft_freqanalysis(cfgtemp,dat_micro_append{2});
     TFR_macro{1}                    = ft_freqanalysis(cfgtemp,dat_macro_append{1});
     TFR_macro{2}                    = ft_freqanalysis(cfgtemp,dat_macro_append{2});
-
+    
     save(fullfile(config{ipatient}.imagesavedir,[config{ipatient}.prefix, 'TFR']),'TFR*','-v7.3');
     load(fullfile(config{ipatient}.imagesavedir,[config{ipatient}.prefix, 'TFR']));
     
     % plot TFR
-     
+    
     fig = figure;
     cfgtemp               = [];
     cfgtemp.channel         = 'all';
     cfgtemp.baseline        = [-0.1, 0];
-%     cfgtemp.baselinetype    = 'relchange';
+    %     cfgtemp.baselinetype    = 'relchange';
     cfgtemp.colorbar        = 'no';
     cfgtemp.colorbar        = 'yes';
     cfgtemp.zlim            = 'maxabs';
-%     cfgtemp.xlim            = config{ipatient}.;
-%     cfgtemp.title           = 'Relative change from Baseline';
+    %     cfgtemp.xlim            = config{ipatient}.;
+    %     cfgtemp.title           = 'Relative change from Baseline';
     cfgtemp.parameter       = 'powspctrm';
     cfgtemp.colormap        = parula(5000);
     cfgtemp.renderer        = 'painters';
@@ -241,139 +213,138 @@ end
 
 
 
-    
+
 %     dat_macro_append.trialinfo(dat_macro_append.trialinfo(:,4) == -1,4) = 0;
+
+figure; hold;
+for i = unique(dat_macro_append.trialinfo(:,4))'
+    subplot(2,5,i+1);
+    cfg = [];
+    cfg.trials = find(dat_macro_append.trialinfo(:,4) == i);
+    ft_singleplotER(cfg,dat_macro_append);
     
-    figure; hold;
-    for i = unique(dat_macro_append.trialinfo(:,4))'
-        subplot(2,5,i+1);
-        cfg = [];
-        cfg.trials = find(dat_macro_append.trialinfo(:,4) == i);
-        ft_singleplotER(cfg,dat_macro_append);
-        
-%         subplot(2,5,i+1+6); hold;
-%         for ii = 1 : size(dat_macro_append.trialinfo,1)
-%             if dat_macro_append.trialinfo(ii,4) == i
-%                 plot(dat_macro_append.trial{ii});
-%             end
-%         end
-    end
-    
-    % put all in none matrix
-    dat = zeros(size(dat_macro_append{1}.trial,2),size(dat_macro_append{1}.trial{1},2));
-    for i = 1 : size(dat_macro_append{1}.trial,2)
-        dat(i,:) = dat_macro_append{1}.trial{i}(1,:);
-        cls(i) = dat_macro_append{1}.trialinfo(i,4);
-    end
-        
-    % combine for classifier
-    d = [dat, cls'];
-    
-    % for neural net
-    
-    cls_dummy = zeros(size(dat,1),size(unique(cls),2));
-    for i = 1 : size(dat,1)
-        cls_dummy(i,cls(i)+1) = 1;
-    end
-    
-    % cluster pattern
-    findPattern(config{ipatient}, dat_micro, dat_macro_append, 1)
-    
-    
-    
-    
-    
-  
-    % Example:
-    %   ini = IniConfig();
-    %   ini.ReadFile('example.ini')
-    %   sections = ini.GetSections()
-    %   [keys, count_keys] = ini.GetKeys(sections{1})
-    %   values = ini.GetValues(sections{1}, keys)
-    %   new_values(:) = {rand()};
-    %   ini.SetValues(sections{1}, keys, new_values, '%.3f')
-    %   ini.WriteFile('example1.ini')
-    %
-    % Example:
-    %   ini = IniConfig();
-    %   ini.AddSections({'Some Section 1', 'Some Section 2'})
-    %   ini.AddKeys('Some Section 1', {'some_key1', 'some_key2'}, {'hello!', [10, 20]})
-    %   ini.AddKeys('Some Section 2', 'some_key3', true)
-    %   ini.AddKeys('Some Section 2', 'some_key1')
-    %   ini.WriteFile('example2.ini')
-    %
-    % Example:
-    %   ini = IniConfig();
-    %   ini.AddSections('Some Section 1')
-    %   ini.AddKeys('Some Section 1', 'some_key1', 'hello!')
-    %   ini.AddKeys('Some Section 1', {'some_key2', 'some_key3'}, {[10, 20], [false, true]})
-    %   ini.WriteFile('example31.ini')
-    %   ini.RemoveKeys('Some Section 1', {'some_key1', 'some_key3'})
-    %   ini.RenameKeys('Some Section 1', 'some_key2', 'renamed_some_key2')
-    %   ini.RenameSections('Some Section 1', 'Renamed Section 1')
-    %   ini.WriteFile('example32.ini')
-    %
-     
-    
-    
-    
-    
-    
-    % average over trials for plotting
-    cfgtemp                 = [];
-    cfgtemp.vartrllength    = 2;
-    dat_micro_rptavg        = ft_timelockanalysis(cfgtemp,dat_micro{1});
-    dat_macro_rptavg        = ft_timelockanalysis(cfgtemp,dat_macro{1});
-    
-    
-    figure;
-    for i = 1 : size(dat_macro_rptavg.label,1)
-        subplot(size(dat_macro_rptavg.label,1),1,i);
-        %         plot(dat_micro_rptavg.time,dat_micro_rptavg.avg)
-        plot(dat_macro_rptavg.time,dat_macro_rptavg.avg(i,:));
-        title(dat_macro_rptavg.label{i});
-    end
-    
-    figure;
-    for i = 1 : size(dat_micro_rptavg.label,1)
-        subplot(size(dat_micro_rptavg.label,1),1,i);
-        %         plot(dat_micro_rptavg.time,dat_micro_rptavg.avg)
-        plot(dat_micro_rptavg.time,dat_micro_rptavg.avg(i,:));
-        title(dat_micro_rptavg.label{i});
-    end
-    
-    
-    % select time interval
-    cfgtemp                 = [];
-    cfgtemp.latency         = [cfg.epoch.toi{imarker}(1) cfg.epoch.toi{imarker}(2)];
-    dat_micro_rptavg        = ft_selectdata(cfgtemp,dat_micro_rptavg);
-    dat_macro_rptavg        = ft_selectdata(cfgtemp,dat_macro_rptavg);
-    
-    
-    
-    
-    
-    
-    
-    % plot LFP timecourse examples for article
-    % plotTimeCourses(config{ipatient});
-    
-    % plot LFP data
-    [FFT_micro_trials,TFR_micro_trials,TFR_macro_trials,stat_TFR_micro] = plotLFP(config{ipatient}, dat_micro, dat_macro, true);
-    
-    % write data concatinated for SC, and update config with sampleinfo
-    config{ipatient}                        = writeSpykingCircus(config{ipatient}, MuseStruct_micro, false);
-    
-    % read raw spike data from SC, and segment into trials
-    [SpikeRaw, SpikeTrials]                 = readSpykingCircus(config{ipatient}, MuseStruct_micro, false);
-    
-    % read and plot spikerate overview, and get the stats
-    [SpikeRateStats, stats_bar, sdf_orig_out, sdf_bar_out, corrs] = spikeratestats(config{ipatient}, SpikeRaw, SpikeTrials, false);
-    
-    % read and plot LFP of spike events
-    % [spike_LFP, spike_LFP_avg]  = spikeLFP(config{ipatient},SpikeRaw);
-    
+    %         subplot(2,5,i+1+6); hold;
+    %         for ii = 1 : size(dat_macro_append.trialinfo,1)
+    %             if dat_macro_append.trialinfo(ii,4) == i
+    %                 plot(dat_macro_append.trial{ii});
+    %             end
+    %         end
 end
+
+% put all in none matrix
+dat = zeros(size(dat_macro_append{1}.trial,2),size(dat_macro_append{1}.trial{1},2));
+for i = 1 : size(dat_macro_append{1}.trial,2)
+    dat(i,:) = dat_macro_append{1}.trial{i}(1,:);
+    cls(i) = dat_macro_append{1}.trialinfo(i,4);
+end
+
+% combine for classifier
+d = [dat, cls'];
+
+% for neural net
+
+cls_dummy = zeros(size(dat,1),size(unique(cls),2));
+for i = 1 : size(dat,1)
+    cls_dummy(i,cls(i)+1) = 1;
+end
+
+% cluster pattern
+findPattern(config{ipatient}, dat_micro, dat_macro_append, 1)
+
+
+
+
+
+
+% Example:
+%   ini = IniConfig();
+%   ini.ReadFile('example.ini')
+%   sections = ini.GetSections()
+%   [keys, count_keys] = ini.GetKeys(sections{1})
+%   values = ini.GetValues(sections{1}, keys)
+%   new_values(:) = {rand()};
+%   ini.SetValues(sections{1}, keys, new_values, '%.3f')
+%   ini.WriteFile('example1.ini')
+%
+% Example:
+%   ini = IniConfig();
+%   ini.AddSections({'Some Section 1', 'Some Section 2'})
+%   ini.AddKeys('Some Section 1', {'some_key1', 'some_key2'}, {'hello!', [10, 20]})
+%   ini.AddKeys('Some Section 2', 'some_key3', true)
+%   ini.AddKeys('Some Section 2', 'some_key1')
+%   ini.WriteFile('example2.ini')
+%
+% Example:
+%   ini = IniConfig();
+%   ini.AddSections('Some Section 1')
+%   ini.AddKeys('Some Section 1', 'some_key1', 'hello!')
+%   ini.AddKeys('Some Section 1', {'some_key2', 'some_key3'}, {[10, 20], [false, true]})
+%   ini.WriteFile('example31.ini')
+%   ini.RemoveKeys('Some Section 1', {'some_key1', 'some_key3'})
+%   ini.RenameKeys('Some Section 1', 'some_key2', 'renamed_some_key2')
+%   ini.RenameSections('Some Section 1', 'Renamed Section 1')
+%   ini.WriteFile('example32.ini')
+%
+
+
+
+
+
+
+% average over trials for plotting
+cfgtemp                 = [];
+cfgtemp.vartrllength    = 2;
+dat_micro_rptavg        = ft_timelockanalysis(cfgtemp,dat_micro{1});
+dat_macro_rptavg        = ft_timelockanalysis(cfgtemp,dat_macro{1});
+
+
+figure;
+for i = 1 : size(dat_macro_rptavg.label,1)
+    subplot(size(dat_macro_rptavg.label,1),1,i);
+    %         plot(dat_micro_rptavg.time,dat_micro_rptavg.avg)
+    plot(dat_macro_rptavg.time,dat_macro_rptavg.avg(i,:));
+    title(dat_macro_rptavg.label{i});
+end
+
+figure;
+for i = 1 : size(dat_micro_rptavg.label,1)
+    subplot(size(dat_micro_rptavg.label,1),1,i);
+    %         plot(dat_micro_rptavg.time,dat_micro_rptavg.avg)
+    plot(dat_micro_rptavg.time,dat_micro_rptavg.avg(i,:));
+    title(dat_micro_rptavg.label{i});
+end
+
+
+% select time interval
+cfgtemp                 = [];
+cfgtemp.latency         = [cfg.epoch.toi{imarker}(1) cfg.epoch.toi{imarker}(2)];
+dat_micro_rptavg        = ft_selectdata(cfgtemp,dat_micro_rptavg);
+dat_macro_rptavg        = ft_selectdata(cfgtemp,dat_macro_rptavg);
+
+
+
+
+
+
+
+% plot LFP timecourse examples for article
+% plotTimeCourses(config{ipatient});
+
+% plot LFP data
+[FFT_micro_trials,TFR_micro_trials,TFR_macro_trials,stat_TFR_micro] = plotLFP(config{ipatient}, dat_micro, dat_macro, true);
+
+% write data concatinated for SC, and update config with sampleinfo
+config{ipatient}                        = writeSpykingCircus(config{ipatient}, MuseStruct_micro, false);
+
+% read raw spike data from SC, and segment into trials
+[SpikeRaw, SpikeTrials]                 = readSpykingCircus(config{ipatient}, MuseStruct_micro, false);
+
+% read and plot spikerate overview, and get the stats
+[SpikeRateStats, stats_bar, sdf_orig_out, sdf_bar_out, corrs] = spikeratestats(config{ipatient}, SpikeRaw, SpikeTrials, false);
+
+% read and plot LFP of spike events
+% [spike_LFP, spike_LFP_avg]  = spikeLFP(config{ipatient},SpikeRaw);
+
 
 %% plot correlations between micro and macro
 

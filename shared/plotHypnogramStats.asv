@@ -1,5 +1,24 @@
-function [marker, hypnogram, MuseStruct_micro, MuseStruct_macro]  = plotHypnogramStats(cfg, MuseStruct_micro, MuseStruct_macro)
+function [marker, hypnogram, MuseStruct] = plotHypnogramStats(cfg, MuseStruct, force)
 
+
+fname = fullfile(cfg.datasavedir,sprintf('%sHypnogramStats.mat',cfg.prefix));
+
+if exist(fname,'file') && force == false
+    fprintf('***************************************\n');
+    fprintf('** loading precomputed MuseStruct *****\n');
+    fprintf('***************************************\n\n');
+    load(fname,'MuseStruct');
+else
+    
+    if force == true
+        fprintf('**********************************************\n');
+        fprintf('** forced redoing of MuseStruct creation *****\n');
+        fprintf('**********************************************\n\n');
+    else
+        fprintf('****************************\n');
+        fprintf('** creating MuseStruct *****\n');
+        fprintf('****************************\n\n');
+    end
 
 % elect those markers to load
 markerlist = [];
@@ -21,59 +40,53 @@ for imarker = markerlist
         for idir = 1 : size(cfg.directorylist{ipart},2)
             
             try
-                StartRecord(ipart,idir) = MuseStruct_macro{ipart}{idir}.markers.StartRecord.clock;
-                StopRecord(ipart,idir)  = MuseStruct_macro{ipart}{idir}.markers.StopRecord.clock;
+                StartRecord(ipart,idir) = MuseStruct{ipart}{idir}.markers.StartRecord.clock;
+                StopRecord(ipart,idir)  = MuseStruct{ipart}{idir}.markers.StopRecord.clock;
             catch
             end
             
-            if isfield(MuseStruct_macro{ipart}{idir}.markers,cfg.muse.startend{imarker,1})
-                if isfield(MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'offset')
-                    for ievent = 1 : size(MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset,2)
+            if isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{imarker,1})
+                if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'offset')
+                    for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset,2)
                         
                         istage = istage + 1;
                         
                         marker.stage(istage)  = -2;
-                        marker.clock(istage)  = MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent);
+                        marker.clock(istage)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent);
                         marker.name{istage}   = cfg.muse.startend{imarker,1};
                         marker.ipart(istage)  = ipart;
                         marker.idir(istage)   = idir;
                         
                         % find overlap with hypnogram markers
                         for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
-                            if isfield(MuseStruct_macro{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
-                                for i = 1 : size(MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset,2)
-                                    x1 = MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(ievent);
-                                    x2 = MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).offset(ievent);
-                                    y1 = MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset(i);
-                                    y2 = MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).offset(i);
+                            if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
+                                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset,2)
+                                    x1 = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(ievent);
+                                    x2 = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).offset(ievent);
+                                    y1 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset(i);
+                                    y2 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).offset(i);
                                     
-                                    %                                             if intersect(x1:x2,y1:y2)
                                     if (y1 < x1) && (x1 < y2)
                                         
                                         fprintf('Found "%s" overlapping with "%s" : adding to trialinfo\n',cfg.name{imarker},cell2mat(hyplabel));
                                         switch cell2mat(hyplabel)
                                             case 'PHASE_1'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 1;
-                                                MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 1;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 1;
                                                 marker.stage(istage)  = 1;
                                             case 'PHASE_2'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 2;
-                                                MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 2;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 2;
                                                 marker.stage(istage)  = 2;
                                             case 'PHASE_3'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 3;
-                                                MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 3;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 3;
                                                 marker.stage(istage)  = 3;
                                             case 'REM'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 4;
-                                                MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 4;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 4;
                                                 marker.stage(istage)  = 4;
                                             case 'AWAKE'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 0;
-                                                MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 0;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 0;
                                                 marker.stage(istage)  = 0;
                                             case 'NO_SCORE'
-                                                MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 0;
+                                                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).stage = 0;
                                                 marker.stage(istage)  = 0;
                                             otherwise
                                                 error('Unexpected label name in Hypnogram\n');
@@ -89,11 +102,8 @@ for imarker = markerlist
     end
 end
 
-
-
 hypnogram = table;
 ihyp = 0;
-
 
 % Go through different parts
 for ipart = 1 : size(cfg.directorylist,2)
@@ -103,14 +113,14 @@ for ipart = 1 : size(cfg.directorylist,2)
         
         % find overlap with hypnogram markers
         for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
-            if isfield(MuseStruct_macro{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
-                for i = 1 : size(MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset,2)
+            if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
+                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset,2)
                     ihyp = ihyp + 1;
-                    hypnogram.starttime(ihyp)   = MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).clock(i);
-                    hypnogram.endtime(ihyp)     = MuseStruct_macro{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).clock(i);
+                    hypnogram.starttime(ihyp)   = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).clock(i);
+                    hypnogram.endtime(ihyp)     = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).clock(i);
                     hypnogram.duration(ihyp)    = seconds(hypnogram.endtime(ihyp) - hypnogram.starttime(ihyp));
                     hypnogram.part(ihyp)        = ipart;
-                    hypnogram.directory(ihyp)   = {MuseStruct_macro{ipart}{idir}.directory};
+                    hypnogram.directory(ihyp)   = {MuseStruct{ipart}{idir}.directory};
                     switch cell2mat(hyplabel)
                         case 'PHASE_1'
                             hypnogram.stage(ihyp)  = 1;

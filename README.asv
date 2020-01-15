@@ -1,15 +1,10 @@
-             _            _        _           _             _            _            _      
-            /\ \         /\ \     /\ \       /\ \           /\ \         /\ \         /\ \    
-           /  \ \       /  \ \    \ \ \     /  \ \         /  \ \       /  \ \____   /  \ \   
-          / /\ \ \     / /\ \ \   /\ \_\   / /\ \ \       / /\ \ \     / /\ \_____\ / /\ \ \  
-         / / /\ \_\   / / /\ \_\ / /\/_/  / / /\ \ \     / / /\ \ \   / / /\/___  // / /\ \_\ 
-        / /_/_ \/_/  / / /_/ / // / /    / / /  \ \_\   / / /  \ \_\ / / /   / / // /_/_ \/_/ 
-       / /____/\    / / /__\/ // / /    / / /    \/_/  / / /   / / // / /   / / // /____/\    
-      / /\____\/   / / /_____// / /    / / /          / / /   / / // / /   / / // /\____\/    
-     / / /______  / / /   ___/ / /__  / / /________  / / /___/ / / \ \ \__/ / // / /______    
-    / / /_______\/ / /   /\__\/_/___\/ / /_________\/ / /____\/ /   \ \___\/ // / /_______\   
-    \/__________/\/_/    \/_________/\/____________/\/_________/     \/_____/ \/__________/   
 
+	 ______   ______  __   ______   ______   _____    ______    
+	/\  ___\ /\  == \/\ \ /\  ___\ /\  __ \ /\  __-. /\  ___\   
+	\ \  __\ \ \  _-/\ \ \\ \ \____\ \ \/\ \\ \ \/\ \\ \  __\   
+	 \ \_____\\ \_\   \ \_\\ \_____\\ \_____\\ \____- \ \_____\ 
+	  \/_____/ \/_/    \/_/ \/_____/ \/_____/ \/____/  \/_____/ 
+	                                                            
 
 _MATLAB code to analyze projects of the research group:_
  _"Cellular excitability and neuronal network dynamics", ICM, Paris_
@@ -22,7 +17,7 @@ _MATLAB code to analyze projects of the research group:_
  * Reduce repetition/duplication of code (and work)
  * Backup and version control, and a way to update between computers/servers.
  * Single solution for interfacing with in-house (MUSE) and external software ([Spyking-Circus](https://github.com/spyking-circus)).
- * Synchronization between different recording systems and their annotation systems (NeuraLynx, MicroMed and DeltaMed)
+ * Synchronization between different recording systems (MicroMe
  * Facilitate use of [FieldTrip](https://github.com/fieldtrip/fieldtrip).
  * Facilitate documentation and publication of methodology.
 

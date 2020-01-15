@@ -12,29 +12,30 @@ function [MuseStruct] = alignMuseMarkers(cfg, varargin)
 % 
 % Necessary fields (as defined in _setparams function):
 %
-% cfg.name                      = e.g.: {'Hspike','SpikeDetect'};                                % Name by which to call the events, can be different from name in MUSE
-% cfg.prefix                    = e.g.: 'P1-';                                                   % unique identifier for subject, prefixed to data and image files
+% cfg.name                      = e.g.: {'Hspike','SpikeDetect'};
+% cfg.prefix                    = e.g.: 'P1-'; 
 % cfg.muse.startend             = e.g.: {'Hspike','Hspike'; 'SpikeDetect','SpikeDetect'};        % start and end Muse marker
-% cfg.patientdir                = e.g.: fullfile(rootpath_data,       'pat_02711_1193');         % patient directory
-% cfg.rawdir                    = e.g.: fullfile(rootpath_data,       'pat_02711_1193', 'eeg');  % raw data directory
+% cfg.muse.backupdir            = e.g.: fullfile(rootpath_analysis, 'markerbackup');
+% 
+% cfg.patientdir                = e.g.: fullfile(rootpath_data,       'pat_02711_1193');
+% cfg.rawdir                    = e.g.: fullfile(rootpath_data,       'pat_02711_1193', 'eeg');
 % cfg.datasavedir               = e.g.: fullfile(rootpath_analysis,   'data',   'hspike');       % where to write data
 % cfg.imagesavedir              = e.g.: fullfile(rootpath_analysis,   'images', 'hspike');       % where to print images
+% 
 % cfg.align.name                = e.g.: {'Hspike','SpikeDetect'};                                % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % cfg.align.channel             = e.g.: {'_HaT2_1','_HaT2_1'};                                   % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-% cfg.align.abs                 = e.g.: {'no','no'};                                             % whether to determine peaks on absolute (both max and min)         
+% cfg.align.abs                 = e.g.: {'no','no'};
 % cfg.align.method              = e.g.: {'crawlback','min'};                                     % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-% cfg.align.filter              = e.g.: {'bp','bp'};                                             % what filter to use (bp,hp,lp)
+% cfg.align.filter              = e.g.: {'bp','bp'};
 % cfg.align.freq                = e.g.: {[1, 10],[1, 40]};                                       % lowpass filter freq to smooth peak detection (Hz)
-% cfg.align.hilbert             = e.g.: {'no','no'};                                             % whether to first create a hilbert transform (to determine peak of frequency response rather than timecourse
-% cfg.align.thresh              = e.g.: [1, 0];                                                  % only peaks that are more than x percent above threshold, 0 to disable
+% cfg.align.hilbert             = e.g.: {'no','no'};
+% cfg.align.thresh              = e.g.: [1, 0];
 % cfg.align.toiplot{1}          = e.g.: [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiactive{1}        = e.g.: [-0.05,  0.150];                                         % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % cfg.align.toibaseline{1}      = e.g.: [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiplot{2}          = e.g.: [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiactive{2}        = e.g.: [-0.05,  0.05];                                          % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % cfg.align.toibaseline{2}      = e.g.: [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-%
-% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -118,11 +119,9 @@ else
                         channelnr = channelnr + 1;
                     end
                 end
-                
                 if channelnr == 0
                     fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
                 end
-                
                 if channelnr > 1
                     fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
                 end
@@ -140,44 +139,46 @@ else
                 
                 % filtering data of selected channel for peak detection
                 switch cfg.align.filter{imarker}
-                    
                     case 'lp'
                         fprintf('Lowpass Filtering data for alignment. This can take a while \n');
-                        cfgtemp                     = [];
-                        cfgtemp.lpfilter            = 'yes';
-                        cfgtemp.lpfreq              = cfg.align.freq{imarker};
-                        cfgtemp.lpfilttype          = 'fir';
-                        dat_filt                    = ft_preprocessing(cfgtemp,dat_sel);
-                        
+                        cfgtemp             = [];
+                        cfgtemp.lpfilter    = 'yes';
+                        cfgtemp.lpfreq      = cfg.align.freq{imarker};
+                        cfgtemp.lpfilttype  = 'fir';
+                        dat_filt            = ft_preprocessing(cfgtemp,dat_sel);
+                        %                 dat_filt.trial{1}   = bandpassFilter(dat_sel.trial{1},dat_sel.fsample,1.0,cfg.lpfreq);
                     case 'bp'
                         fprintf('Bandpass Filtering the data for alignment. This can take a while \n');
-                        dat_filt                    = dat_sel;
-                        dat_filt.trial{1}           = bandpassFilter(dat_sel.trial{1},dat_sel.fsample,cfg.align.freq{imarker}(1),cfg.align.freq{imarker}(2));
-                        
+                        dat_filt            = dat_sel;
+                        dat_filt.trial{1}   = bandpassFilter(dat_sel.trial{1},dat_sel.fsample,cfg.align.freq{imarker}(1),cfg.align.freq{imarker}(2));
                         if strcmp(cfg.align.method{imarker}, 'crawlback')
-                            dat_filt40              = dat_sel;
-                            dat_filt40.trial{1}     = bandpassFilter(dat_sel.trial{1},dat_sel.fsample,cfg.align.freq{imarker}(1),40);
+                            dat_filt40            = dat_sel;
+                            dat_filt40.trial{1}   = bandpassFilter(dat_sel.trial{1},dat_sel.fsample,cfg.align.freq{imarker}(1),40);
                         end
-                        
                     otherwise
                         fprintf('Not applying any filtering. \n');
-                        dat_filt                    = dat_sel;
+                        dat_filt            = dat_sel;
                 end
                 if strcmp(cfg.align.hilbert{imarker},'yes')
                     fprintf('Converting to Hilbert envelope.\n');
                     dat_filt.trial{1}   = envelope(dat_filt.trial{1});
                 end
                 
-                % segment in trials for alignment
+                % segment in trials for alignment only
+                
+                
                 startsample         = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime*dat_sel.fsample + cfg.align.toiplot{imarker}(1)*dat_sel.fsample + hdr.nSamplesPre)';          
                 endsample           = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime*dat_sel.fsample + cfg.align.toiplot{imarker}(2)*dat_sel.fsample + hdr.nSamplesPre)'; 
                 offset              = round(ones(size(startsample))*+cfg.align.toiplot{imarker}(1)*dat_sel.fsample);
+                
+%                  sampleshift_micro               = round(timeshift*dat_filt_trl.fsample); % round to number of samples to shift
+                      
+                
                 cfgtemp             = [];
                 cfgtemp.trl         = [startsample, endsample, offset];
                 cfgtemp.trl(:,4)    = 1:size(cfgtemp.trl,1); % try to find trials that are missing aftewards
                 dat_sel_trl         = ft_redefinetrial(cfgtemp,dat_sel);
                 dat_filt_trl        = ft_redefinetrial(cfgtemp,dat_filt);
-                
                 if strcmp(cfg.align.method{imarker}, 'crawlback')
                     dat_filt40_trl  = ft_redefinetrial(cfgtemp,dat_filt40);
                 end     
@@ -238,34 +239,42 @@ else
                         % find relevant peak according to method
                         if strcmp(cfg.align.method{imarker},'nearest')
                             [~, ip(itrial)] = min(abs(dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1))); % peak-time closest to zero
-                            
                         elseif strcmp(cfg.align.method{imarker},'max')
                             [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1)); 
-                            
                         elseif strcmp(cfg.align.method{imarker},'min') % Same as 'max' because timecourse was flipped
                             [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));
-                            
                         elseif strcmp(cfg.align.method{imarker},'firstmax')
                             ip(itrial)      = 1; % first peak within search toi
-                            
                         elseif strcmp(cfg.align.method{imarker},'firstmin')
-                            ip(itrial)      = 1; % first peak within search toi     
-                            
+                            ip(itrial)      = 1; % first peak within search toi                            
                         elseif strcmp(cfg.align.method{imarker},'lastmax')
-                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));   
-                            ip(itrial)      = indx(end); % last peak within search toi   
-                            
+                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));                                                        
+                            ip(itrial)      = indx(end); % last peak within search toi                                
                         elseif strcmp(cfg.align.method{imarker},'lastmin')
                             [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));                             
-                            ip(itrial)      = indx(end); % last peak within search toi  
-                            
+                            ip(itrial)      = indx(end); % last peak within search toi   
                         elseif strcmp(cfg.align.method{imarker},'crawlback')
                             % start at max in search window
-                            [~, indx1]              = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));       
-                            [~, indx2]              = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel_avg{itrial}(indx1)+t1_ac_indx(itrial)-50));
-                            indx2                   = indx2(end);
-                            ip(itrial)              = 1;
-                            locs_ac_sel_avg{itrial} = indx2 - t1_ac_indx(itrial);      
+                            [~, indx1] = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));       
+                            [~, indx2] = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel_avg{itrial}(indx1)+t1_ac_indx(itrial)-50));
+                            indx2 = indx2(end);
+                            
+%                             figure; 
+%                             subplot(2,1,1); hold;
+%                             plot(dat_filt_trl.trial{itrial});
+%                             y = ylim;
+%                             plot([locs_ac_sel_avg{itrial}(indx1), locs_ac_sel_avg{itrial}(indx1)]+t1_ac_indx(itrial),y);
+% 
+%                             %   
+%                             subplot(2,1,2); hold;
+%                             plot(dat_filt40_trl.trial{itrial});
+%                             y = ylim;
+%                             plot([indx2, indx2],y,'g');
+                            
+
+                            ip(itrial) = 1;
+                            locs_ac_sel_avg{itrial} = indx2 - t1_ac_indx(itrial);
+                            
                         end
                         
                         % align time axis to relevant (peak) index
@@ -273,13 +282,88 @@ else
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
                         if abs(timeshift) > 0.050 
                             hasartefact(itrial) = true;
-                        end 
+                        end
+                            
+%                         sampleshift_micro               = round(timeshift*dat_filt_trl.fsample); % round to number of samples to shift
+%                         MuseStruct_micro_aligned{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial)         = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial) + sampleshift_micro; % note different direction than time
+%                         MuseStruct_micro_aligned{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).sampleshift(itrial)    = sampleshift_micro;
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
+%                         
+%                         sampleshift_macro               = round(timeshift*hdr_macro.Fs); % round to number of samples to shift
+%                         MuseStruct_macro_aligned{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial)         = MuseStruct_macro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial) + sampleshift_macro; % note different direction than time
+%                         MuseStruct_macro_aligned{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).sampleshift(itrial)    = sampleshift_macro;
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                         
                     end
                 end
-
+%                                 
+%                 if isfield(MuseStruct_micro{ipart}{idir}.markers,'BAD__START__')
+%                     % check if there is an equal amount of start and end markers
+%                     if size(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset,2)-size(MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset,2) == 0
+%                         fprintf('Great, recovered same number of starts and end markers \n')
+%                         for itrial = 1 : size(dat_filt_trl.trial,2)
+%                             fprintf('Checking trialnr. %d for artefacts... ',itrial);
+%                             trialinterval = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial) : MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).offset(itrial);
+%                             
+%                             for iart = 1 : size(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset,2)
+%                                 artinterval = MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset(iart) : MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset(iart);
+%                                 if ~isempty(intersect(trialinterval,artinterval))
+%                                     fprintf('Found artefact %d \n',iart);
+%                                     hasartefact(itrial) = true;
+%                                 end
+%                             end
+%                             if ~hasartefact(itrial)
+%                                 fprintf('Ok\n');
+%                             end
+%                         end
+%                         
+%                     elseif size(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset,2)-size(MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset,2) > 0
+%                         fprintf('ERROR! more starts than ends found in %s \n',MuseStruct_micro{ipart}{idir}.directory);
+%                     elseif size(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset,2)-size(MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset,2) < 0
+%                         fprintf('ERROR! more ends than starts found in %s - CORRECTING \n',MuseStruct_micro{ipart}{idir}.directory)
+%                         
+%                         for i = 1 : 10
+%                             for itrial = 1 : length(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.synctime)
+%                                 start(itrial) = MuseStruct_micro{ipart}{idir}.markers.BAD__START__.synctime(itrial);
+%                                 stop(itrial)  = MuseStruct_micro{ipart}{idir}.markers.BAD__END__.synctime(itrial);
+%                             end
+%                             
+%                             x = find(start > stop,1,'first');
+%                             if ~isempty(x)
+%                                 MuseStruct_micro{ipart}{idir}.markers.BAD__END__.synctime(x) = [];
+%                                 MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset(x) = [];
+%                                 
+%                             end
+%                         end
+%                         
+%                         for itrial = 1 : size(dat_filt_trl.trial,2)
+%                             fprintf('Checking trialnr. %d for artefacts... \n',itrial);
+%                             trialinterval = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{1}).offset(itrial) : MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{2}).offset(itrial);
+%                             
+%                             for iart = 1 : size(MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset,2)
+%                                 artinterval = MuseStruct_micro{ipart}{idir}.markers.BAD__START__.offset(iart) : MuseStruct_micro{ipart}{idir}.markers.BAD__END__.offset(iart);
+%                                 if ~isempty(intersect(trialinterval,artinterval))
+%                                     fprintf('Found artefact %d \n',iart);
+%                                     hasartefact(itrial) = true;
+%                                 end
+%                             end
+%                             if ~hasartefact(itrial)
+%                                 fprintf('Ok\n');
+%                             end
+%                         end
+%                         
+%                     end
+%                 else
+%                     fprintf('No artefacts found! \n');
+%                 end
+%                 
+%                 fprintf('Removing %d artefact(s) \n',sum(hasartefact));
+%                 fprintf('Removing %d markers for which I cannot find a peak \n',sum(~haspeak));
+%                 
+%                 MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset    = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset(~hasartefact & haspeak);
+%                 MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock     = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(~hasartefact & haspeak);
+%                 MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime  = MuseStruct_micro{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(~hasartefact & haspeak);
+%                 
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 h               = 1200;

@@ -1,13 +1,7 @@
-function [TFR] = doTFR(cfg,MuseStruct_micro,MuseStruct_macro,force)
+function [TFR] = doTFR(cfg,MuseStruct,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [TFR_micro, TFR_macro] = doTFR(cfg,MuseStruct_macro_micro,MuseStruct_macro_macro,dat_micro,dat_macro,force)
-
-
-
-% Note:
-% Names of markers that contain a space (' ') or minus ('-') will be
-% replaced by an underscore ('_').
+% function [TFR_] = doTFR(cfg,MuseStruct_macro_micro,MuseStruct_macro_macro,dat_micro,dat_macro,force)
 %
 % Dependencies: writeMuseMarkers.m, dir2.m, recent FieldTrip version
 %

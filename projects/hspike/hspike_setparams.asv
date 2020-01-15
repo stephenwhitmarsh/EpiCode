@@ -1,5 +1,14 @@
 
-%% Setting parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [config] = hspike_setparams(config)
+% 
+% This function outputs all the settings of a study, to be defined below
+%
+% Note the consideration of the operating system, because the pointers to
+% the file server is dealt with differently. This could be different for
+% you.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [config] = hspike_setparams(config)
 
@@ -28,12 +37,11 @@ config{1}.prefix                    = 'P1-'; % edit in code
 config{1}.muse.startend             = {'Hspike','Hspike'; 'SpikeDetect','SpikeDetect'};   % start and end Muse marker
 config{1}.muse.backupdir             = fullfile(rootpath_analysis, 'markerbackup');
 
-config{1}.patientdir                = fullfile(rootpath_data,       'pat_02711_1193');
+% config{1}.patientdir                = fullfile(rootpath_data,       'pat_02711_1193');
 config{1}.rawdir                    = fullfile(rootpath_data,       'pat_02711_1193', 'eeg');
 config{1}.datasavedir               = fullfile(rootpath_analysis,   'data',   'hspike');         % where to write data
 config{1}.imagesavedir              = fullfile(rootpath_analysis,   'images', 'hspike');       % where to print images
 
-% config{1}.directory_searchstring    = '02711_2019-04-*';
 config{1}.directorylist{1}          =  {'02711_2019-04-17_12-29',...
                                         '02711_2019-04-17_14-29',...
                                         '02711_2019-04-17_16-29',...
@@ -114,6 +122,17 @@ config{1}.epoch.toi{1}              = [-0.5  1];
 config{1}.epoch.toi{2}              = [-0.5  1];                                                                
 config{1}.epoch.pad                 = [0.5, 0.5, 0.5];
 
+config{1}.spikedetect.LS            = 5;    % Left half-wave slope; default: 7
+config{1}.spikedetect.RS            = 5;    % Right half-wave slope; default: 7
+config{1}.spikedetect.TAMP          = 400;  % Total amplitude; default: 600
+config{1}.spikedetect.LD            = 1;    % Left half-wave duration; default = 10
+config{1}.spikedetect.RD            = 1;    % Right half-wave duration; default = 10
+config{1}.spikedetect.STDCoeff      = 4;    % Chebyshev inequality coefficient (distance from centre point or mean); default 4
+config{1}.spikedetect.SCALE         = 70;   % Scaling parameter
+config{1}.spikedetect.BlockSize     = 1;    % Data processing block size in minutes
+config{1}.spikedetect.TroughSearch  = 40;   % distance in ms to search for a trough on each side of a detected peak
+config{1}.spikedetect.FilterSpec    = [20; 50; 1; 35;];
+
 config{1}.circus.channel            = {'mHaT2_1','mHaT2_3','mHaT2_4','mHaT2_6','mHaT2_8'};
 config{1}.circus.reref              = 'yes';
 config{1}.circus.refchan            = 'mHaT2_2';
@@ -124,11 +143,11 @@ config{1}.circus.postfix            = '-1'; % after using circus-gui-matlab's SA
 
 config{1}.TFR.channel               = {'_HaT2_1','_HaT2_6'};
 
-config{1}.spike.slidestep           = [0.001];
+config{1}.spike.slidestep           = 0.001;
 config{1}.spike.toispikerate{1}     = [-2, 1];         % for plotting spikerate
 config{1}.spike.resamplefs          = 1000;
 config{1}.spike.width               = 15;
-config{1}.spike.ISIbins             = [0 : 0.05 : 0.150];
+config{1}.spike.ISIbins             = 0 : 0.05 : 0.150;
 
 config{1}.stats.bltoi{1}            = [-0.5, -0.1];  % has to fall within cfg.epoch.toi
 config{1}.stats.actoi{1}            = [0,    1];  % has to fall within cfg.epoch.toi 
@@ -138,11 +157,11 @@ config{1}.stats.alpha               = 0.025;
 
 
 %% Patient 2
-config{2}.os                        = os;
-config{2}.name                      = {'Hspike','SpikeDetect'};
+
+% You can replicate settings over subjects and only define the differences
+config{2}                           = config{1}; 
 config{2}.prefix                    = '2718-'; % edit in code
 config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'; 'SpikeDetect','SpikeDetect'};   % start and end Muse marker
-config{2}.muse.backupdir             = fullfile(rootpath_analysis, 'markerbackup');
 
 config{2}.patientdir                = fullfile(rootpath_data,       'pat_02718_1201');
 config{2}.rawdir                    = fullfile(rootpath_data,       'pat_02718_1201', 'eeg');
@@ -169,26 +188,25 @@ config{2}.directorylist{2}          = {'02718_2019-05-15_13-52',...
                                        '02718_2019-05-15_19-52',...
                                        '02718_2019-05-15_21-52',...
                                        '02718_2019-05-15_23-52',...
-                                       '02718_2019-05-16_01-01',...
+                                       '02718_2019-05-16_01-52',...
                                        '02718_2019-05-16_03-52',...
                                        '02718_2019-05-16_05-52',...
                                        '02718_2019-05-16_07-52',...
                                        '02718_2019-05-16_09-52',...
                                        '02718_2019-05-16_10-16',...
                                        '02718_2019-05-16_11-15'};
-config{2}.directorylist{2}          = {'02718_2019-05-16_13-15',...
+config{2}.directorylist{3}          = {'02718_2019-05-16_13-15',...
                                        '02718_2019-05-16_15-15',...
                                        '02718_2019-05-16_17-15',...
                                        '02718_2019-05-16_19-15',...
                                        '02718_2019-05-16_21-15',...
                                        '02718_2019-05-16_23-15',...
-                                       '02718_2019-05-16_01-15',...
-                                       '02718_2019-05-16_03-15',...
-                                       '02718_2019-05-16_05-15',...
-                                       '02718_2019-05-16_07-15',...
-                                       '02718_2019-05-15_09-15',...
-                                       '02718_2019-05-15_10-15',...
-                                       '02718_2019-05-15_11-15'};          
+                                       '02718_2019-05-17_01-15',...
+                                       '02718_2019-05-17_03-15',...
+                                       '02718_2019-05-17_05-15',...
+                                       '02718_2019-05-17_07-15',...
+                                       '02718_2019-05-17_09-15',...
+                                       '02718_2019-05-17_10-12'};          
 
                                     
 config{2}.labels.micro              = {'mHaT1_8'};
@@ -209,18 +227,6 @@ config{2}.align.toiplot{2}          = [-0.3,  0.7];                             
 config{2}.align.toiactive{2}        = [-0.05,  0.05];                                          % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 config{2}.align.toibaseline{2}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
-config{2}.LFP.hpfilter              = 'no';
-config{2}.LFP.hpfreq                = 1;
-config{2}.LFP.resamplefs            = 1000;
-config{2}.LFP.baseline              = 'yes';
-config{2}.LFP.baselinewindow{1}     = [-2, -1];
-config{2}.LFP.baselinewindow{2}     = [-2, -1];
-config{2}.LFP.slidestep             = [0.01];
-
-config{2}.epoch.toi{1}              = [-0.5  1];                                                                
-config{2}.epoch.toi{2}              = [-0.5  1];                                                                
-config{2}.epoch.pad                 = [0.5, 0.5, 0.5];
-
 config{2}.spikedetect.LS            = 5;    % Left half-wave slope; default: 7
 config{2}.spikedetect.RS            = 5;    % Right half-wave slope; default: 7
 config{2}.spikedetect.TAMP          = 400;  % Total amplitude; default: 600
@@ -230,7 +236,9 @@ config{2}.spikedetect.STDCoeff      = 4;    % Chebyshev inequality coefficient (
 config{2}.spikedetect.SCALE         = 70;   % Scaling parameter
 config{2}.spikedetect.BlockSize     = 1;    % Data processing block size in minutes
 config{2}.spikedetect.TroughSearch  = 40;   % distance in ms to search for a trough on each side of a detected peak
-config{2}.spikedetect.DetThresholds = [ LS; RS; TAMP; LD; RD;];
-config{2}.spikedetect.FilterSpec    =  [20; 50; 1; 35;];
+config{2}.spikedetect.FilterSpec    = [20; 50; 1; 35;];
+
+config{2}.hyp.micromedchannel       = 'HaT1';
+
 end
 

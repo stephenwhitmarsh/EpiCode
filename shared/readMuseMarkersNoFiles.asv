@@ -1,4 +1,4 @@
-function [MuseStruct]  = readMuseMarkers(cfg, force)
+function [MuseStruct]  = readMuseMarkersNoFiles(cfg,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function readMuseMarkers
@@ -10,16 +10,14 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 % (writeSpykingCircusDeadFile.m). The resultant MuseStruct can be edited
 % and written into a new markerfile for Muse with writeMuseMarkers.m
 %
-% The first argument is the configuration struct defined by a _setparams.m
-% The second argument is whether or not to force (re)reading the marker
-% file or to load from disk (i.e. as saved a previous time).
-%
-% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+% Code by Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 % with help from Jean-Didier Lemarechal & Craig Richter
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct.mat',cfg.prefix));
+% warning('off','all');
+
+fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct_%s.mat',cfg.prefix,cfg.os));
 
 if exist(fname,'file') && force == false
     fprintf('***************************************\n');
@@ -100,9 +98,6 @@ else
                 [~, f, ~]   = fileparts(temp(1).name);
                 f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
                 clear timestring
-                
-                % depending on amplifier, there are somewhat different
-                % formats of the txt file
                 ftype       = 'none';
                 while 1
                     tline = fgetl(f);
@@ -138,15 +133,12 @@ else
                     case 1
                         headerdate = [cell2mat(timestring(5)) ' ' cell2mat(timestring(7))];
                         MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss.SSS');
-
                         
                     case 2
                         headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
                         MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
                 end
                 
-                MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
-
                 % create markers details in MuseStruct
                 for imarker = 1 : nmarkers
                     name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
@@ -169,3 +161,4 @@ else
     end
     save(fname,'MuseStruct');
 end
+eval(sprintf('MuseStruct_%s = MuseStruct;',type));

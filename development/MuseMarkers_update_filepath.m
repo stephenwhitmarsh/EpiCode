@@ -1,5 +1,5 @@
 
-function [MuseStruct_micro, MuseStruct_macro]  = MuseMarkers_update_filepath_parts(cfg,MuseStruct_micro, MuseStruct_macro)
+function [MuseStruct_micro, MuseStruct_macro]  = MuseMarkers_update_filepath(cfg,MuseStruct_micro, MuseStruct_macro)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function readMuseMarkers
@@ -32,7 +32,6 @@ for type = ["micro","macro"]
             hasfiles = 0;
             channr = 1;
             for ichan = 1 : size(cfg.labels.(type),2)
-%                     d = dir2(fullfile(cfg.rawdir,ldir(idir).name,['*',cfg.labels.(type){ichan},'*.ncs']));
                     d = dir2(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.labels.(type){ichan},'*.ncs']));
 
                     if ~isempty(d)
