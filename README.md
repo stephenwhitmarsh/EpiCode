@@ -27,7 +27,7 @@ _MATLAB code to analyze projects of the research group:_
  * Data, results and figures are saved in project-specific directories
  * Important steps in the analyses are read from file if done earlier, or forced to run again.
  * Processed data follows as much as possible [FieldTrip](https://github.com/fieldtrip/fieldtrip) conventions, making it easier to use FieldTrip at any point of the analysis pipeline. In fact, much of the code uses functions from [FieldTrip](https://github.com/fieldtrip/fieldtrip), and EpiCode functions can be considered higher-level wrapper functions for [FieldTrip](https://github.com/fieldtrip/fieldtrip) functions. 
- * Because many of our analyses revolve around events identified manually with MUSE, those are read into a [MATLAB struct](https://www.mathworks.com/help/matlab/ref/struct.html) which is used to keep track of timings, and can be used to read/write for interfacing with MUSE.
+ * Because many of our analyses revolve around events identified manually with MUSE, those are read into a [MATLAB struct](https://www.mathworks.com/help/matlab/ref/struct.html) which is used to keep track of timings, and can be used to read/write markers created/read by MUSE.
 
 ## Organization
 
