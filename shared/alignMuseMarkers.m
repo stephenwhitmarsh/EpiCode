@@ -61,6 +61,7 @@ if exist(fname,'file') && force == false
     fprintf('*******************************\n');
     fprintf('** Loading results alignment **\n');
     fprintf('*******************************\n\n'); 
+    load(fname,'MuseStruct');
 else
     
     if force == true
@@ -275,8 +276,8 @@ else
                             hasartefact(itrial) = true;
                         end 
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
-                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
-                        
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) - timeshift;
+
                     end
                 end
 

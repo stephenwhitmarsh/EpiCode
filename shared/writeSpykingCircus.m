@@ -1,4 +1,4 @@
-function cfg = writeSpykingCircus_parts(cfg, MuseStruct, force, varargin)
+function [sampleinfo] = writeSpykingCircus(cfg, MuseStruct, force, varargin)
 
 % third argument "force" is to force recalculation of samplinfo - needed in spike analysis
 % pipelines
@@ -14,13 +14,11 @@ end
 fname_output = fullfile(cfg.datasavedir,[cfg.prefix,'SpykingCircus_trialinfo_parts.mat']);
 
 if exist(fname_output,'file') && force == false
-    fprintf('\nLoading trialinfo: %s \n',fname_output);
+    fprintf('\nLoading sampleinfo: %s \n',fname_output);
     temp = load(fname_output,'cfg');
-    cfg.sampleinfo          = temp.cfg.sampleinfo;
+    sampleinfo          = temp.cfg.sampleinfo;
     %     cfg.deadfile_ms         = temp.cfg.deadfile_ms;
-    %     cfg.deadfile_samples    = temp.cfg.deadfile_samples;
-    cfg.fnames_ncs          = temp.cfg.fnames_ncs;
-    
+    %     cfg.deadfile_samples    = temp.cfg.deadfile_samples;   
 else
     
     % loop through different parts
@@ -33,7 +31,7 @@ else
         % process channels separately
         for ichan = 1 : size(cfg.circus.channel,2)
             
-            cfg.sampleinfo{ipart}{ichan} = [];
+            sampleinfo{ipart}{ichan} = [];
             clear dirdat
             % loop over all directories (time), concatinating channel
             for idir = 1 : size(MuseStruct{ipart},2)
@@ -94,7 +92,7 @@ else
                 hdr  = ft_read_header(fullfile(MuseStruct{ipart}{idir}.directory, temp.name));
                 
                 % save sampleinfo to reconstruct data again after reading SC
-                cfg.sampleinfo{ipart}{ichan}(idir,:) = [1 hdr.nSamples];
+                sampleinfo{ipart}{ichan}(idir,:) = [1 hdr.nSamples];
                 
             end
             

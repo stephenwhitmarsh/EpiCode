@@ -40,10 +40,10 @@ for ipatient = 1
     export_hypnogram(config{ipatient});
     
     % read muse markers
-    [MuseStruct] = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct] = readMuseMarkers(config{ipatient}, false);
     
-    % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, true);
+    % align Muse markers according to peaks
+    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, false);
     
     % automatically detect spikes
     detectSpikes(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true, true);
@@ -51,40 +51,37 @@ for ipatient = 1
     % plot hypnogram
     plotHypnogram(config{ipatient},MuseStruct);
     
-    % plot analysis of events vs. hypnogram
-    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, true);
+    % events vs. hypnogram statistics and plots
+    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, false);
      
-    % calculate TFR
-    TFR = doTFR(config{ipatient}, MuseStruct, true);
+    % calculate TFR over all files, per part
+    TFR = doTFRcontinuous(config{ipatient}, MuseStruct, true);
     
-    % write data concatinated for SC, and update config with sampleinfo
-    % FIX CODE SO THAT SELECTED CHANNELS ARE PROPERLY SELECTED,
-    % INDEPENDENTLY FROM WHAT IS IN MUSESTRUCT.filenames
-    config{ipatient} = writeSpykingCircus_parts(config{ipatient}, MuseStruct_micro, false, false);
+    % plot TFR 
+    plotTFRcontinuous(config{ipatient},TFR);
+    
+    % write data concatinated for SC, artefacts, and output sampleinfo per file
+    writeSpykingCircus(config{ipatient}, MuseStruct, false, false);
     
     % write parameters for spyking circus
-    writeSpykingCircusParameters_parts(config{ipatient})
+    writeSpykingCircusParameters(config{ipatient})
     
-    % read spyking circus results
-    % (first load sampleinfo with writeSpykingCirucs
-    [SpikeRaw, SpikeTrials] = readSpykingCircus_parts(config{ipatient}, MuseStruct_micro, true, 'all');
+    % read spike-clustering results, and epoch around events
+    [SpikeRaw, SpikeTrials] = readSpykingCircus(config{ipatient}, MuseStruct, false, 'all');
     
-    % read and plot spikerate overview, and get the stats
-    [stats, ~, ~, ~] = spikeratestats_parts(config{ipatient}, SpikeRaw, SpikeTrials, true);
+    % compute event-related changes of spike rates, and other stats
+    [stats_smooth, stats_binned] = spikeratestatsEvents(config{ipatient}, SpikeRaw, SpikeTrials, false);
     
-    % read spyking circus results
-    % (first load sampleinfo with writeSpykingCirucs
-    [SpikeRawSleep, SpikeTrialsSleep] = readSpykingCircusSleepStage(config{ipatient}, MuseStruct_micro, true, 'all');
+    % read spike-clustering results, and label according to polysomnograpy
+    [SpikeRawPSG, SpikeTrialsPSG] = readSpykingCircusPSG(config{ipatient}, MuseStruct, true, 'all');
     
-    % read and plot spikerate overview, and get the stats
-    [SpikeStatsSleepStage] = spikeratestatsSleepStage(config{ipatient}, SpikeRawSleep, SpikeTrialsSleep, Hypnogram, true);
+    % computer spike stats, and label according to polysomnography
+    [SpikeStatsPSG] = spikeratestatsPSG(config{ipatient}, SpikeRawPSG, SpikeTrialsPSG, hypnogram, true);
     
     % read LFP data
-    [dat_micro, dat_macro] = readLFP_parts(config{ipatient}, MuseStruct_micro, MuseStruct_macro, false, false);
+    [LFP] = readLFP(config{ipatient}, MuseStruct, true, true);
     
-    % TFR
-    TFR = doTFR(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true);
-    
+     
     TFRlog = TFR;
     TFRlog.powspctrm = TFRlog.powspctr
     % plot TFR

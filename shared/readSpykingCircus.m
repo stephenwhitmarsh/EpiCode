@@ -1,4 +1,4 @@
-function [SpikeRaw, SpikeTrials] = readSpykingCircus_parts(cfg,MuseStruct,force,varargin)
+function [SpikeRaw, SpikeTrials] = readSpykingCircus(cfg,MuseStruct,force,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -14,7 +14,7 @@ function [SpikeRaw, SpikeTrials] = readSpykingCircus_parts(cfg,MuseStruct,force,
 % cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
 %
-% MuseStruct{ipart}            = info (e.g. events, files) of original data,
+% MuseStruct{ipart}     = info (e.g. events, files) of original data,
 %                         used to segment the spikes into trials
 %
 % force                 = whether to redo analyses or read previous save
@@ -23,10 +23,10 @@ function [SpikeRaw, SpikeTrials] = readSpykingCircus_parts(cfg,MuseStruct,force,
 %
 % Output:
 %
-% SpikeRaw = raw spike data in FieldTrip raw spike data structure
-% SpikeTrials = spike data epoched in FieldTrip trial data structure
+% SpikeRaw              = raw spike data in FieldTrip raw spike data structure
+% SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
-% (c) Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

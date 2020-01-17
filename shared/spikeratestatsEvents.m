@@ -1,4 +1,4 @@
-function [stats, stats_bar, sdf_orig_out, sdf_bar_out] = spikeratestats(cfg,SpikeRaw,SpikeTrials,force,varargin)
+function [stats_smooth, stats_binned] = spikeratestatsEvents(cfg,SpikeRaw,SpikeTrials,force,varargin)
 
 if ~isempty(varargin)
     cfg.prefix = [cfg.prefix,'p',num2str(varargin{1}),'-'];
@@ -6,7 +6,7 @@ end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'all_data_spikedata_stats.mat']);
 if exist(fname,'file') && force == false
-    load(fname,'stats','stats_bar','sdf_orig_out','sdf_bar_out');
+    load(fname,'stats','stats_binned','sdf_orig_out','sdf_bar_out');
 else
     
     for ipart = 1 : size(SpikeRaw,2)
@@ -32,7 +32,7 @@ else
         cfgtemp.outputunit      = 'proportion';
         cfgtemp.bins            = cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
         cfgtemp.param           = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
-        stats{ipart}.isi_1s     = ft_spike_isi(cfgtemp,spiketrials_1s{ipart});
+        stats_smooth{ipart}.isi_1s     = ft_spike_isi(cfgtemp,spiketrials_1s{ipart});
         
         %     RPV = (length(find(ISI < 2)) / length(ISI)) * 100
         
@@ -43,11 +43,11 @@ else
         for itemp = 1 : nrtemplates
             % plot ISI fo 1-second windows
             subplot(round(nrtemplates/2+0.5),2,itemp);
-            bar(stats{ipart}.isi_1s.time*1000,stats.isi_1s.avg(itemp,:),1);
-            [y,indx] = max(stats{ipart}.isi_1s.avg(itemp,:));
-            title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi_1s.time(indx)*1000));
+            bar(stats_smooth{ipart}.isi_1s.time*1000,stats_smooth{ipart}.isi_1s.avg(itemp,:),1);
+            [y,indx] = max(stats_smooth{ipart}.isi_1s.avg(itemp,:));
+            title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats_smooth{ipart}.isi_1s.time(indx)*1000));
             xlabel('ms');
-            xticks(stats{ipart}.isi_1s.time*1000);
+            xticks(stats_smooth{ipart}.isi_1s.time*1000);
             xtickangle(90);
             axis tight
             grid on
@@ -64,17 +64,17 @@ else
         
         % do my own way of creating ISI
         for itemp = 1 : nrtemplates
-            stats{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs * 1000;
+            stats_smooth{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs * 1000;
         end
         
         fig = figure; hold
         for itemp = 1 : nrtemplates
             % plot ISI fo 1-second windows
             subplot(round(nrtemplates/2+0.25),2,itemp);
-            histogram(stats{ipart}.isi{itemp},'BinWidth',0.5,'BinLimits',[0,15]);
+            histogram(stats_smooth{ipart}.isi{itemp},'BinWidth',0.5,'BinLimits',[0,15]);
             %         bar(stats.isi_1s.time*1000,stats.isi_1s.avg(itemp,:),1);
-            [y,indx] = max(stats{ipart}.isi{itemp});
-            title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi{itemp}(indx)));
+            [y,indx] = max(stats_smooth{ipart}.isi{itemp});
+            title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats_smooth{ipart}.isi{itemp}(indx)));
             xlabel('ms');
             %         xticks(stats.isi_1s.time*1000);
             xtickangle(90);
@@ -167,46 +167,46 @@ else
             cfgtemp.outputunit                      = 'proportion';
             cfgtemp.bins                            = cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
             cfgtemp.param                           = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
-            stats{ipart}.isi_pattern_all{ilabel}    = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
+            stats_smooth{ipart}.isi_pattern_all{ilabel}    = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
             
             cfgtemp.latency                         = cfg.stats.bltoi{ilabel};
-            stats{ipart}.isi_pattern_bl{ilabel}     = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
+            stats_smooth{ipart}.isi_pattern_bl{ilabel}     = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
             
             cfgtemp.latency                         = cfg.stats.actoi{ilabel};
-            stats{ipart}.isi_pattern_ac{ilabel}     = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
+            stats_smooth{ipart}.isi_pattern_ac{ilabel}     = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
             
             % plot ISI per channel, per latency, per template
             fig = figure; hold;
             for itemp = 1 : nrtemplates
                 
                 subplot(nrtemplates,3,(itemp-1)*3+1);
-                bar(stats{ipart}.isi_pattern_all{ilabel}.time*1000,stats{ipart}.isi_pattern_all{ilabel}.avg(itemp,:),1);
-                [y,indx] = max(stats{ipart}.isi_pattern_all{ilabel}.avg(itemp,:));
-                title(sprintf('Unit: %d, Max ISI: all%.1fms',itemp,stats{ipart}.isi_pattern_all{ilabel}.time(indx)*1000));
+                bar(stats_smooth{ipart}.isi_pattern_all{ilabel}.time*1000,stats_smooth{ipart}.isi_pattern_all{ilabel}.avg(itemp,:),1);
+                [y,indx] = max(stats_smooth{ipart}.isi_pattern_all{ilabel}.avg(itemp,:));
+                title(sprintf('Unit: %d, Max ISI: all%.1fms',itemp,stats_smooth{ipart}.isi_pattern_all{ilabel}.time(indx)*1000));
                 xlabel('ms');
-                xticks(stats{ipart}.isi_pattern_all{ilabel}.time*1000);
+                xticks(stats_smooth{ipart}.isi_pattern_all{ilabel}.time*1000);
                 xtickangle(90);
                 axis tight
                 grid on
                 set(gca,'fontsize',6);
                 
                 subplot(nrtemplates,3,(itemp-1)*3+2);
-                bar(stats{ipart}.isi_pattern_bl{ilabel}.time*1000,stats{ipart}.isi_pattern_bl{ilabel}.avg(itemp,:),1);
-                [y,indx] = max(stats{ipart}.isi_pattern_bl{ilabel}.avg(itemp,:));
-                title(sprintf('Unit: %d, Max ISI baseline: %.1fms',itemp,stats{ipart}.isi_pattern_bl{ilabel}.time(indx)*1000));
+                bar(stats_smooth{ipart}.isi_pattern_bl{ilabel}.time*1000,stats_smooth{ipart}.isi_pattern_bl{ilabel}.avg(itemp,:),1);
+                [y,indx] = max(stats_smooth{ipart}.isi_pattern_bl{ilabel}.avg(itemp,:));
+                title(sprintf('Unit: %d, Max ISI baseline: %.1fms',itemp,stats_smooth{ipart}.isi_pattern_bl{ilabel}.time(indx)*1000));
                 xlabel('ms');
-                xticks(stats{ipart}.isi_pattern_bl{ilabel}.time*1000);
+                xticks(stats_smooth{ipart}.isi_pattern_bl{ilabel}.time*1000);
                 xtickangle(90);
                 axis tight
                 grid on
                 set(gca,'fontsize',6);
                 
                 subplot(nrtemplates,3,(itemp-1)*3+3);
-                bar(stats{ipart}.isi_pattern_ac{ilabel}.time*1000,stats{ipart}.isi_pattern_ac{ilabel}.avg(itemp,:),1);
-                [y,indx] = max(stats{ipart}.isi_pattern_ac{ilabel}.avg(itemp,:));
-                title(sprintf('Unit: %d, Max ISI active: %.1fms',itemp,stats{ipart}.isi_pattern_ac{ilabel}.time(indx)*1000));
+                bar(stats_smooth{ipart}.isi_pattern_ac{ilabel}.time*1000,stats_smooth{ipart}.isi_pattern_ac{ilabel}.avg(itemp,:),1);
+                [y,indx] = max(stats_smooth{ipart}.isi_pattern_ac{ilabel}.avg(itemp,:));
+                title(sprintf('Unit: %d, Max ISI active: %.1fms',itemp,stats_smooth{ipart}.isi_pattern_ac{ilabel}.time(indx)*1000));
                 xlabel('ms');
-                xticks(stats{ipart}.isi_pattern_ac{ilabel}.time*1000);
+                xticks(stats_smooth{ipart}.isi_pattern_ac{ilabel}.time*1000);
                 xtickangle(90);
                 axis tight
                 grid on
@@ -254,15 +254,15 @@ else
                 cfgtemp.design(2,:)                     = [1 : size(sdf_orig{ipart}.trial,1) 1 : size(sdf_orig{ipart}.trial,1)];
                 cfgtemp.numrandomization                = 100;
                 cfgtemp.channel                         = itemp;
-                stats{ipart}.clusterstat{ilabel}{itemp} = ft_timelockstatistics(cfgtemp,sdf_smooth{ipart},sdf_bl{ipart});
+                stats_smooth{ipart}.clusterstat{ilabel}{itemp} = ft_timelockstatistics(cfgtemp,sdf_smooth{ipart},sdf_bl{ipart});
                 
                 % calculate baseline
                 slim(1) = find(sdf_orig{ipart}.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
                 slim(2) = find(sdf_orig{ipart}.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
-                stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_orig{ipart}.avg(itemp,slim(1):slim(2)),2);
-                stats{ipart}.clusterstat{ilabel}{itemp}.bl.var        = nanmean(sdf_orig{ipart}.var(itemp,slim(1):slim(2)),2);
-                stats{ipart}.clusterstat{ilabel}{itemp}.bl.dof        = nanmean(sdf_orig{ipart}.dof(itemp,slim(1):slim(2)),2);
-                stats{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_orig{ipart}.trial(:,itemp,slim(1):slim(2)),3);
+                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_orig{ipart}.avg(itemp,slim(1):slim(2)),2);
+                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.var        = nanmean(sdf_orig{ipart}.var(itemp,slim(1):slim(2)),2);
+                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.dof        = nanmean(sdf_orig{ipart}.dof(itemp,slim(1):slim(2)),2);
+                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_orig{ipart}.trial(:,itemp,slim(1):slim(2)),3);
             end
             
             % plot cluster stats per patterns
@@ -281,46 +281,46 @@ else
                 
                 lag = -(sdf_orig{ipart}.time(1) - cfg.stats.bltoi{ilabel}(2)) * cfg.spike.resamplefs;
                 
-                if isfield(stats{ipart}.clusterstat{ilabel}{itemp},'posclusters')
-                    for ipos = 1 : size(stats{ipart}.clusterstat{ilabel}{itemp}.posclusters,2)
-                        if stats{ipart}.clusterstat{ilabel}{itemp}.posclusters(ipos).prob < cfg.stats.alpha
-                            sel = find(stats{ipart}.clusterstat{ilabel}{itemp}.posclusterslabelmat == ipos);
-                            plot(stats{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth{ipart}.avg(itemp,round(sel+lag)),'g','linewidth',2); % smoothed
+                if isfield(stats_smooth{ipart}.clusterstat{ilabel}{itemp},'posclusters')
+                    for ipos = 1 : size(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.posclusters,2)
+                        if stats_smooth{ipart}.clusterstat{ilabel}{itemp}.posclusters(ipos).prob < cfg.stats.alpha
+                            sel = find(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.posclusterslabelmat == ipos);
+                            plot(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth{ipart}.avg(itemp,round(sel+lag)),'g','linewidth',2); % smoothed
                             si = round(sel+lag);
                             [Y,I] = max(sdf_smooth{ipart}.avg(itemp,round(sel+lag)));
                             
                             x = sdf_smooth{ipart}.time(si(I));
                             y = sdf_smooth{ipart}.avg(itemp,si(I));
                             plot(x,y+0.25,'v','markersize',10,'color',[0 1 0],'markerfacecolor',[0 1 0]);
-                            d = (sdf_smooth{ipart}.avg(itemp,si(I)) / stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
+                            d = (sdf_smooth{ipart}.avg(itemp,si(I)) / stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
                             text(x+0.05,y+0.25,sprintf('%.1f%%\n',d),'HorizontalAlignment','left','VerticalAlignment','middle');
                         end
                     end
                 end
                 
                 % plot negative clusters
-                if isfield(stats{ipart}.clusterstat{ilabel}{itemp},'negclusters')
-                    for ineg = 1 : size(stats{ipart}.clusterstat{ilabel}{itemp}.negclusters,2)
-                        if stats{ipart}.clusterstat{ilabel}{itemp}.negclusters(ineg).prob < cfg.stats.alpha
-                            sel = find(stats{ipart}.clusterstat{ilabel}{itemp}.negclusterslabelmat == ineg);
-                            plot(stats{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth.avg(itemp,round(sel+lag+0.5)),'r','linewidth',2); % smoothed
+                if isfield(stats_smooth{ipart}.clusterstat{ilabel}{itemp},'negclusters')
+                    for ineg = 1 : size(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusters,2)
+                        if stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusters(ineg).prob < cfg.stats.alpha
+                            sel = find(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusterslabelmat == ineg);
+                            plot(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth.avg(itemp,round(sel+lag+0.5)),'r','linewidth',2); % smoothed
                             si = round(sel+lag);
                             [Y,I] = min(sdf_smooth.avg(itemp,round(sel+lag+0.5)));
                             x = sdf_smooth.time(si(I));
                             y = sdf_smooth.avg(itemp,si(I));
                             plot(x,y-0.25,'^','markersize',10,'color',[1 0 0],'markerfacecolor',[1 0 0]);
-                            d = (sdf_smooth.avg(itemp,si(I)) / stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
+                            d = (sdf_smooth.avg(itemp,si(I)) / stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
                             text(x+0.05,y-0.25,sprintf('%.1f%%\n',d),'HorizontalAlignment','left','VerticalAlignment','middle');
                         end
                     end
                 end
                 
                 % plot baseline
-                plot(cfg.epoch.toi{ilabel},[stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg, stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg],':k');
+                plot(cfg.epoch.toi{ilabel},[stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg, stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg],':k');
                 
                 % determine zero crossing
                 zci             = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
-                indx            = zci(sdf_smooth{ipart}.avg(itemp,:) - stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg);
+                indx            = zci(sdf_smooth{ipart}.avg(itemp,:) - stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg);
                 times           = sdf_smooth{ipart}.time(indx);
                 remove          = find(diff(times) < 0.15); % minimal duration
                 times(remove)   = [];
@@ -396,13 +396,13 @@ else
                 cfgtemp.design(2,:)                     = [1 : size(sdf_bar{ipart}.trial,1) 1 : size(sdf_bar{ipart}.trial,1)];
                 cfgtemp.numrandomization                = 100;
                 cfgtemp.channel                         = 1;
-                stats_bar{ipart}.clusterstat{ilabel}{itemp}    = ft_timelockstatistics(cfgtemp,sdf_bar{ipart},sdf_bar_bl{ipart});
+                stats_binned{ipart}.clusterstat{ilabel}{itemp}    = ft_timelockstatistics(cfgtemp,sdf_bar{ipart},sdf_bar_bl{ipart});
                 
                 % calculate baseline
                 slim(1) = find(sdf_bar{ipart}.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
                 slim(2) = find(sdf_bar{ipart}.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
-                stats_bar{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_bar{ipart}.avg(slim(1):slim(2)));
-                stats_bar{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_bar{ipart}.trial(:,1,slim(1):slim(2)),3);
+                stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_bar{ipart}.avg(slim(1):slim(2)));
+                stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_bar{ipart}.trial(:,1,slim(1):slim(2)),3);
                 
                 % plot firing rate as bar graph
                 subplot(3,3,[4 5]); hold;
@@ -418,44 +418,44 @@ else
                 hold on
                 
                 % plot positive clusters
-                lag = size(sdf_bar{ipart}.avg,1) - size(stats_bar{ipart}.clusterstat{ilabel}{itemp}.mask,2);
+                lag = size(sdf_bar{ipart}.avg,1) - size(stats_binned{ipart}.clusterstat{ilabel}{itemp}.mask,2);
                 
-                if isfield(stats_bar{ipart}.clusterstat{ilabel}{itemp},'posclusters')
-                    for ipos = 1 : size(stats_bar{ipart}.clusterstat{ilabel}{itemp}.posclusters,2)
-                        if stats_bar{ipart}.clusterstat{ilabel}{itemp}.posclusters(ipos).prob < cfg.stats.alpha
-                            sel = find(stats_bar{ipart}.clusterstat{ilabel}{itemp}.posclusterslabelmat == ipos);
-                            bar(stats_bar{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_bar{ipart}.avg(sel+lag),1,'facecolor','g','edgecolor','g');
+                if isfield(stats_binned{ipart}.clusterstat{ilabel}{itemp},'posclusters')
+                    for ipos = 1 : size(stats_binned{ipart}.clusterstat{ilabel}{itemp}.posclusters,2)
+                        if stats_binned{ipart}.clusterstat{ilabel}{itemp}.posclusters(ipos).prob < cfg.stats.alpha
+                            sel = find(stats_binned{ipart}.clusterstat{ilabel}{itemp}.posclusterslabelmat == ipos);
+                            bar(stats_binned{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_bar{ipart}.avg(sel+lag),1,'facecolor','g','edgecolor','g');
                             
                             % plot percentage
                             si = sel+lag;
                             [Y,I] = max(sdf_bar.avg(sel+lag));
                             x = sdf_bar.time(si(I));
                             y = sdf_bar.avg(si(I));
-                            d = (sdf_bar.avg(si(I)) / stats_bar{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100 - 100;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.maxcluster.perc{ipos} = d;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.maxcluster.x{ipos} = x;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.maxcluster.y{ipos} = y;
+                            d = (sdf_bar.avg(si(I)) / stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100 - 100;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.perc{ipos} = d;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.x{ipos} = x;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.y{ipos} = y;
                             text(x+0.05,y+0.25,sprintf('+%.1f%%\n',d),'HorizontalAlignment','center','VerticalAlignment','middle');
                         end
                     end
                 end
                 
                 % plot negative clusters
-                if isfield(stats_bar{ipart}.clusterstat{ilabel}{itemp},'negclusters')
-                    for ineg = 1 : size(stats_bar{ipart}.clusterstat{ilabel}{itemp}.negclusters,2)
-                        if stats_bar{ipart}.clusterstat{ilabel}{itemp}.negclusters(ineg).prob < cfg.stats.alpha
-                            sel = find(stats_bar{ipart}.clusterstat{ilabel}{itemp}.negclusterslabelmat == ineg);
-                            bar(stats_bar{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_bar{ipart}.avg(sel+lag),1,'facecolor','r','edgecolor','r');
+                if isfield(stats_binned{ipart}.clusterstat{ilabel}{itemp},'negclusters')
+                    for ineg = 1 : size(stats_binned{ipart}.clusterstat{ilabel}{itemp}.negclusters,2)
+                        if stats_binned{ipart}.clusterstat{ilabel}{itemp}.negclusters(ineg).prob < cfg.stats.alpha
+                            sel = find(stats_binned{ipart}.clusterstat{ilabel}{itemp}.negclusterslabelmat == ineg);
+                            bar(stats_binned{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_bar{ipart}.avg(sel+lag),1,'facecolor','r','edgecolor','r');
                             
                             % plot percentage
                             si = sel+lag;
                             [Y,I] = min(sdf_bar{ipart}.avg(sel+lag));
                             x = sdf_bar{ipart}.time(si(I));
                             y = sdf_bar{ipart}.avg(si(I));
-                            d = 100 - (sdf_bar{ipart}.avg(si(I)) / stats_bar{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.mincluster.perc{ineg} = d;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.mincluster.x{ineg} = x;
-                            stats_bar{ipart}.clusterstat{ilabel}{itemp}.mincluster.y{ineg} = y;
+                            d = 100 - (sdf_bar{ipart}.avg(si(I)) / stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.mincluster.perc{ineg} = d;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.mincluster.x{ineg} = x;
+                            stats_binned{ipart}.clusterstat{ilabel}{itemp}.mincluster.y{ineg} = y;
                             text(x+0.05,y-0.25,sprintf('-%.1f%%\n',d),'HorizontalAlignment','center','VerticalAlignment','middle');
                         end
                     end
@@ -468,7 +468,7 @@ else
                 patch('XData',x,'YData',y,'facecolor',[0 0 0],'edgecolor','none','facealpha',0.1);
                 
                 % plot baseline
-                plot(cfg.epoch.toi{ilabel},[stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg, stats{ipart}.clusterstat{ilabel}{itemp}.bl.avg],':k');
+                plot(cfg.epoch.toi{ilabel},[stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg, stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg],':k');
                 
                 % plot raster
                 subplot(3,3,[7,8]); hold;
@@ -493,13 +493,13 @@ else
                 %             legend({'1 sec all data','whole trial','baseline trial','active trial'});
                 %
                 
-                barh = bar(stats{ipart}.isi_pattern_all{ilabel}.time*1000,stats{ipart}.isi_pattern_all{ilabel}.avg(itemp,:));
+                barh = bar(stats_smooth{ipart}.isi_pattern_all{ilabel}.time*1000,stats_smooth{ipart}.isi_pattern_all{ilabel}.avg(itemp,:));
                 title('ISI pattern');
                 xlabel('ISI (ms)');
                 
                 subplot(3,3,6); hold;
                 
-                barh = bar(stats{ipart}.isi_1s.time*1000,stats{ipart}.isi_1s.avg(itemp,:));
+                barh = bar(stats_smooth{ipart}.isi_1s.time*1000,stats_smooth{ipart}.isi_1s.avg(itemp,:));
                 title('ISI all data')
                 %                         barh(1).FaceColor = [0 0 0];
                 %             barh(2).FaceColor = [0 1 0];
@@ -569,6 +569,6 @@ else
     end % ipart
     
     
-    save(fname,'stats','stats_bar','sdf_orig_out','sdf_bar_out','-v7.3');
+    save(fname,'stats','stats_binned','sdf_orig_out','sdf_bar_out','-v7.3');
     
 end % if file already exists

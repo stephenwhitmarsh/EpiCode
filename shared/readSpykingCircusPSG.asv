@@ -1,4 +1,4 @@
-function [SpikeRaw, SpikeTrials] = readSpykingCircusSleepStage(cfg,MuseStruct,force,varargin)
+function [SpikeRaw, SpikeTrials] = readSpykingCircusPSG(cfg,MuseStruct,force,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -14,7 +14,7 @@ function [SpikeRaw, SpikeTrials] = readSpykingCircusSleepStage(cfg,MuseStruct,fo
 % cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
 %
-% MuseStruct{ipart}            = info (e.g. events, files) of original data,
+% MuseStruct{ipart}     = info (e.g. events, files) of original data,
 %                         used to segment the spikes into trials
 %
 % force                 = whether to redo analyses or read previous save
@@ -38,7 +38,7 @@ else
 end
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedataSleepStage.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedataPSG.mat']);
 if exist(fname,'file') && force == false
     load(fname,'SpikeRaw','SpikeTrials');
 else
@@ -80,7 +80,6 @@ else
 %             [timestamps, ~, ~] = Nlx2MatCSC_v3(hdr_fname, [0 0 0 1 0]);
 
         % read spiketimes of clusters
-       
         fprintf('Loading spike data from: %s\n',hdr_fname);
         for i = 1 : size(datinfo.Groups,1)
             names(i) = string(datinfo.Groups(i).Name);
@@ -129,7 +128,7 @@ else
             SpikeRaw{ipart}.template(itemp,:,:) = template;
             SpikeRaw{ipart}.template_maxchan(itemp) = i;
         end
-                
+        
         % create index list for hypnogram
         hypstageindx = ones(1,hdr.nSamples) * -1;
         for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
@@ -145,57 +144,61 @@ else
                     continue
                 end
                 
-                if ~isfield(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']),'offset')
+                if ~isfield(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']),'synctime')
                     continue
                 end
- 
-                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset,2)
-                    y1 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).offset(i);
-                    y2 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).offset(i);
+                
+                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime,2)
+                    y1 = int16(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
+                    y2 = int16(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
                     switch cell2mat(hyplabel)
                         case 'PHASE_1'
                             disp('Found Stage 1');
                             hypstageindx((y1:y2)+dirOnset) = 1;
                         case 'PHASE_2'
                             disp('Found Stage 2');
-                            hypstageindx((y1:y2)+dirOnset) = 2;
+                            hypstageindx((y1:y2)+dirOnset) = 2;                            
                         case 'PHASE_3'
-                            disp('Found Stage 3');   
-                            hypstageindx((y1:y2)+dirOnset) = 3;
+                            disp('Found Stage 3');
+                            hypstageindx((y1:y2)+dirOnset) = 3;                            
                         case 'REM'
                             disp('Found Stage REM');
-                            hypstageindx((y1:y2)+dirOnset) = 4;
+                            hypstageindx((y1:y2)+dirOnset) = 4;                            
                         case 'AWAKE'
                             disp('Found Stage AWAKE');
-                            hypstageindx((y1:y2)+dirOnset) = 0;
+                            hypstageindx((y1:y2)+dirOnset) = 0;                            
                         case 'NO_SCORE'
                             disp('Found Stage NO_SCORE');
-                            hypstageindx((y1:y2)+dirOnset) = 0;
+                            hypstageindx((y1:y2)+dirOnset) = 0;                            
                     end
                 end
-                dirOnset = dirOnset + cfg.sampleinfo{ipart}{1}(idir,2); % assuming all channels have same sampleinfo           
-            end 
+                % assuming all channels have same length in samples
+                temp = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{1},'.ncs']));
+                hdr  = ft_read_header(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{1},'.ncs']);
+                                
+                dirOnset = dirOnset + cfg.sampleinfo{ipart}{1}(idir,2); 
+            end
         end
-        
-        
-        % create trials of x seconds
-        cfgtemp = [];
-        cfgtemp.trl(:,1)    = 1 : hdr.Fs * (cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : hdr.nSamples - hdr.Fs * cfg.hyp.spikewindow;
-        cfgtemp.trl(:,2)    = cfgtemp.trl(:,1) + hdr.Fs * cfg.hyp.spikewindow;
-        cfgtemp.trl(:,3)    = zeros(size(cfgtemp.trl,1),1);
 
-        cfgtemp.trlunit     = 'samples';
-        cfgtemp.hdr         = hdr;
-        SpikeTrials{ipart}  = ft_spike_maketrials(cfgtemp,SpikeRaw{ipart}); 
-        SpikeTrials{ipart}.trialinfo = table;
+        % create trials of x seconds
+        cfgtemp                         = [];
+        cfgtemp.trl(:,1)                = 1 : hdr.Fs * (cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : hdr.nSamples - hdr.Fs * cfg.hyp.spikewindow;
+        cfgtemp.trl(:,2)                = cfgtemp.trl(:,1) + hdr.Fs * cfg.hyp.spikewindow;
+        cfgtemp.trl(:,3)                = zeros(size(cfgtemp.trl,1),1);
+        cfgtemp.trlunit                 = 'samples';
+        cfgtemp.hdr                     = hdr;
+        SpikeTrials{ipart}              = ft_spike_maketrials(cfgtemp,SpikeRaw{ipart}); 
+        SpikeTrials{ipart}.trialinfo    = table;
+        
         for i = 1 : size(cfgtemp.trl,1)
             
-            SpikeTrials{ipart}.trialinfo.stage(i) = median(hypstageindx(cfgtemp.trl(i,1):cfgtemp.trl(i,2)));
+            % add sleepstage to trialinfo
+            SpikeTrials{ipart}.trialinfo.stage(i)       = median(hypstageindx(cfgtemp.trl(i,1):cfgtemp.trl(i,2)));
             fprintf('Trial %d of %d overlaps with sleepstage %d \n',i,size(SpikeTrials{ipart}.trialinfo,1), SpikeTrials{ipart}.trialinfo.stage(i));
  
             % clock time of each segment, based on first file of part            
-            SpikeTrials{ipart}.trialinfo.starttime(i) = MuseStruct{ipart}{1}.starttime + (i-1) * seconds(cfg.hyp.spikewindow);
-            SpikeTrials{ipart}.trialinfo.endtime(i)   = MuseStruct{ipart}{1}.starttime + (i) * seconds(cfg.hyp.spikewindow);
+            SpikeTrials{ipart}.trialinfo.starttime(i)   = MuseStruct{ipart}{1}.starttime + (i-1) * seconds(cfg.hyp.spikewindow);
+            SpikeTrials{ipart}.trialinfo.endtime(i)     = MuseStruct{ipart}{1}.starttime + (i) * seconds(cfg.hyp.spikewindow);
   
         end
     end

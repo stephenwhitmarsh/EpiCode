@@ -34,35 +34,28 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 for ipatient = 1
     
     % load settings
-    config = hspike_setparams([]);
+    config = hspike_setparams;
     
     % export hypnogram to muse
     export_hypnogram(config{ipatient});
     
     % read muse markers
-    [MuseStruct_micro, MuseStruct_macro] = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct] = readMuseMarkers(config{ipatient}, true);
     
-    % update paths for different OS if needed
-    [MuseStruct_micro, MuseStruct_macro] = MuseMarkers_update_filepath(config{ipatient},MuseStruct_micro, MuseStruct_macro);
-    
-    % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro] = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    % align Muse markers according to peaks
+    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, true);
     
     % automatically detect spikes
     detectSpikes(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true, true);
     
-    % HUGE ARTEGACTS IN 14_20-31
-    MuseStruct_micro{1}{5}.markers = rmfield(MuseStruct_micro{1}{5}.markers,'SpikeDetect');
-    
     % plot hypnogram
-    % CORRECT Y-ORDER OF SLEEP STAGES AS IN SPIKE CODE
-    plotHypnogram(config{ipatient},MuseStruct_micro)
+    plotHypnogram(config{ipatient},MuseStruct);
     
     % plot analysis of events vs. hypnogram
-    [Staged, Hypnogram, MuseStruct_micro, MuseStruct_macro] = plotHypnogramStats(config{ipatient}, MuseStruct_micro, MuseStruct_macro);
-    
+    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, true);
+     
     % calculate TFR
-    TFR = doTFR(config{ipatient},MuseStruct_micro,MuseStruct_macro,true);
+    TFR = doTFR(config{ipatient}, MuseStruct, true);
     
     % write data concatinated for SC, and update config with sampleinfo
     % FIX CODE SO THAT SELECTED CHANNELS ARE PROPERLY SELECTED,
@@ -96,21 +89,7 @@ for ipatient = 1
     TFRlog.powspctrm = TFRlog.powspctr
     % plot TFR
     
-    fig = figure;
-    cfgtemp               = [];
-    cfgtemp.channel         = 'all';
-    cfgtemp.ylim = [1 40];
-    cfgtemp.baseline        = [TFR{1}.time(1)+120 TFR{1}.time(end)-120];
-    cfgtemp.baselinetype    = 'relative';
-    cfgtemp.colorbar        = 'no';
-    cfgtemp.colorbar        = 'yes';
-    %     cfgtemp.zlim            = 'maxabs';
-    %     cfgtemp.xlim            = config{ipatient}.;
-    %     cfgtemp.title           = 'Relative change from Baseline';
-    cfgtemp.parameter       = 'powspctrm';
-    cfgtemp.colormap        = parula(5000);
-    cfgtemp.renderer        = 'painters';
-    ft_singleplotTFR(cfgtemp,TFR{1});
+
     
     
     

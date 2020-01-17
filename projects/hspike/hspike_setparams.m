@@ -30,7 +30,7 @@ else
 end
 
 %% Patient 1
-config{1}.os                        = os;
+% config{1}.os                        = os;
 config{1}.name                      = {'Hspike','SpikeDetect'};
 config{1}.prefix                    = 'P1-'; % edit in code
 config{1}.muse.startend             = {'Hspike','Hspike'; 'SpikeDetect','SpikeDetect'};   % start and end Muse marker
@@ -109,6 +109,7 @@ config{1}.align.toiplot{2}          = [-0.3,  0.7];                             
 config{1}.align.toiactive{2}        = [-0.05,  0.05];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 config{1}.align.toibaseline{2}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
+config{1}.LFP.channel               = {'mHaT2_1','mHaT2_3','_HaT2_1','_HaT2_8'};
 config{1}.LFP.hpfilter              = 'no';
 config{1}.LFP.hpfreq                = 1;
 config{1}.LFP.resamplefs            = 1000;

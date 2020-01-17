@@ -1,4 +1,4 @@
-function [LFP] = readLFP(cfg,MuseStruct,force,savedat)
+function [dat_micro, dat_macro] = readLFP(cfg,MuseStruct,force,savedat)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,7 +58,7 @@ else
             for idir = 1:length(MuseStruct{ipart})
                 if isfield(MuseStruct{ipart}{idir},'markers')
                     if isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
-                        if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
+                        if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'offset')
                             
 %                             % select MICRO files
 %                             micro_filenrs = [];
@@ -71,10 +71,10 @@ else
 %                                 end
 %                             end
                             
-                            for ifile = 1 : size(cfg.LFP.channel,2)
+                            for ifile = 1 : length(cfg.LFP.channel,2)
                                 
                                 % to deal with missing data
-                                temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
+                                temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']);
                                 fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                 dat                     = ft_read_neuralynx_interp(fname);
                                 
@@ -92,10 +92,10 @@ else
                                 Stage                   = [];
                                 trialnr                 = [];
                                 
-                                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
+                                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset,2)
                                     
                                     ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) * hdr.Fs);
-                                    idx = find(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime * hdr.Fs >= ss,1,'first');
+                                    idx = find(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime >= ss,1,'first');
                                     es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(idx) * hdr.Fs);
                                     
                                     if ~isempty(es) % && (es - ss) * hdr_micro.Fs < 4 %% find a way to check for Paul's data
@@ -144,11 +144,11 @@ else
                                 Offset                          = ones(size(Endsample)) * (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad(imarker)) * hdr.Fs;
                                 cfgtemp                         = [];
                                 cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
-                                cfgtemp.trl(:,4)                = 1:size(cfgtemp.trl,1); 
-                                cfgtemp.trl(:,5)                = trialnr;
-                                cfgtemp.trl(:,6)                = idir; 
-                                cfgtemp.trl(:,7)                = Stage;
-                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr.nSamples,:); % so not to read before BOF or after EOFs
+                                cfgtemp.trl(:,4)                = 1:size(cfgtemp.trl,1); % try to find trials that are missing aftewards
+                                cfgtemp.trl(:,5)                = trialnr; % try to find trials that are missing afterwards
+                                cfgtemp.trl(:,6)                = idir; % try to find trials that are missing afterwards
+                                cfgtemp.trl(:,7)                = Stage; % add hypnogram stage
+                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr_micro.nSamples,:); % so not to read before BOF or after EOFs
                                 
                                 cfgtemp.dataset                 = fname{1};
                                 filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat_filt);
@@ -165,7 +165,7 @@ else
                                 end
                                 filedat{ifile}                  = ft_resampledata(cfgtemp,filedat{ifile});
                                 
-                                % same label over files
+                                % label to make them equal over files
                                 filedat{ifile}.label{1}         = cfg.LFP.channel{ifile};
                                 
                                 % flag for averaging
@@ -189,11 +189,13 @@ else
             end % idir
             
             % concatinate data of different datasets (over trials)
-            LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker_macro)});
+            dat_macro{ipart}{imarker} = ft_appenddata([],dirdat_macro{find(hasmarker_macro)});
+            dat_micro{ipart}{imarker} = ft_appenddata([],dirdat_micro{find(hasmarker_micro)});
             clear dirdat*
             
             % add samplerate
-            LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+            dat_micro{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+            dat_macro{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
             
         end % imarker
         
@@ -201,5 +203,5 @@ else
 end
 
 if savedat
-    save(fname_out,'LFP','-v7.3');
+    save(fname_out,'dat_micro','dat_macro','-v7.3');
 end
