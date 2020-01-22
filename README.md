@@ -59,7 +59,7 @@ EpiCode is organized as follows:
 ## Limitations and considerations
 
  * Use at your own risk.
- * The code is under heavy development, so but will hopefully stabilize over time.
+ * The code is under heavy development, and will be (but will hopefully stabilize over time).
  * The code is aimed specifically at analysing intercranial data that is recorded from epileptic patients over the course of presurgical evaluation. 
  * No data is or will ever be shared through this repository. 
 
