@@ -1,4 +1,4 @@
-function [t] = plotHypnogram(config,MuseStruct)
+function plotHypnogram(config,MuseStruct)
 
 % loop over different parts, i.e. lists of directories
 for ipart = 1 : size(MuseStruct,2)
@@ -77,7 +77,6 @@ for ipart = 1 : size(MuseStruct,2)
             endindx             = endsindx(1);
             t.endtime(i)        = t.starttime(endindx);
             t(endindx,:)        = [];
-            t.duration(i)       = t.endtime(i) - t.starttime(endindx);
         end
         i = i + 1;
     end

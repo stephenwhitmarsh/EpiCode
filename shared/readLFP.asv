@@ -1,4 +1,4 @@
-function [dat_micro, dat_macro] = readLFP(cfg,MuseStruct,force,savedat)
+function [LFP] = readLFP(cfg,MuseStruct,force,savedat)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,23 +58,70 @@ else
             for idir = 1:length(MuseStruct{ipart})
                 if isfield(MuseStruct{ipart}{idir},'markers')
                     if isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
-                        if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'offset')
+                        if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
                             
-%                             % select MICRO files
-%                             micro_filenrs = [];
-%                             for ifile = 1 : size(MuseStruct{ipart}{idir}.filenames,2)
-%                                 for ilabel = 1 : size(cfg.labels.micro,2)
-%                                     if ~isempty(strfind(MuseStruct{ipart}{idir}.filenames{ifile},cfg.labels.micro{ilabel}))
-%                                         filenrs       = [micro_filenrs, ifile];
-% %                                         microlabel{ifile}   = cfg.labels.micro{ilabel};
-%                                     end
-%                                 end
-%                             end
-                            
-                            for ifile = 1 : length(cfg.LFP.channel,2)
+                            % create trial segmentation common to resampled
+                            % data
+                            Startsample             = [];
+                            Endsample               = [];                            
+                            Stage                   = [];
+                            Offset                  = [];
+                            trialnr                 = [];
+                            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
+
+                                ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) * cfg.LFP.resamplefs);
+                                idx =  find(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime * cfg.LFP.resamplefs >= ss,1,'first');
+                                es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(idx) * cfg.LFP.resamplefs);
+
+                                if ~isempty(es) % && (es - ss) * hdr_micro.Fs < 4 %% find a way to check for Paul's data
+
+                                    Startsample(ievent) = ss + cfg.epoch.toi{imarker}(1) * hdr.Fs - cfg.epoch.pad(imarker) * cfg.LFP.resamplefs;
+                                    Endsample(ievent)   = es + cfg.epoch.toi{imarker}(2) * hdr.Fs + cfg.epoch.pad(imarker) * cfg.LFP.resamplefs;
+                                    Offset(ievent)      = (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad(imarker)) * cfg.LFP.resamplefs;
+                                    trialnr(ievent)     = ievent;
+                                    Stage(ievent)       = -1;
+
+                                    % find overlap with hypnogram markers
+                                    for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
+                                        if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
+                                            for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime,2)
+                                                y1 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i) * hdr.Fs;
+                                                y2 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i) * hdr.Fs;
+                                                if (y1 < ss) && (ss < y2)
+                                                    fprintf('Found "%s" overlapping with "%s" : adding to trialinfo: ',cfg.name{imarker},cell2mat(hyplabel));
+                                                    switch cell2mat(hyplabel)
+                                                        case 'PHASE_1'
+                                                            fprintf('%d\n',1);
+                                                            Stage(ievent) = 1;
+                                                        case 'PHASE_2'
+                                                            fprintf('%d\n',2);
+                                                            Stage(ievent) = 2;
+                                                        case 'PHASE_3'
+                                                            fprintf('%d\n',3);
+                                                            Stage(ievent) = 3;
+                                                        case 'REM'
+                                                            fprintf('%d\n',4);
+                                                            Stage(ievent) = 4;
+                                                        case 'AWAKE'
+                                                            fprintf('%d\n',0);
+                                                            Stage(ievent) = 0;
+                                                        case 'NO_SCORE'
+                                                            fprintf('%d\n',0);
+                                                            Stage(ievent) = 0;
+                                                        otherwise
+                                                            error('Unexpected label name in Hypnogram\n');
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end % ~isempty(es)
+                            end
+   
+                            % loop over files
+                            for ifile = 1 : size(cfg.LFP.channel,2)
                                 
-                                % to deal with missing data
-                                temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']);
+                                temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                 fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                 dat                     = ft_read_neuralynx_interp(fname);
                                 
@@ -85,75 +132,6 @@ else
                                 dat_filt                = ft_preprocessing(cfgtemp,dat);
                                 clear dat
                                 
-                                % create Fieldtrip trl
-                                hdr                     = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name));
-                                Startsample             = [];
-                                Endsample               = [];
-                                Stage                   = [];
-                                trialnr                 = [];
-                                
-                                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).offset,2)
-                                    
-                                    ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) * hdr.Fs);
-                                    idx = find(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime >= ss,1,'first');
-                                    es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(idx) * hdr.Fs);
-                                    
-                                    if ~isempty(es) % && (es - ss) * hdr_micro.Fs < 4 %% find a way to check for Paul's data
-                                        
-                                        Startsample(ievent) = ss + cfg.epoch.toi{imarker}(1) * hdr.Fs - cfg.epoch.pad(imarker) * hdr.Fs;
-                                        Endsample(ievent)   = es + cfg.epoch.toi{imarker}(2) * hdr.Fs + cfg.epoch.pad(imarker) * hdr.Fs;
-                                        trialnr(ievent)     = ievent;
-                                        Stage(ievent)       = -1;
-                                        
-                                        % find overlap with hypnogram markers
-                                        for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
-                                            if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
-                                                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime,2)
-                                                    y1 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i) * hdr.Fs;
-                                                    y2 = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i) * hdr.Fs;
-                                                    if (y1 < ss) && (ss < y2)
-                                                        fprintf('Found "%s" overlapping with "%s" : adding to trialinfo: ',cfg.name{imarker},cell2mat(hyplabel));
-                                                        switch cell2mat(hyplabel)
-                                                            case 'PHASE_1'
-                                                                fprintf('%d\n',1);
-                                                                Stage(ievent) = 1;
-                                                            case 'PHASE_2'
-                                                                fprintf('%d\n',2);
-                                                                Stage(ievent) = 2;
-                                                            case 'PHASE_3'
-                                                                fprintf('%d\n',3);
-                                                                Stage(ievent) = 3;
-                                                            case 'REM'
-                                                                fprintf('%d\n',4);
-                                                                Stage(ievent) = 4;
-                                                            case 'AWAKE'
-                                                                fprintf('%d\n',0);
-                                                                Stage(ievent) = 0;
-                                                            case 'NO_SCORE'
-                                                                fprintf('%d\n',0);
-                                                                Stage(ievent) = 0;
-                                                            otherwise
-                                                                error('Unexpected label name in Hypnogram\n');
-                                                        end
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end % ~isempty(es)
-                                end
-                                Offset                          = ones(size(Endsample)) * (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad(imarker)) * hdr.Fs;
-                                cfgtemp                         = [];
-                                cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
-                                cfgtemp.trl(:,4)                = 1:size(cfgtemp.trl,1); % try to find trials that are missing aftewards
-                                cfgtemp.trl(:,5)                = trialnr; % try to find trials that are missing afterwards
-                                cfgtemp.trl(:,6)                = idir; % try to find trials that are missing afterwards
-                                cfgtemp.trl(:,7)                = Stage; % add hypnogram stage
-                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr_micro.nSamples,:); % so not to read before BOF or after EOFs
-                                
-                                cfgtemp.dataset                 = fname{1};
-                                filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat_filt);
-                                clear dat_filt
-                                
                                 % downsample data and correct baseline
                                 cfgtemp                         = [];
                                 cfgtemp.resamplefs              = cfg.LFP.resamplefs;
@@ -163,9 +141,23 @@ else
                                     cfgtemp.demean              = 'yes';
                                     cfgtemp.baselinewindow      = cfg.LFP.baselinewindow{imarker};
                                 end
-                                filedat{ifile}                  = ft_resampledata(cfgtemp,filedat{ifile});
+                                filedat{ifile}                  = ft_resampledata(cfgtemp,dat_filt);
                                 
-                                % label to make them equal over files
+                                % create Fieldtrip trl
+                                cfgtemp                         = [];
+                                cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
+                                cfgtemp.trl(:,4)                = trialnr; 
+                                cfgtemp.trl(:,6)                = idir; 
+                                cfgtemp.trl(:,7)                = Stage;
+                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat_filt.trial{1}),:); % so not to read before BOF or after EOFs
+                                
+                                cfgtemp.dataset                 = fname{1};
+                                filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat_filt);
+                                clear dat_filt
+                                
+
+                                
+                                % same label over files
                                 filedat{ifile}.label{1}         = cfg.LFP.channel{ifile};
                                 
                                 % flag for averaging
@@ -178,7 +170,23 @@ else
                                 
                             end
 
-                            % concatinate channels
+                            % remove effect of rounding errors that cause differences
+                            % in data length and trialnr between macro and micro.
+                            minlength = inf;
+                            
+                            triallist = filedat{1}.trialinfo(:,1);
+                            for i = 2 : size(filedat,2)
+                                triallist = intersect(triallist,filedat{i}.trialinfo(:,1));
+                            end
+                            
+                            for i = 1 : size(filedat,2)
+                                cfgtemp         = [];
+                                cfgtemp.trials  = triallist';
+                                filedat{i}      = ft_selectdata(cfgtemp,filedat{i});
+                                filedat{i}      = rmfield(filedat{i},'cfg');
+                            end                    
+%                             
+                            % concatinate channels 
                             cfgtemp                             = [];
                             cfgtemp.keepsampleinfo              = 'no';
                             dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
@@ -189,13 +197,11 @@ else
             end % idir
             
             % concatinate data of different datasets (over trials)
-            dat_macro{ipart}{imarker} = ft_appenddata([],dirdat_macro{find(hasmarker_macro)});
-            dat_micro{ipart}{imarker} = ft_appenddata([],dirdat_micro{find(hasmarker_micro)});
+            LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker_macro)});
             clear dirdat*
             
             % add samplerate
-            dat_micro{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
-            dat_macro{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+            LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
             
         end % imarker
         
@@ -203,5 +209,5 @@ else
 end
 
 if savedat
-    save(fname_out,'dat_micro','dat_macro','-v7.3');
+    save(fname_out,'LFP','-v7.3');
 end

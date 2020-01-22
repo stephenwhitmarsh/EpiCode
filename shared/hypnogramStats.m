@@ -126,8 +126,8 @@ else
                 if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
                     for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).clock,2)
                         ihyp = ihyp + 1;
-                        hypnogram.starttime(ihyp)   = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i);
-                        hypnogram.endtime(ihyp)     = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i);
+                        hypnogram.starttime(ihyp)   = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).clock(i);
+                        hypnogram.endtime(ihyp)     = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).clock(i);
                         hypnogram.duration(ihyp)    = hypnogram.endtime(ihyp) - hypnogram.starttime(ihyp);
                         hypnogram.part(ihyp)        = ipart;
                         hypnogram.directory(ihyp)   = {MuseStruct{ipart}{idir}.directory};
@@ -165,7 +165,7 @@ else
     for imarker = markerlist
         
         for i = 0 : 4
-            totaldur(i+1) = sum(hypnogram.duration(hypnogram.stage == i));
+            totaldur(i+1) = seconds(sum(hypnogram.duration(hypnogram.stage == i)));
         end
         for i = 0 : 4
             totalsum(i+1) = sum(marker.stage == i & strcmp(marker.name, cfg.name{imarker}));

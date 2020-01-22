@@ -76,8 +76,8 @@ else
         
         fprintf('Loading timestamps from: %s. This can take a while...',hdr_fname);
         timestamps                  = ft_read_data(hdr_fname,'timestamp','true'); fprintf('Done\n'); % take the first concatinated file to extract the timestamps
-%         timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
-%             [timestamps, ~, ~] = Nlx2MatCSC_v3(hdr_fname, [0 0 0 1 0]);
+%       timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
+%       [timestamps, ~, ~] = Nlx2MatCSC_v3(hdr_fname, [0 0 0 1 0]);
 
         % read spiketimes of clusters
         fprintf('Loading spike data from: %s\n',hdr_fname);
@@ -132,6 +132,8 @@ else
         % create index list for hypnogram
         hypstageindx = ones(1,hdr.nSamples) * -1;
         for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
+            
+            % counter to keep track of nr. of samples per directory/file
             dirOnset = 0;
             
             for idir = 1:length(MuseStruct{ipart})
@@ -149,8 +151,8 @@ else
                 end
                 
                 for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime,2)
-                    y1 = int16(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
-                    y2 = int16(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
+                    y1 = int64(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__START__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
+                    y2 = int64(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel),'__END__']).synctime(i) * hdr.Fs + hdr.nSamplesPre);
                     switch cell2mat(hyplabel)
                         case 'PHASE_1'
                             disp('Found Stage 1');
@@ -172,6 +174,7 @@ else
                             hypstageindx((y1:y2)+dirOnset) = 0;                            
                     end
                 end
+                
                 % assuming all channels have same length in samples
                 temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{1},'.ncs']));
                 hdr_ncs     = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name));                          

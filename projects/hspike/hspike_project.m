@@ -46,13 +46,16 @@ for ipatient = 1
     [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, false);
     
     % automatically detect spikes
-    detectSpikes(config{ipatient}, MuseStruct_micro, MuseStruct_macro, true, true);
+    detectSpikes(config{ipatient}, MuseStruct, true, true);
+    
+    % read hypnogram as table
+    [PSGtable] = PSG2table(config{ipatient}, MuseStruct, true);
     
     % plot hypnogram
     plotHypnogram(config{ipatient},MuseStruct);
     
     % events vs. hypnogram statistics and plots
-    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, false);
+    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, true);
      
     % calculate TFR over all files, per part
     TFR = doTFRcontinuous(config{ipatient}, MuseStruct, true);
@@ -73,7 +76,7 @@ for ipatient = 1
     [stats_smooth, stats_binned] = spikeratestatsEvents(config{ipatient}, SpikeRaw, SpikeTrials, false);
     
     % read spike-clustering results, and label according to polysomnograpy
-    [SpikeRawPSG, SpikeTrialsPSG] = readSpykingCircusPSG(config{ipatient}, MuseStruct, true, 'all');
+    [SpikeRawPSG, SpikeTrialsPSG] = readSpykingCircusPSG(config{ipatient}, MuseStruct, false, 'all');
     
     % computer spike stats, and label according to polysomnography
     [SpikeStatsPSG] = spikeratestatsPSG(config{ipatient}, SpikeRawPSG, SpikeTrialsPSG, hypnogram, true);

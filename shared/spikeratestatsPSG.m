@@ -31,7 +31,7 @@ else
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'ISI_all_data_sleepstage.pdf']),'-r600');
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_all_data_sleepstage.pdf']),'-r600');
         close all
         
         % ISI per stage
@@ -53,126 +53,158 @@ else
             cfgtemp.bins                            = [0 : 0.0005 : 0.100]; %cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
             cfgtemp.param                           = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
             stats{ipart}.isi_sleepstage{istage+2}   = ft_spike_isi(cfgtemp,SpikeTrials{ipart});
-            
-            %     RPV = (length(find(ISI < 2)) / length(ISI)) * 100
-            
-            % plot ISI for each cluster
-            fig = figure; hold;
-            for itemp = 1 : length(SpikeRaw{ipart}.label)
-                subplot(round(length(SpikeRaw{ipart}.label)/2+0.5),2,itemp);
-                bar(stats{ipart}.isi_sleepstage{istage+2}.time*1000,stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:),1);
-                [y,indx] = max(stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:));
-                title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi_sleepstage{istage+2}.time(indx)*1000));
-                xlabel('ms');
-                axis tight
-                set(gca,'fontsize',6);
-            end
-            
-            % print to file
-            fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
-            set(fig,'PaperOrientation','landscape');
-            set(fig,'PaperUnits','normalized');
-            set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstage',num2str(istage),'.pdf']),'-r600');
-            close all
+             
+%             %     RPV = (length(find(ISI < 2)) / length(ISI)) * 100
+%             
+%             % plot ISI for each cluster
+%             fig = figure; hold;
+%             for itemp = 1 : length(SpikeRaw{ipart}.label)
+%                 subplot(round(length(SpikeRaw{ipart}.label)/2+0.5),2,itemp);
+%                 bar(stats{ipart}.isi_sleepstage{istage+2}.time*1000,stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:),1);
+%                 [y,indx] = max(stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:));
+%                 title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi_sleepstage{istage+2}.time(indx)*1000));
+%                 xlabel('ms');
+%                 axis tight
+%                 set(gca,'fontsize',6);
+%             end
+%             
+%             % print to file
+%             fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
+%             set(fig,'PaperOrientation','landscape');
+%             set(fig,'PaperUnits','normalized');
+%             set(fig,'PaperPosition', [0 0 1 1]);
+%             print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstage',num2str(istage),'.pdf']),'-r600');
+%             close all
             
             % create stats for each cluster x stage
             for itemp = 1 : length(SpikeTrials{ipart}.label)
                 
-                trials = find(SpikeTrials{ipart}.trialinfo.stage == istage);
-                i = 1;
                 clear trialavg_isi
-                isi_pooled = [];
+                isi_intraburst    = [];
+                isi_interburst    = [];
+                trials      = find(SpikeTrials{ipart}.trialinfo.stage == istage);
+                i           = 1;
+                isi_pooled  = [];
+                
                 for itrial = trials'
+                    
+                    % get timings and ISIs per trial                    
                     indx            = SpikeTrials{ipart}.trial{itemp} == itrial;
-                    
-%                   figure;
-%                   acf(SpikeTrials{ipart}.time{itemp}(indx)',length(SpikeTrials{ipart}.time{itemp}(indx))-1)     
-                    
-%                   isi             = stats{ipart}.isi_all_trials.isi{itemp}(indx); % same as below
-
                     t               = SpikeTrials{ipart}.time{itemp}(indx);
-                    isi             = diff(t);
-                    x               = isi(1:end-1) ./ isi(2:end);
-                    trialavg_isi(i) = nanmean(isi);
-                    trialfreq(i)    = 1/nanmean(isi);
-                    spikecount(i)   = size(isi,2);
-       
-                    % according to Ponce-Alvarez, 2010
-                    CV2_instant     = 2 * abs(x - 1) ./ (x + 1);
-                    CV2_trial(i)    = mean(CV2_instant);
-                    LV_instant      = 3 * (x - 1).^2 ./ (x + 1).^2;
-                    LV_trial(i)     = mean(LV_instant);
-                    IR_instant      = abs(log(x));
-                    IR_trial(i)     = mean(IR_instant);
-                    SI_instant      = 0.5 * log((x+1).^2/(4*x)); 
-                    SI_trial(i)     = mean(SI_instant);          
+                    isi_all         = diff(t);
+
+                    % counting bursts as in Colder et al. 1996, & Staba et al. 2002                     
+                    indx            = isi_all < 0.01; % ask Stephane
+                    burstindx       = zeros(size(indx));
+                    toremove        = [];
                     
-                    % pool ISIS over trials for pooled CV
-                    isi_pooled      = [isi_pooled, isi];
+                    for burstlength = 1 : 10
+                        
+                        pattern     = [false, true(1,burstlength), false];
+                        bindx       = strfind(indx, pattern);
+                        
+                        if ~isempty(bindx)
+                            burstindx(bindx+1) = burstlength; % note +1 because pattern starts with zero
+                            fprintf('Found %d bursts of length %d in trial %d \n',length(bindx), burstlength, itrial);
+
+                            % add to list to correct for bursts
+                            for ii = 1 : size(bindx,2)
+                                
+                                % remove all but first spike (at +1)
+                                toremove = [toremove, bindx(ii)+2:bindx(ii)+2+burstlength-1]; % burstlength = 1; 0 1 0 -> 0 1 x 0
+                                
+                                % add ISI within bursts
+                                isi_intraburst = [isi_intraburst, isi_all(bindx(ii)+1:bindx(ii)+burstlength-1)];
+                                
+                            end
+                        end
+                        
+                        stats{ipart}.burstsum{itemp}{istage+2}(itrial, burstlength) = sum(length(bindx));  
+                        
+                    end
+                    
+                    % concatinate ISIs, but only between bursts (not within)
+                    t_interburst               = t(burstindx ~= 0);
+                    isi_interburst             = [isi_interburst, diff(t_interburst)];
+                    
+                    % remove subsequenct APs after first AP of a burst
+                    t_corrected                 = t;
+                    t_corrected(toremove)       = [];
+                    isi_corrected               = diff(t_corrected);
+
+                    % basic descriptives
+                    trialavg_isi(i)             = nanmean(isi_all);
+                    trialfreq(i)                = 1/nanmean(isi_all);
+                    spikecount(i)               = size(t,2);
+                    spikecount_corrected(i)     = size(t_corrected,2);
+
+                    % according to Ponce-Alvarez, 2010
+                    x                           = isi_corrected(1:end-1) ./ isi_corrected(2:end);                    
+                    CV2_instant                 = 2 * abs(x - 1) ./ (x + 1);
+                    CV2_trial(i)                = mean(CV2_instant);
+                    
+                    x                           = isi_intraburst(1:end-1) ./ isi_intraburst(2:end);                    
+                    CV2_intraburst_instant      = 2 * abs(x - 1) ./ (x + 1);
+                    CV2_intraburst_trial(i)     = mean(CV2_intraburst_instant);
+                    
+                    LV_instant                  = 3 * (x - 1).^2 ./ (x + 1).^2;
+                    LV_trial(i)                 = mean(LV_instant);
+                    IR_instant                  = abs(log(x));
+                    IR_trial(i)                 = mean(IR_instant);
+                    SI_instant                  = 0.5 * log((x+1).^2/(4*x)); 
+                    SI_trial(i)                 = mean(SI_instant);          
+                    
+                    % concatinate ISIS over trials, corrected for bursts: for pooled CV
+                    isi_pooled                  = [isi_pooled, isi_corrected];
+                    
                     % calculate CV per trial for averged CV
-                    CV_trial(i)     = nanstd(isi) / nanmean(isi); 
+                    CV_trial(i)                 = nanstd(isi_corrected) / nanmean(isi_corrected); 
                     
                     % short vs long ISIs for BI
-                    short(i)        = sum(isi < 0.005);
-                    long(i)         = sum(isi < 0.100);
+                    short(i)                    = sum(isi_all < 0.010);
+                    long(i)                     = sum(isi_all < 0.100);
                     
-                    % bursts as in Colder et al. 1996, & Staba et al. 2002 
-                    bursts(i)       = 0;
-                    for ii = 1 : length(isi)-3
-                        if isi(ii) > 0.02 && (isi(ii+1) + isi(ii+2) < 0.02) && isi(ii+3) > 0.02
-                            bursts(i) = bursts(i) + 1;
-                        end
-                    end
+
                     i = i + 1;
                 end
                 
                 % get stats per sleep stage, over trials
-                stats{ipart}.mean_freq{itemp}(istage+2)     = nanmean(trialfreq);
-                stats{ipart}.stdev_freq{itemp}(istage+2)    = nanstd(trialfreq);
-                stats{ipart}.median_freq{itemp}(istage+2)   = nanmedian(trialfreq);
-                stats{ipart}.mean_isi{itemp}(istage+2)      = nanmean(trialavg_isi);
-                stats{ipart}.var_isi{itemp}(istage+2)       = nanstd(isi_pooled)^2;
-                stats{ipart}.burstindex{itemp}(istage+2)    = sum(short) / sum(long);
-                stats{ipart}.bursts{itemp}(istage+2)        = sum(bursts);
-                stats{ipart}.FF{itemp}(istage+2)            = nanstd(spikecount)^2 / nanmean(spikecount);
-                stats{ipart}.CV_pooled{itemp}(istage+2)     = nanstd(isi_pooled)   / nanmean(isi_pooled);
-                stats{ipart}.CV_trialavg{itemp}(istage+2)   = nanmean(CV_trial);
-                stats{ipart}.CV2_trialavg{itemp}(istage+2)  = nanmean(CV2_trial);
-                stats{ipart}.LV_trialavg{itemp}(istage+2)   = nanmean(LV_trial);
-                stats{ipart}.IR_trialavg{itemp}(istage+2)   = nanmean(IR_trial);
-                stats{ipart}.SI_trialavg{itemp}(istage+2)   = nanmean(SI_trial);
+                stats{ipart}.isi_intraburst{itemp}{istage+2}            = isi_intraburst;
+                stats{ipart}.isi_interburst{itemp}{istage+2}            = isi_interburst;
+                stats{ipart}.burst_trialsum{itemp}(istage+2,:)          = sum(stats{ipart}.burstsum{itemp}{istage+2});
+                stats{ipart}.mean_freq{itemp}(istage+2)                 = nanmean(trialfreq);
+                stats{ipart}.stdev_freq{itemp}(istage+2)                = nanstd(trialfreq);
+                [N,EDGES]                                               = histcounts(trialfreq,'BinWidth',0.5);
+                [M,I]                                                   = max(N);
+                stats{ipart}.mode_freq{itemp}(istage+2)                 = mean(EDGES(I:I+1));
+                stats{ipart}.mean_isi{itemp}(istage+2)                  = nanmean(trialavg_isi);
+                stats{ipart}.var_isi{itemp}(istage+2)                   = nanstd(isi_pooled)^2;
+                stats{ipart}.burstindex{itemp}(istage+2)                = sum(short) / sum(long);
+                stats{ipart}.FF{itemp}(istage+2)                        = nanstd(spikecount_corrected)^2 / nanmean(spikecount_corrected);
+                stats{ipart}.spikecount{itemp}(istage+2)                = sum(spikecount);  
+                stats{ipart}.spikecount_corrected{itemp}(istage+2)      = sum(spikecount_corrected);  
+                stats{ipart}.CV_pooled{itemp}(istage+2)                 = nanstd(isi_pooled)   / nanmean(isi_pooled);
+                stats{ipart}.CV_trialavg{itemp}(istage+2)               = nanmean(CV_trial);
+                stats{ipart}.CV2_trialavg{itemp}(istage+2)              = nanmean(CV2_trial);
+                stats{ipart}.CV2_intraburst_trialavg{itemp}(istage+2)   = nanmean(CV2_intraburst_trial);                
+                stats{ipart}.LV_trialavg{itemp}(istage+2)               = nanmean(LV_trial);
+                stats{ipart}.IR_trialavg{itemp}(istage+2)               = nanmean(IR_trial);
+                stats{ipart}.SI_trialavg{itemp}(istage+2)               = nanmean(SI_trial);
             end
         end
         
         
         % plot ISI descriptives combined over sleep stages
-        fig = figure; hold;
-        C = linspecer(5); % colormap for nr. of sleep stages
+%         fig = figure; hold;
+
         
-        % plot ISI for each cluster
-        for itemp = 1 : length(SpikeRaw{ipart}.label)
-            subplot(round(length(SpikeRaw{ipart}.label)/2+0.5),2,itemp); hold;
-            
-            for istage = 0 : 4 %unique(SpikeTrials{ipart}.trialinfo.stage)' % to remove -1, i.e. all non-scored
-                
-                bar(stats{ipart}.isi_sleepstage{istage+2}.time*1000,stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:),1,'FaceColor',C(istage+1,:),'FaceAlpha',0.5);
-                [y,indx] = max(stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:));
-                title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi_sleepstage{istage+2}.time(indx)*1000));
-                xlabel('ms');
-                axis tight
-                set(gca,'fontsize',6);
-            end
-            legend({'W','Stage 1','Stage 2','Stage 3','REM'},'location','eastoutside');
-        end
-        
-        % print to file
-        fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
-        set(fig,'PaperOrientation','landscape');
-        set(fig,'PaperUnits','normalized');
-        set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.pdf']),'-r600');
-        %         print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.png']),'-r600');
+%         % print to file
+%         fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
+%         set(fig,'PaperOrientation','landscape');
+%         set(fig,'PaperUnits','normalized');
+%         set(fig,'PaperPosition', [0 0 1 1]);
+%         print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.pdf']),'-r600');
+%         %         print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.png']),'-r600');
         close all
         
         % plot hypnogram with spikerate for each cluster
@@ -180,7 +212,9 @@ else
         for itemp = 1 : length(SpikeTrials{ipart}.label)
             
             fig = figure;
-            subplot(3,1,1); hold;
+            C = linspecer(5); % colormap for nr. of sleep stages
+
+            subplot(4,1,1); hold;
             
             X = [];
             Y = [];
@@ -226,7 +260,7 @@ else
             xl = xlim;
             ylim([0 6]);
             
-            % create stats for each trail (no sepation on stages)
+            % calculate firingrate over time (here: trials)
             for itrial = 1 : height(SpikeTrials{ipart}.trialinfo)
                 indx    = SpikeTrials{ipart}.trial{itemp} == itrial;
                 isi     = stats{ipart}.isi_all_trials.isi{itemp}(indx);
@@ -235,14 +269,13 @@ else
             end
             
             % plot spikerates
-            subplot(3,1,2);
+            subplot(4,1,2);
             x = (SpikeTrials{ipart}.trialinfo.starttime + (SpikeTrials{ipart}.trialinfo.endtime - SpikeTrials{ipart}.trialinfo.starttime)/2);
             plot(x,log(stats{ipart}.trialavg_freq{itemp}));
             xlim(xl); ylabel('Log( Firingrate(Hz) )');
             title('Firingrate');
             
             % plot stats
-            subplot(3,1,3);
             stageindx = [zeros(1,length(stats{ipart}.isi_sleepstage{1}.isi{1})) ...
                 ones(1, length(stats{ipart}.isi_sleepstage{1}.isi{2})), ...
                 ones(1, length(stats{ipart}.isi_sleepstage{1}.isi{3}))*2, ...
@@ -256,7 +289,7 @@ else
                 stats{ipart}.isi_sleepstage{1}.isi{5}, ...
                 stats{ipart}.isi_sleepstage{1}.isi{6}];
             
-            subplot(3,4,9);
+            subplot(4,6,13);
             hold on
             errorbar(1:6,stats{ipart}.mean_freq{itemp},zeros(size(stats{ipart}.stdev_freq{itemp})),stats{ipart}.stdev_freq{itemp},'k','LineStyle','none');
             bar(1:6,stats{ipart}.mean_freq{itemp});
@@ -264,32 +297,108 @@ else
             axis tight
             box off
             xlim([1.5,6.5]); % remove x, aka 'rest of data'
-            title('Freq+SD');
+            title('Mean Freq+SD');
             
-            subplot(3,4,10);
-            bar(1:6,stats{ipart}.fano_isi{itemp});
-            set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+            subplot(4,6,14);
+            plot(1:5,stats{ipart}.stdev_freq{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
             axis tight
             box off
-            xlim([1.5,6.5]); % remove x, aka 'rest of data'
-            title('FANO');
+            title('SD Freq');
             
-            subplot(3,4,11);
-            bar(1:6,stats{ipart}.CV_isi{itemp});
-            set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+            subplot(4,6,15);
+            hold on
+            plot(1:5,stats{ipart}.mode_freq{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
             axis tight
             box off
-            xlim([1.5,6.5]); % remove x, aka 'rest of data'
-            title('CV1');
-            
-            subplot(3,4,12);
-            bar(1:6,stats{ipart}.burstindex{itemp});
-            set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+            title('Mode Freq');           
+ 
+            subplot(4,6,16);
+            plot(1:5,stats{ipart}.CV_pooled{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
             axis tight
             box off
-            xlim([1.5,6.5]); % remove x, aka 'rest of data'
-            title('BI');
+            title('CV pooled');
             
+            subplot(4,6,17);
+            plot(1:5,stats{ipart}.CV_trialavg{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+            axis tight
+            box off
+            title('CV trialavg');   
+      
+            subplot(4,6,18);
+            plot(1:5,stats{ipart}.CV2_trialavg{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+            axis tight
+            box off
+            title('CV2 trialavg');    
+            
+            subplot(4,6,19);
+            plot(1:5,stats{ipart}.CV2_intraburst_trialavg{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+            axis tight
+            box off
+            title('CV2 intraburst trialavg');                
+            
+            subplot(4,6,20);
+            plot(1:5,stats{ipart}.burstindex{itemp}(2:end),'.-');
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+            axis tight
+            box off
+            title('Burstindex');                
+            
+            subplot(4,6,21); hold;
+            for iburstnr = 1:3
+                plot(1:5,(stats{ipart}.burst_trialsum{itemp}(2:end,iburstnr) ./ stats{ipart}.spikecount_corrected{itemp}(2:end)') * 100','.-');
+            end
+            legend({'2','3','4'});
+            set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+            ylabel('% bursts of total spikes');
+            axis tight
+            box off
+            title('# bursts / # spikes');
+            box off
+
+            subplot(4,6,22); hold; 
+            for istage = 0 : 4 
+                bar(stats{ipart}.isi_sleepstage{istage+2}.time*1000,stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:),1,'FaceColor',C(istage+1,:),'FaceAlpha',0.5);            
+            end
+            [~, I] = max(stats{ipart}.isi_sleepstage{1}.avg(itemp,:));
+            title(sprintf('ISI, max(W): %.1fms',stats{ipart}.isi_sleepstage{istage+2}.time(I)*1000));   
+            legend({'W','1','2','3','R'},'location','best','fontsize',4);
+            ylabel('PDF');  
+            xlabel('ms');
+            axis tight
+            box off
+
+            subplot(4,6,23); hold;
+            for istage = 0 : 4
+                histogram(stats{ipart}.isi_intraburst{itemp}{istage+2}*1000,'Normalization','pdf','FaceColor',C(istage+1,:),'EdgeColor','None','BinWidth',0.25);
+            end
+            [N,EDGES] = histcounts(stats{ipart}.isi_intraburst{itemp}{istage+2}*1000,1000);
+            [~, I] = max(N);
+            title(sprintf('ISI_intra, max(W): %.1fms', (EDGES(I)+EDGES(I+1))/2));   
+            axis tight
+            xlabel('ms');
+            ylabel('PDF');           
+            legend({'W','1','2','3','R'},'location','best','fontsize',4);
+            box off
+
+            subplot(4,6,24); hold;
+            for istage = 0 : 4
+                histogram(stats{ipart}.isi_interburst{itemp}{istage+2}*1000,1000,'Normalization','pdf','FaceColor',C(istage+1,:),'EdgeColor','None','BinWidth',10);
+            end
+            [N,EDGES] = histcounts(stats{ipart}.isi_interburst{itemp}{istage+2}*1000,1000);
+            [~, I] = max(N);
+            title(sprintf('ISI_inter, max(W): %.1fms', (EDGES(I)+EDGES(I+1))/2));   
+            legend({'W','1','2','3','R'},'location','best','fontsize',4);
+            ylabel('PDF');
+            xlabel('ms');
+            xlim([0, 1000]);
+            box off
+  
             % print to file
             fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
             set(fig,'PaperOrientation','landscape');
@@ -297,15 +406,13 @@ else
             set(fig,'PaperPosition', [0 0 1 1]);
             print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-cluster',num2str(itemp),'_hypnospikestats.pdf']),'-r600');
             close all
-            
         end
-        
         
         %% plot hypnogram with spikerate for all clusters at once, per night (part)
         Hypnogram_part = Hypnogram(Hypnogram.part == ipart,:);
         
         fig = figure;
-        subplot(3,1,1); hold;
+        subplot(4,1,1); hold;
         
         X = [];
         Y = [];
@@ -354,7 +461,7 @@ else
         
         
         % plot spikerates
-        subplot(3,1,2); hold;
+        subplot(4,1,2); hold;
         C = linspecer(length(SpikeTrials{ipart}.label));
         
         x = (SpikeTrials{ipart}.trialinfo.starttime + (SpikeTrials{ipart}.trialinfo.endtime - SpikeTrials{ipart}.trialinfo.starttime)/2);
@@ -389,57 +496,89 @@ else
         for itemp = 1 : length(SpikeTrials{ipart}.label)
             mean_freq   = [mean_freq; stats{ipart}.mean_freq{itemp}];
             stdev_freq  = [stdev_freq; stats{ipart}.stdev_freq{itemp}];
-            fano        = [fano; stats{ipart}.fano_isi{itemp}];
-            CV          = [CV; stats{ipart}.CV_isi{itemp}];
-            BI          = [BI; stats{ipart}.burstindex{itemp}];
             X           = [X; 1,2,3,4,5,6];
         end
         
         colormap(C);
-        
-        subplot(3,4,9);
-        b = bar(X',mean_freq','FaceColor','flat','Edgecolor','none');
-        for k = 1:size(mean_freq,1)
-            b(k).CData = k;
+        subplot(4,6,13); hold on  
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.mean_freq{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
         end
-        set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
         axis tight
         box off
         title('Freq');
-        xlim([1.5,6.5]); % remove x, aka 'rest of data'
         
-        subplot(3,4,10);
-        b = bar(X',fano','FaceColor','flat','Edgecolor','none');
-        for k = 1:size(fano',1)
-            b(k).CData = k;
+        subplot(4,6,14); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.stdev_freq{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
         end
-        set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
         axis tight
         box off
-        title('Fano');
-        xlim([1.5,6.5]); % remove x, aka 'rest of data'
+        title('SD Freq');  
         
-        subplot(3,4,11);
-        b = bar(X',CV','FaceColor','flat','Edgecolor','none');
-        for k = 1:size(CV',1)
-            b(k).CData = k;
+        subplot(4,6,15); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.mode_freq{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
         end
-        set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
         axis tight
         box off
-        title('CV');
-        xlim([1.5,6.5]); % remove x, aka 'rest of data'
-        
-        subplot(3,4,12);
-        b = bar(X',BI','FaceColor','flat','Edgecolor','none');
-        for k = 1:size(BI',1)
-            b(k).CData = k;
+        title('Mode Freq');
+            
+        subplot(4,6,16); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.CV_pooled{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
         end
-        set(gca,'Xtick', 1 : 6,'Xticklabels',{'x','W','1','2','3','R'},'TickDir','out');
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');        
+        ylabel('normalized');
         axis tight
         box off
-        title('BI');
-        xlim([1.5,6.5]); % remove x, aka 'rest of data'
+        title('CV pooled');
+        
+        subplot(4,6,17); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.CV_trialavg{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
+        end
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');        
+        ylabel('normalized');
+        axis tight
+        box off
+        title('CV trialavg');
+        
+        subplot(4,6,18); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.CV2_trialavg{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
+        end
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
+        axis tight
+        box off
+        title('CV2 trialavg');
+        
+        subplot(4,6,19); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(stats{ipart}.burstindex{itemp}(2:end),'norm'),'.-','color',C(itemp,:));
+        end
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
+        axis tight
+        box off
+        title('Burstindex');
+        
+        subplot(4,6,20); hold on;
+        for itemp = 1 : length(SpikeTrials{ipart}.label)
+            plot(1:5,normalize(sum(stats{ipart}.burst_trialsum{itemp}(2:end,:),2) ./ stats{ipart}.spikecount_corrected{itemp}(2:end)'),'.-','color',C(itemp,:));
+        end
+        set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
+        ylabel('normalized');
+        axis tight
+        box off
+        title('# bursts / # spikes');
         
         % print to file
         fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
