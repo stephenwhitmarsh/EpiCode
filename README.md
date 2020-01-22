@@ -11,7 +11,7 @@
     \/__________/\/_/    \/_________/\/____________/\/_________/     \/_____/ \/__________/   
 
 
-_MATLAB code to analyze projects of the research group:_
+Analysis scripts and functions for projects of the research group:_
  _"Cellular excitability and neuronal network dynamics", ICM, Paris_
 
 ## Goals
