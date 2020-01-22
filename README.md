@@ -11,8 +11,8 @@
     \/__________/\/_/    \/_________/\/____________/\/_________/     \/_____/ \/__________/   
 
 
-Analysis scripts and functions for projects of the research group:_
- _"Cellular excitability and neuronal network dynamics", ICM, Paris_
+Analysis scripts and functions for projects of the research group:
+_"Cellular excitability and neuronal network dynamics", ICM, Paris_
 
 ## Goals
  * Make analyses easier by providing high-level functions for common analyses on our data.
