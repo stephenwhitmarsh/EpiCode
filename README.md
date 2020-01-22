@@ -15,7 +15,7 @@ _MATLAB code to analyze projects of the research group:_
  _"Cellular excitability and neuronal network dynamics", ICM, Paris_
 
 ## Goals
- * Make analyses easier by providing high-level functions for common analyses on our data
+ * Make analyses easier by providing high-level functions for common analyses on our data.
  * Increase robustness and automatization of our analyses.
  * Develop and share code and analysis pipelines that are common between research projects.
  * Make analysis pipelines and parameters visible and comparable between projects.
