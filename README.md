@@ -11,11 +11,12 @@
     \/__________/\/_/    \/_________/\/____________/\/_________/     \/_____/ \/__________/   
 
 
-_MATLAB code to analyze projects of the research group:_
- _"Cellular excitability and neuronal network dynamics", ICM, Paris_
+Analysis scripts for projects of the research group:
+_"Cellular excitability and neuronal network dynamics"_
+_ICM, Paris_
 
 ## Goals
-
+ * Make analyses easier by providing high-level functions for common analyses on our data.
  * Increase robustness and automatization of our analyses.
  * Develop and share code and analysis pipelines that are common between research projects.
  * Make analysis pipelines and parameters visible and comparable between projects.
@@ -59,7 +60,7 @@ EpiCode is organized as follows:
 ## Limitations and considerations
 
  * Use at your own risk.
- * The code is under heavy development, so but will hopefully stabilize over time.
+ * The code is under heavy development, and will be (but will hopefully stabilize over time).
  * The code is aimed specifically at analysing intercranial data that is recorded from epileptic patients over the course of presurgical evaluation. 
  * No data is or will ever be shared through this repository. 
 
