@@ -1,5 +1,5 @@
 
-%% Setting parameters DTX project Paul Boudin
+%% Setting parameters DTX project Paul Baudin
 
 function [config] = dtx_setparams(config)
 
@@ -13,14 +13,16 @@ elseif isunix
     rootpath_data       = '/network/lustre/iss01/epimicro/rodents/raw/DTX-raw/';
     os                  = 'unix'; 
 elseif ispc
-    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
+    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\DTX-PROBE\Analyses_Paul';
     rootpath_data       = '\\lexport\iss01.epimicro\rodents\raw\DTX-raw\';
     os                  = 'windows';
 else
     error('Platform not supported')
 end
 
-% Rodent 1
+
+
+%% Rodent 1
 config{1}.os                        = os;
 config{1}.name                      = {'SlowWave','Seizure','InterIctal'};
 config{1}.prefix                    = 'DTX5-';
