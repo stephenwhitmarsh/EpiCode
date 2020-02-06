@@ -5,11 +5,13 @@
 % requires bandpassFilter.m from Mario
 % requires releaseDec2015 from Neuralynx website
 
+restoredefaultpath
 addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
 addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/pnh/
 addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip/
 ft_defaults
 
+restoredefaultpath
 addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
 addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\pnh
 addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
@@ -31,7 +33,7 @@ for ipatient =  1 : 3
     
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-    [MuseStruct_micro, MuseStruct_macro]    = MuseMarkers_update_filepath(config{ipatient},MuseStruct_micro, MuseStruct_macro);
+%     [MuseStruct_micro, MuseStruct_macro]    = MuseMarkers_update_filepath(config{ipatient},MuseStruct_micro, MuseStruct_macro);
     
 %     % read LFP data
     [dat_micro, dat_macro] = readLFP(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
@@ -55,6 +57,182 @@ for ipatient =  1 : 3
 %     [spike_LFP]  = spikeLFP(config{ipatient},SpikeRaw, false);
     
 end
+
+%% revised calculation of unit firing charateristics
+        
+for ipatient = 1 : 3
+    
+    [SpikeRaw{ipatient},~]  = readSpykingCircus(config{ipatient}, MuseStruct_micro, false);
+    
+    % get samplerate
+    temp                    = dir(fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'all_data_',config{ipatient}.circus.channel{1},'.ncs']));
+    hdr_fname               = fullfile(temp(1).folder,temp(1).name);
+    hdr                     = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+    
+    % redefine trials to 60-second windows for ISI
+    window = 60;
+    cfgtemp                 = [];
+    cfgtemp.trl             = (1 : hdr.Fs*window : hdr.nSamples)';
+    cfgtemp.trl(:,2)        = cfgtemp.trl(:,1) + hdr.Fs*window;
+    cfgtemp.trl(:,3)        = zeros(size(cfgtemp.trl,1),1);
+    %         cfgtemp.trl             = cfgtemp.trl(1:end-1,:);
+    %         cfgtemp.trl             = cfgtemp.trl(randi(size(cfgtemp.trl,1),1000,1),:);    % select a subsection, to reduce memoryload
+    cfgtemp.trlunit         = 'samples';
+    cfgtemp.hdr             = hdr;
+    SpikeTrials{ipatient}   = ft_spike_maketrials(cfgtemp,SpikeRaw{ipatient});
+end
+
+% ISI descriptives
+clear stats
+for ipatient = 1 : 3    
+    
+     for itemp = 1 : length(SpikeTrials{ipatient}.label)
+        
+        clear trialavg_isi
+        isi_intraburst    = [];
+        isi_interburst    = [];
+        i           = 1;
+        isi_pooled  = [];
+        
+        for itrial = unique(SpikeTrials{ipatient}.trial{itemp})
+            % get timings and ISIs per trial
+            indx            = SpikeTrials{ipatient}.trial{itemp} == itrial;
+            t               = SpikeTrials{ipatient}.time{itemp}(indx);
+            isi_all         = diff(t);
+            
+            % counting bursts as in Colder et al. 1996, & Staba et al. 2002
+            indx            = isi_all < 0.01; % ask Stephane
+            burstindx       = zeros(size(indx));
+            toremove        = [];
+            
+            for burstlength = 1 : 10
+                
+                pattern     = [false, true(1,burstlength), false];
+                bindx       = strfind(indx, pattern);
+                
+                if ~isempty(bindx)
+                    burstindx(bindx+1) = burstlength; % note +1 because pattern starts with zero
+                    fprintf('Found %d bursts of length %d in trial %d \n',length(bindx), burstlength, itrial);
+                    
+                    % add to list to correct for bursts
+                    for ii = 1 : size(bindx,2)
+                        
+                        % remove all but first spike (at +1)
+                        toremove = [toremove, bindx(ii)+2:bindx(ii)+2+burstlength-1]; % burstlength = 1; 0 1 0 -> 0 1 x 0
+                        
+                        % add ISI within bursts
+                        isi_intraburst = [isi_intraburst, isi_all(bindx(ii)+1:bindx(ii)+burstlength-1)];
+                        
+                    end
+                end
+                
+                stats{ipatient}.burstsum{itemp}(itrial, burstlength) = sum(length(bindx));
+                
+            end
+            
+            % concatinate ISIs, but only between bursts (not within)
+            t_interburst               = t(burstindx ~= 0);
+            isi_interburst             = [isi_interburst, diff(t_interburst)];
+            
+            % remove subsequenct APs after first AP of a burst
+            t_corrected                 = t;
+            t_corrected(toremove)       = [];
+            isi_corrected               = diff(t_corrected);
+            
+            % basic descriptives
+            trialavg_isi(i)             = nanmean(isi_all);
+            trialfreq(i)                = 1/nanmean(isi_all);
+            spikecount(i)               = size(t,2);
+            spikecount_corrected(i)     = size(t_corrected,2);
+            
+            % according to Ponce-Alvarez, 2010
+            x                           = isi_corrected(1:end-1) ./ isi_corrected(2:end);
+            CV2_instant                 = 2 * abs(x - 1) ./ (x + 1);
+            CV2_trial(i)                = mean(CV2_instant);
+            
+            x                           = isi_intraburst(1:end-1) ./ isi_intraburst(2:end);
+            CV2_intraburst_instant      = 2 * abs(x - 1) ./ (x + 1);
+            CV2_intraburst_trial(i)     = mean(CV2_intraburst_instant);
+            
+            LV_instant                  = 3 * (x - 1).^2 ./ (x + 1).^2;
+            LV_trial(i)                 = mean(LV_instant);
+            IR_instant                  = abs(log(x));
+            IR_trial(i)                 = mean(IR_instant);
+            SI_instant                  = 0.5 * log((x+1).^2/(4*x));
+            SI_trial(i)                 = mean(SI_instant);
+            
+            % concatinate ISIS over trials, corrected for bursts: for pooled CV
+            isi_pooled                  = [isi_pooled, isi_corrected];
+            
+            % calculate CV per trial for averged CV
+            CV_trial(i)                 = nanstd(isi_corrected) / nanmean(isi_corrected);
+            
+            % short vs long ISIs for BI
+            short(i)                    = sum(isi_all < 0.010);
+            long(i)                     = sum(isi_all < 0.100);
+            
+            i = i + 1;
+        end
+        
+        % get stats per sleep stage, over trials
+        stats{ipatient}.isi_intraburst{itemp}            = isi_intraburst;
+        stats{ipatient}.isi_interburst{itemp}            = isi_interburst;
+        stats{ipatient}.burst_trialsum{itemp}            = sum(stats{ipatient}.burstsum{itemp});
+        stats{ipatient}.mean_freq{itemp}                 = nanmean(trialfreq);
+        stats{ipatient}.stdev_freq{itemp}                = nanstd(trialfreq);
+        [N,EDGES]                                        = histcounts(trialfreq,'BinWidth',0.5);
+        [M,I]                                            = max(N);
+        stats{ipatient}.mode_freq{itemp}                 = mean(EDGES(I:I+1));
+        stats{ipatient}.mean_isi{itemp}                  = nanmean(trialavg_isi);
+        stats{ipatient}.var_isi{itemp}                   = nanstd(isi_pooled)^2;
+        stats{ipatient}.burstindex{itemp}                = sum(short) / sum(long);
+        stats{ipatient}.FF{itemp}                        = nanstd(spikecount_corrected)^2 / nanmean(spikecount_corrected);
+        stats{ipatient}.spikecount{itemp}                = sum(spikecount);
+        stats{ipatient}.spikecount_corrected{itemp}      = sum(spikecount_corrected);
+        stats{ipatient}.CV_pooled{itemp}                 = nanstd(isi_pooled)   / nanmean(isi_pooled);
+        stats{ipatient}.CV_trialavg{itemp}               = nanmean(CV_trial);
+        stats{ipatient}.CV2_trialavg{itemp}              = nanmean(CV2_trial);
+        stats{ipatient}.CV2_intraburst_trialavg{itemp}   = nanmean(CV2_intraburst_trial);
+        stats{ipatient}.LV_trialavg{itemp}               = nanmean(LV_trial);
+        stats{ipatient}.IR_trialavg{itemp}               = nanmean(IR_trial);
+        stats{ipatient}.SI_trialavg{itemp}               = nanmean(SI_trial);
+        stats{ipatient}.burstperc{itemp}                 = sum(stats{ipatient}.burst_trialsum{itemp}) / stats{ipatient}.spikecount{itemp} * 100;
+        
+    end
+end
+
+tbl = table;
+iunit = 1;
+for ipatient =  1 : 3
+    for itemp = 1 : length(SpikeTrials{ipatient}.label)
+        tbl.nodule(iunit)   = ipatient;
+        tbl.unit(iunit)     = itemp;
+        tbl.CV(iunit)       = stats{ipatient}.CV_trialavg{itemp};
+        tbl.CV2(iunit)      = stats{ipatient}.CV2_trialavg{itemp};
+        tbl.BI(iunit)       = stats{ipatient}.burstindex{itemp};
+        tbl.BP(iunit)       = stats{ipatient}.burstperc{itemp};
+        tbl.FR(iunit)       = stats{ipatient}.mean_freq{itemp};
+        tbl.FF(iunit)       = stats{ipatient}.FF{itemp};
+        tbl.template_pt(iunit) = SpikeRateStats{ipatient}.template_pt(itemp);
+        tbl.template_tp(iunit) = SpikeRateStats{ipatient}.template_tp(itemp);
+        iunit               = iunit + 1;
+    end
+end
+
+filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.xlsx');
+writetable(tbl,filename)
+filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.csv');
+writetable(tbl,filename)
+
+
+
+
+
+
+
+
+
+
 
 
 %% extra spike stats cf Pierre
@@ -92,10 +270,16 @@ for ipatient =  1 : 3
             i = 1;
             for itrial                 = unique(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.trial{itemp})
                 trialindx              = SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.trial{itemp} == itrial;
-                trialavg_isi_bl(i)     = nanmean(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp}(trialindx));
+                isi                    = SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp}(trialindx);     
+                trialavg_isi_bl(i)     = nanmean(isi);               
+                trail_CV_bl(i)         = nanstd(isi) / nanmean(isi);                
+                x                      = isi(1:end-1) ./ isi(2:end);
+                trial_CV2_bl(i)        = nanmean(2 * abs(x - 1) ./ (x + 1));
+                trial_spikecount_bl(i) = sum(trialindx);                
                 i = i + 1;
             end
             i = 1;
+            trial_CV = [];
             for itrial                 = unique(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.trial{itemp})
                 trialindx              = SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.trial{itemp} == itrial;
                 trialavg_isi_ac(i)     = nanmean(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp}(trialindx));
@@ -111,21 +295,25 @@ for ipatient =  1 : 3
             SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = 1 / nanmean(trialavg_isi_bl);
             SpikeRateStats{ipatient}.freq_ac(ipattern,itemp)    = 1 / nanmean(trialavg_isi_ac);
             
-            SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = stats_bar{ipatient}.clusterstat{ilabel}{itemp}.bl.avg;  
+%             SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = stats_bar{ipatient}.clusterstat{ilabel}{itemp}.bl.avg;  
             
             SpikeRateStats{ipatient}.fano_all(ipattern,itemp)   = nanstd(trialavg_isi_all)^2 / nanmean(trialavg_isi_all);
-            SpikeRateStats{ipatient}.fano_bl(ipattern,itemp)    = nanstd(trialavg_isi_bl)^2  / nanmean(trialavg_isi_bl);
+% %             SpikeRateStats{ipatient}.fano_bl(ipattern,itemp)    = nanstd(trialavg_isi_bl)^2  / nanmean(trialavg_isi_bl);
             SpikeRateStats{ipatient}.fano_ac(ipattern,itemp)    = nanstd(trialavg_isi_ac)^2  / nanmean(trialavg_isi_ac);
             SpikeRateStats{ipatient}.cv_all(ipattern,itemp)     = nanstd(trialavg_isi_all)   / nanmean(trialavg_isi_all);
-            SpikeRateStats{ipatient}.cv_bl(ipattern,itemp)      = nanstd(trialavg_isi_bl)    / nanmean(trialavg_isi_bl);
+%             SpikeRateStats{ipatient}.cv_bl(ipattern,itemp)      = nanstd(trialavg_isi_bl)    / nanmean(trialavg_isi_bl);
             SpikeRateStats{ipatient}.cv_ac(ipattern,itemp)      = nanstd(trialavg_isi_ac)    / nanmean(trialavg_isi_ac);
             SpikeRateStats{ipatient}.BI_all(ipattern,itemp)     = sum(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi{itemp} < 0.005) / sum(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi{itemp} < 0.100);
             SpikeRateStats{ipatient}.BI_bl(ipattern,itemp)      = sum(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp} < 0.005)  / sum(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp} < 0.100);
             SpikeRateStats{ipatient}.BI_ac(ipattern,itemp)      = sum(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp} < 0.005)  / sum(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp} < 0.100);
             
+            SpikeRateStats{ipatient}.cv_bl(ipattern,itemp)      = nanmean(trail_CV_bl);
+            SpikeRateStats{ipatient}.cv2_bl(ipattern,itemp)     = nanmean(trial_CV2_bl);
+            SpikeRateStats{ipatient}.fano_bl(ipattern,itemp)    = nanstd(trial_spikecount_bl)^2  / nanmean(trial_spikecount_bl);     
         end
     end
 end
+
 
 tbl = table;
 iunit = 1;
@@ -181,6 +369,10 @@ for ipatient =  1 : 3
             tbl.FA_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(2,itemp);
             tbl.ES_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(3,itemp);
             
+            tbl.SW_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(1,itemp);
+            tbl.FA_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(2,itemp);
+            tbl.ES_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(3,itemp);
+            
             tbl.SW_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(1,itemp);
             tbl.FA_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(2,itemp);
             tbl.ES_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(3,itemp);
@@ -202,6 +394,10 @@ for ipatient =  1 : 3
             
             tbl.FA_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(1,itemp);
             tbl.ES_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(2,itemp);
+            
+            tbl.FA_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(1,itemp);
+            tbl.ES_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(2,itemp);
+            
             tbl.FA_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(1,itemp);
             tbl.ES_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(2,itemp);
             
@@ -217,9 +413,9 @@ for ipatient =  1 : 3
 end
 
 
-filename = fullfile(config{ipatient}.datasavedir,'spikestats_new_again_again.xlsx');
+filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.xlsx');
 writetable(tbl,filename)
-filename = fullfile(config{ipatient}.datasavedir,'spikestats.csv');
+filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.csv');
 writetable(tbl,filename)
 
 

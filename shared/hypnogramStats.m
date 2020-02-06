@@ -8,6 +8,7 @@ function [MuseStruct, marker, hypnogram] = hypnogramStats(cfg, MuseStruct, force
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+warning('off','all');
 
 fname = fullfile(cfg.datasavedir,sprintf('%shypnogramStats.mat',cfg.prefix));
 

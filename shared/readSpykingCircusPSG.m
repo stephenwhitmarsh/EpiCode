@@ -201,7 +201,10 @@ else
             % clock time of each segment, based on first file of part            
             SpikeTrials{ipart}.trialinfo.starttime(i)   = MuseStruct{ipart}{1}.starttime + (i-1) * seconds(cfg.hyp.spikewindow);
             SpikeTrials{ipart}.trialinfo.endtime(i)     = MuseStruct{ipart}{1}.starttime + (i) * seconds(cfg.hyp.spikewindow);
-  
+            
+            % add trialnr., for later stratification
+            SpikeTrials{ipart}.trialinfo.trialnr(i)     = i;
+
         end
     end
     

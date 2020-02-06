@@ -1,4 +1,4 @@
-function writeSpykingCircusParameters_parts(cfg)
+function writeSpykingCircusParameters(cfg)
 
 fname_params_default        = 'SpykingCircusDefaultSettings.params'; % in path, i.e. in /shared scripts
 
@@ -6,9 +6,9 @@ for ipart = 1 : size(cfg.directorylist,2)
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p',num2str(ipart)];
-    filename        = [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.labels.micro{1},'.params'];
+    filename        = [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1},'.params'];
     fname_params    = fullfile(cfg.datasavedir,subjdir,partdir,filename);
-    fname_prb       = [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.labels.micro{1},'.prb'];
+    fname_prb       = [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1},'.prb'];
     
     % read Spyking-Circus params file
     ini = IniConfig();

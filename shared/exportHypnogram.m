@@ -153,7 +153,7 @@ for iMicroMed = 1 : size(micromed_hypnfilelist,1)
         if ~isempty(NL_title)
             NL_title = [NL_title, '\n'];
         end
-        NL_title            = [NL_title, cfgtemp.dataset];
+        NL_title            = [NL_title, l(channelnr).name];
         
         % resample neuralynx to same samplerate of micromed data
         cfgtemp             = [];
@@ -251,8 +251,8 @@ for iMicroMed = 1 : size(micromed_hypnfilelist,1)
         
         for label = unique(hyp_file.stage)'
             disp(['Working on ',label{1}]);
+            
             if strcmp(label,'BEGIN')
-                
                 MuseStruct.markers.StartHypnogram.synctime       = hyp_file.startSec(strcmp(hyp_file.stage, label))';     % replace space with underscore
                 MuseStruct.markers.StartHypnogram.trialnum       = 0;  
                 MuseStruct.markers.StartHypnogram.classgroupid   = '+3';
@@ -273,12 +273,14 @@ for iMicroMed = 1 : size(micromed_hypnfilelist,1)
                 MuseStruct.markers.EndHypnogram.color           = 'black';
             end
             
+            
             % for those markers that have a duration
             if hyp_file.startSec(strcmp(hyp_file.stage, label)) ~= hyp_file.endSec(strcmp(hyp_file.stage, label))
                 
-                % concatinates with existing markers. Duplicates are
-                % removed by writeMuseMarker
-                
+                % replace markers in markerfile
+                MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime = [];
+                MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime = [];
+            
                 try
                     MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime       = [MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime, hyp_file.startSec(strcmp(hyp_file.stage, label))'];     % replace space with underscore           
                 catch
@@ -331,9 +333,9 @@ for iMicroMed = 1 : size(micromed_hypnfilelist,1)
                         MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).color = 'black';
                 end
                 
-                % round to 2 decimals
-                 MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime =  round(MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime,2);
-                 MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime =  round(MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime,2);
+                % round to 0 decimals
+                MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime  =  round(MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime);
+                MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime    =  round(MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime);
                 
                 % remove duplicates 
                 [~,IA,IC] = unique([MuseStruct.markers.([strrep(label{1},' ','_'), '__START__']).synctime; MuseStruct.markers.([strrep(label{1},' ','_'), '__END__']).synctime]','rows');
@@ -387,7 +389,7 @@ for iMicroMed = 1 : size(micromed_hypnfilelist,1)
         fname_out = fullfile(neuralynx_dirlist(idir).folder,neuralynx_dirlist(idir).name,'Events.mrk');
 %         fname_out = fullfile(cfg.hyp.markerdir,[neuralynx_dirlist(idir).name,'.mrk']);
         
-        writeMuseMarkers(MuseStruct, fname_out);
+        writeMuseMarkerfile(MuseStruct, fname_out);
         hypi = hypi + 1;
     end
     

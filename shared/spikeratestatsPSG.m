@@ -54,28 +54,6 @@ else
             cfgtemp.param                           = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
             stats{ipart}.isi_sleepstage{istage+2}   = ft_spike_isi(cfgtemp,SpikeTrials{ipart});
              
-%             %     RPV = (length(find(ISI < 2)) / length(ISI)) * 100
-%             
-%             % plot ISI for each cluster
-%             fig = figure; hold;
-%             for itemp = 1 : length(SpikeRaw{ipart}.label)
-%                 subplot(round(length(SpikeRaw{ipart}.label)/2+0.5),2,itemp);
-%                 bar(stats{ipart}.isi_sleepstage{istage+2}.time*1000,stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:),1);
-%                 [y,indx] = max(stats{ipart}.isi_sleepstage{istage+2}.avg(itemp,:));
-%                 title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats{ipart}.isi_sleepstage{istage+2}.time(indx)*1000));
-%                 xlabel('ms');
-%                 axis tight
-%                 set(gca,'fontsize',6);
-%             end
-%             
-%             % print to file
-%             fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
-%             set(fig,'PaperOrientation','landscape');
-%             set(fig,'PaperUnits','normalized');
-%             set(fig,'PaperPosition', [0 0 1 1]);
-%             print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstage',num2str(istage),'.pdf']),'-r600');
-%             close all
-            
             % create stats for each cluster x stage
             for itemp = 1 : length(SpikeTrials{ipart}.label)
                 
@@ -164,7 +142,6 @@ else
                     short(i)                    = sum(isi_all < 0.010);
                     long(i)                     = sum(isi_all < 0.100);
                     
-
                     i = i + 1;
                 end
                 
@@ -190,21 +167,10 @@ else
                 stats{ipart}.LV_trialavg{itemp}(istage+2)               = nanmean(LV_trial);
                 stats{ipart}.IR_trialavg{itemp}(istage+2)               = nanmean(IR_trial);
                 stats{ipart}.SI_trialavg{itemp}(istage+2)               = nanmean(SI_trial);
+                stats{ipart}.nrwindows{itemp}(istage+2)                 = sum(SpikeTrials{ipart}.trialinfo.stage == istage);
             end
         end
         
-        
-        % plot ISI descriptives combined over sleep stages
-%         fig = figure; hold;
-
-        
-%         % print to file
-%         fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
-%         set(fig,'PaperOrientation','landscape');
-%         set(fig,'PaperUnits','normalized');
-%         set(fig,'PaperPosition', [0 0 1 1]);
-%         print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.pdf']),'-r600');
-%         %         print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-ISI_FT_sleepstages_combined.png']),'-r600');
         close all
         
         % plot hypnogram with spikerate for each cluster
@@ -261,7 +227,7 @@ else
             ylim([0 6]);
             
             % calculate firingrate over time (here: trials)
-            for itrial = 1 : height(SpikeTrials{ipart}.trialinfo)
+            for itrial = SpikeTrials{ipart}.trialinfo.trialnr'
                 indx    = SpikeTrials{ipart}.trial{itemp} == itrial;
                 isi     = stats{ipart}.isi_all_trials.isi{itemp}(indx);
                 stats{ipart}.trialavg_isi{itemp}(itrial) = nanmean(isi);
@@ -300,11 +266,11 @@ else
             title('Mean Freq+SD');
             
             subplot(4,6,14);
-            plot(1:5,stats{ipart}.stdev_freq{itemp}(2:end),'.-');
+            bar(1:5,stats{ipart}.nrwindows{itemp}(2:end));
             set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
             axis tight
             box off
-            title('SD Freq');
+            title('Nr. windows');
             
             subplot(4,6,15);
             hold on
@@ -315,11 +281,11 @@ else
             title('Mode Freq');           
  
             subplot(4,6,16);
-            plot(1:5,stats{ipart}.CV_pooled{itemp}(2:end),'.-');
+            plot(1:5,stats{ipart}.FF{itemp}(2:end),'.-');
             set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');
             axis tight
             box off
-            title('CV pooled');
+            title('Fano Factor');
             
             subplot(4,6,17);
             plot(1:5,stats{ipart}.CV_trialavg{itemp}(2:end),'.-');
@@ -351,7 +317,7 @@ else
             
             subplot(4,6,21); hold;
             for iburstnr = 1:3
-                plot(1:5,(stats{ipart}.burst_trialsum{itemp}(2:end,iburstnr) ./ stats{ipart}.spikecount_corrected{itemp}(2:end)') * 100','.-');
+                plot(1:5,(stats{ipart}.burst_trialsum{itemp}(2:end,iburstnr) ./ stats{ipart}.spikecount{itemp}(2:end)') * 100','.-');
             end
             legend({'2','3','4'});
             set(gca,'Xtick', 1 : 5,'Xticklabels',{'W','1','2','3','R'},'TickDir','out');

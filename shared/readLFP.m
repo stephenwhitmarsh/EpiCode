@@ -33,7 +33,7 @@ if exist(fname_out,'file') && force == false
     fprintf('*** Loading precomputed LFP data ***\n');
     fprintf('************************************\n\n');
     
-    load(fname_out,'dat_micro','dat_macro');
+    load(fname_out,'LFP');
     
 else
     fprintf('********************************\n');

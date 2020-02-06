@@ -85,30 +85,16 @@ for ipatient = 2
     [LFP] = readLFP(config{ipatient}, MuseStruct, false, false);
 end
      
-figure; hold;
-for ichan = 1 : size(LFP{1}{1}.label,1)
-    subplot(size(LFP{1}{1}.label,1),1,ichan);
+    
+
+    figure; 
     cfg = [];
-    cfg.channel = ichan;
     ft_singleplotER(cfg,LFP{1}{1});
-end
-
-cfg = [];
-cfg.reref = 'yes';
-cfg.refmethod = 'bipolar';
-LFP_bipolar = ft_preprocessing(cfg,LFP{1}{1});
-
-figure; hold;
-for ichan = 1 : size(LFP_bipolar.label,1)
-    subplot(size(LFP_bipolar.label,1),1,ichan);
-    cfg = [];
-    cfg.channel = ichan;
-    ft_singleplotER(cfg,LFP_bipolar);
-end
     
     figure; hold;
     for ichan = 1 : size(LFP{1}{1}.label,1)
-        plot(LFP{1}{1}.time{1},mean(LFP{1}{1}.trial{1}));
+        plot(LFP{1}{1}.trial{1}LFP{1}{1}.trial{1});
+    
     end
     
     

@@ -13,13 +13,15 @@ for ipart = 1 : size(MuseStruct,2)
     % loop over directories
     for idir = 1 : size(MuseStruct{ipart},2)
         fprintf('Working on directory %d of %d\n',idir,size(MuseStruct{ipart},2));
-        try % some might be empty
-            mrknames = fieldnames(MuseStruct{ipart}{idir}.markers);
-            for imarker = 1 : numel(mrknames)
+        mrknames = fieldnames(MuseStruct{ipart}{idir}.markers);
+        
+        for imarker =  1 : numel(mrknames)
+            
+            if isfield(MuseStruct{ipart}{idir}.markers, mrknames{imarker})
                 
                 % if marker field doesn't exist yet, create it
                 if ~isfield(MuseStruct_append{ipart}.markers,(mrknames{imarker}))
-                    MuseStruct_append{ipart}.markers.(mrknames{imarker}) = MuseStruct{ipart}{idir}.markers.(mrknames{imarker});
+                    MuseStruct_append{ipart}.markers.(mrknames{imarker}) = [];
                 end
                 
                 % if marker.clock field doesn't exist yet, create it
@@ -27,16 +29,25 @@ for ipart = 1 : size(MuseStruct,2)
                     MuseStruct_append{ipart}.markers.(mrknames{imarker}).clock = [];
                 end
                 
+                % add directory
+                if ~isfield(MuseStruct_append{ipart}.markers.(mrknames{imarker}),'directory')
+                    MuseStruct_append{ipart}.markers.(mrknames{imarker}).directory = [];
+                end
+                
                 % append clock field
                 if isfield(MuseStruct{ipart}{idir}.markers.(mrknames{imarker}),'clock')
                     MuseStruct_append{ipart}.markers.(mrknames{imarker}).clock = ...
                         [MuseStruct_append{ipart}.markers.(mrknames{imarker}).clock, ...
                         MuseStruct{ipart}{idir}.markers.(mrknames{imarker}).clock];
+                    
+                    % add directory
+                    MuseStruct_append{ipart}.markers.(mrknames{imarker}).directory = ...
+                        [MuseStruct_append{ipart}.markers.(mrknames{imarker}).directory; ...
+                        repmat({MuseStruct{ipart}{idir}.directory}, size(MuseStruct{ipart}{idir}.markers.(mrknames{imarker}).clock,2), 1)];
                 end
-                
             end
-        catch
         end
+        
     end
     
     % remove empty markers
@@ -53,17 +64,20 @@ for ipart = 1 : size(MuseStruct,2)
     
     % concatinate markers
     fn = fieldnames(MuseStruct_append{ipart}.markers);
-    markerlabel = [];
-    starttime = [];
-    startsample = [];
+    markerlabel     = [];
+    starttime       = [];
+    startsample     = [];
+    directory       = [];
     for imarker = 1 : numel(fn)
         markerlabel     = [markerlabel;     repmat(convertCharsToStrings(fn{imarker}),numel(MuseStruct_append{ipart}.markers.(fn{imarker}).clock),1)];
         starttime       = [starttime;       MuseStruct_append{ipart}.markers.(fn{imarker}).clock'];
+        directory       = [directory;       MuseStruct_append{ipart}.markers.(fn{imarker}).directory];
+        
     end
     
     endtime = starttime; % same time if cant find end marker (below)
     
-    t = table(markerlabel,starttime,endtime);
+    t = table(markerlabel,starttime,endtime,directory);
     t = unique(t,'rows');
     t = sortrows(t,2);
     
@@ -71,13 +85,16 @@ for ipart = 1 : size(MuseStruct,2)
     i = 1;
     while i < height(t)
         if contains(t.markerlabel(i),'__START__')
+            indx                = find(contains(t.markerlabel,strcat(t.markerlabel{i}(1:end-9),'__END__')));
+            endindx             = find(t.starttime(indx) > t.starttime(i),1,'first');
+            if isempty(endindx)
+                disp('sdf')
+            end
             t.markerlabel(i)    = t.markerlabel{i}(1:end-9);
-            endsindx            = find(contains(t.markerlabel,strcat(t.markerlabel{i},'__END__')));
-            endsindx            = endsindx(endsindx > i);
-            endindx             = endsindx(1);
-            t.endtime(i)        = t.starttime(endindx);
-            t(endindx,:)        = [];
-            t.duration(i)       = t.endtime(i) - t.starttime(endindx);
+            t.endtime(i)        = t.starttime(indx(endindx));
+            t.duration(i)       = t.endtime(i) - t.starttime(indx(endindx));
+            t(indx(endindx),:)  = [];
+            
         end
         i = i + 1;
     end
@@ -105,7 +122,7 @@ for ipart = 1 : size(MuseStruct,2)
     maxlength       = max(hyp_endtime - hyp_starttime);
     
     %% plotting
-
+    
     h = figure;
     subplot(numel(unique(mrk_tbl.markerlabel))+1,1,1); hold;
     

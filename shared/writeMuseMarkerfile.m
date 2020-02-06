@@ -1,4 +1,4 @@
-function writeMuseMarkers(MuseStruct,fname)
+function writeMuseMarkerfile(MuseStruct,fname)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function writeMuseMarkers(MuseStruct)

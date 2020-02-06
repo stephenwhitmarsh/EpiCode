@@ -160,6 +160,7 @@ config{1}.stats.alpha               = 0.025;
 
 % You can replicate settings over subjects and only define the differences
 config{2}                           = config{1};
+config{2}.name                      = {'SpikeHaT1_1','SpikeDetect'};
 config{2}.prefix                    = '2718-'; % edit in code
 config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'; 'SpikeDetect','SpikeDetect'};   % start and end Muse marker
 
@@ -212,14 +213,14 @@ config{2}.directorylist{3}          = {'02718_2019-05-16_13-15',...
 config{2}.labels.micro              = {'mHaT1_8'};
 config{2}.labels.macro              = {'_HaT1_1','_HaT1_2','_HaT1_3'};
 
-config{2}.align.name                = {'Hspike','SpikeDetect'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{2}.align.name                = {'SpikeHaT1_1'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{2}.align.channel             = {'_HaT1_1','_HaT1_1'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{2}.align.abs                 = {'no','no'};
-config{2}.align.method              = {'crawlback','min'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+config{2}.align.method              = {'nearest','max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 config{2}.align.filter              = {'bp','bp'};
-config{2}.align.freq                = {[1, 10],[1, 40]};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
+config{2}.align.freq                = {[1, 40],[1, 40]};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
 config{2}.align.hilbert             = {'no','no'};
-config{2}.align.thresh              = [1, 0];
+config{2}.align.thresh              = [0, 0];
 config{2}.align.toiplot{1}          = [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 config{2}.align.toiactive{1}        = [-0.05,  0.150];                                         % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 config{2}.align.toibaseline{1}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
@@ -227,17 +228,22 @@ config{2}.align.toiplot{2}          = [-0.3,  0.7];                             
 config{2}.align.toiactive{2}        = [-0.05,  0.05];                                          % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 config{2}.align.toibaseline{2}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
-config{2}.spikedetect.LS            = 5;    % Left half-wave slope; default: 7
-config{2}.spikedetect.RS            = 5;    % Right half-wave slope; default: 7
-config{2}.spikedetect.TAMP          = 400;  % Total amplitude; default: 600
-config{2}.spikedetect.LD            = 1;    % Left half-wave duration; default = 10
-config{2}.spikedetect.RD            = 1;    % Right half-wave duration; default = 10
-config{2}.spikedetect.STDCoeff      = 4;    % Chebyshev inequality coefficient (distance from centre point or mean); default 4
-config{2}.spikedetect.SCALE         = 70;   % Scaling parameter
-config{2}.spikedetect.BlockSize     = 1;    % Data processing block size in minutes
-config{2}.spikedetect.TroughSearch  = 40;   % distance in ms to search for a trough on each side of a detected peak
-config{2}.spikedetect.FilterSpec    = [20; 50; 1; 35;];
+config{2}.hyp.micromedchannel       = 'HaT11';
+config{2}.hyp.markers               = {'SpikeHaT1_1','SpikeDetect'};
 
-config{2}.hyp.micromedchannel       = 'HaT1';
+config{2}.circus.channel            = {'mHaT1_1','mHaT1_2','mHaT1_3','mHaT1_4','mHaT1_5','mHaT1_6','mHaT1_7','mHaT1_8'};
+config{2}.circus.reref              = 'no';
+config{2}.circus.refchan            = 'mHaT1_1';
+config{2}.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'hspike', 'SpykingCircus');
+config{2}.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
+config{2}.circus.hpfreq             = 0; % even when not using
+config{2}.circus.postfix            = '-1'; % after using circus-gui-matlab's SAVE number
 
-
+config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4'};
+config{2}.LFP.hpfilter              = 'no';
+config{2}.LFP.hpfreq                = 1;
+config{2}.LFP.resamplefs            = 1000;
+config{2}.LFP.baseline              = 'yes';
+config{2}.LFP.baselinewindow{1}     = [-2, -1];
+config{2}.LFP.baselinewindow{2}     = [-2, -1];
+config{2}.LFP.slidestep             = [0.01];

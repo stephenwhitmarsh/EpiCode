@@ -1,21 +1,31 @@
+function [config] = pnh_setparams
 
-%% Setting parameters
-
-function [config] = pnh_setparams(config)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [config] = pnh_setparams
+%
+% This function outputs all the settings of a study, to be defined below
+%
+% Note the consideration of the operating system, because the pointers to
+% the file server is dealt with differently. This could be different for
+% you.
+%
+% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ismac
     error('Platform not supported')
 elseif isunix
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
     rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data';
-    os                  = 'unix'; 
 elseif ispc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
     rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data';
-    os                  = 'windows';
 else
     error('Platform not supported')
 end
+
+%% 
 
 % Patient 1, perivetricular heterotopia #1
 disp('setting parameters');
