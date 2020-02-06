@@ -121,9 +121,14 @@ else
                             % loop over files
                             for ifile = 1 : size(cfg.LFP.channel,2)
                                 
-                                temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
-                                fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
-                                dat                     = ft_read_neuralynx_interp(fname);
+                                %temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
+                                temp                    = dir_data(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}));
+                                datafile_extension      = temp.name{1}(end-3:end);
+                                
+                                if strcmp(datafile_extension, '.ncs') %is neuralynx
+                                    temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
+                                    fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+                                    dat                     = ft_read_neuralynx_interp(fname);
                                 
                                 % filter with FT
                                 cfgtemp                 = [];

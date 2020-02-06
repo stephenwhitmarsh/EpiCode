@@ -2,7 +2,7 @@
 %% Setting parameters DTX project Paul Baudin
 %The conversion from Deltamed to '.vhdr' loose infioramtion in the header. Do
 %not use the header created by ft_read_header, but the header saved with
-%the data (data_header, for each file) 
+%the data (data_header, for each file)
 
 function [config] = dtx_setparams_patientsLGI1(config)
 
@@ -13,7 +13,7 @@ if ismac
 elseif isunix
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
     rootpath_data       = '/network/lustre/iss01/epimicro/rodents/raw/DTX-raw/';
-    os                  = 'unix'; 
+    os                  = 'unix';
 elseif ispc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\Patients_LGI1\';
     rootpath_data       = '\\lexport\iss01.epimicro\rodents\raw\Patients_LGI1\';
@@ -23,7 +23,7 @@ else
 end
 
 datasavedir = fullfile(rootpath_analysis, 'data_for_scripts');
-imagesavedir = fullfile(rootpath_analysis); 
+imagesavedir = fullfile(rootpath_analysis);
 
 %% Patient 1
 %REVOIR CHANNEL ALIGNEMENT DE CE PREMIER ENREGISTREMENT
@@ -40,42 +40,36 @@ config{1}.datasavedir               = datasavedir;         % where to write data
 config{1}.imagesavedir              = imagesavedir;       % where to print images
 config{1}.labels.macro              = {'Fp2','F4','C4','P4','O2','F8','T4','T6','Fpz','Fz','Cz','Pz','Oz','Fp1','F3',...
     'C3','P3','O1','F7','T3','T5'};
-config{1}.labels.emg                = {'EMG1+','EMG2+'}; 
+config{1}.labels.emg                = {'EMG1+','EMG2+'};
 config{1}.directorylist{1}          = {'EEG_129'};
-%config{1}.directorylist{2}          = {'EEG_131'};
+config{1}.inversedata = -1;
 
-labelsize1 = length(config{1}.labels.macro);
-labelsize2 = length(config{1}.labels.emg);
-channels_total = {};
-for i=1:labelsize1
-    channels_total{i}=config{1}.labels.macro{i};
-end
-for i = 1:labelsize2
-    channels_total{i+labelsize1}=config{1}.labels.emg{i};
-end
+config{1}.preproc_eeg.channel     = config{1}.labels.macro';
+config{1}.preproc_eeg.reref       = 'yes';
+config{1}.preproc_eeg.rerefmethod = 'avg';
+config{1}.preproc_eeg.refchannel  = config{1}.labels.macro';
+config{1}.preproc_eeg.bsfilter    = 'yes';
+config{1}.preproc_eeg.bsfreq      = [49 51];
 
-%Reref, notch, inverser avant align
-% config{1}.preproc.channel     = channels_total';
-% config{1}.preproc.reref       = 'yes';
-% config{1}.preproc.rerefmethod = 'avg';
-% config{1}.preproc.refchannel  = config{1}.labels.macro';
-% config{1}.preproc.bsfilter    = 'yes';
-% config{1}.preproc.bsfreq      = [49 51];
-% config{1}.preproc.inversedata = -1; 
+config{1}.preproc_emg.channel     = cfg.labels.emg'; 
+config{1}.preproc_emg.hpfilter    = 'yes';
+config{1}.preproc_emg.hpfreq      = 10;
+config{1}.preproc_emg.bsfilter    = 'yes';
+config{1}.preproc_emg.bsfreq      = [49 51];
 
- config{1}.align.name                = {'SlowWave'};
- config{1}.align.channel             = {'C4'};       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
- config{1}.align.flip                = {'no'};
- config{1}.align.abs                 = {'no'};
- config{1}.align.method              = {'max'};      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
- config{1}.align.filter              = {'lp'};
- config{1}.align.freq                = {5};          % lowpass filter freq to smooth peak detection (Hz)
- config{1}.align.hilbert             = {'no'};
- config{1}.align.thresh              = [0];
- config{1}.align.toiplot{1}          = [-1,  1];     % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
- config{1}.align.toiactive{1}        = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
- config{1}.align.toibaseline{1}      = [-1, -0.5];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
+config{1}.align.name                = {'SlowWave'};
+config{1}.align.channel             = {'C4'};       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{1}.align.flip                = {'no'};
+config{1}.align.abs                 = {'no'};
+config{1}.align.method              = {'max'};      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+config{1}.align.filter              = {'lp'};
+config{1}.align.freq                = {5};          % lowpass filter freq to smooth peak detection (Hz)
+config{1}.align.hilbert             = {'no'};
+config{1}.align.thresh              = [0];
+config{1}.align.toiplot{1}          = [-1,  1];     % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+config{1}.align.toiactive{1}        = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
+config{1}.align.toibaseline{1}      = [-1, -0.5];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+%
 
 config{1}.LFP.name                  = {'SlowWave'};
 config{1}.LFP.hpfilter              = 'no';
@@ -86,16 +80,16 @@ config{1}.LFP.baselinewindow{1}     = [-2, -1];
 config{1}.LFP.slidestep             = 0.01;
 config{1}.LFP.electrodeToPlot       = [2 1 3 10 11];
 
-%1, 2 and 3 associated with config.muse.startend 
-config{1}.epoch.toi{1}              = [-15, 15];  
-config{1}.epoch.toi{2}              = [-2, 1];  
-config{1}.epoch.toi{3}              = [1, -2];  
+%1, 2 and 3 associated with config.muse.startend
+config{1}.epoch.toi{1}              = [-15, 15];
+config{1}.epoch.toi{2}              = [-2, 1];
+config{1}.epoch.toi{3}              = [1, -2];
 config{1}.epoch.pad{1}              = 1;
 config{1}.epoch.pad{2}              = 0.5;
 config{1}.epoch.pad{3}              = 0.5;
 
 %% Patient 2
-%Same patient, other EEG. 
+%Same patient, other EEG.
 config{2}.os                        = os;
 config{2}.format                    = 'micromed';
 config{2}.types                     = ["macro"];
@@ -108,7 +102,7 @@ config{2}.datasavedir               = datasavedir;         % where to write data
 config{2}.imagesavedir              = imagesavedir;       % where to print images
 config{2}.labels.macro              = {'Fp2','F4','C4','P4','O2','F8','T4','T6','Fpz','Fz','Cz','Pz','Oz','Fp1','F3',...
     'C3','P3','O1','F7','T3','T5'};
-config{2}.labels.emg                = {'EMG1+','EMG2+'}; 
+config{2}.labels.emg                = {'EMG1+','EMG2+'};
 config{2}.directorylist{1}          = {'EEG_129'};
 
 
@@ -129,21 +123,21 @@ end
 % config{2}.preproc.refchannel  = config{2}.labels.macro';
 % config{2}.preproc.bsfilter    = 'yes';
 % config{2}.preproc.bsfreq      = [49 51];
-% config{2}.preproc.inversedata = -1; 
+% config{2}.preproc.inversedata = -1;
 
- config{2}.align.name                = {'SlowWave'};
- config{2}.align.channel             = {'F4'};       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
- config{2}.align.flip                = {'no'};
- config{2}.align.abs                 = {'no'};
- config{2}.align.method              = {'max'};      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
- config{2}.align.filter              = {'lp'};
- config{2}.align.freq                = {5};          % lowpass filter freq to smooth peak detection (Hz)
- config{2}.align.hilbert             = {'no'};
- config{2}.align.thresh              = [0];
- config{2}.align.toiplot{1}          = [-1,  1];     % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
- config{2}.align.toiactive{1}        = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
- config{2}.align.toibaseline{1}      = [-1, -0.5];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
+config{2}.align.name                = {'SlowWave'};
+config{2}.align.channel             = {'F4'};       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{2}.align.flip                = {'no'};
+config{2}.align.abs                 = {'no'};
+config{2}.align.method              = {'max'};      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+config{2}.align.filter              = {'lp'};
+config{2}.align.freq                = {5};          % lowpass filter freq to smooth peak detection (Hz)
+config{2}.align.hilbert             = {'no'};
+config{2}.align.thresh              = [0];
+config{2}.align.toiplot{1}          = [-1,  1];     % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+config{2}.align.toiactive{1}        = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
+config{2}.align.toibaseline{1}      = [-1, -0.5];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+%
 
 config{2}.LFP.name                  = {'SlowWave'};
 config{2}.LFP.hpfilter              = 'no';
@@ -154,10 +148,10 @@ config{2}.LFP.baselinewindow{1}     = [-2, -1];
 config{2}.LFP.slidestep             = 0.01;
 config{2}.LFP.electrodeToPlot       = [2 1 3 10 11];
 
-%1, 2 and 3 associated with config.muse.startend 
-config{2}.epoch.toi{1}              = [-15, 15];  
-config{2}.epoch.toi{2}              = [-2, 1];  
-config{2}.epoch.toi{3}              = [1, -2];  
+%1, 2 and 3 associated with config.muse.startend
+config{2}.epoch.toi{1}              = [-15, 15];
+config{2}.epoch.toi{2}              = [-2, 1];
+config{2}.epoch.toi{3}              = [1, -2];
 config{2}.epoch.pad{1}              = 1;
 config{2}.epoch.pad{2}              = 0.5;
 config{2}.epoch.pad{3}              = 0.5;
