@@ -5,15 +5,15 @@
 % requires bandpassFilter.m from Mario
 % requires releaseDec2015 from Neuralynx website
 
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
 addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/dtx/
+addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
 addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip/
 addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/spikes-master'));
 addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/npy-matlab-master'));
 ft_defaults
 
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
 addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\dtx
+addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
 addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
 % addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\spikes-master'));
 % addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\npy-matlab-master'));
