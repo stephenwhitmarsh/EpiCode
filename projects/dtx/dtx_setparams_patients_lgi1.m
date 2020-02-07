@@ -15,33 +15,35 @@ elseif isunix
     rootpath_data       = '/network/lustre/iss01/epimicro/rodents/raw/DTX-raw/';
     os                  = 'unix';
 elseif ispc
-    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\Patients_LGI1\';
+    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\DTX-Patients_LGI1\';
     rootpath_data       = '\\lexport\iss01.epimicro\rodents\raw\Patients_LGI1\';
     os                  = 'windows';
 else
     error('Platform not supported')
 end
 
-datasavedir = fullfile(rootpath_analysis, 'data_for_scripts');
+datasavedir = fullfile(rootpath_analysis, 'data');
 imagesavedir = fullfile(rootpath_analysis);
 
 %% Patient 1
 %REVOIR CHANNEL ALIGNEMENT DE CE PREMIER ENREGISTREMENT
 %FILTRE HIGH PASS POUR LES EMG : séparer preproc EEG et EMG et appendata
+%LISTE DIRECTORY = DOSSIER. + LISTE FILE
 config{1}.os                        = os;
-config{1}.format                    = 'micromed';
+%config{1}.format                    = 'micromed';
 config{1}.types                     = ["macro"];
 config{1}.name                      = {'SlowWave_R','Seizure','InterIctal'};
-config{1}.prefix                    = 'pat_LGI1_008-EEG_129';
+config{1}.prefix                    = 'pat_LGI1_008-EEG_129-';
 config{1}.muse.startend             = {'SlowWave_R','SlowWave_R'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker
-config{1}.foldername                = 'pat_LGI1_008';
-config{1}.rawdir                    = fullfile(rootpath_data, config{1}.foldername);
+%config{1}.foldername                = 'pat_LGI1_008';
+config{1}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_008');
 config{1}.datasavedir               = datasavedir;         % where to write data
 config{1}.imagesavedir              = imagesavedir;       % where to print images
 config{1}.labels.macro              = {'Fp2','F4','C4','P4','O2','F8','T4','T6','Fpz','Fz','Cz','Pz','Oz','Fp1','F3',...
     'C3','P3','O1','F7','T3','T5'};
 config{1}.labels.emg                = {'EMG1+','EMG2+'};
-config{1}.directorylist{1}          = {'EEG_129'};
+config{1}.directorylist{1}          = {'EEG_129'}; %dir = eeg file with all the electrodess
+
 config{1}.inversedata = -1;
 
 config{1}.preproc_eeg.channel     = config{1}.labels.macro';
@@ -51,13 +53,13 @@ config{1}.preproc_eeg.refchannel  = config{1}.labels.macro';
 config{1}.preproc_eeg.bsfilter    = 'yes';
 config{1}.preproc_eeg.bsfreq      = [49 51];
 
-config{1}.preproc_emg.channel     = cfg.labels.emg'; 
+config{1}.preproc_emg.channel     = config{1}.labels.emg'; 
 config{1}.preproc_emg.hpfilter    = 'yes';
 config{1}.preproc_emg.hpfreq      = 10;
 config{1}.preproc_emg.bsfilter    = 'yes';
 config{1}.preproc_emg.bsfreq      = [49 51];
 
-config{1}.align.name                = {'SlowWave'};
+config{1}.align.name                = {'SlowWave_R'};
 config{1}.align.channel             = {'C4'};       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{1}.align.flip                = {'no'};
 config{1}.align.abs                 = {'no'};
@@ -71,7 +73,7 @@ config{1}.align.toiactive{1}        = [-0.5, 0.5];  % active period in which to 
 config{1}.align.toibaseline{1}      = [-1, -0.5];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 %
 
-config{1}.LFP.name                  = {'SlowWave'};
+config{1}.LFP.name                  = {'SlowWave_R','SlowWave_L'};
 config{1}.LFP.hpfilter              = 'no';
 config{1}.LFP.hpfreq                = 1;
 config{1}.LFP.resamplefs            = 256;

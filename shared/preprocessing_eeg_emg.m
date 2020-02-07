@@ -38,7 +38,7 @@ else
     
     % EMG preprocessing
     cfgtemp             = [];
-    cfgtemp.channel     = cfg.preproc_emg;
+    cfgtemp     = cfg.preproc_emg;
     cfgtemp.dataset     = datapath;
     data_EMG            = ft_preprocessing(cfgtemp);
     

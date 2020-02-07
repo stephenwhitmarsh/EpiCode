@@ -40,6 +40,9 @@ else
     fprintf('*** (re-) computing LFP data ***\n');
     fprintf('********************************\n\n');
     
+    %get format to adapt script for each format
+    %specificities :
+    [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
     % select those markers to load
     markerlist = [];
@@ -55,13 +58,14 @@ else
             
             hasmarker = false(length(MuseStruct{ipart}),1);
             
-            for idir = 1:length(MuseStruct{ipart})
+            for idir = 1:length(MuseStruct{ipart}) %according to cfg.directorylist
                 if isfield(MuseStruct{ipart}{idir},'markers')
                     if isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
                         if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
                             
                             % create trial segmentation common to resampled
-                            % data
+                            % data. Neuralynx : same markers for all files
+                            % of one dir.
                             Startsample             = [];
                             Endsample               = [];                            
                             Stage                   = [];
@@ -118,17 +122,25 @@ else
                                 end % ~isempty(es)
                             end
    
+
+                            
                             % loop over files
-                            for ifile = 1 : size(cfg.LFP.channel,2)
+                            if isNeuralynx
+                                nfile = size(cfg.LFP.channel,2); %one file per channel
+                            elseif isMicromed || isBrainvision
+                                nfile = 1; %only one file with all electrodes
+                            end
+                            
+                            for ifile = 1 : nfile
                                 
-                                %temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
-                                temp                    = dir_data(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}));
-                                datafile_extension      = temp.name{1}(end-3:end);
-                                
-                                if strcmp(datafile_extension, '.ncs') %is neuralynx
+                                %load data
+                                if isNeuralynx
                                     temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                     fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                     dat                     = ft_read_neuralynx_interp(fname);
+                                elseif isMicromed
+                                    dat                     = preprocessing_eeg_emg(cfg, ipart, idir, true);
+                                end
                                 
                                 % filter with FT
                                 cfgtemp                 = [];
@@ -157,8 +169,10 @@ else
                                 filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
                                 clear dat
 
-                                % same label over files
-                                filedat{ifile}.label{1}         = cfg.LFP.channel{ifile};
+                                if isNeuralynx
+                                    % same label over files
+                                    filedat{ifile}.label{1}         = cfg.LFP.channel{ifile};
+                                end
                                 
                                 % flag for averaging
                                 hasmarker(idir)                 = true;

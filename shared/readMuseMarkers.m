@@ -38,6 +38,10 @@ else
         fprintf('****************************\n\n');
     end
     
+    %get format to adapt script for each format
+    %specificities :
+    [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
+    
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist,2)
         
@@ -47,8 +51,15 @@ else
             fprintf('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
             
             % find muse event file
-            temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.mrk'));
-            name_mrk    = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+            if isNeuralynx
+                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.mrk'));
+                name_mrk    = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+            elseif isMicromed
+                name_mrk    = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.mrk']);
+            elseif isBrainvision
+                name_mrk    = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.vmrk']);
+            end
+            
             
             if ~exist(name_mrk,'file')
                 error('%s not found', name_mrk);
@@ -60,7 +71,7 @@ else
             f = fopen(name_mrk, 'rt');
             markfile = {};
             while true
-                l = fgetl(f);
+                l = fgetl(f); 
                 if ~ischar(l)
                     break
                 end
@@ -95,62 +106,116 @@ else
                     end
                 end
                 
-                % recover "real time" from first Neurlynx .txt file
-                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
-                [~, f, ~]   = fileparts(temp(1).name);
-                f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
-                clear timestring
                 
-                % depending on amplifier, there are somewhat different
-                % formats of the txt file
-                ftype       = 'none';
-                while 1
-                    tline = fgetl(f);
-                    if ~ischar(tline), break, end
-                    searchstring1 = '## Time Opened (m/d/y)';
-                    searchstring2 = '-TimeCreated';
-                    try
-                        if length(tline) >= max(length(searchstring1))
-                            if strcmp(tline(1:length(searchstring1)),searchstring1)
-                                timestring = tline;
-                                ftype = 1;
-                                disp('Great, found timestamp in header file - Type 1');
-                                break
+                % recover "real time"
+                
+                if isNeuralynx
+                    %from first Neurlynx .txt file
+                    temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
+                    [~, f, ~]   = fileparts(temp(1).name);
+                    f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
+                    clear timestring
+                    
+                    % depending on amplifier, there are somewhat different
+                    % formats of the txt file
+                    ftype       = 'none';
+                    while 1
+                        tline = fgetl(f);
+                        if ~ischar(tline), break, end
+                        searchstring1 = '## Time Opened (m/d/y)';
+                        searchstring2 = '-TimeCreated';
+                        try
+                            if length(tline) >= max(length(searchstring1))
+                                if strcmp(tline(1:length(searchstring1)),searchstring1)
+                                    timestring = tline;
+                                    ftype = 1;
+                                    disp('Great, found timestamp in header file - Type 1');
+                                    break
+                                end
                             end
-                        end
-                        if length(tline) >= max(length(searchstring2))
-                            if strcmp(tline(1:length(searchstring2)),searchstring2)
-                                timestring = tline;
-                                ftype = 2;
-                                disp('Great, found timestamp in header file - Type 2');
-                                break
+                            if length(tline) >= max(length(searchstring2))
+                                if strcmp(tline(1:length(searchstring2)),searchstring2)
+                                    timestring = tline;
+                                    ftype = 2;
+                                    disp('Great, found timestamp in header file - Type 2');
+                                    break
+                                end
                             end
+                        catch
+                            disp('Warning: something weird happened reading the txt time');
                         end
-                    catch
-                        disp('Warning: something weird happened reading the txt time');
                     end
-                end
-                fclose(f);
+                    fclose(f);
+                    
+                    % add real time of onset of file
+                    timestring = strsplit(timestring);
+                    switch ftype
+                        case 1
+                            headerdate = [cell2mat(timestring(5)) ' ' cell2mat(timestring(7))];
+                            MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss.SSS');
+                            
+                            
+                        case 2
+                            headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
+                            MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
+                    end
+                    
+                elseif isMicromed
+                    %read .bni text header. because time at
+                    %beginning is not available on the header
+                    %created by fieldtrip
+                    
+                    datafile = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+                    hdr = ft_read_header(datafile);
+                    
+                    f = fopen([datafile(1:end-3) 'bni']);
+                    clear timestring
+                    ftype = 'none';
+                    search_date_time = 0;
+                    while search_date_time<2
+                        tline = fgetl(f);
+                        if ~ischar(tline), break, end
+                        searchstring1 = 'Date = ';
+                        searchstring2 = 'Time = ';
+                        try
+                            if length(tline) >= max(length(searchstring1))
+                                if strcmp(tline(1:length(searchstring1)),searchstring1)
+                                    datestring = tline;
+                                    ftype = 1;
+                                    disp('Great, found datestamp in header file');
+                                    search_date_time = search_date_time+1;
+                                end
+                            end
+                            if length(tline) >= max(length(searchstring2))
+                                if strcmp(tline(1:length(searchstring2)),searchstring2)
+                                    timestring = tline;
+                                    search_date_time = search_date_time+1;
+                                    disp('Great, found timestamp in header file');
+                                end
+                            end
+                        catch
+                            disp('Warning: something weird happened reading the .bni time');
+                        end
+                    end
+                    fclose(f);
+                    
+                    % add real time of onset of file
+                    datestring = strsplit(datestring);
+                    timestring = strsplit(timestring);
+                    headerdate = [cell2mat(datestring(3)) ' ' cell2mat(timestring(3))];
+                    MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss');
                 
-                % add real time of onset of file
-                timestring = strsplit(timestring);
-                switch ftype
-                    case 1
-                        headerdate = [cell2mat(timestring(5)) ' ' cell2mat(timestring(7))];
-                        MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss.SSS');
-
-                        
-                    case 2
-                        headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
-                        MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
-                end
+                end %end of recover real time. different for each format
+                    
                 
                 MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
 
+                
+                
                 % create markers details in MuseStruct
                 for imarker = 1 : nmarkers
                     name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
-                    MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = [];
+                    MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = []; %Paul : why this field ?
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).comment        = comment{imarker};
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).color          = color{imarker};
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).editable       = editable{imarker};

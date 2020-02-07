@@ -26,7 +26,7 @@ dbstop if error
 
 for ipatient = 1:6
     
-    config = dtx_setparams([]);    
+    config = dtx_setparams_probe([]);    
     
     % read muse markers
     [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers_parts(config{ipatient}, false);

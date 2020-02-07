@@ -3,7 +3,7 @@
 
 
 addpath C:\Users\paul.baudin\Documents\MATLAB\fieldtrip;
-addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\epilepsy'));
+addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode'));
 addpath C:\Users\paul.baudin\Documents\MATLAB\DTX;
 addpath C:\Users\paul.baudin\Documents\MATLAB\MatlabImportExport_v6.0.0;
 ft_defaults
@@ -13,17 +13,17 @@ ft_defaults
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neuralynx
 
 
-config = dtx_setparams_patientsLGI1([]);
+config = dtx_setparams_patients_lgi1([]);
 cfg=config{1}; %provisoire, a supprimer
 
 for ipatient = 1
     
     %% Get LFP data
     % read muse markers
-    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers_parts(config{ipatient}, false);
+    [MuseStruct]    = readMuseMarkers(config{ipatient}, true);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    [MuseStruct]    = alignMuseMarkers(config{ipatient},MuseStruct, true);
     
     %jusque là, extraire markers et les aligner commun quelle que soit
     %l'électrode à analyser

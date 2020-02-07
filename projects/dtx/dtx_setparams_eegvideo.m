@@ -4,7 +4,7 @@
 %not use the header created by ft_read_header, but the header saved with
 %the data (data_header, for each file) 
 
-function [config] = dtx_setparams_EEGvideo(config)
+function [config] = dtx_setparams_eegvideo(config)
 
 disp('setting parameters');
 
@@ -42,6 +42,9 @@ config{1}.labels.macro              = {'M1G','M1D','PtA'};
 %config{irat}.directorylist
 filelist = dir(config{1}.rawdir);
 i=0;
+
+% changer directory list : ajouter filelist. pcq tous dans le même
+% directory
 for ifile = 1:length(filelist)
     if length(filelist(ifile).name)>3
         fileExtension = filelist(ifile).name(1,length(filelist(ifile).name)-3:length(filelist(ifile).name));

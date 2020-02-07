@@ -10,7 +10,7 @@
 
 
 addpath C:\Users\paul.baudin\Documents\MATLAB\fieldtrip;
-addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\epilepsy'));
+addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode'));
 addpath C:\Users\paul.baudin\Documents\MATLAB\DTX;
 addpath C:\Users\paul.baudin\Documents\MATLAB\MatlabImportExport_v6.0.0;
 ft_defaults

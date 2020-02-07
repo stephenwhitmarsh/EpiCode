@@ -56,6 +56,8 @@ end
 if ~exist(fname,'file') && length(varargin) == 1
     force = true;
 end
+%Paul : I did'nt understand this part : What if length(varargin) == 3 ? And
+%if length(varargin) == 1, where is called MuseStruct ?
 
 if exist(fname,'file') && force == false
     fprintf('*******************************\n');
@@ -73,6 +75,10 @@ else
         fprintf('** Aligning **\n');
         fprintf('**************\n\n');
     end
+    
+    %get format to adapt script for each format
+    %specificities :
+    [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
     % select those markers to align
     markerlist = [];
@@ -109,16 +115,41 @@ else
             for idir = markerindx
                 
                 % find datafilename corresponding to requested electrode 
+                % and load header and data
                 
-                filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
-                channelnr = 0;
-                for ifile = 1 : size(filelist,1)
-                    if strfind(filelist(ifile).name,cfg.align.channel{imarker})
-                        fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},filelist(ifile).name);
-                        dataset = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},filelist(ifile).name);
-                        channelnr = channelnr + 1;
+                if isNeuralynx                    
+                    filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
+                    channelnr = 0;
+                    for ifile = 1 : size(filelist,1)
+                        if strfind(filelist(ifile).name,cfg.align.channel{imarker})
+                            fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},filelist(ifile).name);
+                            dataset = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},filelist(ifile).name);
+                            channelnr = channelnr + 1;
+                        end
                     end
+                    
+                    hdr = ft_read_header(dataset);
+                    cfgtemp             = [];
+                    cfgtemp.dataset     = dataset;
+                    dat_sel             = ft_preprocessing(cfgtemp);
+                
+                elseif isMicromed   
+                    hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC'])); 
+                    dat_sel = preprocessing_eeg_emg(cfg,ipart,idir,true); %notch filter, otherwise the figure at the end is less meaningfull
+                    channelnr = 0;
+                    channelindex = [];
+                    for ichannel = 1 : length(dat_sel.label)
+                        if strfind(dat_sel.label{ichannel},cfg.align.channel{imarker})
+                            fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},MuseStruct{ipart}{idir}.directory);
+                            channelnr = channelnr + 1;
+                            channelindex = [channelindex ichannel];
+                        end
+                    end
+                    dat_sel.trial{1} = dat_sel.trial{1}(channelindex,:);
+                    dat_sel.label = dat_sel.label(channelindex);
+                    
                 end
+                
                 
                 if channelnr == 0
                     fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
@@ -127,12 +158,8 @@ else
                 if channelnr > 1
                     fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
                 end
-                                
-                hdr = ft_read_header(dataset);
-                
-                cfgtemp             = [];
-                cfgtemp.dataset     = dataset;
-                dat_sel             = ft_preprocessing(cfgtemp);
+                       
+
                 
                 % flip data if required
                 if strcmp(cfg.align.method{imarker},'min') || strcmp(cfg.align.method{imarker},'firstmin') || strcmp(cfg.align.method{imarker},'lastmin')
@@ -220,7 +247,7 @@ else
                     peaks_ac_sel_avg{itrial}    = peaks_ac{itrial}(peaks_sel_avg);
                     locs_ac_sel_avg{itrial}     = locs_ac{itrial}(peaks_sel_avg);
                     
-                    % threshold based on median of max peaks in trail-by-trial baseline
+                    % threshold based on median of max peaks in trial-by-trial baseline
                     peaks_sel_trl               = peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh(imarker);
                     peaks_ac_sel_trl{itrial}    = peaks_ac{itrial}(peaks_sel_trl);
                     locs_ac_sel_trl{itrial}     = locs_ac{itrial}(peaks_sel_trl);
@@ -232,6 +259,7 @@ else
                 end
                 
                 dat_sel_aligned = dat_sel_trl;
+                dat_filt_aligned = dat_filt_trl; %for plot
                 
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
@@ -269,29 +297,42 @@ else
                             locs_ac_sel_avg{itrial} = indx2 - t1_ac_indx(itrial);      
                         end
                         
-                        % align time axis to relevant (peak) index
+                        % align time axis to relevant (peak) index 
                         timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
-                        if abs(timeshift) > 0.050 
-                            hasartefact(itrial) = true;
-                        end 
+                        dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
+%                         if abs(timeshift) > 0.050 
+%                             hasartefact(itrial) = true;
+%                         end 
+%Paul : this is not adapted to my data, it detects lot of artefacts whereas it is
+%not. Could we put the artefact detection of the last version of alignMuseMarkers, which is
+%done according to Muse BAD__START__ and BAD__END__ ?
+
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) - timeshift;
-
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial) - seconds(timeshift);
                     end
                 end
 
+                %% Plot alignement
+
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
-                h               = 1200;
                 
-                subplot(1,3,1);
+                for itemp = 1:length(peaks_ac_sel_trl)
+                    peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
+                end
+                h               = mean(peaks_ac_sel_trl_max)/10;%1200; %adapt h because it has to be different between my 3 formats of files. Paul
+           
+                
+                subplot(2,2,1);
                 hold;
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t     = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -310,13 +351,43 @@ else
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
                 
-                subplot(1,3,2);
+                subplot(2,2,2);
+                hold;
+                for itrial = 1 : size(dat_sel_trl.trial,2)
+                    if haspeak(itrial)
+                        color = 'k';
+                        t       = 0;
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
+                        
+                    else
+                        color = 'r';
+                    end
+                    if hasartefact(itrial)
+                        color = 'c';
+                    else
+                        color = 'k';
+                    end
+                   plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
+                    
+                end
+                title('Alignment');
+                set(gca, 'YTickLabel', '');
+                xlabel('Time (s)');
+                axis tight
+                ax = axis;
+                fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
+                fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
+                
+               
+                subplot(2,2,3);
                 hold;
                 for itrial = 1 : size(dat_sel_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t       = dat_sel_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -335,13 +406,14 @@ else
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
                 
-                subplot(1,3,3);
+                subplot(2,2,4);
                 hold;
                 for itrial = 1 : size(dat_sel_aligned.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t       = 0;
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end

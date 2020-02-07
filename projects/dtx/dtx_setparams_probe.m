@@ -24,6 +24,7 @@ datasavedir = fullfile(rootpath_analysis, 'data'); %removed of config{i} so we c
 imagesavedir = rootpath_analysis; 
 
 %% Rodent 1
+%Ajout config{1}.LFP.channel   
 config{1}.os                        = os;
 config{1}.name                      = {'SlowWave','Seizure','InterIctal'};
 config{1}.prefix                    = 'DTX5-';
@@ -57,6 +58,7 @@ config{1}.align.toiactive{1}        = [-0.5, 0.5];                              
 config{1}.align.toibaseline{1}      = [-1, -0.5];         
 % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
+config{1}.LFP.channel               = config{1}.labels.macro;
 config{1}.LFP.name                  = {'SlowWave'};
 config{1}.LFP.hpfilter              = 'no';
 config{1}.LFP.hpfreq                = 1;
