@@ -46,8 +46,8 @@ else
     
     % select those markers to load
     markerlist = [];
-    for i = 1 : size(cfg.name,2)
-        if ismember(cfg.name{i},cfg.name)
+    for i = 1 : size(cfg.LFP.name,2)
+        if ismember(cfg.LFP.name{i},cfg.name)
             markerlist = [markerlist, i];
         end
     end
@@ -79,9 +79,9 @@ else
 
                                 if ~isempty(es) % && (es - ss) * hdr_micro.Fs < 4 %% find a way to check for Paul's data
 
-                                    Startsample(ievent) = ss + cfg.epoch.toi{imarker}(1) * cfg.LFP.resamplefs - cfg.epoch.pad(imarker) * cfg.LFP.resamplefs;
-                                    Endsample(ievent)   = es + cfg.epoch.toi{imarker}(2) * cfg.LFP.resamplefs + cfg.epoch.pad(imarker) * cfg.LFP.resamplefs;
-                                    Offset(ievent)      = (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad(imarker)) * cfg.LFP.resamplefs;
+                                    Startsample(ievent) = ss + cfg.epoch.toi{imarker}(1) * cfg.LFP.resamplefs - cfg.epoch.pad{imarker} * cfg.LFP.resamplefs;
+                                    Endsample(ievent)   = es + cfg.epoch.toi{imarker}(2) * cfg.LFP.resamplefs + cfg.epoch.pad{imarker} * cfg.LFP.resamplefs;
+                                    Offset(ievent)      = (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad{imarker}) * cfg.LFP.resamplefs;
                                     trialnr(ievent)     = ievent;
                                     Stage(ievent)       = -1;
 

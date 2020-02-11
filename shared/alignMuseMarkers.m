@@ -138,6 +138,7 @@ else
                     dat_sel = preprocessing_eeg_emg(cfg,ipart,idir,true); %notch filter, otherwise the figure at the end is less meaningfull
                     channelnr = 0;
                     channelindex = [];
+                    %Find channel of interest
                     for ichannel = 1 : length(dat_sel.label)
                         if strfind(dat_sel.label{ichannel},cfg.align.channel{imarker})
                             fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},MuseStruct{ipart}{idir}.directory);
@@ -309,8 +310,8 @@ else
 %done according to Muse BAD__START__ and BAD__END__ ?
 
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
-                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) - timeshift;
-                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial) - seconds(timeshift);
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) + timeshift;
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial) + seconds(timeshift);
                     end
                 end
 
@@ -434,8 +435,8 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',num2str(idir),'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
                 close all
             end % idir
         end % imarker
