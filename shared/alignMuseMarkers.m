@@ -56,8 +56,6 @@ end
 if ~exist(fname,'file') && length(varargin) == 1
     force = true;
 end
-%Paul : I did'nt understand this part : What if length(varargin) == 3 ? And
-%if length(varargin) == 1, where is called MuseStruct ?
 
 if exist(fname,'file') && force == false
     fprintf('*******************************\n');
@@ -115,8 +113,6 @@ else
             for idir = markerindx
                 
                 % find datafilename corresponding to requested electrode 
-                % and load header and data
-                
                 if isNeuralynx                    
                     filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
                     channelnr = 0;
@@ -127,40 +123,52 @@ else
                             channelnr = channelnr + 1;
                         end
                     end
-                    
-                    hdr = ft_read_header(dataset);
-                    cfgtemp             = [];
-                    cfgtemp.dataset     = dataset;
-                    dat_sel             = ft_preprocessing(cfgtemp);
-                
-                elseif isMicromed   
-                    hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC'])); 
-                    dat_sel = preprocessing_eeg_emg(cfg,ipart,idir,true); %notch filter, otherwise the figure at the end is less meaningfull
-                    channelnr = 0;
-                    channelindex = [];
-                    %Find channel of interest
-                    for ichannel = 1 : length(dat_sel.label)
-                        if strfind(dat_sel.label{ichannel},cfg.align.channel{imarker})
-                            fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},MuseStruct{ipart}{idir}.directory);
-                            channelnr = channelnr + 1;
-                            channelindex = [channelindex ichannel];
-                        end
+                    if channelnr == 0
+                        fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
                     end
-                    dat_sel.trial{1} = dat_sel.trial{1}(channelindex,:);
-                    dat_sel.label = dat_sel.label(channelindex);
+                    if channelnr > 1
+                        fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
                     
+                elseif isMicromed
+                    dataset = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
                 end
                 
+                           
+                %load data and header
+                hdr = ft_read_header(dataset);
                 
-                if channelnr == 0
-                    fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
+                cfgtemp             = [];
+                
+                if isfield(cfg.align, 'reref')
+                    if strcmp(cfg.align.reref,'yes')
+                        cfgtemp.reref       = 'yes';
+                        cfgtemp.rerefmethod = 'avg';
+                        cfgtemp.refchannel  = cfg.labels.macro';
+                    end
                 end
                 
-                if channelnr > 1
-                    fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
+                if isfield(cfg.align, 'notch')
+                    if strcmp(cfg.align.notch,'yes')
+                        cfgtemp.bsfilter       = 'yes';
+                        cfgtemp.bsfreq         = [49 51];
+                    end
                 end
-                       
-
+                
+                cfgtemp.dataset     = dataset;
+                dat_sel             = ft_preprocessing(cfgtemp);
+                
+                if isMicromed %choose channel
+                    cfgtemp         = [];
+                    cfgtemp.channel = cfg.align.channel{imarker};
+                    dat_sel         = ft_selectdata(cfgtemp,dat_sel);
+                    if size(dat_sel.trial{1},1) == 0
+                        fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                    if size(dat_sel.trial{1},1) > 1
+                        fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                end
                 
                 % flip data if required
                 if strcmp(cfg.align.method{imarker},'min') || strcmp(cfg.align.method{imarker},'firstmin') || strcmp(cfg.align.method{imarker},'lastmin')
@@ -302,12 +310,10 @@ else
                         timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
                         dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
+                        
 %                         if abs(timeshift) > 0.050 
 %                             hasartefact(itrial) = true;
 %                         end 
-%Paul : this is not adapted to my data, it detects lot of artefacts whereas it is
-%not. Could we put the artefact detection of the last version of alignMuseMarkers, which is
-%done according to Muse BAD__START__ and BAD__END__ ?
 
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) + timeshift;
@@ -323,7 +329,7 @@ else
                 for itemp = 1:length(peaks_ac_sel_trl)
                     peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
                 end
-                h               = mean(peaks_ac_sel_trl_max)/10;%1200; %adapt h because it has to be different between my 3 formats of files. Paul
+                h               = mean(peaks_ac_sel_trl_max)/10;%1200; 
            
                 
                 subplot(2,2,1);

@@ -140,32 +140,32 @@ else
                                     dat                     = ft_read_neuralynx_interp(fname);
                                
                                 elseif isMicromed
-                                    fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+                                    
                                     % EEG
                                     cfgtemp             = [];
                                     if isfield(cfg.LFP, 'reref')
-                                        cfgtemp.reref                 = cfg.LFP.reref;
-                                        cfgtemp.rerefmethod           = cfg.LFP.rerefmethod;
-                                        cfgtemp.refchannel            = cfg.LFP.refchannel;
+                                        cfgtemp.reref       = cfg.LFP.reref;
+                                        cfgtemp.rerefmethod = cfg.LFP.rerefmethod;
+                                        cfgtemp.refchannel  = cfg.refchannel;
                                     end
                                     if isfield(cfg.LFP, 'bsfilter')
-                                        cfgtemp.bsfilter              = cfg.LFP.bsfilter;
-                                        cfgtemp.bsfreq                = cfg.LFP.bsfreq;
+                                        cfgtemp.bsfilter       = cfg.LFP.bsfilter;
+                                        cfgtemp.bsfreq         = cfg.LFP.bsfreq;
                                     end
-                                    cfgtemp.dataset                   = fname;
-                                    cfgtemp.channel                   = cfg.labels.macro';
-                                    dat                               = ft_preprocessing(cfgtemp);
+                                    cfgtemp.dataset     = datapath;
+                                    cfgtemp.channel     = cfg.labels.macro';
+                                    dat            = ft_preprocessing(cfgtemp);
                                     
                                     % EMG
                                     if isfield(cfg.labels, 'emg')
                                         if ~isempty(cfg.labels.emg)
                                             cfgtemp                   = [];
                                             cfgtemp.channel           = cfg.labels.emg';
-                                            cfgtemp.hpfilter          = cfg.EMG.hpfilter;
-                                            cfgtemp.hpfreq            = cfg.EMG.hpfreq;
-                                            cfgtemp.bsfilter          = cfg.EMG.bsfilter;
-                                            cfgtemp.bsfreq            = cfg.EMG.bsfreq;
-                                            cfgtemp.dataset           = fname;
+                                            cfgtemp.hpfilter          = cfg.hpfilter;
+                                            cfgtemp.hpfreq            = cfg.hpfreq;
+                                            cfgtemp.bsfilter          = cfg.bsfilter;
+                                            cfgtemp.bsfreq            = [49 51];
+                                            cfgtemp.dataset           = datapath;
                                             data_EMG                  = ft_preprocessing(cfgtemp);
                                             
                                             %Appendata EEG EMG

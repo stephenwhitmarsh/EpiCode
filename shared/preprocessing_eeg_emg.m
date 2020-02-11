@@ -31,14 +31,14 @@ else
     cfgtemp             = [];
     cfgtemp             = cfg.preproc_eeg;
     cfgtemp.dataset     = datapath;
-    cfgtemp.bsfilter    = 'yes';
-    cfgtemp.bsfreq      = [49 51];
+%     cfgtemp.bsfilter    = 'yes';
+%     cfgtemp.bsfreq      = [49 51];
     data_EEG            = ft_preprocessing(cfgtemp);
     
     
     % EMG preprocessing
     cfgtemp             = [];
-    cfgtemp     = cfg.preproc_emg;
+    cfgtemp             = cfg.preproc_emg;
     cfgtemp.dataset     = datapath;
     data_EMG            = ft_preprocessing(cfgtemp);
     
