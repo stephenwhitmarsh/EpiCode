@@ -45,6 +45,9 @@ config{1}.labels.macro              = {'Fp2','F4','C4','P4','O2','F8','T4','T6',
 config{1}.labels.emg                = {'EMG1+','EMG2+'};
 config{1}.directorylist{1}          = {'EEG_129'}; %dir = eeg file with all the electrodess
 
+config{1}.inversedata = -1;
+
+
 %config{1}.preproc_eog %TO DO
 
 config{1}.align.name                = {'SlowWave_R'};%{'SlowWave_R','SlowWave_R'};
@@ -68,24 +71,24 @@ config{1}.align.notch       = 'yes';
 config{1}.LFP.name                  = {'SlowWave_R'};%,'SlowWave_L'};
 config{1}.LFP.emg                   = {'EMG1+'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
 config{1}.LFP.hpfilter              = 'no';
-config{1}.LFP.hpfreq                = 0;
+config{1}.LFP.hpfreq                = 1;
 config{1}.LFP.resamplefs            = 256;
 config{1}.LFP.baseline              = 'no';
 config{1}.LFP.baselinewindow{1}     = [-2, -1];
 config{1}.LFP.slidestep             = 0.01;
 config{1}.LFP.electrodeToPlot       = [2 1 3 10 11];
-%config{1}.LFP.channel               = config{1}.labels.macro';
-config{1}.LFP.reref                 = 'yes';
-config{1}.LFP.rerefmethod           = 'avg';
-config{1}.LFP.refchannel            = config{1}.labels.macro';
-config{1}.LFP.bsfilter              = 'yes';
-config{1}.LFP.bsfreq                = [49 51];
-config{1}.LFP.hasemg                = 'yes';
-%config{1}.LFP.emg.channel           = config{1}.labels.emg'; 
-config{1}.EMG.hpfilter              = 'yes';
-config{1}.EMG.hpfreq                = 10;
-config{1}.EMG.bsfilter              = 'yes';
-config{1}.EMG.bsfreq                = [49 51];
+config{1}.LFP.channel     = config{1}.labels.macro';
+config{1}.LFP.reref       = 'yes';
+config{1}.LFP.rerefmethod = 'avg';
+config{1}.LFP.refchannel  = config{1}.labels.macro';
+config{1}.LFP.bsfilter    = 'yes';
+config{1}.LFP.bsfreq      = [49 51];
+
+config{1}.LFP.emg.channel     = config{1}.labels.emg'; 
+config{1}.LFP.emg.hpfilter    = 'yes';
+config{1}.LFP.emg.hpfreq      = 10;
+config{1}.LFP.emg.bsfilter    = 'yes';
+config{1}.LFP.emg.bsfreq      = [49 51];
 
 
 %1, 2 and 3 associated with config.muse.startend

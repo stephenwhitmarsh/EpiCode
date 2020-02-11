@@ -74,6 +74,10 @@ else
         fprintf('**************\n\n');
     end
     
+    %get format to adapt script for each format
+    %specificities :
+    [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
+    
     % select those markers to align
     markerlist = [];
     for i = 1 : size(cfg.align.name,2)
@@ -109,30 +113,62 @@ else
             for idir = markerindx
                 
                 % find datafilename corresponding to requested electrode 
-                
-                filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
-                channelnr = 0;
-                for ifile = 1 : size(filelist,1)
-                    if strfind(filelist(ifile).name,cfg.align.channel{imarker})
-                        fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},filelist(ifile).name);
-                        dataset = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},filelist(ifile).name);
-                        channelnr = channelnr + 1;
+                if isNeuralynx                    
+                    filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
+                    channelnr = 0;
+                    for ifile = 1 : size(filelist,1)
+                        if strfind(filelist(ifile).name,cfg.align.channel{imarker})
+                            fprintf('Found channel with pattern "%s" in %s\n',cfg.align.channel{imarker},filelist(ifile).name);
+                            dataset = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},filelist(ifile).name);
+                            channelnr = channelnr + 1;
+                        end
                     end
+                    if channelnr == 0
+                        fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                    if channelnr > 1
+                        fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                    
+                elseif isMicromed
+                    dataset = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
                 end
                 
-                if channelnr == 0
-                    fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
-                end
-                
-                if channelnr > 1
-                    fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
-                end
-                                
+                           
+                %load data and header
                 hdr = ft_read_header(dataset);
                 
                 cfgtemp             = [];
+                
+                if isfield(cfg.align, 'reref')
+                    if strcmp(cfg.align.reref,'yes')
+                        cfgtemp.reref       = 'yes';
+                        cfgtemp.rerefmethod = 'avg';
+                        cfgtemp.refchannel  = cfg.labels.macro';
+                    end
+                end
+                
+                if isfield(cfg.align, 'notch')
+                    if strcmp(cfg.align.notch,'yes')
+                        cfgtemp.bsfilter       = 'yes';
+                        cfgtemp.bsfreq         = [49 51];
+                    end
+                end
+                
                 cfgtemp.dataset     = dataset;
                 dat_sel             = ft_preprocessing(cfgtemp);
+                
+                if isMicromed %choose channel
+                    cfgtemp         = [];
+                    cfgtemp.channel = cfg.align.channel{imarker};
+                    dat_sel         = ft_selectdata(cfgtemp,dat_sel);
+                    if size(dat_sel.trial{1},1) == 0
+                        fprintf('Did not find of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                    if size(dat_sel.trial{1},1) > 1
+                        fprintf('Found more than 1 occurance of channel pattern %s!\n',cfg.align.channel{imarker});
+                    end
+                end
                 
                 % flip data if required
                 if strcmp(cfg.align.method{imarker},'min') || strcmp(cfg.align.method{imarker},'firstmin') || strcmp(cfg.align.method{imarker},'lastmin')
@@ -220,7 +256,7 @@ else
                     peaks_ac_sel_avg{itrial}    = peaks_ac{itrial}(peaks_sel_avg);
                     locs_ac_sel_avg{itrial}     = locs_ac{itrial}(peaks_sel_avg);
                     
-                    % threshold based on median of max peaks in trail-by-trial baseline
+                    % threshold based on median of max peaks in trial-by-trial baseline
                     peaks_sel_trl               = peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh(imarker);
                     peaks_ac_sel_trl{itrial}    = peaks_ac{itrial}(peaks_sel_trl);
                     locs_ac_sel_trl{itrial}     = locs_ac{itrial}(peaks_sel_trl);
@@ -232,6 +268,7 @@ else
                 end
                 
                 dat_sel_aligned = dat_sel_trl;
+                dat_filt_aligned = dat_filt_trl; %for plot
                 
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
@@ -269,29 +306,40 @@ else
                             locs_ac_sel_avg{itrial} = indx2 - t1_ac_indx(itrial);      
                         end
                         
-                        % align time axis to relevant (peak) index
+                        % align time axis to relevant (peak) index 
                         timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
-                        if abs(timeshift) > 0.050 
-                            hasartefact(itrial) = true;
-                        end 
-                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
-                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) - timeshift;
+                        dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
+                        
+%                         if abs(timeshift) > 0.050 
+%                             hasartefact(itrial) = true;
+%                         end 
 
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) + timeshift;
+                        MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial) + seconds(timeshift);
                     end
                 end
 
+                %% Plot alignement
+
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
-                h               = 1200;
                 
-                subplot(1,3,1);
+                for itemp = 1:length(peaks_ac_sel_trl)
+                    peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
+                end
+                h               = mean(peaks_ac_sel_trl_max)/10;%1200; 
+           
+                
+                subplot(2,2,1);
                 hold;
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t     = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -310,13 +358,43 @@ else
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
                 
-                subplot(1,3,2);
+                subplot(2,2,2);
+                hold;
+                for itrial = 1 : size(dat_sel_trl.trial,2)
+                    if haspeak(itrial)
+                        color = 'k';
+                        t       = 0;
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
+                        
+                    else
+                        color = 'r';
+                    end
+                    if hasartefact(itrial)
+                        color = 'c';
+                    else
+                        color = 'k';
+                    end
+                   plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
+                    
+                end
+                title('Alignment');
+                set(gca, 'YTickLabel', '');
+                xlabel('Time (s)');
+                axis tight
+                ax = axis;
+                fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
+                fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
+                
+               
+                subplot(2,2,3);
                 hold;
                 for itrial = 1 : size(dat_sel_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t       = dat_sel_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -335,13 +413,14 @@ else
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
                 
-                subplot(1,3,3);
+                subplot(2,2,4);
                 hold;
                 for itrial = 1 : size(dat_sel_aligned.trial,2)
                     if haspeak(itrial)
                         color = 'k';
                         t       = 0;
-                        line([t,t],[(itrial-0.5)*h,(itrial+0.5)*h],'color','r');
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -362,8 +441,8 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',num2str(idir),'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
                 close all
             end % idir
         end % imarker
