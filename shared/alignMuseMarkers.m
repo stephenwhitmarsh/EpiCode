@@ -79,17 +79,17 @@ else
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
     % select those markers to align
-    markerlist = [];
-    for i = 1 : size(cfg.align.name,2)
-        if ismember(cfg.align.name{i},cfg.name)
-            markerlist = [markerlist, i];
-        end
-    end
+%     markerlist = [];
+%     for i = 1 : size(cfg.align.name,2)
+%         if ismember(cfg.align.name{i},cfg.name)
+%             markerlist = [markerlist, i];
+%         end
+%     end
     
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist,2)
         
-        for imarker = markerlist
+        for imarker = 1 : size(cfg.align.name,2)%markerlist
             
             % find data directories that have the required event
             markerindx = [];
@@ -441,8 +441,8 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
                 close all
             end % idir
         end % imarker
