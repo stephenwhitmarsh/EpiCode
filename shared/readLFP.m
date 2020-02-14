@@ -160,7 +160,7 @@ else
                                     if isfield(cfg.labels, 'emg')
                                         if ~isempty(cfg.labels.emg)
                                             cfgtemp                   = [];
-                                            cfgtemp.channel           = cfg.labels.emg';
+                                            cfgtemp.channel           = cfg.LFP.emg{imarker};
                                             cfgtemp.hpfilter          = cfg.EMG.hpfilter;
                                             cfgtemp.hpfreq            = cfg.EMG.hpfreq;
                                             cfgtemp.bsfilter          = cfg.EMG.bsfilter;
