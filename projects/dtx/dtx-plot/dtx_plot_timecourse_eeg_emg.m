@@ -1,100 +1,139 @@
-function dtx_plot_timecourse_eeg_emg(cfg,data,iEEG,iEMG,imarker,saveplot)
-%iEEG{imarker} et iEMG{imarker} are the indexes of the channels in data.
-% if iEMG{imarker} = 'no' : subplot indicating absence of EMG
-%if iEMG{imarker} = false : ignoring everything concerning EMG
+function dtx_plot_timecourse_eeg_emg(cfg,data,imarker,datatype,saveplot)
+%data{ipart} 
+%This script is for one ipart and one imarker
+%datatype : 'eeg' or 'emg'
 
-%abscisse_scale = 10;%s
+isEEG = 0;
+isEMG = 0;
+if strcmp(datatype, 'eeg')
+    isEEG = 1;
+elseif strcmp(datatype, 'emg')
+    isEMG = 1;
+else
+    error('Error in the function arguments : datatype must be ''eeg'' or ''emg''');
+end
 
-n = size(data{imarker}.trial,2);
-fig = figure;
-fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
 
+%select the channel of interest
+if isEEG
+    cfgtemp = [];
+    cfgtemp.channel = cfg.align.channel{imarker};
+    data = ft_selectdata(cfgtemp,data{imarker});
+    
+elseif isEMG
+    if isfield(cfg.LFP, 'emg')
+        if ~strcmp(cfg.LFP.emg{imarker},'no')
+            if ~(cfg.LFP.emg{imarker} == false)
+                cfgtemp = [];
+                cfgtemp.channel = cfg.LFP.emg{imarker};
+                data = ft_selectdata(cfgtemp,data{imarker});
+            else
+                warning('cfg.LFP.emg{imarker} == false : no EMG data loaded, plot not made');
+                return
+            end
+        else
+            warning('cfg.LFP.emg{imarker} == ''no'' : no EMG data loaded, plot not made');
+            return
+        end
+    else
+        warning('Field cfg.LFP.emg does not exist : no EMG data loaded, plot not made');
+        return
+    end
+    
+end
+
+nb_trials = size(data.trial,2);
 
 %% EEG
-subplot(1,2,1);
-
-if ~strcmp(iEMG{imarker},'no') %if iEMG='no' : do subplot(1,2,1)
-    if iEMG{imarker} == false %if iEMG=false : do not subplot
-        subplot(1,1,1);
-    end
-end
+fig1 = figure;
 hold;
 
 %h automatic setting :
-for itrial = 1 : n
-    h_temp_max = max(data{imarker}.trial{itrial}(iEEG{imarker},:));
-    h_temp_min = min(data{imarker}.trial{itrial}(iEEG{imarker},:));
-    h_temp_amplitude(itrial) = h_temp_max - h_temp_min;
+for itrial = 1 : nb_trials
+%     h_temp_max = max(data.trial{itrial}(1,:));
+%     h_temp_min = min(data.trial{itrial}(1,:));
+%     h_temp(itrial) = h_temp_max - h_temp_min;
+t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % offset for which t = 0;
+h_temp(itrial) = max(data.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %max between -0.5s and 0.5s. Avoid noise. Available for EEG and EMG.
 end
-h = mean(h_temp_amplitude);
 
-plot([0 0],[0 n*h+h], 'r', 'Linewidth', 2);
+if isEEG
+    h = mean(h_temp)/2;
+elseif isEMG
+    h = mean(h_temp)*2;
+end
+
+plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2);
 %plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
-for itrial = 1 : n
-    plot(data{imarker}.time{itrial},data{imarker}.trial{itrial}(iEEG{imarker},:)+ (n+1)*h - itrial*h,'k'); %first on top
+for itrial = 1 : nb_trials
+    plot(data.time{itrial},data.trial{itrial}(1,:)+ (nb_trials+1)*h - itrial*h,'k'); %first on top
 end
 
 
-xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
+xlabel(sprintf('Time from %s (s)', data.label{1}),'Interpreter','none', 'Fontsize',15);
 ylabel('Number of seizures', 'Fontsize',15);
-title(sprintf('Aligned data from %s', data{imarker}.label{iEEG{imarker}}),'Interpreter','none','Fontsize',18);
+title(sprintf('%s : aligned data from %s (%d trials)', cfg.LFP.name{imarker}, data.label{1}, size(data.trial,2)),'Interpreter','none','Fontsize',20);
 set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
 tick = h;
-yticks(tick : tick*10 : n*h);
-yticklabels(n : -10 : 0);
+yticks(tick : tick*10 : nb_trials*h);
+yticklabels(nb_trials : -10 : 0);
 set(gca,'TickDir','out');
 axis tight
-xlim(cfg.epoch.toi{1});
+xlim(cfg.epoch.toi{imarker});
 
-%% EMG
-
-if ~strcmp(iEMG{imarker},'no')
-    if ~(iEMG{imarker} == false)
-        
-        subplot(1,2,2);
-        hold;
-        
-        %h automatic setting :
-        for itrial = 1 : n
-            h_temp_max = max(data{imarker}.trial{itrial}(iEMG{imarker},:));
-            h_temp_min = min(data{imarker}.trial{itrial}(iEMG{imarker},:));
-            h_temp_amplitude(itrial) = h_temp_max - h_temp_min;
-        end
-        h = mean(h_temp_amplitude);
-        
-        
-        
-        %plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
-        plot([0 0],[0 n*h+h], 'r', 'Linewidth', 2);
-        
-        for itrial = 1 : n
-            t = data{imarker}.time{itrial};
-            plot(t,data{imarker}.trial{itrial}(iEMG{imarker},:)+ (n+1)*h - itrial*h,'k'); %first on top
-        end
-        
-        
-        
-        xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
-        ylabel('Number of seizures', 'Fontsize',15);
-        title(sprintf('Aligned data from %s', data{imarker}.label{iEMG{imarker}}),'Interpreter','none','Fontsize',18);
-        set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
-        tick = h;
-        yticks(tick : tick*10 : n*h);
-        yticklabels(n : -10 : 0);
-        set(gca,'TickDir','out');
-        axis tight
-        xlim(cfg.epoch.toi{1});
-    end
-end
-
-if strcmp(iEMG{imarker},'no')
-    subplot(1,2,2);
-    set(gca,'TickLength',[0 0]);
-    yticklabels([]);
-    xticklabels([]);
-    set(gca,'YColor', [1 1 1],'XColor', [1 1 1]);
-    text(0.2,0.5,sprintf('No EMG data \nassociated with %s', cfg.LFP.name{imarker}),'Interpreter','none','Fontsize',15);
-end
+% %% EMG
+% 
+% if isfield(cfg.LFP, 'emg')
+%     if ~strcmp(cfg.LFP.emg{imarker},'no')
+%         if ~(cfg.LFP.emg{imarker} == false)
+%             
+%             fig2 = figure;
+%             hold;
+%             
+%             %h automatic setting :
+%             for itrial = 1 : nb_trials
+%                 h_temp_max = max(data_EMG.trial{itrial}(1,:));
+%                 h_temp_min = min(data_EMG.trial{itrial}(1,:));
+%                 h_temp_amplitude(itrial) = h_temp_max - h_temp_min;
+%             end
+%             h = mean(h_temp_amplitude);
+%             
+%             
+%             
+%             %plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
+%             plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2);
+%             
+%             for itrial = 1 : nb_trials
+%                 t = data_EMG.time{itrial};
+%                 plot(t,data_EMG.trial{itrial}(1,:)+ (nb_trials+1)*h - itrial*h,'k'); %first on top
+%             end
+%             
+%             
+%             
+%             xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
+%             ylabel('Number of seizures', 'Fontsize',15);
+%             title(sprintf('Aligned data from %s', data_EMG{imarker}.label{iEMG{imarker}}),'Interpreter','none','Fontsize',18);
+%             set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
+%             tick = h;
+%             yticks(tick : tick*10 : nb_trials*h);
+%             yticklabels(nb_trials : -10 : 0);
+%             set(gca,'TickDir','out');
+%             axis tight
+%             xlim(cfg.epoch.toi{1});
+%         end
+%     end
+% end
+% 
+% if isfield(cfg.LFP, 'emg')
+%     if ~strcmp(cfg.LFP.emg{imarker},'no')
+%         subplot(1,2,2);
+%         set(gca,'TickLength',[0 0]);
+%         yticklabels([]);
+%         xticklabels([]);
+%         set(gca,'YColor', [1 1 1],'XColor', [1 1 1]);
+%         text(0.2,0.5,sprintf('No EMG data \nassociated with %s', cfg.LFP.name{imarker}),'Interpreter','none','Fontsize',15);
+%     end
+% end
 
 
 %% print to file
@@ -105,21 +144,36 @@ if saveplot
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
     
-    set(fig,'PaperOrientation','landscape');
-    set(fig,'PaperUnits','normalized');
-    set(fig,'PaperPosition', [0 0 1 1]);
-    set(fig,'Renderer','Painters');
+    set(fig1,'PaperOrientation','landscape');
+    set(fig1,'PaperUnits','normalized');
+    set(fig1,'PaperPosition', [0 0 1 1]);
+    set(fig1,'Renderer','Painters');
     
-    if strcmp(iEMG{imarker},'no')|| iEMG{imarker} == false
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
-    else
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
-    end
+
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',datatype,'_',data.label{1}]),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',datatype,'_',data.label{1}]),'-r600');
+    
+
+%     %EMG
+%     if isfield(cfg.LFP, 'emg')
+%         if ~strcmp(cfg.LFP.emg{imarker},'no')
+%             if ~(cfg.LFP.emg{imarker} == false)
+%                 set(fig2,'PaperOrientation','landscape');
+%                 set(fig2,'PaperUnits','normalized');
+%                 set(fig2,'PaperPosition', [0 0 1 1]);
+%                 set(fig2,'Renderer','Painters');
+%                 
+%                 print(fig2, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_EMG_',data_EMG.label{1}]),'-r600');
+%                 print(fig2, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_EMG_',data_EMG.label{1}]),'-r600');
+%             end
+%         end
+%     end
     
     close all
+    
 end
 
 end
+
+
 

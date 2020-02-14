@@ -160,8 +160,8 @@ else
                                     dat                               = ft_preprocessing(cfgtemp);
                                     
                                     % EMG
-                                    if isfield(cfg.labels, 'emg')
-                                        if ~isempty(cfg.labels.emg)
+                                    if isfield(cfg.LFP, 'emg')
+                                        if ~isempty(cfg.LFP.emg)&& ~strcmp(cfg.LFP.emg{imarker},'no')
                                             cfgtemp                   = [];
                                             cfgtemp.channel           = cfg.LFP.emg{imarker};%load only the emg associated with eeg marker
                                             cfgtemp.hpfilter          = cfg.EMG.hpfilter;

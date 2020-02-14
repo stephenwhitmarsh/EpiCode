@@ -46,7 +46,7 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
             
             [MuseStruct]    = readMuseMarkers(config{ianalyse}, false);
             [MuseStruct]    = alignMuseMarkers(config{ianalyse},MuseStruct, false);
-            [dat_LFP]       = readLFP(config{ianalyse}, MuseStruct, false, false); %dat_LFP{ipart}{imarker}
+            [dat_LFP]       = readLFP(config{ianalyse}, MuseStruct, true, true); %dat_LFP{ipart}{imarker}
             
             %inverse the data according to standard clinical visualisation
             for imarker = 1:size(dat_LFP{ipart},2)
@@ -57,35 +57,37 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
             
             if merge_eeg == true
                 data_temp{ianalyse} = dat_LFP;
+                MuseStruct_temp{ianalyse} = MuseStruct;
             end
         end
         
         if merge_eeg == true 
-            [config{ipatient}, MuseStruct, dat_LFP_EMG, dat_LFP] = dtx_merge_patientslgi1(mergeindex,ipatient,data_temp);
+            [config{ipatient}, MuseStruct, dat_LFP_EMG, dat_LFP] = dtx_merge_patientslgi1(mergeindex,ipatient,MuseStruct_temp,data_temp);
         end
         
+%         cfgtemp = []
+%         cfgtemp.channel = {'EMG'};
+%         a = ft_selectdata(cfgtemp,dat_LFP_EMG{ipart}{imarker});
         
-        %% Choose EEG and EMG channels according to the setparams
-        iEEG = [];
-        iEMG = [];
-        
-        for ichannel = 1 : length(dat_LFP{ipart}{imarker}.label)
-            for imarker = 1:length(config{ipatient}.LFP.name)
-                if strcmp(dat_LFP{ipart}{imarker}.label{ichannel},config{ipatient}.align.channel{imarker})
-                    iEEG{imarker} = ichannel;
-                end
-                if strcmp(dat_LFP{ipart}{imarker}.label{ichannel},config{ipatient}.LFP.emg{imarker})
-                    iEMG{imarker} = ichannel;
-                end
-                if strcmp(config{ipatient}.LFP.emg{imarker},'no')
-                    iEMG{imarker} = {'no'};
-                end
-            end
-            
-        end
-        if length(iEMG)==1
-            iEMG{2}={'no'};
-        end
+%         %% Choose EEG and EMG channels according to the setparams
+%         iEEG = [];
+%         iEMG = [];
+%         
+%         for ichannel = 1 : length(dat_LFP{ipart}{imarker}.label)
+%             for imarker = 1:length(config{ipatient}.LFP.name)
+%                 if strcmp(dat_LFP{ipart}{imarker}.label{ichannel},config{ipatient}.align.channel{imarker})
+%                     iEEG{imarker} = ichannel;
+%                 end
+%                 if strcmp(dat_LFP{ipart}{imarker}.label{ichannel},config{ipatient}.LFP.emg{imarker})
+%                     iEMG{imarker} = ichannel;
+%                 end
+%                 if strcmp(config{ipatient}.LFP.emg{imarker},'no')
+%                     iEMG{imarker} = {'no'};
+%                 end
+%             end
+%             
+%         end
+
         %% Plot
         
         fprintf('***********************************\n');
@@ -98,24 +100,33 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
         %2 figures : For SW_R and SW_L
         for imarker = 1:length(config{ipatient}.LFP.name)
             
-            dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP{ipart}, iEEG, iEMG, imarker,true);
+            dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP{ipart},imarker, 'eeg', true);
+            dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP_EMG{ipart},imarker, 'emg', true);
             
-            dtx_plot_TFR(config{ipatient}, dat_LFP{ipart}, iEEG, imarker, true);
+            dtx_plot_TFR(config{ipatient}, dat_LFP{ipart}, imarker, false);
             
-            if ~any(strcmp(iEMG{imarker},'no') || iEMG{imarker} == true)
-                
-                dtx_plot_comparison_eeg_emg(config{ipatient}, dat_LFP{ipart}, iEEG, iEMG, imarker,true); %find which strategy of EMG quantif
-                
+            dtx_plot_overdraw_allchannels(config{ipatient},dat_LFP{ipart},imarker,true);
+            
+            dtx_plot_avg_allchannels(config{ipatient},dat_LFP{ipart},imarker,true);
+            
+            dtx_plot_SlowWaveTopographyTimecouse(config{ipatient},dat_LFP{ipart}, imarker, true);
+            
+            if isfield(config{ipatient}.LFP,'emg')
+                if ~(strcmp(config{ipatient}.LFP.emg{imarker},'no')
+                    if ~(config{ipatient}.LFP.emg{imarker} == false)
+                        
+                        dtx_plot_comparison_eeg_emg(config{ipatient}, dat_LFP_EMG{ipart}, imarker,true); %find which strategy of EMG quantif
+                    
+                    end
+                end
             end
             
         end
         
         %1 figure common for SW_R and SW_L
-        dtx_plot_overdraw_allchannels(config{ipatient},dat_LFP{ipart},iEEG,iEMG,true,true);
+        
         
         dtx_plot_SlowWaveTopography(config{ipatient},dat_LFP{ipart},true,true);
-        
-        dtx_plot_SlowWaveTopographyTimecouse(config{ipatient},dat_LFP{ipart},true);
         
         dtx_plot_count_seizure(config{ipatient}, MuseStruct, true)
         

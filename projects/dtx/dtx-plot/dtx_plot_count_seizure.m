@@ -6,6 +6,8 @@ function dtx_plot_count_seizure(cfg, MuseStruct, savedata)
 %pour appliquer à tous : rentrer cfg entier. préciser ipatient/irat dans
 %argument à part
 
+%AJOUTER CB AVEC EMG ET CB AVEC EEG
+
 %get all marker times
 SlowWave_R_total = dtx_concatenateMuseMarkers(cfg,MuseStruct, 'SlowWave_R');
 SlowWave_L_total = dtx_concatenateMuseMarkers(cfg, MuseStruct,'SlowWave_L');
@@ -132,7 +134,12 @@ end
 
 %% Table creation
 
-tablepath = fullfile(cfg.imagesavedir,'seizures_info',[cfg.prefix, 'seizure_info.csv']);
+if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+end
+
+tablepath = fullfile(cfg.imagesavedir,[cfg.prefix, 'seizure_info.csv']);
 tableid = fopen(tablepath,'wt');
 fprintf(tableid,'%s\n',cfg.prefix(1:end-1));
 fprintf(tableid,'Number of Slow Waves :;%g\n',nbSlowWaves);
@@ -227,7 +234,7 @@ elseif isRat
     end
 end
 
-title(sprintf('%s : seizures quantification',cfg.prefix(1:end-1)),'Fontsize',18,'Interpreter','none');
+title(sprintf('%s : %d right seizures and %d left seizures',cfg.prefix(1:end-1), size(SlowWave_R_total,2),size(SlowWave_L_total,2)),'Fontsize',18,'Interpreter','none');
 xlabel('Time at recording');
 ylabel('Slow deflexions occurences');
 set(gca,'TickDir','out','FontWeight','bold');
