@@ -57,12 +57,11 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
             
             if merge_eeg == true
                 data_temp{ianalyse} = dat_LFP;
-                MuseStruct_temp{ianalyse} = MuseStruct;
             end
         end
         
         if merge_eeg == true 
-            [config{ipatient}, MuseStruct, dat_LFP_EMG, dat_LFP] = dtx_merge_patientslgi1(mergeindex,ipatient,MuseStruct_temp,data_temp);
+            [config{ipatient}, MuseStruct, dat_LFP_EMG, dat_LFP] = dtx_merge_patientslgi1(mergeindex,ipatient,data_temp);
         end
         
         

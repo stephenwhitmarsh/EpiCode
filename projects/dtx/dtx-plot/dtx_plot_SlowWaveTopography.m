@@ -106,12 +106,18 @@ end
 
 %% print to file
 if saveplot
+    
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
+    
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'topography']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'topography']),'-r600');
     close all
 end
 

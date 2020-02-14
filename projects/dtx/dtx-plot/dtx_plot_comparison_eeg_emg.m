@@ -120,11 +120,17 @@ xlabel('Time (s)','Fontsize',18);
 
 %% sava data
 if saveplot
+    
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
+    
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'comparison_eegemg',[cfg.prefix,'comparisoneegemg_',cfg.LFP.name{imarker},'_',data.label{iEEG},'_',data.label{iEMG},'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'comparison_eegemg',[cfg.prefix,'comparisoneegemg_',cfg.LFP.name{imarker},'_',data.label{iEEG},'_',data.label{iEMG},'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'comparisoneegemg_',cfg.LFP.name{imarker},'_',data.label{iEEG},'_',data.label{iEMG},'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'comparisoneegemg_',cfg.LFP.name{imarker},'_',data.label{iEEG},'_',data.label{iEMG},'.png']),'-r600');
     close all
 end
 

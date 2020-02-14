@@ -314,12 +314,17 @@ end
 %% Print to file
 if savedata
     
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
+    
     fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'seizures_info',[cfg.prefix, 'seizures_infos']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'seizures_info',[cfg.prefix, 'seizures_infos']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix, 'seizures_infos']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix, 'seizures_infos']),'-r600');
     close all
     
     

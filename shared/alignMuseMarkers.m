@@ -439,11 +439,16 @@ else
                 axis tight
                 
                 % print to file
+                    
+                if ~(exist (cfg.imagesavedir)==7)
+                    mkdir(cfg.imagesavedir);
+                    warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+                end
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
                 close all
             end % idir
         end % imarker

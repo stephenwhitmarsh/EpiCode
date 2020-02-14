@@ -79,12 +79,18 @@ for imarker = 1:length(data)
     
     %% print to file
     if saveplot
+        
+        if ~(exist (cfg.imagesavedir)==7)
+            mkdir(cfg.imagesavedir);
+            warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+        end
+        
         set(fig1,'PaperOrientation','landscape');
         set(fig1,'PaperUnits','normalized');
         set(fig1,'PaperPosition', [0 0 1 1]);
         set(fig1,'Renderer','Painters');
-        print(fig1, '-dpdf', fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
-        print(fig1, '-dpng', fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
+        print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
+        print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
         
         savefig(fig2,fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},'.fig']));
         

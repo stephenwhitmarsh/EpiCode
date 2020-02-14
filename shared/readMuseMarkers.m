@@ -22,20 +22,20 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct.mat',cfg.prefix));
 
 if exist(fname,'file') && force == false
-    fprintf('***************************************\n');
-    fprintf('** loading precomputed MuseStruct *****\n');
-    fprintf('***************************************\n\n');
+    fprintf('************************************\n');
+    fprintf('** loading precomputed MuseStruct **\n');
+    fprintf('************************************\n\n');
     load(fname,'MuseStruct');
 else
     
     if force == true
-        fprintf('**********************************************\n');
-        fprintf('** forced redoing of MuseStruct creation *****\n');
-        fprintf('**********************************************\n\n');
+        fprintf('*******************************************\n');
+        fprintf('** forced redoing of MuseStruct creation **\n');
+        fprintf('*******************************************\n\n');
     else
-        fprintf('****************************\n');
-        fprintf('** creating MuseStruct *****\n');
-        fprintf('****************************\n\n');
+        fprintf('*************************\n');
+        fprintf('** creating MuseStruct **\n');
+        fprintf('*************************\n\n');
     end
     
     %get format to adapt script for each format

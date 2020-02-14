@@ -48,7 +48,7 @@ for imarker = 1 : length(data)
             channelisEMG=false;
         elseif ~(strcmp(iEMG{imarker},'no') || iEMG{imarker} == false) %if there is EMG data
             ichan_emg = ichan-length(cfg.labels.macro);
-            cfgtemp.channel = cfg.labels.emg{ichan_emg};
+            cfgtemp.channel = cfg.LFP.emg{ichan_emg};
             channelisEMG=true;
         end
         dat_temp = ft_selectdata(cfgtemp,data{imarker});
@@ -114,12 +114,18 @@ end
 
 %% print to file
 if saveplot
+    
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
+    
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'overdraw_allchannels',[cfg.prefix,'overdraw_allchannels']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'overdraw_allchannels',[cfg.prefix,'overdraw_allchannels']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels']),'-r600');
     close all
 end
 

@@ -99,17 +99,23 @@ end
 
 %% print to file
 if saveplot
+    
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
+    
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
     
     if strcmp(iEMG{imarker},'no')|| iEMG{imarker} == false
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,'timecourse',[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,'timecourse',[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
+        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}}]),'-r600');
     else
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,'timecourse',[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,'timecourse',[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
+        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',data{imarker}.label{iEEG{imarker}},'_',data{imarker}.label{iEMG{imarker}}]),'-r600');
     end
     
     close all

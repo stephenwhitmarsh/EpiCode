@@ -70,12 +70,16 @@ ylabel('Frequency (Hz)');
 
 %% print to file
 if saveplot
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+    end
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'TFR',[cfg.prefix,'TFR_', cfg.LFP.name{imarker}, '_', data.label{iEEG}]),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'TFR',[cfg.prefix,'TFR_', cfg.LFP.name{imarker}, '_', data.label{iEEG}]),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'TFR_', cfg.LFP.name{imarker}, '_', data.label{iEEG}]),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'TFR_', cfg.LFP.name{imarker}, '_', data.label{iEEG}]),'-r600');
     close all
 end
 
