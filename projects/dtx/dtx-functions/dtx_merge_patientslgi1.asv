@@ -34,13 +34,13 @@ count_SlowWave_L = 0;
 
 for i_pat = merge_index
     for imarker = 1:length(config{i_pat}.LFP.name)
-        hasEMG = false;
+        hasEMG = 0;
         
-        %search and rename EMG
+        %rename EMG
         for ichannel=1:length(data{i_pat}{ipart}{imarker}.label)
             if strcmp(data{i_pat}{ipart}{imarker}.label{ichannel},config{i_pat}.LFP.emg{imarker})
                 data{i_pat}{ipart}{imarker}.label{ichannel} = 'EMG';
-                hasEMG = true;
+                hasEMG = 1;
             end
         end
                
@@ -51,11 +51,7 @@ for i_pat = merge_index
                 
                 if strcmp('SlowWave_R',markername)
                     count_SlowWave_R = count_SlowWave_R+1;
-                    if hasEMG
-                        eval(sprintf('dataEEGEMG_R_%d = data{idata}{ipart}{imarker};',count_SlowWave_R));
-                    end
-                        eval(sprintf('dataEEG_R_%d = data{idata}{ipart}{imarker};',count_SlowWave_R));
-                    
+                    eval(sprintf('data_R_%d = data{idata}{ipart}{imarker};',count_SlowWave_R));
                 elseif strcmp('SlowWave_L',markername)
                     count_SlowWave_L = count_SlowWave_L+1;
                     eval(sprintf('data_L_%d = data{idata}{ipart}{imarker};',count_SlowWave_L));

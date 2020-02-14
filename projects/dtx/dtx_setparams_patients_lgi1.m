@@ -111,7 +111,7 @@ config{2}.datasavedir               = datasavedir;         % where to write data
 config{2}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_008');       % where to print images
 config{2}.labels.macro              = {'Fp2','F4','C4','P4','O2','F8','T4','T6','Fpz','Fz','Cz','Pz','Oz','Fp1','F3',...
     'C3','P3','O1','F7','T3','T5'};
-config{2}.labels.emg                = {'EMG1+','EMG2+'};
+%config{2}.labels.emg                = {'EMG1+','EMG2+'};
 config{2}.directorylist{1}          = {'EEG_131'}; %dir = eeg file with all the electrodess
 
 %config{2}.preproc_eog %TO DO
