@@ -327,10 +327,14 @@ else
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 
-                for itemp = 1:length(peaks_ac_sel_trl)
-                    peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
+                i_h_temp = 0;
+                for ipeak = 1:length(peaks_ac_sel_trl)
+                    if ~isempty((peaks_ac_sel_trl{ipeak}))
+                        i_h_temp = i_h_temp+1;
+                        h_temp(i_h_temp) = max(peaks_ac_sel_trl{ipeak});
+                    end
                 end
-                h               = mean(peaks_ac_sel_trl_max)/10;%1200; 
+                h               = mean(h_temp)/10;%1200; 
            
                 
                 subplot(2,2,1);

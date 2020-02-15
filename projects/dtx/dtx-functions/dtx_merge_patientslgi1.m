@@ -103,11 +103,12 @@ for i_L = 1:count_SlowWave_L_EMG
 end
 
 
-%Appenddata, and set cfg.LFP.name and cfg.LFP.emg
+%Appenddata, and set cfg.LFP.name and cfg.LFP.emg and cfg.muse.startend
 config{ipatient}.LFP.emg      = {'EMG', 'EMG'};
 
 if count_SlowWave_R > 0 && count_SlowWave_L > 0
-    config{ipatient}.LFP.name     = {'SlowWave_R','SlowWave_L'};
+    config{ipatient}.LFP.name       = {'SlowWave_R','SlowWave_L'};
+    config{ipatient}.muse.startend  = {'SlowWave_R','SlowWave_R'; 'SlowWave_L','SlowWave_L'; 'Crise_End','SlowWave'};   % start and end Muse marker
     eval(sprintf('data_LFP{ipart}{1} = ft_appenddata([]%s);',dataEEG_R_string));
     eval(sprintf('data_LFP{ipart}{2} = ft_appenddata([]%s);',dataEEG_L_string));
     if count_SlowWave_R_EMG > 0
@@ -122,7 +123,9 @@ if count_SlowWave_R > 0 && count_SlowWave_L > 0
     end
     
 elseif count_SlowWave_R > 0 && count_SlowWave_L == 0
-    config{ipatient}.LFP.name     = {'SlowWave_R'};
+    config{ipatient}.LFP.name       = {'SlowWave_R'};
+    config{ipatient}.muse.startend  = {'SlowWave_R','SlowWave_R'; 'SlowWave_L','SlowWave_L'; 'Crise_End','SlowWave'};   % start and end Muse marker
+
     eval(sprintf('data_merged{ipart}{1} = ft_appenddata([]%s);',dataEEG_R_string));
     if count_SlowWave_R_EMG > 0
         eval(sprintf('data_LFP_EMG{ipart}{1} = ft_appenddata([]%s);',dataEEGEMG_R_string));
@@ -132,6 +135,8 @@ elseif count_SlowWave_R > 0 && count_SlowWave_L == 0
     
 elseif count_SlowWave_R == 0 && count_SlowWave_L > 0
     config{ipatient}.LFP.name     = {'SlowWave_L'};
+    config{ipatient}.muse.startend  = {'SlowWave_L','SlowWave_L'; 'SlowWave_R','SlowWave_R'; 'Crise_End','SlowWave'};   % start and end Muse marker
+
     eval(sprintf('data_merged{ipart}{1} = ft_appenddata([]%s);',dataEEG_L_string));
     if count_SlowWave_L_EMG > 0
         eval(sprintf('data_LFP_EMG{ipart}{2} = ft_appenddata([]%s);',dataEEGEMG_L_string));

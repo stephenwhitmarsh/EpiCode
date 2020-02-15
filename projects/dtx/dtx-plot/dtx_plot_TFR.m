@@ -1,11 +1,10 @@
-function dtx_plot_TFR(cfg,data,imarker,saveplot)
+function TFR_eeg = dtx_plot_TFR(cfg,data,imarker,saveplot)
 %TFR of all trials of one electrode, with time of interest defined in cfg
 
 %Select EEG channel
 cfgtemp = [];
 cfgtemp.channel = cfg.align.channel{imarker};
 data = ft_selectdata(cfgtemp,data{imarker});
-
 
 cfgtemp                         = [];
 cfgtemp.channel                 = 'all'; 
@@ -19,10 +18,10 @@ cfgtemp.t_ftimwin               = 40./cfgtemp.foi;
 %cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi))*0.5;
 
 cfgtemp.toi                     = [-10:0.01:15];
-TFR_macro                       = ft_freqanalysis(cfgtemp,data);
+TFR_eeg                       = ft_freqanalysis(cfgtemp,data);
 
-TFR_macro_log = TFR_macro;
-TFR_macro_log.powspctrm = log(TFR_macro.powspctrm);
+TFR_macro_log = TFR_eeg;
+TFR_macro_log.powspctrm = log(TFR_eeg.powspctrm);
 
 fig = figure;
 subplot(2,1,1);
@@ -38,7 +37,7 @@ cfgtemp.parameter       = 'powspctrm';
 cfgtemp.colormap        = parula(5000);
 cfgtemp.renderer        = 'painters';
 
-ft_singleplotTFR(cfgtemp, TFR_macro);
+ft_singleplotTFR(cfgtemp, TFR_eeg);
 
 title(sprintf('%s%s : Frequency power over time',cfg.prefix,data.label{1}),'Interpreter','none');
 %xlim([-1, 1]);

@@ -1,4 +1,4 @@
-function dtx_plot_avg_allchannels(cfg,data,imarker,saveplot)
+function dat_avg = dtx_plot_avg_allchannels(cfg,data,imarker,saveplot)
 %plot avg of all channels indicates in cfg.labels.macro and
 %cfg.LFP.emg.
 
@@ -36,7 +36,7 @@ for ichan = 1:nb_channels
     data_temp_avg            = ft_timelockanalysis(cfgtemp,data_1chan);
     dat_avg{ichan}           = data_temp_avg;
     
-    plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k','LineWidth',2);
+    plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k');
 
     
 end
@@ -45,7 +45,7 @@ plot([0 0],[0 (nb_channels+1)*h], '--r', 'Linewidth', 1);
 
 axis tight
 xlim(cfg.epoch.toi{1});
-ylim([0 (nb_channels+1)*h]);
+%ylim([0 (nb_channels+1)*h]);
 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Channel name', 'Fontsize',15);
 title(sprintf('%d seizures', length(data.trial)),'Interpreter','none','Fontsize',20);
@@ -68,8 +68,8 @@ if saveplot
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'avg_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'avg_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
     close all
 end
 

@@ -1,4 +1,4 @@
-function dtx_plot_comparison_eeg_emg(cfg,data,imarker,saveplot)
+function [data_EEG, data_EMG] = dtx_plot_comparison_eeg_emg(cfg,data,imarker,saveplot)
 abscisse_scale = 2;
 
 
@@ -7,6 +7,7 @@ cfgtemp = [];
 cfgtemp.channel = cfg.align.channel{imarker};
 data_EEG = ft_selectdata(cfgtemp,data{imarker});
 
+data_EMG = [];
 if isfield(cfg.LFP, 'emg')
     if ~strcmp(cfg.LFP.emg{imarker},'no')
         if ~(cfg.LFP.emg{imarker} == false)

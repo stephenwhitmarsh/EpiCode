@@ -1,4 +1,4 @@
-function dtx_plot_count_seizure(cfg, MuseStruct, savedata)
+function Seizure_Infos = dtx_plot_count_seizure(cfg, MuseStruct, savedata)
 
 %Descriptive statistics of seizures from Muse markers
 %BaselineStart = Analysis Start

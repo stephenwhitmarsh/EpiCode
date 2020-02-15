@@ -88,7 +88,7 @@ if saveplot
     print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
     print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
     
-    savefig(fig2,fullfile(cfg.imagesavedir,'slowwave_topography',[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},'.fig']));
+    savefig(fig2,fullfile(cfg.imagesavedir,[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},'.fig']));
     
     close all
 end
