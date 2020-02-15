@@ -56,6 +56,8 @@ else
         
         for imarker = 1 : size(cfg.LFP.name,2)%markerlist
             
+            fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
+            
             hasmarker = false(length(MuseStruct{ipart}),1);
             
             for idir = 1:length(MuseStruct{ipart}) %according to cfg.directorylist
@@ -157,10 +159,10 @@ else
                                     dat                               = ft_preprocessing(cfgtemp);
                                     
                                     % EMG
-                                    if isfield(cfg.labels, 'emg')
-                                        if ~isempty(cfg.labels.emg)
+                                    if isfield(cfg.LFP, 'emg')
+                                        if ~isempty(cfg.LFP.emg)&& ~strcmp(cfg.LFP.emg{imarker},'no')
                                             cfgtemp                   = [];
-                                            cfgtemp.channel           = cfg.LFP.emg{imarker};
+                                            cfgtemp.channel           = cfg.LFP.emg{imarker};%load only the emg associated with eeg marker
                                             cfgtemp.hpfilter          = cfg.EMG.hpfilter;
                                             cfgtemp.hpfreq            = cfg.EMG.hpfreq;
                                             cfgtemp.bsfilter          = cfg.EMG.bsfilter;
