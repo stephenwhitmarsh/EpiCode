@@ -324,15 +324,19 @@ else
                 end
 
                 %% Plot alignement
-
+                
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 
                 for itemp = 1:length(peaks_ac_sel_trl)
-                    peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
+                    if ~isempty(peaks_ac_sel_trl{itemp})
+                        peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
+                    else
+                        peaks_ac_sel_trl_max(itemp) = 0;
+                    end
                 end
-                h               = mean(peaks_ac_sel_trl_max)/10;%1200; 
-           
+                h               = mean(peaks_ac_sel_trl_max)/10;%1200;
+                
                 
                 subplot(2,2,1);
                 hold;
