@@ -15,14 +15,14 @@ fname_output = fullfile(cfg.datasavedir,[cfg.prefix,'SpykingCircus_trialinfo_par
 
 if exist(fname_output,'file') && force == false
     fprintf('\nLoading sampleinfo: %s \n',fname_output);
-    temp = load(fname_output,'cfg');
-    sampleinfo          = temp.cfg.sampleinfo;
+    temp         = load(fname_output,'cfg');
+    sampleinfo   = temp.cfg.sampleinfo;
     %     cfg.deadfile_ms         = temp.cfg.deadfile_ms;
     %     cfg.deadfile_samples    = temp.cfg.deadfile_samples;
 else
     
     % loop through different parts
-    for ipart = 1 : 2 % size(MuseStruct,2)
+    for ipart = 1 : size(MuseStruct,2)
         
         % just define MuseStruct here for only one part to simplify code
         % and similarity with no-parts

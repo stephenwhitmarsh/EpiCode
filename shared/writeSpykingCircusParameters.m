@@ -32,7 +32,7 @@ for ipart = 1 : size(cfg.directorylist,2)
     if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
     
     status = ini.WriteFile(fname_params);
-    if ~status 
+    if status == false
         error('Couldn''t write file');
     end
     ini.ToString()
