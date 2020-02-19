@@ -9,7 +9,7 @@ if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip        
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
@@ -19,7 +19,7 @@ if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\  
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));

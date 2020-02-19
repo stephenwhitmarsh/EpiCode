@@ -44,6 +44,7 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
+<<<<<<< HEAD
     % select those markers to load
     %     markerlist = [];
     %     for i = 1 : size(cfg.LFP.name,2)
@@ -56,6 +57,19 @@ else
         
         %         for imarker = markerlist
         for imarker = 1 : size(cfg.LFP.name,2)
+=======
+%     % select those markers to load
+%     markerlist = [];
+%     for i = 1 : size(cfg.LFP.name,2)
+%         if ismember(cfg.LFP.name{i},cfg.name)
+%             markerlist = [markerlist, i];
+%         end
+%     end
+    
+    for ipart = 1:length(MuseStruct)
+        
+        for imarker = 1 : size(cfg.LFP.name,2)%markerlist
+>>>>>>> master
             
             fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
             

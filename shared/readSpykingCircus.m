@@ -47,17 +47,17 @@ else
         
         % find spiking-circus output path, which is based on the name of the
         % first datafile
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result.hdf5']));
+        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result',cfg.circus.postfix,'.hdf5']));
         if isempty(temp)
-            fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result.hdf5']));
+            fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result',cfg.circus.postfix,'.hdf5']));
             return
         else
             fname_spikes = fullfile(temp.folder,temp.name);
         end
         
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates.hdf5']));
+        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates',cfg.circus.postfix,'.hdf5']));
         if isempty(temp)
-            fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates.hdf5']));
+            fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates',cfg.circus.postfix,'.hdf5']));
             return
         end
         fname_templates = fullfile(temp.folder,temp.name);
@@ -69,8 +69,10 @@ else
             temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.ncs']));
             hdr_fname   = fullfile(temp(1).folder,temp(1).name);
             hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-            timestamps  = ft_read_data(hdr_fname,'timestamp','true');  % take the first concatinated file to extract the timestamps
-            %         timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
+            %             tempdataset{1} = hdr_fname;
+            %             temp        = ft_read_neuralynx_interp(tempdataset);
+                        timestamps  = ft_read_data(hdr_fname,'timestamp','true');  % take the first concatinated channel to extract the timestamps
+%             timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
             
             clear names
             % read spiketimes of clusters
@@ -141,28 +143,36 @@ else
                 Trialnr = [];
                 Filenr = [];
                 FileOffset = [];
-            
+                
                 dirOnset = 0;
                 trialcount = 1;
                 for idir = 1 : size(MuseStruct{ipart},2)
-                    try
-                        for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).offset,2)
-                            % FIXME
-                            % has to be fixezd for unequalnumber of
-                            % start-end, i.e. for Paul's project's
-                            % Interictal period
-                            Startsample  = [Startsample; MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).offset(ievent) + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
-                            Endsample    = [Endsample;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).offset(ievent) + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
-                            Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
-                            Trialnr      = [Trialnr; trialcount];
-                            Filenr       = [Filenr; idir];    
-                            FileOffset   = [FileOffset; dirOnset];                            
-                            trialcount   = trialcount + 1;
+                    if isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{ilabel})
+                        if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}),'synctime')
+                            if ~isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2))
+                                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2)
+                                    % FIXME
+                                    % has to be fixezd for unequalnumber of
+                                    % start-end, i.e. for Paul's project's
+                                    % Interictal period
+                                    Startsample  = [Startsample; MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent) * hdr.Fs + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
+                                    Endsample    = [Endsample;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(ievent) * hdr.Fs + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
+                                    Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
+                                    Trialnr      = [Trialnr; trialcount];
+                                    Filenr       = [Filenr; idir];
+                                    FileOffset   = [FileOffset; dirOnset];
+                                    trialcount   = trialcount + 1;
+                                end
+                                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'_*.ncs']));
+                                hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));
+                                %                             sampleinfo(idir) =
+                                dirOnset    = dirOnset + hdrtemp.nSamples; % assuming all channels have same sampleinfo
+                            else
+                                fprintf('No events starting with %s found in filenr %d\n',cfg.muse.startend{ilabel},idir);
+                            end
                         end
-                    catch
-                        fprintf('No events starting with %s found in filenr %d\n',cfg.muse.startend{ilabel},idir);
                     end
-                    dirOnset = dirOnset + cfg.sampleinfo{ipart}{1}(idir,2); % assuming all channels have same sampleinfo
+                    
                 end
                 
                 cfgtemp                         = [];
@@ -175,10 +185,9 @@ else
                 cfgtemp.trl(:,9)                = Endsample-Startsample+1;              % duration in samples
                 cfgtemp.trl(:,10)               = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
                 cfgtemp.trl(:,11)               = Filenr;                               % trialnr. to try to find trials that are missing afterwards
-                cfgtemp.trl(:,12)               = FileOffset;                           % trialnr. to try to find trials that are missing afterwards    
+                cfgtemp.trl(:,12)               = FileOffset;                           % trialnr. to try to find trials that are missing afterwards
                 
-                maxsamples                      = sum(cfg.sampleinfo{ipart}{1}(:,2));   % assuming first channel is representative
-                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < maxsamples(end),:); % so not to read before BOF or after EOFs
+                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr.nSamples,:); % so not to read before BOF or after EOFs
                 
                 % create spiketrials timelocked to events
                 cfgtemp.trlunit                         = 'samples';
@@ -197,9 +206,9 @@ else
         
     end
     
-        save(fname,'SpikeRaw','SpikeTrials');
+    save(fname,'SpikeRaw','SpikeTrials');
     
-%     save(fname,'SpikeRaw');
+    %     save(fname,'SpikeRaw');
     
 end % save / force
 
