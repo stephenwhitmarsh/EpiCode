@@ -78,11 +78,8 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-<<<<<<< HEAD
-%     % select those markers to align
-=======
+
     % select those markers to align
->>>>>>> master
 %     markerlist = [];
 %     for i = 1 : size(cfg.align.name,2)
 %         if ismember(cfg.align.name{i},cfg.name)
@@ -93,13 +90,9 @@ else
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist,2)
         
-<<<<<<< HEAD
-        %for imarker = markerlist
-        for imarker = 1:size(cfg.align.name,2)
-=======
+
         for imarker = 1 : size(cfg.align.name,2)%markerlist
->>>>>>> master
-            
+
             % find data directories that have the required event
             markerindx = [];
             for idir = 1 : size(MuseStruct{ipart},2)
@@ -337,36 +330,16 @@ else
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> master
                 i_h_temp = 0;
                 for ipeak = 1:length(peaks_ac_sel_trl)
                     if ~isempty((peaks_ac_sel_trl{ipeak}))
                         i_h_temp = i_h_temp+1;
                         h_temp(i_h_temp) = max(peaks_ac_sel_trl{ipeak});
                     end
-<<<<<<< HEAD
                 end
                 h               = mean(h_temp)/10;%1200; 
            
-=======
-                end
-                h               = mean(h_temp)/10;%1200;
-=======
-                for itemp = 1:length(peaks_ac_sel_trl)
-                    if ~isempty(peaks_ac_sel_trl{itemp})
-                        peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
-                    else
-                        peaks_ac_sel_trl_max(itemp) = 0;
-                    end
-                end
-                h               = mean(peaks_ac_sel_trl_max)/10;%1200;
->>>>>>> 9b5c3c0dcb28107db74f56a98445e257294ed7bf
-                
->>>>>>> master
-                
+
                 subplot(2,2,1);
                 hold;
                 for itrial = 1 : size(dat_filt_trl.trial,2)
@@ -472,20 +445,9 @@ else
                 xlabel('Time (s)');
                 axis tight
                 
-<<<<<<< HEAD
                 % print to file
                     
-                if ~(exist (cfg.imagesavedir)==7)
-                    mkdir(cfg.imagesavedir);
-                    warning('%s did not exist for saving images, create now',cfg.imagesavedir);
-                end
-                set(fig,'PaperOrientation','landscape');
-                set(fig,'PaperUnits','normalized');
-                set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.align.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
-=======
-                
+                   
                 % check if images directory exists, if not create
                 if ~isfolder(cfg.imagesavedir)
                     ft_notice('creating directory %s', cfg.imagesavedir);
@@ -502,14 +464,10 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-<<<<<<< HEAD
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
-=======
                 print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.pdf']));
                 print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.png']),'-r600');
->>>>>>> 9b5c3c0dcb28107db74f56a98445e257294ed7bf
->>>>>>> master
+
+
                 close all
             end % idir
         end % imarker
