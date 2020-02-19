@@ -213,7 +213,9 @@ else
                 cfgtemp.trl         = [startsample, endsample, offset];
                 cfgtemp.trl(:,4)    = 1:size(cfgtemp.trl,1); % try to find trials that are missing aftewards
                 dat_sel_trl         = ft_redefinetrial(cfgtemp,dat_sel);
+                clear dat_sel      
                 dat_filt_trl        = ft_redefinetrial(cfgtemp,dat_filt);
+                clear dat_filt
                 
                 if strcmp(cfg.align.method{imarker}, 'crawlback')
                     dat_filt40_trl  = ft_redefinetrial(cfgtemp,dat_filt40);
@@ -437,12 +439,25 @@ else
                 xlabel('Time (s)');
                 axis tight
                 
-                % print to file
+                
+                % check if images directory exists, if not create
+                if ~isfolder(cfg.imagesavedir)
+                    ft_notice('creating directory %s', cfg.imagesavedir);
+                    mkdir(d);
+                end
+                
+                % check if aligment subdirectory exists, if not create
+                if ~isfolder(fullfile(cfg.imagesavedir,'alignment'))
+                    ft_notice('creating directory %s', fullfile(cfg.imagesavedir,'alignment'));
+                    mkdir(fullfile(cfg.imagesavedir,'alignment'));
+                end
+                
+                % print to file    
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignement',[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.pdf']));
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.png']),'-r600');
                 close all
             end % idir
         end % imarker
