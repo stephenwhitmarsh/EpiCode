@@ -22,7 +22,7 @@ else
     error('Platform not supported')
 end
 
-datasavedir = fullfile(rootpath_analysis, 'data_for_scripts');
+datasavedir = fullfile(rootpath_analysis, 'data');
 imagesavedir = fullfile(rootpath_analysis); 
 
 %% Rodent 1
@@ -48,7 +48,7 @@ i=0;
 for ifile = 1:length(filelist)
     if length(filelist(ifile).name)>3
         fileExtension = filelist(ifile).name(1,length(filelist(ifile).name)-3:length(filelist(ifile).name));
-        if strncmp(fileExtension,'vhdr',4) 
+        if strncmp(fileExtension,'.eeg',4) 
             i=i+1;
             config{1}.directorylist{1}{i}          =  filelist(ifile).name;
         end
