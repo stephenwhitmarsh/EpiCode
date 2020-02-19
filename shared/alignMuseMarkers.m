@@ -328,7 +328,6 @@ else
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 
-<<<<<<< HEAD
                 i_h_temp = 0;
                 for ipeak = 1:length(peaks_ac_sel_trl)
                     if ~isempty((peaks_ac_sel_trl{ipeak}))
@@ -337,16 +336,6 @@ else
                     end
                 end
                 h               = mean(h_temp)/10;%1200;
-=======
-                for itemp = 1:length(peaks_ac_sel_trl)
-                    if ~isempty(peaks_ac_sel_trl{itemp})
-                        peaks_ac_sel_trl_max(itemp) = max(peaks_ac_sel_trl{itemp});
-                    else
-                        peaks_ac_sel_trl_max(itemp) = 0;
-                    end
-                end
-                h               = mean(peaks_ac_sel_trl_max)/10;%1200;
->>>>>>> 9b5c3c0dcb28107db74f56a98445e257294ed7bf
                 
                 
                 subplot(2,2,1);
@@ -471,13 +460,9 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-<<<<<<< HEAD
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.pdf']),'-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignment_',cfg.name{imarker},'_',dat_sel.label{1},'_',num2str(idir),'.png']),'-r600');
-=======
                 print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.pdf']));
                 print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.png']),'-r600');
->>>>>>> 9b5c3c0dcb28107db74f56a98445e257294ed7bf
+
                 close all
             end % idir
         end % imarker
