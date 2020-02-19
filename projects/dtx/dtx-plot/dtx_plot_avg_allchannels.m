@@ -1,4 +1,4 @@
-function dat_avg = dtx_plot_avg_allchannels(cfg,data,imarker,saveplot)
+function dat_avg_allchans = dtx_plot_avg_allchannels(cfg,data,imarker,saveplot)
 %plot avg of all channels indicates in cfg.labels.macro and
 %cfg.LFP.emg.
 
@@ -7,6 +7,9 @@ data = data{imarker};
 nb_channels = length(cfg.labels.macro);
 fig = figure;
 hold;
+
+cfgtemp                  = [];
+dat_avg_allchans            = ft_timelockanalysis(cfgtemp,data);
 
 %h automatic setting :
 cfgtemp = [];

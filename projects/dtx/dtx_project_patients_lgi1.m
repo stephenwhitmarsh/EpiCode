@@ -16,17 +16,17 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 ipart = 1; %script not adapted yet to data with several "ipart"
 
-for merge_eeg = [false true] %one analysis patient per patient, one other merging
+for merge_eeg = true %[false true] %one analysis patient per patient, one other merging
     
 
     if merge_eeg == false
-        nb_of_patients = length(config);
+        patients_list = 1:length(config);
     elseif merge_eeg == true
-        nb_of_patients = length(mergeindex);
+        patients_list = 1:length(mergeindex);
     end
     
     
-    for ipatient = 1:nb_of_patients %go patient/eeg by patient/eg
+    for ipatient = patients_list%1:nb_of_patients %go patient/eeg by patient/eg
 
         
         %% Get LFP data
@@ -36,6 +36,10 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
         elseif merge_eeg == true
             idata = mergeindex{ipatient};
         end
+        
+        i_eeg_to_merge = 0;
+        data_temp = [];
+        MuseStruct_temp = [];
         
         for ianalyse = idata
             
@@ -56,8 +60,9 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
             end
             
             if merge_eeg == true
-                data_temp{ianalyse} = dat_LFP;
-                MuseStruct_temp{ianalyse} = MuseStruct;
+                i_eeg_to_merge = i_eeg_to_merge + 1;
+                data_temp{i_eeg_to_merge} = dat_LFP;
+                MuseStruct_temp{i_eeg_to_merge} = MuseStruct;
             end
         end
         
@@ -87,7 +92,7 @@ for merge_eeg = [false true] %one analysis patient per patient, one other mergin
             
             dtx_plot_overdraw_allchannels(config{ipatient},dat_LFP{ipart},imarker,true);
             
-            EEG_avg_allchan{ipatient} = dtx_plot_avg_allchannels(config{ipatient},dat_LFP{ipart},imarker,true);
+            EEG_avg_allchan{ipatient}{imarker} = dtx_plot_avg_allchannels(config{ipatient},dat_LFP{ipart},imarker,true);
             
             dtx_plot_SlowWaveTopographyTimecouse(config{ipatient},dat_LFP{ipart}, imarker, true);
             
@@ -117,13 +122,15 @@ end %merge_eeg
 %% save data all patients
 
 %Remove data of non-merged eeg
-TFR_eeg = TFR_eeg(1:length(mergeindex)); 
-EEG_avg_allchan = EEG_avg_allchan(1:length(mergeindex)); 
-EEGchanalign_avg = EEGchanalign_avg(1:length(mergeindex)); 
-EMG_avg = EMG_avg(1:length(mergeindex)); 
-Seizure_Infos = Seizure_Infos(1:length(mergeindex)); 
+config_merged                   = config{1:length(mergeindex));
+TFR_eeg                         = TFR_eeg(1:length(mergeindex)); 
+EEG_avg_allchan                 = EEG_avg_allchan(1:length(mergeindex)); 
+EEGchanalign_avg                = EEGchanalign_avg(1:length(mergeindex)); 
+EMG_avg                         = EMG_avg(1:length(mergeindex)); 
+Seizure_Infos                   = Seizure_Infos(1:length(mergeindex)); 
 
 %save. Same datasavedir for all patients
+save(fullfile(config{1}.datasavedir,'config_merged.mat'),'config_merged');
 save(fullfile(config{1}.datasavedir,'All_patients_TFR_eeg.mat'),'TFR_eeg');
 save(fullfile(config{1}.datasavedir,'All_patients_EEG_avg_allchan.mat'),'EEG_avg_allchan');
 save(fullfile(config{1}.datasavedir,'All_patients_EEGchanalign_avg.mat'),'EEGchanalign_avg');
@@ -136,11 +143,13 @@ save(fullfile(config{1}.datasavedir,'All_patients_Seizure_Infos.mat'),'Seizure_I
 [config, mergeindex] = dtx_setparams_patients_lgi1([]);
 
 % Same datasavedir for all patients
+load(fullfile(config{1}.datasavedir,'config_merged.mat'),'config');
 load(fullfile(config{1}.datasavedir,'All_patients_TFR_eeg.mat'),'TFR_eeg');
-load(fullfile(config{1}.datasavedir,'All_patients_EEG_avg_allchan.mat'),'EEG_avg_allchan');
+load(fullfile(config{1}.datasavedir,'All_patients_EEG_avg_allchan.mat'),'EEG_avg_allchan'); %récupérer avg de tous les channels, pas un par un
 load(fullfile(config{1}.datasavedir,'All_patients_EEGchanalign_avg.mat'),'EEGchanalign_avg');
 load(fullfile(config{1}.datasavedir,'All_patients_EMG_avg.mat'),'EMG_avg');
 load(fullfile(config{1}.datasavedir,'All_patients_Seizure_Infos.mat'),'Seizure_Infos');
+
 
 %attendre d'avoir une première version des fichiers sauvegardés
 %appenddata et voir si c'est OK, si les avg se sont bien concaténés en

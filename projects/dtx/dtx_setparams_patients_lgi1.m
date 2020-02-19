@@ -284,10 +284,10 @@ config{14}.continous                 = true; %sometimes EEG data are cut and cli
 
 %% Patient 15
 config{15}                           = configcommon;
-config{15}.prefix                    = 'pat_LGI1_012-EEG_213-';
+config{15}.prefix                    = 'pat_LGI1_012-EEG_228-';
 config{15}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
 config{15}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
-config{15}.directorylist{1}          = {'EEG_213'}; %dir = eeg file with all the electrodess
+config{15}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
 config{15}.muse.startend             = {'SlowWave_R','SlowWave_R'; 'SlowWave_L','SlowWave_L'; 'Crise_End','SlowWave'};   % start and end Muse marker
 config{15}.align.name                = {'SlowWave_R','SlowWave_L'};%{'SlowWave_R','SlowWave_R'};
 config{15}.align.channel             = {'F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
