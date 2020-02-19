@@ -12,7 +12,7 @@ else
     for ipart = 1 : size(SpikeRaw,2)
         
         % fix this for consistency
-        temp                    = dir(fullfile(cfg.datasavedir,[cfg.prefix,'multifile-',cfg.circus.channel{1},'.ncs']));
+        temp                    = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p' num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.ncs']));
         hdr_fname               = fullfile(temp(1).folder,temp(1).name);
         hdr                     = ft_read_header(hdr_fname); % take the first file to extract the header of the data
         
@@ -30,7 +30,7 @@ else
         % ISI over 1-second windows
         cfgtemp                 = [];
         cfgtemp.outputunit      = 'proportion';
-        cfgtemp.bins            = cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
+        cfgtemp.bins            = [0 : 0.0005 : 0.100]; %cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
         cfgtemp.param           = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
         stats_smooth{ipart}.isi_1s     = ft_spike_isi(cfgtemp,spiketrials_1s{ipart});
         
@@ -225,14 +225,14 @@ else
             cfgtemp.fsample                 = cfg.spike.resamplefs;   % sample at 1000 hz
             cfgtemp.keeptrials              = 'yes';
             cfgtemp.latency                 = [cfg.epoch.toi{ilabel}(1), cfg.epoch.toi{ilabel}(2)];
-            cfgtemp.timwin                  = cfg.spike.toispikerate{ilabel} / 4;
+            cfgtemp.timwin                  = [-0.05 0.05]; % cfg.spike.toispikerate{ilabel} / 4;
             sdf_orig{ipart}                 = ft_spikedensity(cfgtemp,SpikeTrials{ipart}{ilabel});
-            cfgtemp.timwin                  = cfg.spike.toispikerate{ilabel};
+            cfgtemp.timwin                  = [-0.05 0.05] * 4; %cfg.spike.toispikerate{ilabel};
             sdf_smooth{ipart}               = ft_spikedensity(cfgtemp,SpikeTrials{ipart}{ilabel});
             
             % prepare dummy data with baseline value per trial for stats
-            slim(1)                         = find(sdf_orig.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
-            slim(2)                         = find(sdf_orig.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
+            slim(1)                         = find(sdf_orig{ipart}.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
+            slim(2)                         = find(sdf_orig{ipart}.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
             sdf_bl{ipart}                   = sdf_orig{ipart};
             sdf_bl{ipart}.trial             = ones(size(sdf_orig{ipart}.trial)) .* nanmean(sdf_orig{ipart}.trial(:,:,slim(1):slim(2)),3); % replace with mean
             
@@ -247,11 +247,11 @@ else
                 cfgtemp.method                          = 'montecarlo';
                 cfgtemp.computestat                     = 'yes';
                 cfgtemp.correctm                        = 'cluster';
-                cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig.time(end)]; % active period starts after baseline
+                cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig{ipart}.time(end)]; % active period starts after baseline
                 cfgtemp.ivar                            = 1;
                 cfgtemp.uvar                            = 2;
-                cfgtemp.design(1,:)                     = [ones(1,size(sdf_orig{ipart}.trial,1)) ones(1,size(sdf_orig{ipart}.trial,1)) *2];
-                cfgtemp.design(2,:)                     = [1 : size(sdf_orig{ipart}.trial,1) 1 : size(sdf_orig{ipart}.trial,1)];
+                cfgtemp.design(1,:)                     = [ones(1,size(sdf_smooth{ipart}.trial,1)) ones(1,size(sdf_bl{ipart}.trial,1)) *2];
+                cfgtemp.design(2,:)                     = [1 : size(sdf_smooth{ipart}.trial,1) 1 : size(sdf_bl{ipart}.trial,1)];
                 cfgtemp.numrandomization                = 100;
                 cfgtemp.channel                         = itemp;
                 stats_smooth{ipart}.clusterstat{ilabel}{itemp} = ft_timelockstatistics(cfgtemp,sdf_smooth{ipart},sdf_bl{ipart});
@@ -345,7 +345,7 @@ else
                 % plot baseline text
                 x = (cfg.stats.bltoi{ilabel}(1) + cfg.stats.bltoi{ilabel}(2))/2;
                 y = ax(4)*0.9;
-                d = stats.clusterstat{ilabel}{itemp}.bl.avg;
+                d = stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg;
                 text(x,y,sprintf('%.1f p/s',d),'HorizontalAlignment','center');
                 xlabel('Time (sec)');
                 ylabel('Spikerate (Hz)');
@@ -389,7 +389,7 @@ else
                 cfgtemp.method                          = 'montecarlo';
                 cfgtemp.computestat                     = 'yes';
                 cfgtemp.correctm                        = 'cluster';
-                cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig.time(end)]; % active perio starts after baseline
+                cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig{ipart}.time(end)]; % active perio starts after baseline
                 cfgtemp.ivar                            = 1;
                 cfgtemp.uvar                            = 2;
                 cfgtemp.design(1,:)                     = [ones(1,size(sdf_bar{ipart}.trial,1)) ones(1,size(sdf_bar{ipart}.trial,1)) *2];
