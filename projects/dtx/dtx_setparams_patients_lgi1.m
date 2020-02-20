@@ -81,6 +81,8 @@ configcommon.epoch.pad{1}              = 10;
 configcommon.epoch.pad{2}              = 10;
 configcommon.epoch.pad{3}              = 0.5;
 
+
+
 %% Patient 1
 %REVOIR CHANNEL ALIGNEMENT DE CE PREMIER ENREGISTREMENT
 %ADD EOG CHANNEL IF ANY

@@ -44,7 +44,7 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-<<<<<<< HEAD
+
     % select those markers to load
     %     markerlist = [];
     %     for i = 1 : size(cfg.LFP.name,2)
@@ -57,19 +57,7 @@ else
         
         %         for imarker = markerlist
         for imarker = 1 : size(cfg.LFP.name,2)
-=======
-%     % select those markers to load
-%     markerlist = [];
-%     for i = 1 : size(cfg.LFP.name,2)
-%         if ismember(cfg.LFP.name{i},cfg.name)
-%             markerlist = [markerlist, i];
-%         end
-%     end
-    
-    for ipart = 1:length(MuseStruct)
-        
-        for imarker = 1 : size(cfg.LFP.name,2)%markerlist
->>>>>>> master
+
             
             fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
             
@@ -144,8 +132,12 @@ else
                             % loop over files
                             if isNeuralynx
                                 nfile = size(cfg.LFP.channel,2); %one file per channel
-                            elseif isMicromed || isBrainvision
+                            elseif isMicromed 
                                 nfile = 1; %only one file with all electrodes
+                                fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+                            elseif isBrainvision
+                                nfile = 1; %only one file with all electrodes
+                                fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
                             end
                             
                             for ifile = 1 : nfile
@@ -155,9 +147,10 @@ else
                                     temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                     fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                     dat                     = ft_read_neuralynx_interp(fname);
-                                    
-                                elseif isMicromed
-                                    fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+
+                               
+                                elseif isMicromed || isBrainvision
+
                                     % EEG
                                     cfgtemp             = [];
                                     if isfield(cfg.LFP, 'reref')

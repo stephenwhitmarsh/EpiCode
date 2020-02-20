@@ -134,11 +134,17 @@ else
                     
                 elseif isMicromed
                     dataset = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+                    
+                elseif isBrainvision
+                    dataset = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
+                    
                 end
+                
                 
                            
                 %load data and header
                 hdr = ft_read_header(dataset);
+                
                 
                 cfgtemp             = [];
                 
@@ -160,7 +166,7 @@ else
                 cfgtemp.dataset     = dataset;
                 dat_sel             = ft_preprocessing(cfgtemp);
                 
-                if isMicromed %choose channel
+                if isMicromed || isBrainvision %choose channel
                     cfgtemp         = [];
                     cfgtemp.channel = cfg.align.channel{imarker};
                     dat_sel         = ft_selectdata(cfgtemp,dat_sel);
@@ -451,7 +457,7 @@ else
                 % check if images directory exists, if not create
                 if ~isfolder(cfg.imagesavedir)
                     ft_notice('creating directory %s', cfg.imagesavedir);
-                    mkdir(d);
+                    mkdir(cfg.imagesavedir);
                 end
                 
                 % check if aligment subdirectory exists, if not create
