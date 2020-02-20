@@ -140,8 +140,8 @@ else
                     for isample = begin_mrk_list_index:length(markfile)
                         if strcmp(markfile{isample}{2},name{imarker})
                             sample_index = sample_index+1;
-                            marks{imarker}(sample_index, 1) = 1;
-                            marks{imarker}(sample_index, 2) = str2num(markfile{isample}{3})/header.Fs;
+                            marks{imarker}(sample_index, 1) = str2num(markfile{isample}{3})/header.Fs;
+                            marks{imarker}(1,sample_index) = str2num(markfile{isample}{3})/header.Fs;
                         end
                     end
                     if sample_index == 0

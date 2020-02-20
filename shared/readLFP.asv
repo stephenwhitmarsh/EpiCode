@@ -133,7 +133,6 @@ else
                                 nfile = 1; %only one file with all electrodes
                                 fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
                             elseif isBrainvision
-                                nfile = 1; %only one file with all electrodes
                                 fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
                             end
                             

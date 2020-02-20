@@ -44,7 +44,7 @@ configcommon.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};  % active p
 configcommon.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 configcommon.align.reref               = 'no';
 configcommon.align.rerefmethod         = 'avg';
-configcommon.align.refchannel          = 'all';
+configcommon.align.refchannel          = configcommon.labels.macro';
 configcommon.align.notch               = 'no';
 
 configcommon.LFP.hpfilter              = 'no';
@@ -55,7 +55,7 @@ configcommon.LFP.baselinewindow        = {[-2, -1], [-2, -1]};
 configcommon.LFP.slidestep             = 0.01;
 configcommon.LFP.reref                 = 'no';
 configcommon.LFP.rerefmethod           = 'avg';
-configcommon.LFP.refchannel            = 'all';
+configcommon.LFP.refchannel            = configcommon.labels.macro';
 configcommon.LFP.bsfilter              = 'no';
 configcommon.LFP.bsfreq                = [49 51];
 configcommon.EMG.hpfilter              = 'yes';
@@ -77,15 +77,12 @@ configcommon.epoch.pad{3}              = 0.5;
 config{1}                           = configcommon;
 config{1}.prefix                    = 'DTXEEG12-';
 config{1}.rawdir                    = fullfile(rootpath_data,'DTXEEG12-100uM');
-config{1}.rawlabels                 = {'47','45','48'};
-config{1}.labels.macro              = {'M1G','M1D','PtA'};
-config{1}.imagesavedir              = fullfile(imagesavedir,'DTXEEG12');       % where to print images
+config{1}.imagesavedir              = fullfile(imagesavedir,'DTXEEG12-');       % where to print images
 config{1}.muse.startend             = {'SlowWave','SlowWave'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker. For defining trials
 config{1}.align.name                = {'SlowWave'};%{'SlowWave_R','SlowWave_R'};
 config{1}.align.channel             = {'M1G'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{1}.LFP.name                  = {'SlowWave'};%,'SlowWave_L'}; %alwa
 config{1}.LFP.emg                   = {'no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
-
 %config{1}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
 % 
 % config{1}.os                        = os;
@@ -93,7 +90,8 @@ config{1}.LFP.emg                   = {'no'};%same index as associated EEG. 'no'
 % config{1}.muse.startend             = {'SlowWave','Crise_Start'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker
 % config{1}.rawdir                    = fullfile(rootpath_data, 'DTXEEG12-100uM');
 % config{1}.imagesavedir              = fullfile(imagesavedir,'DTXEEG12-');       % where to print images
-
+% config{1}.rawlabels                 = {'47','45','48'};
+% config{1}.labels.macro              = {'M1G','M1D','PtA'};
 
 %config{irat}.directorylist
 filelist = dir(config{1}.rawdir);

@@ -453,7 +453,7 @@ else
                 % check if images directory exists, if not create
                 if ~isfolder(cfg.imagesavedir)
                     ft_notice('creating directory %s', cfg.imagesavedir);
-                    mkdir(cfg.imagesavedir);
+                    mkdir(d);
                 end
                 
                 % check if aligment subdirectory exists, if not create

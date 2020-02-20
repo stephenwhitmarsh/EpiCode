@@ -25,6 +25,8 @@ end
 datasavedir = fullfile(rootpath_analysis, 'data');
 imagesavedir = fullfile(rootpath_analysis);
 
+
+
 %% Patient 1
 %REVOIR CHANNEL ALIGNEMENT DE CE PREMIER ENREGISTREMENT
 %FILTRE HIGH PASS POUR LES EMG : séparer preproc EEG et EMG et appendata
