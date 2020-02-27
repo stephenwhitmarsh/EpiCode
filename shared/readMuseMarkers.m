@@ -92,6 +92,11 @@ else
                 editable        = markfile(find(strcmp('EDITABLE:', markfile)) + 1);
                 classid         = markfile(find(strcmp('CLASSID:', markfile)) + 1);
                 nrEvents        = str2double(markfile(find(strcmp('NUMBER OF SAMPLES:', markfile)) + 1));
+                %correct bug paul : 
+                if length(name)-length(classgroupid) == 1
+                    classgroupid{end+1} = '+3';
+                end
+                
                 
                 for i = 1:length(nrEvents)
                     if nrEvents(i) > 0

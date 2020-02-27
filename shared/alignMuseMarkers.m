@@ -78,6 +78,7 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
+
     % select those markers to align
 %     markerlist = [];
 %     for i = 1 : size(cfg.align.name,2)
@@ -89,8 +90,9 @@ else
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist,2)
         
+
         for imarker = 1 : size(cfg.align.name,2)%markerlist
-            
+
             % find data directories that have the required event
             markerindx = [];
             for idir = 1 : size(MuseStruct{ipart},2)
@@ -177,7 +179,7 @@ else
                 end
                 
                 % flip data if required
-                if strcmp(cfg.align.method{imarker},'min') || strcmp(cfg.align.method{imarker},'firstmin') || strcmp(cfg.align.method{imarker},'lastmin')
+                if strcmp(cfg.align.method{imarker},'min') || strcmp(cfg.align.method{imarker},'firstmin') || strcmp(cfg.align.method{imarker},'lastmin') || strcmp(cfg.align.method{imarker},'nearestmin')
                     dat_sel.trial{1} = -dat_sel.trial{1};
                 end
                 
@@ -277,12 +279,14 @@ else
                 
                 dat_sel_aligned = dat_sel_trl;
                 dat_filt_aligned = dat_filt_trl; %for plot
+                n_haspeak = 0;
                 
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
+                        n_haspeak = n_haspeak+1;
                         
                         % find relevant peak according to method
-                        if strcmp(cfg.align.method{imarker},'nearest')
+                        if strcmp(cfg.align.method{imarker},'nearest') ||strcmp(cfg.align.method{imarker},'nearestmin') % Min same as 'max' because timecourse was flipped
                             [~, ip(itrial)] = min(abs(dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1))); % peak-time closest to zero
                             
                         elseif strcmp(cfg.align.method{imarker},'max')
@@ -328,7 +332,12 @@ else
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(itrial) + seconds(timeshift);
                     end
                 end
-
+                
+                %remove supplemental trials in case some are ignored
+                %because of ~haspeak
+                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(1:n_haspeak);
+                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(1:n_haspeak);
+                
                 %% Plot alignement
                 
                 fig             = figure;
@@ -341,9 +350,9 @@ else
                         h_temp(i_h_temp) = max(peaks_ac_sel_trl{ipeak});
                     end
                 end
-                h               = mean(h_temp)/10;%1200;
-                
-                
+                h               = mean(h_temp)/5;%1200; 
+           
+
                 subplot(2,2,1);
                 hold;
                 for itrial = 1 : size(dat_filt_trl.trial,2)
@@ -357,8 +366,8 @@ else
                     end
                     if hasartefact(itrial)
                         color = 'c';
-                    else
-                        color = 'k';
+%                     else
+%                         color = 'k';
                     end
                     plot(dat_filt_trl.time{itrial},dat_filt_trl.trial{itrial} + itrial*h,'color',color);
                 end
@@ -384,8 +393,8 @@ else
                     end
                     if hasartefact(itrial)
                         color = 'c';
-                    else
-                        color = 'k';
+%                     else
+%                         color = 'k';
                     end
                    plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
                     
@@ -412,8 +421,8 @@ else
                     end
                     if hasartefact(itrial)
                         color = 'c';
-                    else
-                        color = 'k';
+%                     else
+%                         color = 'k';
                     end
                     plot(dat_sel_trl.time{itrial},dat_sel_trl.trial{itrial} + itrial*h,'color',color);
                 end
@@ -422,8 +431,8 @@ else
                 xlabel('Time (s)');
                 axis tight
                 ax = axis;
-                fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
-                fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
+                %fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
+                %fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
                 
                 subplot(2,2,4);
                 hold;
@@ -438,8 +447,8 @@ else
                     end
                     if hasartefact(itrial)
                         color = 'c';
-                    else
-                        color = 'k';
+%                     else
+%                         color = 'k';
                     end
                     plot(dat_sel_aligned.time{itrial},dat_sel_aligned.trial{itrial} + itrial*h,'color',color);
           
@@ -449,7 +458,9 @@ else
                 xlabel('Time (s)');
                 axis tight
                 
-                
+                % print to file
+                    
+                   
                 % check if images directory exists, if not create
                 if ~isfolder(cfg.imagesavedir)
                     ft_notice('creating directory %s', cfg.imagesavedir);
@@ -466,8 +477,9 @@ else
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.pdf']));
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'.png']),'-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'_',num2str(idir),'.pdf']));
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,'alignment',[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_',dat_sel_aligned.label{1},'_',num2str(idir),'.png']),'-r600');
+
 
                 close all
             end % idir

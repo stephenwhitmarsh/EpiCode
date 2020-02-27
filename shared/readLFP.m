@@ -44,19 +44,22 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-%     % select those markers to load
-%     markerlist = [];
-%     for i = 1 : size(cfg.LFP.name,2)
-%         if ismember(cfg.LFP.name{i},cfg.name)
-%             markerlist = [markerlist, i];
-%         end
-%     end
+
+    % select those markers to load
+    %     markerlist = [];
+    %     for i = 1 : size(cfg.LFP.name,2)
+    %         if ismember(cfg.LFP.name{i},cfg.name)
+    %             markerlist = [markerlist, i];
+    %         end
+    %     end
     
     for ipart = 1:length(MuseStruct)
         
-        for imarker = 1 : size(cfg.LFP.name,2)%markerlist
+        %         for imarker = markerlist
+        for imarker = 1 : size(cfg.LFP.name,2)
+
             
-            fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
+            fprintf('For marker %s\n',cfg.LFP.name{imarker});
             
             hasmarker = false(length(MuseStruct{ipart}),1);
             
@@ -69,24 +72,24 @@ else
                             % data. Neuralynx : same markers for all files
                             % of one dir.
                             Startsample             = [];
-                            Endsample               = [];                            
+                            Endsample               = [];
                             Stage                   = [];
                             Offset                  = [];
                             trialnr                 = [];
                             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
-
+                                
                                 ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) * cfg.LFP.resamplefs);
                                 idx =  find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime * cfg.LFP.resamplefs) >= ss,1,'first');
                                 es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(idx) * cfg.LFP.resamplefs);
-
+                                
                                 if ~isempty(es) % && (es - ss) * hdr_micro.Fs < 4 %% find a way to check for Paul's data
-
+                                    
                                     Startsample(ievent) = ss + cfg.epoch.toi{imarker}(1) * cfg.LFP.resamplefs - cfg.epoch.pad{imarker} * cfg.LFP.resamplefs;
                                     Endsample(ievent)   = es + cfg.epoch.toi{imarker}(2) * cfg.LFP.resamplefs + cfg.epoch.pad{imarker} * cfg.LFP.resamplefs;
                                     Offset(ievent)      = (cfg.epoch.toi{imarker}(1) - cfg.epoch.pad{imarker}) * cfg.LFP.resamplefs;
                                     trialnr(ievent)     = ievent;
                                     Stage(ievent)       = -1;
-
+                                    
                                     % find overlap with hypnogram markers
                                     for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
                                         if isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
@@ -123,8 +126,8 @@ else
                                     end
                                 end % ~isempty(es)
                             end
-   
-
+                            
+                            
                             
                             % loop over files
                             if isNeuralynx
@@ -144,8 +147,10 @@ else
                                     temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                     fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                     dat                     = ft_read_neuralynx_interp(fname);
+                                    hdr                     = ft_read_header(fname);
                                
                                 elseif isMicromed || isBrainvision
+
                                     % EEG
                                     cfgtemp             = [];
                                     if isfield(cfg.LFP, 'reref')
@@ -157,9 +162,22 @@ else
                                         cfgtemp.bsfilter              = cfg.LFP.bsfilter;
                                         cfgtemp.bsfreq                = cfg.LFP.bsfreq;
                                     end
+
+                                    
                                     cfgtemp.dataset                   = fname;
                                     cfgtemp.channel                   = cfg.labels.macro';
                                     dat                               = ft_preprocessing(cfgtemp);
+                                    
+                                    if isfield(cfg.LFP, 'lpfilter')
+                                        cfgtemp                     = [];
+                                        cfgtemp.lpfilter            = cfg.LFP.lpfilter;
+                                        cfgtemp.lpfreq              = cfg.LFP.lpfreq;
+                                        cfgtemp.lpfilttype          = cfg.LFP.lpfilttype;
+                                        dat                         = ft_preprocessing(cfgtemp,dat);
+                                    end
+                                    
+                                    
+                                    hdr                               = ft_read_header(fname);
                                     
                                     % EMG
                                     if isfield(cfg.LFP, 'emg')
@@ -170,6 +188,15 @@ else
                                             cfgtemp.hpfreq            = cfg.EMG.hpfreq;
                                             cfgtemp.bsfilter          = cfg.EMG.bsfilter;
                                             cfgtemp.bsfreq            = cfg.EMG.bsfreq;
+                                            
+                                            if isfield(cfg.EMG, 'reref')
+                                                if strcmp(cfg.EMG.reref, 'yes')
+                                                    cfgtemp.reref                 = cfg.EMG.reref;
+                                                    cfgtemp.rerefmethod           = cfg.EMG.rerefmethod;
+                                                    cfgtemp.refchannel            = cfg.EMG.refchannel;
+                                                end
+                                            end
+                                            
                                             cfgtemp.dataset           = fname;
                                             data_EMG                  = ft_preprocessing(cfgtemp);
                                             
@@ -204,13 +231,13 @@ else
                                 % create Fieldtrip trl
                                 cfgtemp                         = [];
                                 cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
-                                cfgtemp.trl(:,4)                = trialnr; 
-                                cfgtemp.trl(:,6)                = idir; 
+                                cfgtemp.trl(:,4)                = trialnr;
+                                cfgtemp.trl(:,6)                = idir;
                                 cfgtemp.trl(:,7)                = Stage;
-                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat.trial{1}),:); % so not to read before BOF or after EOFs   
+                                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat.trial{1}),:); % so not to read before BOF or after EOFs
                                 filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
                                 clear dat
-
+                                
                                 if isNeuralynx
                                     % same label over files
                                     filedat{ifile}.label{1}         = cfg.LFP.channel{ifile};
@@ -219,23 +246,31 @@ else
                                 % flag for averaging
                                 hasmarker(idir)                 = true;
                             end
-
-                            % concatinate channels 
+                            
+                            % concatinate channels
                             cfgtemp                             = [];
                             cfgtemp.keepsampleinfo              = 'no';
                             dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
                             clear filedat*
+                            
                         end
                     end
                 end
             end % idir
             
+            if exist('dirdat','var') %in case there is no marker in the data
+                
             % concatinate data of different datasets (over trials)
             LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
             clear dirdat*
             
             % add samplerate
             LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+            
+            else
+                LFP{ipart}{imarker} = [];
+                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});
+            end
             
         end % imarker
         
