@@ -1,4 +1,4 @@
-function dtx_plot_SlowWaveTopography(cfg,data,separate_R_L,saveplot)
+function dtx_plot_SlowWaveTopography(cfg,data,ipart,saveplot)
 %plot topography of event related to one or two markers, according to 1020
 %human EEG layout.
 %cfg.labels.emg.
@@ -6,8 +6,17 @@ function dtx_plot_SlowWaveTopography(cfg,data,separate_R_L,saveplot)
 %ATTENTION : if there are more than 2 markers which define trials, this
 %script is not yet adapted.
 
-%if separate_R_L = true, subplot right and left and indicate absence of one
-%side of seizure if so
+%rename prefix in case of "merge" data
+if isfield(cfg, 'merge')
+    if cfg.merge == true
+        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+            cfg.prefix = [cfg.prefix, 'MERGED-'];
+        else
+            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+        end
+    end
+end
+
 
 abscisse_limits = 2; %s
 
@@ -54,13 +63,14 @@ cfgtemp.linecolor     = 'br';
 cfgtemp.linewidth     = 1;
 cfgtemp.comment       = '\n';
 
-if  separate_R_L == true && length(data)>1
-    ft_multiplotER(cfgtemp,dat_EEG_avg{1},dat_EEG_avg{2}); %script adapted only for 2 markers maximum
-    
-else
-    ft_multiplotER(cfgtemp,dat_EEG_avg{1});
-    
-end
+% if  separate_R_L == true && length(data)>1
+%     ft_multiplotER(cfgtemp,dat_EEG_avg{1},dat_EEG_avg{2}); %script adapted only for 2 markers maximum
+%     
+% else
+%     ft_multiplotER(cfgtemp,dat_EEG_avg{1});
+% end
+
+ft_multiplotER(cfgtemp,dat_EEG_avg{:}); %à tester
 
 title(sprintf('Slow deflexion topography :'),'Interpreter','none','Fontsize',18);
 
@@ -84,15 +94,15 @@ for imarker = 1:length(data)
     ft_topoplotER(cfgtemp,dat_EEG_avg{imarker});
     
     if imarker ==1
-        title(sprintf('%d %s :',size(data{imarker}.trial,2),cfg.LFP.name{imarker}),'Interpreter','none','Fontsize',18,'Color','b');
+        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name{imarker},size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','b');
     elseif imarker == 2
-        title(sprintf('%d %s :',size(data{imarker}.trial,2),cfg.LFP.name{imarker}),'Interpreter','none','Fontsize',18,'Color','r');
+        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name{imarker},size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','r');
     end
 
 
 end
 
-if  separate_R_L == true && length(data) == 1
+if  length(data) == 1
     subplot(2,2,4)
     set(gca,'TickLength',[0 0]);
     yticklabels([]);
@@ -111,6 +121,7 @@ if saveplot
         mkdir(cfg.imagesavedir);
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
+
     
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');

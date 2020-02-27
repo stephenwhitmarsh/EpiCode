@@ -10,7 +10,9 @@
 
 
 addpath C:\Users\paul.baudin\Documents\MATLAB\fieldtrip;
-addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode'));
+addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode\projects\dtx'));
+addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode\external'));
+addpath (genpath('C:\Users\paul.baudin\Documents\MATLAB\EpiCode\shared'));
 addpath C:\Users\paul.baudin\Documents\MATLAB\DTX;
 addpath C:\Users\paul.baudin\Documents\MATLAB\MatlabImportExport_v6.0.0;
 ft_defaults
@@ -23,14 +25,14 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 
 
-config = dtx_setparams([]);
+config = dtx_setparams_probe([]);
 
 
 for irat = 1:6
     
     %% Get right LFP data
     % read muse markers
-    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers_parts(config{irat}, false);
+    [MuseStruct]    = readMuseMarkers(config{irat}, true);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{irat},MuseStruct_micro, MuseStruct_macro, false);
@@ -59,7 +61,7 @@ for irat = 1:6
     fprintf('******************************\n\n');
     
     
-    
+    [MuseStructtest] =   dtx_remove_wrong_seizure(config{irat}, MuseStruct, false);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for macro_id = [config{irat}.LFP.electrodeToPlot(1), config{irat}.LFP.electrodeToPlot(2)]

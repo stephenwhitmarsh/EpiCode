@@ -1,5 +1,6 @@
-function [markerName_Total] = dtx_concatenateMuseMarkers(cfg, MuseStruct, markerName)
+function [markerName_Total] = dtx_concatenateMuseMarkers(cfg, MuseStruct_ipart, markerName)
 %Concatenate markers of all files of the same rodent.
+%Only markers of one part
 %Get the "clock" time of each marker position over all the files of the same rodent
 %Find rodent number in dtx_setparams.m
 
@@ -8,10 +9,10 @@ markerName_Total = [];
 
 Length_markerName_Total = 0;
 
-for idir = 1:length(MuseStruct{1}) %pour chaque fichier
-    if isfield(MuseStruct{1}{idir}.markers, markerName)
-        if isfield(MuseStruct{1}{idir}.markers.(markerName), 'clock')
-            markerName_idir = MuseStruct{1}{idir}.markers.(markerName).clock; %récupérer mrk avec le même nom dans le dossier
+for idir = 1:length(MuseStruct_ipart) %pour chaque fichier
+    if isfield(MuseStruct_ipart{idir}.markers, markerName)
+        if isfield(MuseStruct_ipart{idir}.markers.(markerName), 'clock')
+            markerName_idir = MuseStruct_ipart{idir}.markers.(markerName).clock; %récupérer mrk avec le même nom dans le dossier
             
             for iMarkerPosition = 1:length(markerName_idir)
                 markerName_Total{1,iMarkerPosition+Length_markerName_Total}=markerName_idir(iMarkerPosition); %Remplir array total
@@ -20,10 +21,10 @@ for idir = 1:length(MuseStruct{1}) %pour chaque fichier
             Length_markerName_Total = Length_markerName_Total + length(markerName_idir); %se décaler dans l'array pour remplir la suite
             
         else
-            warning('Marker %s exists but is empty in %s', markerName, MuseStruct{1}{idir}.directory);
+            fprintf('Marker %s exists but is empty in %s\n', markerName, MuseStruct_ipart{idir}.directory);
         end
     else
-        warning('Marker %s does not exist in %s',markerName, MuseStruct{1}{idir}.directory);
+        fprintf('Marker %s does not exist in %s\n',markerName, MuseStruct_ipart{idir}.directory);
     end
     
 end

@@ -1,7 +1,21 @@
-function dtx_plot_timecourse_eeg_emg(cfg,data,imarker,datatype,saveplot)
+function dtx_plot_timecourse_eeg_emg(cfg,data,ipart,imarker,datatype,saveplot)
 %data{ipart} 
 %This script is for one ipart and one imarker
 %datatype : 'eeg' or 'emg'
+
+%rename prefix in case of "merge" data
+if isfield(cfg, 'merge')
+    if cfg.merge == true
+        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+            cfg.prefix = [cfg.prefix, 'MERGED-'];
+        else
+            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+        end
+    end
+end
+
+
+data = data{ipart};
 
 isEEG = 0;
 isEMG = 0;
@@ -12,6 +26,8 @@ elseif strcmp(datatype, 'emg')
 else
     error('Error in the function arguments : datatype must be ''eeg'' or ''emg''');
 end
+
+
 
 
 %select the channel of interest
@@ -57,11 +73,15 @@ t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % off
 h_temp(itrial) = max(data.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %max between -0.5s and 0.5s. Avoid noise. Available for EEG and EMG.
 end
 
-if isEEG
-    h = mean(h_temp)/2;
-elseif isEMG
-    h = mean(h_temp)*2;
-end
+h = mean(h_temp)*2;
+
+% if isEEG && isMicromed
+%     h = mean(h_temp)/2;
+% elseif isEEG && isBrainvision
+%     h = mean(h_temp)*2;
+% elseif isEMG
+%     h = mean(h_temp)*2;
+% end
 
 plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2);
 %plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
@@ -70,7 +90,7 @@ for itrial = 1 : nb_trials
 end
 
 
-xlabel(sprintf('Time from %s (s)', data.label{1}),'Interpreter','none', 'Fontsize',15);
+xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Number of seizures', 'Fontsize',15);
 title(sprintf('%s : aligned data from %s (%d trials)', cfg.LFP.name{imarker}, data.label{1}, size(data.trial,2)),'Interpreter','none','Fontsize',20);
 set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
@@ -141,17 +161,16 @@ if saveplot
     
     if ~(exist (cfg.imagesavedir)==7)
         mkdir(cfg.imagesavedir);
-        warning('%s did not exist for saving images, create now',cfg.imagesavedir);
+        warning('Create folder %s',cfg.imagesavedir);
     end
-    
+        
     set(fig1,'PaperOrientation','landscape');
     set(fig1,'PaperUnits','normalized');
     set(fig1,'PaperPosition', [0 0 1 1]);
     set(fig1,'Renderer','Painters');
-    
-
-    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',datatype,'_',data.label{1}]),'-r600');
-    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'timecourse_',cfg.LFP.name{imarker},'_',datatype,'_',data.label{1}]),'-r600');
+     
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1}]),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1}]),'-r600');
     
 
 %     %EMG

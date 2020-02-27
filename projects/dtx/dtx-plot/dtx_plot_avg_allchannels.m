@@ -1,15 +1,28 @@
-function dat_avg_allchans = dtx_plot_avg_allchannels(cfg,data,imarker,saveplot)
+function [EEG_avg_allchan, EEG_align] = dtx_plot_avg_allchannels(cfg,data,ipart,imarker,saveplot)
 %plot avg of all channels indicates in cfg.labels.macro and
 %cfg.LFP.emg.
 
 
-data = data{imarker};
+%rename prefix in case of "merge" data
+if isfield(cfg, 'merge')
+    if cfg.merge == true
+        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+            cfg.prefix = [cfg.prefix, 'MERGED-'];
+        else
+            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+        end
+    end
+end
+
+
+data = data{ipart}{imarker};
 nb_channels = length(cfg.labels.macro);
 fig = figure;
 hold;
 
 cfgtemp                  = [];
-dat_avg_allchans            = ft_timelockanalysis(cfgtemp,data);
+EEG_avg_allchan          = ft_timelockanalysis(cfgtemp,data);
+EEG_avg_allchan.ID  = cfg.prefix(1:end-1);
 
 %h automatic setting :
 cfgtemp = [];
@@ -29,7 +42,7 @@ h = mean(h_temp);
 
 
 for ichan = 1:nb_channels
-    
+
     %select channel
     cfgtemp = [];
     cfgtemp.channel = cfg.labels.macro{ichan};
@@ -41,6 +54,11 @@ for ichan = 1:nb_channels
     
     plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k');
 
+    if strcmp(cfg.labels.macro{ichan},cfg.align.channel{imarker}) %if chan is align channel
+        EEG_align = dat_avg{ichan};
+        EEG_align.label = 'chan_SlowWave';
+        EEG_align.ID = cfg.prefix(1:end-1);
+    end
     
 end
 
@@ -51,7 +69,7 @@ xlim(cfg.epoch.toi{1});
 %ylim([0 (nb_channels+1)*h]);
 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Channel name', 'Fontsize',15);
-title(sprintf('%d seizures', length(data.trial)),'Interpreter','none','Fontsize',20);
+title(sprintf('%s : average of %d trials',cfg.LFP.name{imarker}, length(data.trial)),'Interpreter','none','Fontsize',20);
 set(gca, 'FontWeight','bold', 'Fontsize',15);
 tick = h;
 yticks(h : tick : nb_channels*h);
@@ -66,13 +84,14 @@ if saveplot
         mkdir(cfg.imagesavedir);
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
+
     
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'avg_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'avg_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg']),'-r600');
     close all
 end
 

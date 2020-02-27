@@ -59,7 +59,7 @@ else
         for imarker = 1 : size(cfg.LFP.name,2)
 
             
-            fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
+            fprintf('For marker %s\n',cfg.LFP.name{imarker});
             
             hasmarker = false(length(MuseStruct{ipart}),1);
             
@@ -147,7 +147,7 @@ else
                                     temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                     fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                     dat                     = ft_read_neuralynx_interp(fname);
-
+                                    hdr                     = ft_read_header(fname);
                                
                                 elseif isMicromed || isBrainvision
 
@@ -162,9 +162,22 @@ else
                                         cfgtemp.bsfilter              = cfg.LFP.bsfilter;
                                         cfgtemp.bsfreq                = cfg.LFP.bsfreq;
                                     end
+
+                                    
                                     cfgtemp.dataset                   = fname;
                                     cfgtemp.channel                   = cfg.labels.macro';
                                     dat                               = ft_preprocessing(cfgtemp);
+                                    
+                                    if isfield(cfg.LFP, 'lpfilter')
+                                        cfgtemp                     = [];
+                                        cfgtemp.lpfilter            = cfg.LFP.lpfilter;
+                                        cfgtemp.lpfreq              = cfg.LFP.lpfreq;
+                                        cfgtemp.lpfilttype          = cfg.LFP.lpfilttype;
+                                        dat                         = ft_preprocessing(cfgtemp,dat);
+                                    end
+                                    
+                                    
+                                    hdr                               = ft_read_header(fname);
                                     
                                     % EMG
                                     if isfield(cfg.LFP, 'emg')
@@ -175,6 +188,15 @@ else
                                             cfgtemp.hpfreq            = cfg.EMG.hpfreq;
                                             cfgtemp.bsfilter          = cfg.EMG.bsfilter;
                                             cfgtemp.bsfreq            = cfg.EMG.bsfreq;
+                                            
+                                            if isfield(cfg.EMG, 'reref')
+                                                if strcmp(cfg.EMG.reref, 'yes')
+                                                    cfgtemp.reref                 = cfg.EMG.reref;
+                                                    cfgtemp.rerefmethod           = cfg.EMG.rerefmethod;
+                                                    cfgtemp.refchannel            = cfg.EMG.refchannel;
+                                                end
+                                            end
+                                            
                                             cfgtemp.dataset           = fname;
                                             data_EMG                  = ft_preprocessing(cfgtemp);
                                             
@@ -230,17 +252,25 @@ else
                             cfgtemp.keepsampleinfo              = 'no';
                             dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
                             clear filedat*
+                            
                         end
                     end
                 end
             end % idir
             
+            if exist('dirdat','var') %in case there is no marker in the data
+                
             % concatinate data of different datasets (over trials)
             LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
             clear dirdat*
             
             % add samplerate
             LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+            
+            else
+                LFP{ipart}{imarker} = [];
+                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});
+            end
             
         end % imarker
         

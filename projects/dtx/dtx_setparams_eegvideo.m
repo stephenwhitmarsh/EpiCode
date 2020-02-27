@@ -58,6 +58,9 @@ configcommon.LFP.rerefmethod           = 'avg';
 configcommon.LFP.refchannel            = 'all';
 configcommon.LFP.bsfilter              = 'no';
 configcommon.LFP.bsfreq                = [49 51];
+configcommon.EMG.reref                 = 'yes';
+configcommon.EMG.rerefmethod           = 'bipolar';
+%configcommon.EMG.refchannel  specified for each rat
 configcommon.EMG.hpfilter              = 'yes';
 configcommon.EMG.hpfreq                = 10;
 configcommon.EMG.bsfilter              = 'yes';
@@ -72,29 +75,20 @@ configcommon.epoch.pad{2}              = 10;
 configcommon.epoch.pad{3}              = 0.5;
 
 
->>>>>>> master
-
 %% Rodent 1
+%NOTER QUE LES EMG SONT CHOISIS : REJETES SI PAS DE REPONSE EMG OU SI ARTEFACTS
 config{1}                           = configcommon;
-config{1}.prefix                    = 'DTXEEG12-';
-config{1}.rawdir                    = fullfile(rootpath_data,'DTXEEG12-100uM');
-config{1}.rawlabels                 = {'47','45','48'};
-config{1}.labels.macro              = {'M1G','M1D','PtA'};
-config{1}.imagesavedir              = fullfile(imagesavedir,'DTXEEG12');       % where to print images
-config{1}.muse.startend             = {'SlowWave','SlowWave'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker. For defining trials
-config{1}.align.name                = {'SlowWave'};%{'SlowWave_R','SlowWave_R'};
-config{1}.align.channel             = {'M1G'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-config{1}.LFP.name                  = {'SlowWave'};%,'SlowWave_L'}; %alwa
-config{1}.LFP.emg                   = {'no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
-
-%config{1}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
-% 
-% config{1}.os                        = os;
-% config{1}.prefix                    = 'DTXEEG12-';
-% config{1}.muse.startend             = {'SlowWave','Crise_Start'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker
-% config{1}.rawdir                    = fullfile(rootpath_data, 'DTXEEG12-100uM');
-% config{1}.imagesavedir              = fullfile(imagesavedir,'DTXEEG12-');       % where to print images
-
+config{1}.prefix                    = 'DTX-EEGEMG-12-';
+config{1}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-12');
+config{1}.rawlabels                 = {'47','45','48','46','49'};
+config{1}.labels.macro              = {'M1G','M1D','PtA','EMG1','EMG2'};
+config{1}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-12');       % where to print images
+config{1}.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave_EMG','SlowWave_EMG'; 'Crise_Start','Crise_End'};   % start and end Muse marker. For defining trials
+config{1}.align.name                = {'SlowWave','SlowWave_EMG'};%{'SlowWave_R','SlowWave_R'};
+config{1}.align.channel             = {'M1G','M1G'};      % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{1}.LFP.name                  = {'SlowWave','SlowWave_EMG'};%,'SlowWave_L'}; %alwa
+config{1}.LFP.emg                   = {'no','EMG1'};%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
+config{1}.EMG.refchannel            = {'EMG2'};
 
 %config{irat}.directorylist
 filelist = dir(config{1}.rawdir);
@@ -108,98 +102,33 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-% config{1}.align.name                = {'SlowWave'};
-% config{1}.align.channel             = {'E12.ncs'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-% config{1}.align.flip                = {'no'};
-% config{1}.align.abs                 = {'no'};
-% config{1}.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-% config{1}.align.filter              = {'lp'};
-% config{1}.align.freq                = {5};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-% config{1}.align.hilbert             = {'no'};
-% config{1}.align.thresh              = [0];
-% config{1}.align.toiplot{1}          = [-1,  1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% config{1}.align.toiactive{1}        = [-0.5, 0.5];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-% config{1}.align.toibaseline{1}      = [-1, -0.5];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
-% config{1}.LFP.name                  = {'SlowWave'};
-% config{1}.LFP.hpfilter              = 'no';
-% config{1}.LFP.hpfreq                = 1;
-% config{1}.LFP.resamplefs            = 1000;
-% config{1}.LFP.baseline              = 'yes';
-% config{1}.LFP.baselinewindow{1}     = [-2, -1];
-% config{1}.LFP.slidestep             = 0.01;
-% config{1}.LFP.electrodeToPlot       = [6, 11];
-% 
-% %1, 2 and 3 associated with config.muse.startend 
-% config{1}.epoch.toi{1}              = [-5, 25];  
-% config{1}.epoch.toi{2}              = [-2, 1];  
-% config{1}.epoch.toi{3}              = [1, -2];  
-% config{1}.epoch.pad{1}              = 1;
-% config{1}.epoch.pad{2}              = 0.5;
-% config{1}.epoch.pad{3}              = 0.5;
 
 %% Rodent 2
-%% Rodent 1
-config{2}.os                        = os;
-config{2}.format                    = 'brainvision';
-config{2}.types                     = ['macro'];
-config{2}.name                      = {'SlowWave','Seizure','InterIctal'};
-config{2}.prefix                    = 'DTXEEG_EMG_6-';
-config{2}.muse.startend             = {'SlowWave','Crise_Start'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % start and end Muse marker
-config{2}.foldername                = 'DTXEEG_EMG_6-100uM';
-config{2}.rawdir                    = fullfile(rootpath_data, config{2}.foldername);
-config{2}.datasavedir               = datasavedir;         % where to write data
-config{2}.imagesavedir              = imagesavedir;       % where to print images
-config{2}.rawlabels                 = {'52','50','53'};
-config{2}.labels.macro              = {'M1G','M1D','PtA'};
+config{2}                           = configcommon;
+config{2}.prefix                    = 'DTX-EEGEMG-14-';
+config{2}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-14');
+config{2}.rawlabels                 = {'57','55','58','56','59'};
+config{2}.labels.macro              = {'M1G','M1D','PtA','EMG1','EMG2'};
+config{2}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-12');       % where to print images
+config{2}.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave_EMG','SlowWave_EMG'; 'Crise_Start','Crise_End'};   % start and end Muse marker. For defining trials
+config{2}.align.name                = {'SlowWave','SlowWave_EMG'};%{'SlowWave_R','SlowWave_R'};
+config{2}.align.channel             = {'M1G','M1G'};      % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{2}.LFP.name                  = {'SlowWave','SlowWave_EMG'};%,'SlowWave_L'}; %alwa
+config{2}.LFP.emg                   = {'no','EMG1'};%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
+config{2}.EMG.refchannel            = {'EMG2'};
 
 %config{irat}.directorylist
 filelist = dir(config{2}.rawdir);
 i=0;
 for ifile = 1:length(filelist)
-    if length(filelist(ifile).name)>3
-        fileExtension = filelist(ifile).name(1,length(filelist(ifile).name)-3:length(filelist(ifile).name));
-        if strncmp(fileExtension,'vhdr',4) 
-            i=i+1;
-            config{2}.directorylist{1}{i}          =  filelist(ifile).name;
-        end
+    [~,~,file_extension] = fileparts(filelist(ifile).name);
+    if strncmp(file_extension,'.eeg',4)
+        i=i+1;
+        config{2}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
     end
 end
 clear filelist
-                                    
-config{2}.preproc.bsfilter    = 'yes';
-config{2}.preproc.bsfreq      = [49 51];
-config{2}.preproc.inversedata = -1; 
 
-% config{2}.align.name                = {'SlowWave'};
-% config{2}.align.channel             = {'E12.ncs'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-% config{2}.align.flip                = {'no'};
-% config{2}.align.abs                 = {'no'};
-% config{2}.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-% config{2}.align.filter              = {'lp'};
-% config{2}.align.freq                = {5};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-% config{2}.align.hilbert             = {'no'};
-% config{2}.align.thresh              = [0];
-% config{2}.align.toiplot{1}          = [-1,  1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% config{2}.align.toiactive{1}        = [-0.5, 0.5];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-% config{2}.align.toibaseline{1}      = [-1, -0.5];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
-% config{2}.LFP.name                  = {'SlowWave'};
-% config{2}.LFP.hpfilter              = 'no';
-% config{2}.LFP.hpfreq                = 1;
-% config{2}.LFP.resamplefs            = 1000;
-% config{2}.LFP.baseline              = 'yes';
-% config{2}.LFP.baselinewindow{1}     = [-2, -1];
-% config{2}.LFP.slidestep             = 0.01;
-% config{2}.LFP.electrodeToPlot       = [6, 11];
-% 
-% %1, 2 and 3 associated with config.muse.startend 
-% config{2}.epoch.toi{1}              = [-5, 25];  
-% config{2}.epoch.toi{2}              = [-2, 1];  
-% config{2}.epoch.toi{3}              = [1, -2];  
-% config{2}.epoch.pad{1}              = 1;
-% config{2}.epoch.pad{2}              = 0.5;
-% config{2}.epoch.pad{3}              = 0.5;
 end
 
 

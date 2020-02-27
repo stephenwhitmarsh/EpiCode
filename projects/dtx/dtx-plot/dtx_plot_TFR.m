@@ -1,5 +1,7 @@
-function TFR_eeg = dtx_plot_TFR(cfg,data,imarker,saveplot)
+function TFR_eeg = dtx_plot_TFR(cfg,data,ipart,imarker,saveplot)
 %TFR of all trials of one electrode, with time of interest defined in cfg
+
+data = data{ipart};
 
 %Select EEG channel
 cfgtemp = [];
@@ -39,11 +41,12 @@ cfgtemp.renderer        = 'painters';
 
 ft_singleplotTFR(cfgtemp, TFR_eeg);
 
-title(sprintf('%s%s : Frequency power over time',cfg.prefix,data.label{1}),'Interpreter','none');
+title(sprintf('%s%s : Frequency power over time',cfg.prefix,data.label{1}),'Interpreter','none','Fontsize',20);
 %xlim([-1, 1]);
 %ylim([80 125]);
 xlabel(sprintf('Time from %s (s)',cfg.LFP.name{imarker}),'Interpreter','none');
 ylabel('Frequency (Hz)');
+set(gca, 'FontWeight','bold', 'Fontsize',15);
 % colormap_axis = caxis;
 % caxis([0,colormap_axis(2)]);
 
@@ -60,10 +63,12 @@ cfgtemp.renderer        = 'painters';
 
 ft_singleplotTFR(cfgtemp, TFR_macro_log);
 
-title(sprintf('%s%s : Frequency log power over time',cfg.prefix,data.label{1}),'Interpreter','none');
+title(sprintf('%s%s : Frequency log power over time',cfg.prefix,data.label{1}),'Interpreter','none','Fontsize',20);
 %xlim([-5, 5]);
 xlabel(sprintf('Time from %s (s)',cfg.LFP.name{imarker}),'Interpreter','none');
 ylabel('Frequency (Hz)');
+set(gca, 'FontWeight','bold', 'Fontsize',15);
+
 % colormap_axis = caxis;
 % caxis([0,colormap_axis(2)]);
  
@@ -75,6 +80,18 @@ if saveplot
         mkdir(cfg.imagesavedir);
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
+
+    %rename prefix in case of "merge" data
+    if isfield(cfg, 'merge')
+        if cfg.merge == true
+            if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+                cfg.prefix = [cfg.prefix, 'MERGED-']; 
+            else
+                cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+            end
+        end
+    end
+
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);

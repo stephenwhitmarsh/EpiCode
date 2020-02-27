@@ -1,8 +1,22 @@
-function dtx_plot_SlowWaveTopographyTimecouse(cfg,data,imarker,saveplot)
+function dtx_plot_SlowWaveTopographyTimecouse(cfg,data,ipart,imarker,saveplot)
 %plot topography of event related to one or two markers, according to 1020
 %human EEG layout.
 %cfg.labels.emg.
 %One figure per marker
+
+%rename prefix in case of "merge" data
+if isfield(cfg, 'merge')
+    if cfg.merge == true
+        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+            cfg.prefix = [cfg.prefix, 'MERGED-'];
+        else
+            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+        end
+    end
+end
+
+
+data = data{ipart};
 
 abscisse_limits = 1; %s
 
@@ -80,13 +94,13 @@ if saveplot
         mkdir(cfg.imagesavedir);
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
-    
+
     set(fig1,'PaperOrientation','landscape');
     set(fig1,'PaperUnits','normalized');
     set(fig1,'PaperPosition', [0 0 1 1]);
     set(fig1,'Renderer','Painters');
-    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
-    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'topography_timecourse_',cfg.LFP.name{imarker}]),'-r600');
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse']),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse']),'-r600');
     
     savefig(fig2,fullfile(cfg.imagesavedir,[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},'.fig']));
     

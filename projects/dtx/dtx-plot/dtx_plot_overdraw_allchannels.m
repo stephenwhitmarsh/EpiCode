@@ -1,12 +1,23 @@
-function dtx_plot_overdraw_allchannels(cfg,data,imarker,saveplot)
+function dtx_plot_overdraw_allchannels(cfg,data,ipart,imarker,saveplot)
 %plot overdraw and avg of all channels indicates in cfg.labels.macro and
 %cfg.LFP.emg.
 
+%rename prefix in case of "merge" data
+if isfield(cfg, 'merge')
+    if cfg.merge == true
+        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+            cfg.prefix = [cfg.prefix, 'MERGED-'];
+        else
+            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+        end
+    end
+end
 
-data = data{imarker};
+data = data{ipart}{imarker};
+
 nb_channels = length(cfg.labels.macro);
 fig = figure;
-subplot(1,2,1)
+%subplot(1,2,1)
 hold;
 
 %h automatic setting :
@@ -55,7 +66,7 @@ xlim(cfg.epoch.toi{1});
 ylim([0 (nb_channels+1)*h]);
 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Channel name', 'Fontsize',15);
-title(sprintf('%d seizures', length(data.trial)),'Interpreter','none','Fontsize',18);
+title(sprintf('%s : overdraw of %d trials',cfg.LFP.name{imarker}, length(data.trial)),'Interpreter','none','Fontsize',18);
 set(gca, 'FontWeight','bold', 'Fontsize',15);
 tick = h;
 yticks(h : tick : nb_channels*h);
@@ -70,13 +81,13 @@ if saveplot
         mkdir(cfg.imagesavedir);
         warning('%s did not exist for saving images, create now',cfg.imagesavedir);
     end
-    
+
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'overdraw_allchannels_eeg',cfg.LFP.name{imarker}]),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_overdraw_allchannels_eeg']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_overdraw_allchannels_eeg']),'-r600');
     close all
 end
 
