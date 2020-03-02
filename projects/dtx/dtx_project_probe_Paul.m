@@ -27,15 +27,21 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 config = dtx_setparams_probe([]);
 
-
+    ipart = 1;
 for irat = 1:6
     
     %% Get right LFP data
     % read muse markers
-    [MuseStruct]    = readMuseMarkers(config{irat}, true);
+    [MuseStruct]    = readMuseMarkers(config{irat}, false);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{irat},MuseStruct_micro, MuseStruct_macro, false);
+    [MuseStruct]    = alignMuseMarkers(config{irat},MuseStruct, false);
+
+
+
+    dtx_plot_count_seizure(config{irat}, MuseStruct, ipart, true);
+end
+    
     [MuseStruct_micro, MuseStruct_macro]    = MuseMarkers_update_filepath_parts(config{irat},MuseStruct_micro, MuseStruct_macro);
     %[MuseStruct_micro, MuseStruct_macro]    = markers_adapt_clock_synctime(config{irat},MuseStruct_micro, MuseStruct_macro, false);
     

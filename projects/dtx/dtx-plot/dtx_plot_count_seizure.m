@@ -38,6 +38,19 @@ elseif ~isempty(SlowWave_total)
     isRat = 1;
 end
 
+%load header
+[isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
+for idir = 1:length(MuseStruct{ipart})
+    if isNeuralynx
+        filelist = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
+        hdr{idir} = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},filelist(1).name));
+    elseif isMicromed
+        hdr{idir} = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']));
+    elseif isBrainvision
+        hdr{idir} = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']));
+    end
+end
+
 %avoir error in crise annotation
 if isRat
     if size(Crise_Start_total,2) ~= size(Crise_End_total,2)
@@ -53,13 +66,17 @@ if isRat
     BaselineDuration = Injection{1,1}-Baseline_Start{1,1};
     RecordDuration = Analysis_End{1,1}-Baseline_Start{1,1};
     PostInjDuration = RecordDuration - BaselineDuration;
-    length_previous_dir = duration.empty;
+    length_previous_dirs(1) = seconds(0);
+    for idir = 1:length(MuseStruct{ipart})
+        length_previous_dirs(idir+1) = length_previous_dirs(idir) + seconds(hdr{idir}.nSamples/hdr{idir}.Fs);
+    end
+    
 elseif isPatient
+    length_previous_dirs = seconds(0);
     RecordDuration = seconds(0);
-    for idir = 1:length(cfg.directorylist{ipart})
-        length_previous_dirs(idir) = RecordDuration;
-        hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']));
-        RecordDuration = RecordDuration + seconds(hdr.nSamples/hdr.Fs); %en secondes
+    for idir = 1:length(MuseStruct{ipart})
+        length_previous_dirs(idir+1) = length_previous_dirs(idir) + seconds(hdr{idir}.nSamples/hdr{idir}.Fs);
+        RecordDuration = RecordDuration + seconds(hdr{idir}.nSamples/hdr{idir}.Fs); %en secondes
     end
 end
 
@@ -130,7 +147,7 @@ if isRat
     for iSeizure = 1:size(Crise_Start_total,2)-1
         if Crise_Start_total{2,iSeizure} == Crise_End_total{2,iSeizure} %ignore if they are not in the same file
             seizureLength(iresult) = Crise_End_total{1,iSeizure}-Crise_Start_total{1,iSeizure}; %Time between two slow waves
-            x_seizureLength(iresult) = Crise_Start(1,iSeizure)-MuseStruct{ipart}{Crise_Start{2,iSeizure}}.starttime-length_previous_dirs(Crise_Start{2,iSeizure});
+            x_seizureLength(iresult) = Crise_Start_total{1,iSeizure}-MuseStruct{ipart}{Crise_Start_total{2,iSeizure}}.starttime+length_previous_dirs(Crise_Start_total{2,iSeizure});
             iresult = iresult +1;
         end
     end
@@ -247,7 +264,7 @@ fclose('all');
 
 fig=figure;
 
-%slow waves over time
+%% slow waves over time
 if isPatient
     subplot(3,3,1:3);
     hold;
@@ -259,13 +276,7 @@ if isPatient
         t = minutes(SlowWave_L_total{1,iL}-MuseStruct{ipart}{SlowWave_L_total{2,iL}}.starttime)+ minutes(length_previous_dirs(SlowWave_L_total{2,iL}));
         plot_L{iL} = plot([t,t],[-1,1],'-r');
     end
-    %plot limit betweeen 2 eeg
-    for idir = 1:length(MuseStruct{ipart})
-        if idir >1
-            t = minutes(length_previous_dirs(idir));
-            plot_dirlim = plot([t,t],[-2,2],'Color',[0.5 0.5 0.5],'Linewidth', 2, 'LineStyle', '--');
-        end
-    end
+
     
 elseif isRat
     subplot(5,3,1:3)
@@ -274,22 +285,39 @@ elseif isRat
         t = minutes(SlowWave_total{1,i}-MuseStruct{ipart}{SlowWave_total{2,i}}.starttime)+ minutes(length_previous_dirs(SlowWave_total{2,i}));
         plot_SW{i} = plot([t,t],[-1,1],'b'); 
     end
+    %Analysis_start, injection time and analysis_end
+    t_start = minutes(Baseline_Start{1,1}-MuseStruct{ipart}{Baseline_Start{2,1}}.starttime)+ minutes(length_previous_dirs(Baseline_Start{2,1}));
+    plot_start = plot([t_start,t_start],[-2,2],'g','Linewidth', 2);
+    t_inj = minutes(Injection{1,1}-MuseStruct{ipart}{Injection{2,1}}.starttime)+ minutes(length_previous_dirs(Injection{2,1}));
+    plot_inj = plot([t_inj,t_inj],[-2,2],'r','Linewidth', 2);
+    t_end = minutes(Analysis_End{1,1}-MuseStruct{ipart}{Analysis_End{2,1}}.starttime)+ minutes(length_previous_dirs(Analysis_End{2,1}));
+    plot_end = plot([t_end,t_end],[-2,2],'g','Linewidth', 2);
+
+end
+
+%plot limit betweeen 2 files
+for idir = 1:length(MuseStruct{ipart})
+    if idir >1
+        t = minutes(length_previous_dirs(idir));
+        plot_dirlim = plot([t,t],[-2,2],'Color',[0.5 0.5 0.5],'Linewidth', 2, 'LineStyle', '--');
+    end
 end
 
 if isPatient
     title(sprintf('%s : %d SlowWave_R and %d SlowWave_L',cfg.prefix(1:end-1), size(SlowWave_R_total,2),size(SlowWave_L_total,2)),'Fontsize',18,'Interpreter','none');
     if idir >1
-        legend([plot_R{iR}, plot_L{iL}, plot_dirlim], cfg.LFP.name{1:2}, 'New File', 'Interpreter','none');
+        legend([plot_R{iR}, plot_L{iL}, plot_dirlim], cfg.LFP.name{1:2}, 'Change of EEG file','Location','eastoutside', 'Interpreter','none');
     else
         legend([plot_R{iR}, plot_L{iL}], cfg.LFP.name{1:2}, 'Interpreter','none');
     end
     
 elseif isRat
     title(sprintf('%s : %d SlowWaves',cfg.prefix(1:end-1), size(SlowWave_total,2)),'Fontsize',18,'Interpreter','none');
-    legend(plot_SW{i}, cfg.LFP.name{1:2}, 'Interpreter','none');
+    legend([plot_SW{i},plot_start,plot_inj, plot_end, plot_dirlim], cfg.LFP.name{1}, 'Analysis_Start', 'Injection', 'Analysis_End', 'Change of EEG file','Location','eastoutside', 'Interpreter','none');
+    xlim([t_start-10, t_end+10]);
 end
 xlabel('Time (minutes)');
-ylabel('Slow deflexions occurences');
+ylabel(sprintf('Slow deflexions \noccurences'));
 set(gca,'TickDir','out','FontWeight','bold');
 yticklabels([]);
 yticks(10);
@@ -297,7 +325,7 @@ ylim([-2 2]);
 
 
 
-%time between 2 slow waves
+%% time between 2 slow waves
 if isPatient
     subplot(3,3,[4,7])
     hold;
@@ -307,33 +335,43 @@ if isPatient
     if ~isempty(timeBetween2SlowWaves_L)
         plot(minutes(x_timeBetween2SlowWaves_L),minutes(timeBetween2SlowWaves_L),'-or');
     end
-    
-    %plot limit betweeen 2 eeg
-    ylim_dirlim = get(gca,'YLim');
-    for idir = 1:length(MuseStruct{ipart})
-        if idir >1
-            t = minutes(length_previous_dirs(idir));
-            plot([t,t],ylim_dirlim,'Color',[0.5 0.5 0.5],'Linewidth', 2, 'LineStyle', '--');
-        end
-    end
-    
+      
 elseif isRat
     subplot(5,3,[4,5,7,8])
+    hold;
     plot(minutes(x_timeBetween2SlowWaves),minutes(timeBetween2SlowWaves),'-ob');
+    ylim_dirlim = get(gca,'YLim');
+    plot_start = plot([t_start,t_start],ylim_dirlim,'g','Linewidth', 2);
+    plot_inj = plot([t_inj,t_inj],ylim_dirlim,'r','Linewidth', 2);
+    plot_end = plot([t_end,t_end],ylim_dirlim,'g','Linewidth', 2);
 end
 
+%plot limit betweeen 2 eeg
+ylim_dirlim = get(gca,'YLim');
+for idir = 1:length(MuseStruct{ipart})
+    if idir >1
+        t = minutes(length_previous_dirs(idir));
+        plot([t,t],ylim_dirlim,'Color',[0.5 0.5 0.5],'Linewidth', 2, 'LineStyle', '--');
+    end
+end
 
 %title('Time between 2 slow deflexions','Fontsize',15);
 xlabel('Time at recording');
-ylabel('Time between 2 slow deflexions (minutes)');
+ylabel(sprintf('Time between \n2 slow deflexions (minutes)'));
 set(gca,'TickDir','out','FontWeight','bold');
-if idir >1
-    legend(cfg.LFP.name{1:2}, 'New File', 'Interpreter','none');
-else
-    legend(cfg.LFP.name{1:2}, 'Interpreter','none');
+
+if isPatient
+    if idir >1
+        legend(cfg.LFP.name{1:(2)}, 'New File', 'Interpreter','none');
+    else
+        legend(cfg.LFP.name{1:(2)}, 'Interpreter','none');
+    end
+elseif isRat
+    legend(cfg.LFP.name{1}, 'Interpreter','none');
+    xlim([t_start-10, t_end+10]);
 end
 
-%Slowwaves distrib
+%% Slowwaves distrib
 
 if isPatient
     if ~isempty(timeBetween2SlowWaves_L)
@@ -357,32 +395,56 @@ if isPatient
 elseif isRat
     subplot(5,3,[6,9])
     hold;
-    histogram(seconds(timeBetween2SlowWaves),'BinWidth',10,'FaceColor','b');
+    histogram(minutes(timeBetween2SlowWaves),'BinWidth',1,'FaceColor','b');
     %title('Distribution of time between 2 slow deflexions','Fontsize',15);
-    xlabel(sprintf('Time between \n2 slow deflexions (seconds)'));
+    xlabel(sprintf('Time between 2 slow deflexions (minutes)'));
     ylabel('Nb of occurences');
     set(gca,'TickDir','out','FontWeight','bold');
 end
 
 
 
-% Seizure length
+%% Seizure length over time
 if isRat
     subplot(5,3,[10,11,13,14])
-    plot(x_seizureLength,seizureLength,'-ob');
-    %title('Seizure length','Fontsize',15);
-    xlabel('Time at recording');
-    ylabel('Seizure length');
+    hold;
+    plot(minutes(x_seizureLength),minutes(seizureLength),'-ob');
+    ylim_dirlim = get(gca,'YLim');
+    plot_start = plot([t_start,t_start],ylim_dirlim,'g','Linewidth', 2);
+    plot_inj = plot([t_inj,t_inj],ylim_dirlim,'r','Linewidth', 2);
+    plot_end = plot([t_end,t_end],ylim_dirlim,'g','Linewidth', 2);
+    
+    %plot limit betweeen 2 eeg
+    ylim_dirlim = get(gca,'YLim');
+    for idir = 1:length(MuseStruct{ipart})
+        if idir >1
+            t = minutes(length_previous_dirs(idir));
+            plot([t,t],ylim_dirlim,'Color',[0.5 0.5 0.5],'Linewidth', 2, 'LineStyle', '--');
+        end
+    end
+    
+    %title('Time between 2 slow deflexions','Fontsize',15);
+    xlabel('Time at recording (minutes)');
+    ylabel('Seizure length (minutes)');
     set(gca,'TickDir','out','FontWeight','bold');
     
+    legend('Seizure length', 'Interpreter','none');
+    xlim([t_start-10, t_end+10]);
+end
+
+
+%% Seizure length distrib
+if isRat
+
     subplot(5,3,[12,15])
     hold;
-    histogram(x_seizureLength,'BinWidth',seconds(10),'FaceColor','r');
-    %title('Distribution of time between 2 seizures','Fontsize',15);
-    xlabel('Time between 2 seizures');
+    histogram(minutes(seizureLength),'BinWidth',0.5,'FaceColor','b');
+    %title('Distribution of time between 2 slow deflexions','Fontsize',15);
+    xlabel('Seizure length (minutes)');
     ylabel('Nb of occurences');
     set(gca,'TickDir','out','FontWeight','bold');
 end
+
 
 %% Print to file
 if savedata

@@ -1,7 +1,7 @@
 function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct, force)
 %check if there is slowave without seizure or seizure without slowwave and
 %remove the correspondant marker.
-%A seizure beginning in one file and ending in the next file is ignored
+%A seizure beginning in one file and ending in the next file is removed
 %Add indexes and number of removed markers in MuseStruct
 %Paul Baudin
 
@@ -35,24 +35,24 @@ else
                     if isfield(MuseStruct{ipart}{idir}.markers.SlowWave,'clock')
                         if ~isempty(MuseStruct{ipart}{idir}.markers.SlowWave.clock) %If no clock : don't change the structure
                             
-                            n_ignoreSeizure{idir} = 0;
-                            n_ignoreSlowWave{idir} = 0;
-                            n_ignoreLastSeizure{idir} = 0;
+                            n_removeSeizure{idir} = 0;
+                            n_removeSlowWave{idir} = 0;
+                            n_removeLastSeizure{idir} = 0;
                             
-                            ignoreSeizure_index = [];
-                            ignoreSlowWave_index = [];
-                            ignoreLastSeizure_index = [];
+                            removeSeizure_index = [];
+                            removeSlowWave_index = [];
+                            removeLastSeizure_index = [];
                             
                             SlowWave_orig = MuseStruct{ipart}{idir}.markers.SlowWave.clock;
                             Crise_Start_orig = MuseStruct{ipart}{idir}.markers.Crise_Start.clock;
                             Crise_End_orig = MuseStruct{ipart}{idir}.markers.Crise_End.clock;
                             
-                            %ignore the first crise_end if it is the end of a
+                            %remove the first crise_end if it is the end of a
                             %seizure begining in the previous dir
                             if Crise_End_orig(1)-Crise_Start_orig(1)<0
-                                ignore_1st_Crise_End{idir}=1;
+                                remove_1st_Crise_End{idir}=1;
                             else
-                                ignore_1st_Crise_End{idir}=0;
+                                remove_1st_Crise_End{idir}=0;
                             end
                             
                             %go throught all markers
@@ -62,40 +62,40 @@ else
                             
                             while iSeizure <= length(Crise_Start_orig)  && iSlowWave <= length(SlowWave_orig)
                                 iresult = iresult+1;
-                                ignoreseizure = 0;
+                                removeseizure = 0;
                                 
                                 %SlowWave without seizure
                                 if seconds(Crise_Start_orig(iSeizure)-SlowWave_orig(iSlowWave)) > 10
-                                    n_ignoreSlowWave{idir} = n_ignoreSlowWave{idir}+1;
-                                    ignoreSlowWave_index(n_ignoreSlowWave{idir}) = iSlowWave;
+                                    n_removeSlowWave{idir} = n_removeSlowWave{idir}+1;
+                                    removeSlowWave_index(n_removeSlowWave{idir}) = iSlowWave;
                                     iSlowWave = iSlowWave+1;
-                                    ignoreseizure = 1;
+                                    removeseizure = 1;
                                 end
                                 
                                 %Seizure without SlowWave
-                                if ignoreseizure == 0 && seconds(Crise_Start_orig(iSeizure)-SlowWave_orig(iSlowWave)) <0
-                                    n_ignoreSeizure{idir} = n_ignoreSeizure{idir}+1;
-                                    ignoreSeizure_index(n_ignoreSeizure{idir}) = iSeizure;
+                                if removeseizure == 0 && seconds(Crise_Start_orig(iSeizure)-SlowWave_orig(iSlowWave)) <0
+                                    n_removeSeizure{idir} = n_removeSeizure{idir}+1;
+                                    removeSeizure_index(n_removeSeizure{idir}) = iSeizure;
                                     iSeizure = iSeizure+1;
-                                    ignoreseizure = 1;
+                                    removeseizure = 1;
                                 end
                                 
-                                %ignore the last seizure of the file if seizure ends in the next file
+                                %remove the last seizure of the file if seizure ends in the next file
                                 if length(Crise_Start_orig)-length(Crise_End_orig)==1 && iSeizure==length(Crise_Start_orig)
-                                    n_ignoreLastSeizure{idir} = n_ignoreLastSeizure{idir}+1;
-                                    ignoreLastSeizure_index(n_ignoreLastSeizure{idir}) = idir;
+                                    n_removeLastSeizure{idir} = n_removeLastSeizure{idir}+1;
+                                    removeLastSeizure_index(n_removeLastSeizure{idir}) = idir;
                                     iresult = iresult-1;
-                                    ignore_last_Seizure{idir}=1;
+                                    remove_last_Seizure{idir}=1;
                                     break
                                 else
-                                    ignore_last_Seizure{idir}=0;
+                                    remove_last_Seizure{idir}=0;
                                 end
                                 
-                                %Write markers to MuseStruct_corrected if seizure is not to ignore
-                                if ignoreseizure == 0
+                                %Write markers to MuseStruct_corrected if seizure is not to remove
+                                if removeseizure == 0
                                     
                                     marker = ["SlowWave", "Crise_Start", "Crise_End"];
-                                    eventindex = {iSlowWave, iSeizure, iSeizure+ignore_1st_Crise_End{idir}};
+                                    eventindex = {iSlowWave, iSeizure, iSeizure+remove_1st_Crise_End{idir}};
                                     
                                     for i=1:3
                                         imarker = marker(i);
@@ -123,28 +123,28 @@ else
                             
                             %Add index values
                             marker = ["SlowWave", "Crise_Start", "Crise_End"];
-                            if ignore_1st_Crise_End{idir}
-                                ignoreindex = {ignoreSlowWave_index, ignoreSeizure_index, [ignore_1st_Crise_End{idir}, ignoreSeizure_index]};
+                            if remove_1st_Crise_End{idir}
+                                removeindex = {removeSlowWave_index, removeSeizure_index, [remove_1st_Crise_End{idir}, removeSeizure_index]};
                             else
-                                ignoreindex = {ignoreSlowWave_index, ignoreSeizure_index, ignoreSeizure_index};
+                                removeindex = {removeSlowWave_index, removeSeizure_index, removeSeizure_index};
                             end
                             for i=1:3
                                 imarker = marker(i);
-                                i_ignoreindex = ignoreindex{i};
-                                MuseStruct_corrected{ipart}{idir}.markers.(imarker).originalindex_ignored = i_ignoreindex;
+                                i_removeindex = removeindex{i};
+                                MuseStruct_corrected{ipart}{idir}.markers.(imarker).originalindex_removed = i_removeindex;
                             end
-                            if ignore_last_Seizure{idir}
-                                MuseStruct_corrected{ipart}{idir}.markers.SlowWave.originalindex_ignored(end+1) = length(SlowWave_orig);
-                                MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.originalindex_ignored(end+1) = length(Crise_Start_orig);
+                            if remove_last_Seizure{idir}
+                                MuseStruct_corrected{ipart}{idir}.markers.SlowWave.originalindex_removed(end+1) = length(SlowWave_orig);
+                                MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.originalindex_removed(end+1) = length(Crise_Start_orig);
                             end
                             
                             
                             %add infos of nr of removed seizure per dir
-                            MuseStruct_corrected{ipart}{idir}.ignoremarkers_Info.ignoreLastSeizure = ignore_last_Seizure{idir};
-                            MuseStruct_corrected{ipart}{idir}.ignoremarkers_Info.ignoreFirstCrise_End = ignore_1st_Crise_End{idir};
-                            MuseStruct_corrected{ipart}{idir}.ignoremarkers_Info.n_ignored_SlowWave = n_ignoreSlowWave{idir}+ignore_last_Seizure{idir};
-                            MuseStruct_corrected{ipart}{idir}.ignoremarkers_Info.n_ignored_Crise_Start = n_ignoreSeizure{idir}+ignore_last_Seizure{idir};
-                            MuseStruct_corrected{ipart}{idir}.ignoremarkers_Info.n_ignored_Crise_End = n_ignoreSeizure{idir}+ignore_1st_Crise_End{idir};
+                            MuseStruct_corrected{ipart}{idir}.removemarkers_Info.removeLastSeizure = remove_last_Seizure{idir};
+                            MuseStruct_corrected{ipart}{idir}.removemarkers_Info.removeFirstCrise_End = remove_1st_Crise_End{idir};
+                            MuseStruct_corrected{ipart}{idir}.removemarkers_Info.n_removed_SlowWave = n_removeSlowWave{idir}+remove_last_Seizure{idir};
+                            MuseStruct_corrected{ipart}{idir}.removemarkers_Info.n_removed_Crise_Start = n_removeSeizure{idir}+remove_last_Seizure{idir};
+                            MuseStruct_corrected{ipart}{idir}.removemarkers_Info.n_removed_Crise_End = n_removeSeizure{idir}+remove_1st_Crise_End{idir};
                             
                             %safety check
                             if ~(length(MuseStruct_corrected{ipart}{idir}.markers.SlowWave.synctime) == length(MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.synctime) &&...

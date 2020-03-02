@@ -92,7 +92,7 @@ title(sprintf('Average of envelopes of abs of %s',data_EMG.label{1}),'Interprete
 
 env = [];
 
-%plot trial by trial : rect and enveloppe
+%plot trial by trial : rect and envelope
 
 for itrial = 1 : size(data_EMG.trial,2)
     t = data{imarker}.time{itrial};
@@ -103,11 +103,11 @@ end
 for itrial = 1 : size(data_EMG.trial,2)
     t = data{imarker}.time{itrial};
     rect_emg = abs(data_EMG.trial{itrial}(1,:));
-    [env{itrial}, ~] = envelope(rect_emg,20,'rms');
+    [env{itrial}, ~] = envelope(rect_emg,30,'rms');
     plot(t,env{itrial},'color','c');
 end
 
-%plot avg of enveloppe
+%plot avg of envelope
 for ioffset = 1:length(env{1}) %all trials must have the same size
     for itrial = 1:length(env)
         env_by_offset(itrial) = env{itrial}(ioffset);
@@ -139,7 +139,7 @@ set(gca,'ycolor','b');
 
 
 
-title('Average enveloppe of rectified EMG','Fontsize',18);
+title('Average envelope of rectified EMG','Fontsize',18);
 ylabel(sprintf('%s (µV)',data_EMG.label{1}),'Fontsize',15,'Interpreter','none');
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');

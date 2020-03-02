@@ -41,11 +41,11 @@ fig=figure;
 subplot(1,3,1);
 hold;
 
-plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
 
 for itrial = 1 : nb_trials
     plot(data.time{itrial},data.trial{itrial}(1,:)+(nb_trials+1)*h- itrial*h,'k'); %first on top
 end
+plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
 
 %xlabel(sprintf('Time from \n%s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Number of seizures', 'Fontsize',15);
@@ -66,11 +66,11 @@ h = h/2; %because no more negative values
 subplot(1,3,2);
 hold;
 
-plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
 
 for itrial = 1 : nb_trials
     plot(data.time{itrial},abs(data.trial{itrial}(1,:))+ (nb_trials+1)*h - itrial*h,'k'); %first on top
 end
+plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
 
 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 %ylabel('Number of seizures', 'Fontsize',15);
@@ -87,7 +87,6 @@ xlim([-abscisse_scale abscisse_scale]);
 subplot(1,3,3);
 hold;
 
-plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
 
 env_upper = [];
 for itrial = 1 : nb_trials
@@ -95,6 +94,8 @@ for itrial = 1 : nb_trials
     plot(data.time{itrial},abs(data.trial{itrial}(1,:))+ (nb_trials+1)*h - itrial*h,'k'); %first on top
     plot(data.time{itrial},env_upper{itrial}+ (nb_trials+1)*h - itrial*h,'c','LineWidth',2);
 end
+plot([0 0],[h/2 (nb_trials+1)*h], 'r', 'Linewidth', 2);
+
 
 %xlabel(sprintf('Time from \n%s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 %ylabel('Number of seizures', 'Fontsize',15);
