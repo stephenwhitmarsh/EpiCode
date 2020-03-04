@@ -209,8 +209,7 @@ else
             text(xData,totaldur(ib,:)'/60/60,num2str(round(totaldur(ib,:)'/60/60,1)),'vert','bottom','horiz','center');     
         end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
-        title('Total duration per sleep stage (hrs)');
-        ylabel('Hours');
+        title('Total duration per stage (hrs)');
         box off
         legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');        
         ylim([0, max(max(totaldur)/60/60)*1.3]);
@@ -230,7 +229,6 @@ else
         end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
         title('IEDs per minute');
-        ylabel('IEDs per minute');
         box off
         legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');       
         ylim([0, max(max(IEDrate))*1.3]);
@@ -252,7 +250,6 @@ else
         end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
         title('IEDs per minute normalized to wake stage');
-        ylabel('IED rate vs. wake');
         box off
         legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');        
         ylim([0, max(max(IEDrateNorm))*1.3]);

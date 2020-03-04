@@ -160,7 +160,7 @@ config{1}.stats.alpha               = 0.025;
 
 % You can replicate settings over subjects and only define the differences
 config{2}                           = config{1};
-config{2}.name                      = {'SpikeHaT1_1','SpikeDetect'};
+config{2}.name                      = {'Hspike','SpikeDetect'};
 config{2}.prefix                    = '2718-'; % edit in code
 config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'; 'SpikeDetect','SpikeDetect'};   % start and end Muse marker
 
@@ -214,7 +214,7 @@ config{2}.labels.micro              = {'mHaT1_8'};
 config{2}.labels.macro              = {'_HaT1_1','_HaT1_2','_HaT1_3'};
 
 config{2}.align.name                = {'SpikeHaT1_1'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-config{2}.align.channel             = {'_HaT1_3','_HaT1_3'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{2}.align.channel             = {'_HaT1_1','_HaT1_1'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{2}.align.abs                 = {'no','no'};
 config{2}.align.method              = {'nearest','max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 config{2}.align.filter              = {'bp','bp'};
