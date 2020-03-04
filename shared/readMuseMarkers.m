@@ -50,7 +50,7 @@ else
             
             fprintf('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
             
-            % find muse event file
+            % find muse event file and read header if neaded
             if isNeuralynx
                 temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.mrk'));
                 name_mrk    = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
@@ -58,6 +58,7 @@ else
                 name_mrk    = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.mrk']);
             elseif isBrainvision
                 name_mrk    = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.vmrk']);
+                load(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '_header']), 'header'); %header create by Paul's script during the conversion from Deltamed to Brainvision
             end
             
             
@@ -80,6 +81,9 @@ else
             fclose(f);
             
             if ~isempty(markfile)
+                            
+            if isNeuralynx || isMicromed 
+
                 nmarkers        = str2double(markfile{find(strcmp('NUMBER OF MARKERS:', markfile)) + 1});
                 classgroupid    = markfile(find(strcmp('CLASSGROUPID:', markfile)) + 1);
                 name            = markfile(find(strcmp('NAME:', markfile)) + 1);
@@ -88,6 +92,11 @@ else
                 editable        = markfile(find(strcmp('EDITABLE:', markfile)) + 1);
                 classid         = markfile(find(strcmp('CLASSID:', markfile)) + 1);
                 nrEvents        = str2double(markfile(find(strcmp('NUMBER OF SAMPLES:', markfile)) + 1));
+                %correct bug paul : 
+                if length(name)-length(classgroupid) == 1
+                    classgroupid{end+1} = '+3';
+                end
+                
                 
                 for i = 1:length(nrEvents)
                     if nrEvents(i) > 0
@@ -97,15 +106,69 @@ else
                 
                 % Get the events, time in seconds from onset of file
                 j = find(strcmp('LIST OF SAMPLES:', markfile)) + 2;
-                for i = 1 : nmarkers
-                    marks{i} = str2num(char(markfile(j(i):j(i) + nrEvents(i) - 1)));
+                for imarker = 1 : nmarkers
+                    marks{imarker} = str2num(char(markfile(j(imarker):j(imarker) + nrEvents(imarker) - 1)));
                     
                     % Convert from index origin 0 to 1
-                    if nrEvents(i) ~= 0
-                        marks{i}(:, 1) = marks{i}(:, 1) + 1;
+                    if nrEvents(imarker) ~= 0
+                        marks{imarker}(:, 1) = marks{imarker}(:, 1) + 1;
                     end
                 end
                 
+                
+            elseif isBrainvision %other muse marker file format than neuralynx or micromed
+               
+                %Get marker names and infos
+                name_temp            = markfile(find(strcmp('#TRIGGER COMMENTS', markfile)) + 1 : find(strcmp('Brain Vision Data Exchange Marker File, Version 1.0', markfile)) - 1);
+                nmarkers             = length(name_temp);
+                
+                for imarker = 1 : nmarkers
+                    name_temp{imarker}        = split(name_temp{imarker});
+                    name{imarker}             = name_temp{imarker}{2};
+                    classgroupid{imarker}     = [];
+                    comment{imarker}          = [];
+                    color{imarker}            = name_temp{imarker}{4}(8:end);
+                    editable{imarker}         = [];
+                    classid{imarker}          = [];
+                end
+
+                % Get the events, time in seconds from onset of file
+                %index beginning of marker samples : 
+                begin_mrk_list_index = find(strcmp('[Marker Infos]', markfile)) + 1;
+                
+                for i = 1:length(markfile)
+                    markfile{i} = split(markfile{i},',');
+                end
+                
+                for imarker = 1:nmarkers
+                    sample_index = 0;
+                    for isample = begin_mrk_list_index:length(markfile)
+                        if strcmp(markfile{isample}{2},name{imarker})
+                            sample_index = sample_index+1;
+                            marks{imarker}(sample_index, 1) = 1;
+                            marks{imarker}(sample_index, 2) = str2num(markfile{isample}{3})/header.Fs;
+                        end
+                    end
+                    if sample_index == 0
+                         marks{imarker} = [];
+                    end
+                end
+                        
+                
+                for imarker = 1:nmarkers
+                    nrEvents(imarker)        = size(marks{imarker},1);
+                    if nrEvents(imarker)>0
+                        fprintf('found %d occurances of %s \n', size(marks{imarker},1), name{imarker});
+                    end
+                end
+                
+                
+                
+            end
+            
+            
+                
+                                
                 
                 % recover "real time"
                 
@@ -205,6 +268,11 @@ else
                     headerdate = [cell2mat(datestring(3)) ' ' cell2mat(timestring(3))];
                     MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss');
                 
+                    
+                elseif isBrainvision
+                    MuseStruct{ipart}{idir}.starttime = header.date;
+                    
+                    
                 end %end of recover real time. different for each format
                     
                 
@@ -215,7 +283,7 @@ else
                 % create markers details in MuseStruct
                 for imarker = 1 : nmarkers
                     name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
-                    MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = []; %Paul : why this field ?
+                    MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = []; 
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).comment        = comment{imarker};
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).color          = color{imarker};
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).editable       = editable{imarker};
