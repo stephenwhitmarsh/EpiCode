@@ -44,17 +44,19 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-    % select those markers to load
-    markerlist = [];
-    for i = 1 : size(cfg.LFP.name,2)
-        if ismember(cfg.LFP.name{i},cfg.name)
-            markerlist = [markerlist, i];
-        end
-    end
+%     % select those markers to load
+%     markerlist = [];
+%     for i = 1 : size(cfg.LFP.name,2)
+%         if ismember(cfg.LFP.name{i},cfg.name)
+%             markerlist = [markerlist, i];
+%         end
+%     end
     
     for ipart = 1:length(MuseStruct)
         
-        for imarker = markerlist
+        for imarker = 1 : size(cfg.LFP.name,2)%markerlist
+            
+            fprintf('\nFor marker %s\n',cfg.LFP.name{imarker});
             
             hasmarker = false(length(MuseStruct{ipart}),1);
             
@@ -157,10 +159,10 @@ else
                                     dat                               = ft_preprocessing(cfgtemp);
                                     
                                     % EMG
-                                    if isfield(cfg.labels, 'emg')
-                                        if ~isempty(cfg.labels.emg)
+                                    if isfield(cfg.LFP, 'emg')
+                                        if ~isempty(cfg.LFP.emg)&& ~strcmp(cfg.LFP.emg{imarker},'no')
                                             cfgtemp                   = [];
-                                            cfgtemp.channel           = cfg.labels.emg';
+                                            cfgtemp.channel           = cfg.LFP.emg{imarker};%load only the emg associated with eeg marker
                                             cfgtemp.hpfilter          = cfg.EMG.hpfilter;
                                             cfgtemp.hpfreq            = cfg.EMG.hpfreq;
                                             cfgtemp.bsfilter          = cfg.EMG.bsfilter;
