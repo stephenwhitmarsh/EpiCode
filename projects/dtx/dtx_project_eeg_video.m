@@ -15,17 +15,17 @@ ft_defaults
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neuralynx
 
 
-config = dtx_setparams_patients_lgi1([]);
+config = dtx_setparams_eegvideo([]);
 %cfg=config{1}; 
 
-for ipatient = 1
+for irat = 1
     
     %% Get LFP data
     % read muse markers
-    [MuseStruct]    = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct]    = readMuseMarkers(config{irat}, true);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct]    = alignMuseMarkers(config{ipatient},MuseStruct, true);
+    [MuseStruct]    = alignMuseMarkers(config{irat},MuseStruct, true);
     
     %jusque là, extraire markers et les aligner commun quelle que soit
     %l'électrode à analyser
@@ -34,12 +34,22 @@ for ipatient = 1
     % dans setparams. Avec tous les canaux micro et macro nommé dans cfg
     fprintf('***********************************************************\n');
     fprintf('***********************************************************\n');
-    fprintf('** read, cut and and save LFP data for rat %d **\n',ipatient);
+    fprintf('** read, cut and and save LFP data for rat %d **\n',irat);
     fprintf('***********************************************************\n');
     fprintf('***********************************************************\n\n');
     
-    [dat_macro] = readLFP(config{ipatient}, MuseStruct, true, true);
+    [dat_macro] = readLFP(config{irat}, MuseStruct, true, true);
     %dat_macro{ipart}{imarker}
+    
+    
+    %inverse the data according to standard clinical visualisation
+    for imarker = 1:size(dat_macro{1},2)
+        for itrial = 1:size(dat_macro{1}{imarker}.trial,2)
+            dat_macro{1}{imarker}.trial{itrial} = -dat_macro{1}{imarker}.trial{itrial};
+        end
+    end
+    
+    
     
     fprintf('***********************************\n');
     fprintf('***********************************\n');
@@ -52,19 +62,20 @@ for ipatient = 1
     %get EEG channel
     %get EMG channel
     %get Marker name
+    %Adapter les mêmes fonctions pour awake et anesth.
     
     % search EEG used for alignment, and best EMG channels
     % Ok for several markers, each associated with 1 EEG and 1 EMG channel
     for ichannel = 1 : length(dat_macro{1}{1}.label)
         for imarker = 1:length(config{1}.LFP.name)
             
-            if strcmp(dat_macro{1}{1}.label{ichannel},config{ipatient}.align.channel{imarker})
+            if strcmp(dat_macro{1}{1}.label{ichannel},config{irat}.align.channel{imarker})
                 iEEG(imarker) = ichannel;
             end
-            if strcmp(dat_macro{1}{1}.label{ichannel},config{ipatient}.LFP.emg{imarker})
+            if strcmp(dat_macro{1}{1}.label{ichannel},config{irat}.LFP.emg{imarker})
                 iEMG(imarker) = ichannel;
             end
-            if strcmp(config{ipatient}.LFP.emg{imarker},'no')
+            if strcmp(config{irat}.LFP.emg{imarker},'no')
                 iEMG(imarker) = 'no';
             end
         end
@@ -72,11 +83,19 @@ for ipatient = 1
     
     
     
-    for imarker = length(config{1}.LFP.name) %For SW_R and SW_L
-       
+    
+    
+   
+    %2 figures : For SW_R and SW_L
+    for imarker = 1:length(config{1}.LFP.name) 
+        dtx_plot_timecourse_eeg_emg(config{irat}, dat_macro{1}, iEEG, iEMG, imarker);
+        dtx_plot_comparison_eeg_emg(config{irat}, dat_macro{1}, iEEG, iEMG, imarker); %add exception if no EMG
     end
     
-     dtx_plot_comparison_eeg_emg(config{ipatient}, dat_macro{1}{1}, iEEG, iEMG);
+    %1 figure common for SW_R and SW_L
+    dtx_plot_overdraw_allchannels
+    
+    
  % plot slow wave time to see regularity 
  %ajouter if isfield
  figure;
@@ -152,8 +171,8 @@ set(groot, 'defaultFigureRenderer', 'painters')
     cfg = [];
     cfg.layout = 'EEG1020';
     cfg.colorbar = 'yes';
-    cfg.zlim = [-100 100];%'maxabs';    
-    cfg.xlim = [-2:0.25:2];
+    cfg.zlim = [-100 180];%'maxabs';    
+    cfg.xlim = [-1:0.125:1];
     ft_topoplotER(cfg,dat_EEG_avg);
     
     
@@ -175,7 +194,7 @@ set(groot, 'defaultFigureRenderer', 'painters')
     
     fprintf('******************************\n');
     fprintf('******************************\n');
-    fprintf('**** Plot data, for rat %d ****\n',ipatient);
+    fprintf('**** Plot data, for rat %d ****\n',irat);
     fprintf('******************************\n');
     fprintf('******************************\n\n');
     
@@ -214,7 +233,7 @@ set(groot, 'defaultFigureRenderer', 'painters')
                         subplot(2,1,1);
                         ft_singleplotTFR([], TFR_macro);
             
-                        title(sprintf('%s%s : Frequency power over time',config{ipatient}.prefix,dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
+                        title(sprintf('%s%s : Frequency power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
                         %xlim([-1, 1]);
                         %ylim([80 125]);
                         xlabel('Time from Slow Wave (s)');
@@ -222,7 +241,7 @@ set(groot, 'defaultFigureRenderer', 'painters')
             
                         subplot(2,1,2);
                         ft_singleplotTFR([], TFR_macro_log);
-                        title(sprintf('%s%s : Frequency log power over time',config{ipatient}.prefix,dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
+                        title(sprintf('%s%s : Frequency log power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
                         %xlim([-5, 5]);
                         xlabel('Time from Slow Wave (s)');
                         ylabel('Frequency (Hz)');
@@ -316,13 +335,13 @@ end
 
     %% timecourse 
     %for macro_id = [config{ipatient}.LFP.electrodeToPlot(1), config{ipatient}.LFP.electrodeToPlot(2)]
-    for macro_id = config{ipatient}.LFP.electrodeToPlot(1)
+    for macro_id = config{irat}.LFP.electrodeToPlot(1)
         
         %search electrode index in the dat_macro (not the same in all
         %patients)
         
         for ichannel = 1 : length(dat_macro{1}{1}.label)
-            if strfind(dat_macro{1}{1}.label{ichannel},config{ipatient}.labels.macro{macro_id})
+            if strfind(dat_macro{1}{1}.label{ichannel},config{irat}.labels.macro{macro_id})
                 channelindx = [ichannel];
             end
         end
@@ -345,7 +364,7 @@ end
 
                     xlabel('Time from SlowWave (s)');
                     ylabel('Number of seizures');
-                    title(sprintf('%s : Aligned data from %s',config{ipatient}.prefix(1,1:end-1), dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
+                    title(sprintf('%s : Aligned data from %s',config{irat}.prefix(1,1:end-1), dat_macro{1}{1}.label{macro_id}),'Interpreter','none');
                     set(gca, 'YTickLabel', '');
                     tick = h;
                     yticks(0 : tick*10 : n*h);
@@ -385,14 +404,14 @@ end
 
         fig=figure;
         hold;
-        h=200;
+        h=5000;
         for i = 1 : size(dat_macro_rptavg.label,1)
             %subplot(size(dat_macro_rptavg.label,1),1,size(dat_macro_rptavg.label,1)-i+1);
             %         plot(dat_micro_rptavg.time,dat_micro_rptavg.avg)
             plot(dat_macro_rptavg.time,dat_macro_rptavg.avg(i,:)+h*i,'color','black');
 
         end
-        title(sprintf('Average of all SlowWaves of %s',config{ipatient}.prefix(1:end-1)),'Interpreter','none');
+        title(sprintf('Average of all SlowWaves of %s',config{irat}.prefix(1:end-1)),'Interpreter','none');
         axis tight;
         xlabel('Time (s)');
         ylabel('Channel name');
@@ -400,6 +419,7 @@ end
         yticks(0 : tick : length(dat_macro_rptavg.label)*h);
         set(gca, 'YTickLabel',[dat_macro_rptavg.label(end)', dat_macro_rptavg.label(1:end-1)']); %why Y axis not in the good order
         set(gca,'TickDir','out');
+        xlim([-5 25]);
 %         if abscisse_max == 2
 %             xlim([-2, 2]);
 %         else

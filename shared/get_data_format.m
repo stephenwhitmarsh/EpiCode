@@ -30,11 +30,18 @@ for ifile = 1:length(listing)
     end
 end
 
+if isNeuralynx
+    fprintf('Data is Neuralynx\n');
+elseif isMicromed
+    fprintf('Data is Micromed\n');
+elseif isBrainvision
+    fprintf('Data is Brainvision\n');
+end
 
 if isNeuralynx + isMicromed + isBrainvision == 0
-    error('Cannot detect good data format in datapath = %s \nData have to be Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)', datapath);
+    error('Cannot detect good data format in datapath = %s \nData have to be Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)\n', datapath);
 elseif isNeuralynx + isMicromed + isBrainvision >1
-    error('Several data formats are detected in datapath = %s \nData are Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)', datapath);
+    error('Several data formats are detected in datapath = %s \nData are Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)\n', datapath);
 end
 
 
