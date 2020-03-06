@@ -286,7 +286,7 @@ else
                         n_haspeak = n_haspeak+1;
                         
                         % find relevant peak according to method
-                        if strcmp(cfg.align.method{imarker},'nearest') ||strcmp(cfg.align.method{imarker},'nearestmin') % Min same as 'max' because timecourse was flipped
+                        if strcmp(cfg.align.method{imarker},'nearestmax') ||strcmp(cfg.align.method{imarker},'nearestmin') % Min same as 'max' because timecourse was flipped
                             [~, ip(itrial)] = min(abs(dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1))); % peak-time closest to zero
                             
                         elseif strcmp(cfg.align.method{imarker},'max')
