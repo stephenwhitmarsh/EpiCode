@@ -26,92 +26,114 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 
 config = dtx_setparams_probe([]);
+cfg = config{1}
 
-    ipart = 1;
-for irat = 1:6
+%% LFP analysis
     
+for irat = 1:6
     %% Get right LFP data
     % read muse markers
     [MuseStruct]    = readMuseMarkers(config{irat}, false);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct]    = alignMuseMarkers(config{irat},MuseStruct, false);
+    
+    [MuseStruct] =   dtx_remove_wrong_seizure(config{irat}, MuseStruct, true);
+    [dat_LFP] = readLFP(config{irat}, MuseStructtest, true, false);
+    %dat_LFP{ipart}{imarker}
 
+    ipart = 1;
+    imarker = 1;
+    
+    if irat == 2
+        electrodeToPlot = 'ECoGS1';
+    else
+        electrodeToPlot = 'ECoGM1G';
+    end
+    
+    dtx_plot_timecourse_eeg_emg(config{irat}, dat_LFP, ipart, imarker, 'eeg',electrodeToPlot,[-inf, inf], true);
+    dtx_plot_timecourse_eeg_emg(config{irat}, dat_LFP, ipart, imarker, 'eeg',electrodeToPlot,[-5, 25], true);
 
-
-    dtx_plot_count_seizure(config{irat}, MuseStruct, ipart, true);
+   
+    
+    
+    
+    
 end
-    
-    [MuseStruct_micro, MuseStruct_macro]    = MuseMarkers_update_filepath_parts(config{irat},MuseStruct_micro, MuseStruct_macro);
-    %[MuseStruct_micro, MuseStruct_macro]    = markers_adapt_clock_synctime(config{irat},MuseStruct_micro, MuseStruct_macro, false);
-    
-    %jusque là, extraire markers et les aligner commun quelle que soit
-    %l'électrode à analyser
-    
-    % read LFP data : micro et macro coupées comme définit dans le script et
-    % dans setparams. Avec tous les canaux micro et macro nommé dans cfg
-    fprintf('***********************************************************\n');
-    fprintf('***********************************************************\n');
-    fprintf('** read, downsample, cut and and save LFP data for rat %d **\n',irat);
-    fprintf('***********************************************************\n');
-    fprintf('***********************************************************\n\n');
-    
-    [dat_macro] = readLFP_parts_macro(config{irat}, MuseStruct_macro, true, true);
-    
-    
-    
-    fprintf('******************************\n');
-    fprintf('******************************\n');
-    fprintf('**** Plot data, for rat %d ****\n',irat);
-    fprintf('******************************\n');
-    fprintf('******************************\n\n');
-    
-    
-    [MuseStructtest] =   dtx_remove_wrong_seizure(config{irat}, MuseStruct, false);
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    for macro_id = [config{irat}.LFP.electrodeToPlot(1), config{irat}.LFP.electrodeToPlot(2)]
-        %% time frequency analysis
-        for i_t_ftimwin = [9, 20, 40]
-            foi_max=50;
-            
-            cfgtemp                         = [];
-            cfgtemp.channel                 = macro_id;%'all'; %ichannel;
-            cfgtemp.method                  = 'mtmconvol'; %relative change. 'mtmfft' : frequency content
-            cfgtemp.output                  = 'pow';
-            cfgtemp.taper                   = 'hanning';
-            cfgtemp.pad                     = 'nextpow2';
-            cfgtemp.keeptrials              = 'yes'; %return average
-            cfgtemp.foi                     = 1:0.5:50;
-            cfgtemp.t_ftimwin               = i_t_ftimwin./cfgtemp.foi;
-            %cfgtemp.t_ftimwin               = 20./cfgtemp.foi;
-            %cfgtemp.t_ftimwin               = 40./cfgtemp.foi;
-            %cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi))*0.5;
-            
-            cfgtemp.toi                     = [-5:0.01:25];
-            TFR_macro                    = ft_freqanalysis(cfgtemp,dat_macro{1}{1});
-            
-            TFR_macro_log = TFR_macro;
-            TFR_macro_log.powspctrm = log(TFR_macro.powspctrm);
-            
-            % without baseline relchange
-                        fig = figure;
-                        subplot(2,1,1);
-                        ft_singleplotTFR([], TFR_macro);
-            
-                        title(sprintf('%s%s : Frequency power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}));
-                        xlim([-5, 25]);
-                        xlabel('Time from Slow Wave (s)');
-                        ylabel('Frequency (Hz)');
-            
-                        subplot(2,1,2);
-                        ft_singleplotTFR([], TFR_macro_log);
-                        title(sprintf('%s%s : Frequency log power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}));
-                        xlim([-5, 25]);
-                        xlabel('Time from Slow Wave (s)');
-                        ylabel('Frequency (Hz)');
-            
-            
+ dtx_plot_count_seizure(config{irat}, MuseStruct, ipart, true); %need to be done with all markers, not markers removed wrong seizures
+
+
+%% Spike analysis
+config = dtx_setparams_probe([]);
+cfg = config{1}
+
+irat = 1;
+
+[MuseStruct]                     = readMuseMarkers(config{irat}, false);
+
+% align Muse markers according to peaks and detect whether they contain artefacts
+[MuseStruct]                     = alignMuseMarkers(config{irat},MuseStruct, false);
+
+[MuseStruct]                     = dtx_remove_wrong_seizure(config{irat}, MuseStruct, true);
+
+%remove seizure from 5s after SlowWave to Crise_End
+[MuseStruct_without_seizures]    = addMuseBAD(MuseStruct, 'all', 'all', 'SlowWave', 'Crise_End', ':', 5, 0);
+
+
+[sampleinfo] = writeSpykingCircus(config{irat}, MuseStruct_without_seizures, true, true);
+writeSpykingCircusParameters(config{ipatient})
+
+
+% read spike-clustering results, and epoch around events
+[SpikeRaw, SpikeTrials] = readSpykingCircus(config{irat}, MuseStruct, false, 1);
+
+% compute event-related changes of spike rates, and other stats
+[stats_smooth, stats_binned] = spikeratestatsEvents(config{ipatient}, SpikeRaw, SpikeTrials, true);
+
+%     
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     for macro_id = [config{irat}.LFP.electrodeToPlot(1), config{irat}.LFP.electrodeToPlot(2)]
+%         %% time frequency analysis
+%         for i_t_ftimwin = [9, 20, 40]
+%             foi_max=50;
+%             
+%             cfgtemp                         = [];
+%             cfgtemp.channel                 = macro_id;%'all'; %ichannel;
+%             cfgtemp.method                  = 'mtmconvol'; %relative change. 'mtmfft' : frequency content
+%             cfgtemp.output                  = 'pow';
+%             cfgtemp.taper                   = 'hanning';
+%             cfgtemp.pad                     = 'nextpow2';
+%             cfgtemp.keeptrials              = 'yes'; %return average
+%             cfgtemp.foi                     = 1:0.5:50;
+%             cfgtemp.t_ftimwin               = i_t_ftimwin./cfgtemp.foi;
+%             %cfgtemp.t_ftimwin               = 20./cfgtemp.foi;
+%             %cfgtemp.t_ftimwin               = 40./cfgtemp.foi;
+%             %cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi))*0.5;
+%             
+%             cfgtemp.toi                     = [-5:0.01:25];
+%             TFR_macro                    = ft_freqanalysis(cfgtemp,dat_macro{1}{1});
+%             
+%             TFR_macro_log = TFR_macro;
+%             TFR_macro_log.powspctrm = log(TFR_macro.powspctrm);
+%             
+%             % without baseline relchange
+%                         fig = figure;
+%                         subplot(2,1,1);
+%                         ft_singleplotTFR([], TFR_macro);
+%             
+%                         title(sprintf('%s%s : Frequency power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}));
+%                         xlim([-5, 25]);
+%                         xlabel('Time from Slow Wave (s)');
+%                         ylabel('Frequency (Hz)');
+%             
+%                         subplot(2,1,2);
+%                         ft_singleplotTFR([], TFR_macro_log);
+%                         title(sprintf('%s%s : Frequency log power over time',config{irat}.prefix,dat_macro{1}{1}.label{macro_id}));
+%                         xlim([-5, 25]);
+%                         xlabel('Time from Slow Wave (s)');
+%                         ylabel('Frequency (Hz)');
+%             
+%             
             
 %             
 %             %ft_singleplotTFR([], TFR_macro_log);
@@ -174,23 +196,23 @@ end
 %             %              c=colorbar;
 %             %              c.Label.String = 'Log of power relative change';
 %             
-            % print to file
-            fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
-            set(fig,'PaperOrientation','landscape');
-            set(fig,'PaperUnits','normalized');
-            set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(config{irat}.imagesavedir,'tfr_seizures',[config{irat}.prefix,dat_macro{1}{1}.label{macro_id}, '_Avg_TFR_seizures_',num2str(foi_max),'Hz_',num2str(i_t_ftimwin)]),'-r600');
-            print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'tfr_seizures',[config{irat}.prefix,dat_macro{1}{1}.label{macro_id}, '_Avg_TFR_seizures_',num2str(foi_max),'Hz_',num2str(i_t_ftimwin)]),'-r600');
-            close all
-            
-            clear TFR_macro TFR_macro_log
-        end
-        
-        
-    end
-    
-end
-
+%             % print to file
+%             fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
+%             set(fig,'PaperOrientation','landscape');
+%             set(fig,'PaperUnits','normalized');
+%             set(fig,'PaperPosition', [0 0 1 1]);
+%             print(fig, '-dpdf', fullfile(config{irat}.imagesavedir,'tfr_seizures',[config{irat}.prefix,dat_macro{1}{1}.label{macro_id}, '_Avg_TFR_seizures_',num2str(foi_max),'Hz_',num2str(i_t_ftimwin)]),'-r600');
+%             print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'tfr_seizures',[config{irat}.prefix,dat_macro{1}{1}.label{macro_id}, '_Avg_TFR_seizures_',num2str(foi_max),'Hz_',num2str(i_t_ftimwin)]),'-r600');
+%             close all
+%             
+%             clear TFR_macro TFR_macro_log
+%         end
+%         
+%         
+%     end
+%     
+% end
+% 
 
 
 

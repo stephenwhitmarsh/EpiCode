@@ -42,7 +42,7 @@ for ipart = 1 : size(cfg.directorylist,2)
     fid                 = fopen(fullfile(cfg.datasavedir,subjdir,partdir,fname_prb),'w+');
     
     fprintf(fid,'# Probe file for Spyking Circus \n');
-    fprintf(fid,'# Created automatically by writeSpykingCircus.m \n \n');
+    fprintf(fid,'# Created automatically by writeSpykingCircusParameters.m \n \n');
     
     fprintf(fid,'total_nb_channels = %d;\n',nb_channels);
     fprintf(fid,'radius            = 10;\n\n');

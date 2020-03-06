@@ -1,4 +1,4 @@
-function dtx_plot_emg_method(cfg,data,ipart,imarker,saveplot)
+function dtx_plot_emg_method(cfg,data,ipart,imarker,electrodeToPlot,saveplot)
 %iEEG et 1 are the indexes of the channels in data.
 % if 1 = 'no' : subplot indicating absence of EMG
 %if 1 = false : ignoring everything concerning EMG
@@ -16,12 +16,12 @@ if isfield(cfg, 'merge')
 end
 
 cfgtemp = [];
-cfgtemp.channel = cfg.LFP.emg{imarker};
+cfgtemp.channel = electrodeToPlot;
 data = ft_selectdata(cfgtemp,data{ipart}{imarker});
 
 abscisse_scale = 2;%s
-envelope_method = 'rms';
-envelope_parameter = 30;
+% envelope_method = 'rms';
+% envelope_parameter = 30;
 timewindowlength=0.05;%s, for TFR
 
 nb_trials = size(data.trial,2);
@@ -90,7 +90,7 @@ hold;
 
 env_upper = [];
 for itrial = 1 : nb_trials
-    [env_upper{itrial}, ~] = envelope(abs(data.trial{itrial}(1,:)),envelope_parameter,envelope_method);
+    [env_upper{itrial}, ~] = envelope(abs(data.trial{itrial}(1,:)),cfg.EMG.envparam,cfg.EMG.envmethod);
     plot(data.time{itrial},abs(data.trial{itrial}(1,:))+ (nb_trials+1)*h - itrial*h,'k'); %first on top
     plot(data.time{itrial},env_upper{itrial}+ (nb_trials+1)*h - itrial*h,'c','LineWidth',2);
 end

@@ -20,10 +20,6 @@ nb_channels = length(cfg.labels.macro);
 fig = figure;
 hold;
 
-cfgtemp                  = [];
-EEG_avg_allchan          = ft_timelockanalysis(cfgtemp,data);
-EEG_avg_allchan.ID  = cfg.prefix(1:end-1);
-
 %h automatic setting :
 cfgtemp = [];
 cfgtemp.channel = cfg.align.channel{imarker};
@@ -53,12 +49,6 @@ for ichan = 1:nb_channels
     dat_avg{ichan}           = data_temp_avg;
     
     plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k');
-
-    if strcmp(cfg.labels.macro{ichan},cfg.align.channel{imarker}) %if chan is align channel
-        EEG_align = dat_avg{ichan};
-        EEG_align.label = 'chan_SlowWave';
-        EEG_align.ID = cfg.prefix(1:end-1);
-    end
     
 end
 

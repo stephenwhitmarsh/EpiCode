@@ -24,10 +24,11 @@ datasavedir = fullfile(rootpath_analysis, 'data'); %removed of config{i} so we c
 imagesavedir = rootpath_analysis; 
 
 %% Config common
+%change MuseStartEnd, and toi
 configcommon.os                        = os;
 configcommon.name                      = {'SlowWave','Seizure','InterIctal'};
 configcommon.datasavedir               = datasavedir;
-configcommon.muse.startend             = {'SlowWave','SlowWave'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configcommon.muse.startend             = {'SlowWave','Crise_End'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
 configcommon.align.name                = {'SlowWave'};
 configcommon.align.flip                = {'no'};
 configcommon.align.abs                 = {'no'};
@@ -50,28 +51,29 @@ configcommon.LFP.baselinewindow{1}     = [-2, -1];
 configcommon.LFP.baselinewindow{2}     = [-2, -1];
 configcommon.LFP.baselinewindow{3}     = [0, 1];
 configcommon.LFP.slidestep             = 0.01;
-configcommon.LFP.electrodeToPlot       = [6, 11]; %index of the channel in configcommon.labels.macro  
 
 % list of onset timing with respect to start-marker (s)
-configcommon.epoch.toi{1}              = [-5, 25];  
+configcommon.epoch.toi{1}              = [-5, 5];  
 configcommon.epoch.toi{2}              = [-2, 1];  
 configcommon.epoch.toi{3}              = [1, -2];  
-configcommon.epoch.pad(1)              = 10;
-configcommon.epoch.pad(2)              = 0.5;
-configcommon.epoch.pad(3)              = 0.5;
+configcommon.epoch.pad{1}              = 10;
+configcommon.epoch.pad{2}              = 0.5;
+configcommon.epoch.pad{3}              = 0.5;
 
 configcommon.circus.reref              = 'no';
 configcommon.circus.refchan            = '';
 configcommon.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configcommon.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configcommon.circus.suffix             = '-1';
+configcommon.circus.postfix             = '-1';
 
 configcommon.stats.bltoi{1}            = [-2, -1];
-configcommon.stats.bltoi{1}            = [-2, -1];
-configcommon.stats.bltoi{1}            = [0, 1];
+configcommon.stats.bltoi{2}            = [-2, -1];
+configcommon.stats.bltoi{3}            = [-2, -1];
+%configcommon.stats.bltoi{3}            = [0, 1];
 configcommon.stats.actoi{1}            = [-1, 0];
-configcommon.stats.actoi{1}            = [-1, 0];
-configcommon.stats.actoi{1}            = [1, 0];
+configcommon.stats.actoi{2}            = [-1, 0];
+configcommon.stats.actoi{3}            = [-1, 0];
+%configcommon.stats.actoi{3}            = [1, 0];
 configcommon.stats.alpha               = 0.025;
 
 configcommon.spike.slidestep           = [0.01];
@@ -80,8 +82,9 @@ configcommon.spike.toispikerate{2}     = [-0.1 0.1];           % for plotting sp
 configcommon.spike.toispikerate{3}     = [-0.1 0.1];           % for plotting spikerate
 configcommon.spike.resamplefs          = 1000;
 configcommon.spike.bltoi{1}            = [-2, -1];
-configcommon.spike.bltoi{1}            = [-2, -1];
-configcommon.spike.bltoi{1}            = [0, 1];
+configcommon.spike.bltoi{2}            = [-2, -1];
+configcommon.spike.bltoi{3}            = [-2, -1];
+%configcommon.spike.bltoi{3}            = [0, 1];
 
 configcommon.spike.ISIbins             = [0:0.005:0.150];
 
@@ -103,7 +106,7 @@ config{1}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13'
 config{1}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-config{1}.align.channel             = {'E12LFP.ncs'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{1}.align.channel             = {'E12LFP'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{1}.LFP.channel               = config{1}.labels.macro;
 config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -124,7 +127,7 @@ config{2}.labels.micro              = {'E08','E09','E10','E11','E12','E13','E14'
 config{2}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
         'ECoGS1','ECoGM1','ECoGPtA'}; % /!\ Mistake during acquisition : ECoGS1 = ECoGM1G};
     
-config{2}.align.channel                = {'E13LFP.ncs'};
+config{2}.align.channel                = {'E13LFP'};
 config{2}.LFP.channel                  = config{2}.labels.macro;
 config{2}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -144,7 +147,7 @@ config{3}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13'
 config{3}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP'...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-config{3}.align.channel                = {'E13LFP.ncs'};
+config{3}.align.channel                = {'E13LFP'};
 config{3}.LFP.channel                  = config{3}.labels.macro;
 config{3}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -163,7 +166,7 @@ config{4}.labels.micro              = {'E08','E09','E10','E11','E12','E13','E14'
 config{4}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-config{4}.align.channel                = {'E13LFP.ncs'};
+config{4}.align.channel                = {'E13LFP'};
 config{4}.LFP.channel                  = config{4}.labels.macro;
 config{4}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -182,7 +185,7 @@ config{5}.labels.micro              = {'E06','E07','E08','E09','E10','E11','E12'
 config{5}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-config{5}.align.channel                = {'E13LFP.ncs'};
+config{5}.align.channel                = {'E13LFP'};
 config{5}.LFP.channel                  = config{5}.labels.macro;
 config{5}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -201,7 +204,7 @@ config{6}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13'
 config{6}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-config{6}.align.channel                = {'E13LFP.ncs'};
+config{6}.align.channel                = {'E13LFP'};
 config{6}.LFP.channel                  = config{6}.labels.macro;
 config{6}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 end

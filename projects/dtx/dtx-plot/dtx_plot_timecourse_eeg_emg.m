@@ -1,4 +1,4 @@
-function dtx_plot_timecourse_eeg_emg(cfg,data,ipart,imarker,datatype,saveplot)
+function dtx_plot_timecourse_eeg_emg(cfg,data,ipart,imarker,datatype,electrodeToPlot,abscisse_scale,saveplot)
 %data{ipart} 
 %This script is for one ipart and one imarker
 %datatype : 'eeg' or 'emg'
@@ -33,7 +33,7 @@ end
 %select the channel of interest
 if isEEG
     cfgtemp = [];
-    cfgtemp.channel = cfg.align.channel{imarker};
+    cfgtemp.channel = electrodeToPlot;
     data = ft_selectdata(cfgtemp,data{imarker});
     
 elseif isEMG
@@ -41,7 +41,7 @@ elseif isEMG
         if ~strcmp(cfg.LFP.emg{imarker},'no')
             if ~(cfg.LFP.emg{imarker} == false)
                 cfgtemp = [];
-                cfgtemp.channel = cfg.LFP.emg{imarker};
+                cfgtemp.channel = electrodeToPlot;
                 data = ft_selectdata(cfgtemp,data{imarker});
             else
                 warning('cfg.LFP.emg{imarker} == false : no EMG data loaded, plot not made');
@@ -99,7 +99,9 @@ yticks(tick : tick*10 : nb_trials*h);
 yticklabels(nb_trials : -10 : 0);
 set(gca,'TickDir','out');
 axis tight
-xlim(cfg.epoch.toi{imarker});
+
+xlim(abscisse_scale);
+
 
 % %% EMG
 % 
@@ -169,8 +171,8 @@ if saveplot
     set(fig1,'PaperPosition', [0 0 1 1]);
     set(fig1,'Renderer','Painters');
      
-    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1}]),'-r600');
-    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1}]),'-r600');
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(abscisse_scale),']']),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(abscisse_scale),']']),'-r600');
     
 
 %     %EMG

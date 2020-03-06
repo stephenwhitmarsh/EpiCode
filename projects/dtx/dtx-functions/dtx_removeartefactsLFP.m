@@ -162,7 +162,7 @@ for ipart = 1:size(data, 2)
             end
             
             
-            %Remove artefacts : (à vérifier)
+            %% Remove artefacts : 
             data{ipart}{imarker}.time       = data{ipart}{imarker}.time(~hasartefact);
             data{ipart}{imarker}.trial      = data{ipart}{imarker}.trial(~hasartefact);
             data{ipart}{imarker}.trialinfo  = data{ipart}{imarker}.trialinfo(~hasartefact,:);

@@ -1,7 +1,46 @@
-function [data_EEG, data_EMG] = dtx_plot_comparison_eeg_emg(cfg,data,ipart,imarker,saveplot)
+function dtx_plot_comparison_eeg_emg(cfg,data,ipart,imarker,saveplot,varargin)
+
 abscisse_scale = 2;
 
 data = data{ipart};
+
+data_EEG = [];
+data_EMG = [];
+
+%get EEG and EMG channels
+if isempty(varargin)
+    chanEEG = cfg.align.channel{imarker};
+    if isfield(cfg.LFP, 'emg')
+        if ~strcmp(cfg.LFP.emg{imarker},'no')
+            if ~(cfg.LFP.emg{imarker} == false)
+                chanEMG = cfg.LFP.emg{imarker};
+            else
+                warning('cfg.LFP.emg{imarker} == false : no EMG data loaded, plot not made');
+                return
+            end
+        else
+            warning('cfg.LFP.emg{imarker} == ''no'' : no EMG data loaded, plot not made');
+            return
+        end
+    else
+        warning('Field cfg.LFP.emg does not exist : no EMG data loaded, plot not made');
+        return
+    end
+elseif length(varargin) == 2
+    chanEEG = varargin{1};
+    chanEMG = varargin{2};
+else
+    error('varargin must have 0 argument, or 2 arguments (chan name chanEEG and chanEMG).\nHere there are %d arguments',length(varargin));
+end
+
+%select the channels of interest
+cfgtemp = [];
+cfgtemp.channel = chanEEG;
+data_EEG = ft_selectdata(cfgtemp,data{imarker});
+
+cfgtemp = [];
+cfgtemp.channel = chanEMG;
+data_EMG = ft_selectdata(cfgtemp,data{imarker});
 
 %rename prefix in case of "merge" data
 if isfield(cfg, 'merge')
@@ -14,32 +53,6 @@ if isfield(cfg, 'merge')
     end
 end
 
-
-%select the channels of interest
-cfgtemp = [];
-cfgtemp.channel = cfg.align.channel{imarker};
-data_EEG = ft_selectdata(cfgtemp,data{imarker});
-
-
-data_EMG = [];
-if isfield(cfg.LFP, 'emg')
-    if ~strcmp(cfg.LFP.emg{imarker},'no')
-        if ~(cfg.LFP.emg{imarker} == false)
-            cfgtemp = [];
-            cfgtemp.channel = cfg.LFP.emg{imarker};
-            data_EMG = ft_selectdata(cfgtemp,data{imarker});
-        else
-            warning('cfg.LFP.emg{imarker} == false : no EMG data loaded, plot not made');
-            return
-        end
-    else
-        warning('cfg.LFP.emg{imarker} == ''no'' : no EMG data loaded, plot not made');
-        return
-    end
-else
-    warning('Field cfg.LFP.emg does not exist : no EMG data loaded, plot not made');
-    return
-end
 
 
 fig = figure;
@@ -103,7 +116,7 @@ end
 for itrial = 1 : size(data_EMG.trial,2)
     t = data{imarker}.time{itrial};
     rect_emg = abs(data_EMG.trial{itrial}(1,:));
-    [env{itrial}, ~] = envelope(rect_emg,30,'rms');
+    [env{itrial}, ~] = envelope(rect_emg,cfg.EMG.envparam,cfg.EMG.envmethod);
     plot(t,env{itrial},'color','c');
 end
 
@@ -204,11 +217,6 @@ if saveplot
     close all
 end
 
-%% rename for saving over several patients
-data_EEG.label{1} = 'chan_SlowWave';
-data_EEG.ID = cfg.prefix(1:end-1);
-data_EMG.label{1} = 'EMG';
-data_EMG.ID = cfg.prefix(1:end-1);
 
 end
 

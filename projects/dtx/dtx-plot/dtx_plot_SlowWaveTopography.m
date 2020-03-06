@@ -94,9 +94,9 @@ for imarker = 1:length(data)
     ft_topoplotER(cfgtemp,dat_EEG_avg{imarker});
     
     if imarker ==1
-        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name{imarker},size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','b');
+        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name,size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','b');
     elseif imarker == 2
-        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name{imarker},size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','r');
+        title(sprintf('%s (%d trials) :',data{imarker}.LFP.name,size(data{imarker}.trial,2)),'Interpreter','none','Fontsize',18,'Color','r');
     end
 
 

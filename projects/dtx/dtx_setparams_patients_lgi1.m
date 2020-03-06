@@ -55,6 +55,7 @@ configcommon.align.refchannel          = configcommon.labels.macro';
 configcommon.align.notch               = 'yes';
 
 configcommon.LFP.name                  = {'SlowWave_R','SlowWave_L','SlowWave_R_EMG','SlowWave_L_EMG'};
+configcommon.LFP.motorcortex           = {'C4','C3','C4','C3'};
 configcommon.LFP.hpfilter              = 'no';
 configcommon.LFP.hpfreq                = 0;
 configcommon.LFP.resamplefs            = 256;
@@ -73,6 +74,8 @@ configcommon.EMG.hpfilter              = 'yes';
 configcommon.EMG.hpfreq                = 10;
 configcommon.EMG.bsfilter              = 'yes';
 configcommon.EMG.bsfreq                = [49 51];
+configcommon.EMG.envmethod             = 'rms';
+configcommon.EMG.envparam              = 30;
 
 %1, 2 and 3 associated with config.muse.startend
 configcommon.epoch.toi{1}              = [-10, 10];
