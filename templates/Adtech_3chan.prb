@@ -1,0 +1,17 @@
+# Probe file for Spyking Circus 
+# Created automatically by writeSpykingCircus.m 
+ 
+total_nb_channels = 3;
+radius            = 10;
+
+channel_groups = {
+	1: {
+		'channels':range(0,3),
+		'geometry': {
+						0: [0, 50],
+						1: [0, 100],
+						2: [0, 150],
+		},
+		'graph' : []
+	}
+}

@@ -165,61 +165,102 @@ else
     
     for imarker = markerlist
         
-        for i = 0 : 4
-            totaldur(i+1) = seconds(sum(hypnogram.duration(hypnogram.stage == i)));
+        for ipart = unique(hypnogram.part)'
+            
+            for i = 0 : 4
+                totaldur(ipart,i+1) = seconds(sum(hypnogram.duration(hypnogram.stage == i & hypnogram.part == ipart)));
+            end
+            for i = 0 : 4
+                totalsum(ipart,i+1) = sum(marker.stage == i & strcmp(marker.name, cfg.name{imarker}) & marker.ipart == ipart);
+            end
+            
         end
-        for i = 0 : 4
-            totalsum(i+1) = sum(marker.stage == i & strcmp(marker.name, cfg.name{imarker}));
-        end
+        IEDrate = totalsum./totaldur*60;
         
         h = figure;
+        
+        % Number of IEDs per night / stage
         subplot(4,1,1);
-        bar([0 : 4],totalsum,'k');
-        text([0 : 4],totalsum,num2str(totalsum'),'vert','bottom','horiz','center','FontSize',18);
-        xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
-        title('Number of IEDs detected in each stage');
+        hb = bar([0 : 4],totalsum,1);
+        for ib = 1:numel(hb)
+            %XData property is the tick labels/group centers; XOffset is the offset
+            %of each distinct group
+            xData = hb(ib).XData+hb(ib).XOffset;
+            text(xData,totalsum(ib,:)',num2str(totalsum(ib,:)'),'vert','bottom','horiz','center');     
+        end
+        xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'});
+        ylabel('Number of IEDs');
+        title('Number of IEDs per sleep stage');
         box off
-        ylim([0, max(totalsum)*1.3]);
-        set(gca,'TickLength',[0 0])
-        set(gca,'Yticklabels',[])
+        legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');
+        ylim([0, max(max(totalsum))*1.3]);
+        set(gca,'TickLength',[0 0]); % set(gca,'Yticklabels',[])
+        ax = gca;
+        ax.XGrid = 'off';
+        ax.YGrid = 'on';        
         
-        t = arrayfun(@(x) sprintf('%3.2f',x),totaldur/60/60,'uniformoutput', false);
-        
-        subplot(4,1,2);
-        bar([0 : 4],totaldur/60/60,'k');
-        text([0 : 4],totaldur/60/60,t,'vert','bottom','horiz','center','FontSize',18);
+        % hours spend in sleep stage
+        subplot(4,1,2);       
+        hb = bar([0 : 4],totaldur/60/60,1);
+        for ib = 1:numel(hb)
+            %XData property is the tick labels/group centers; XOffset is the offset
+            %of each distinct group
+            xData = hb(ib).XData+hb(ib).XOffset;
+            text(xData,totaldur(ib,:)'/60/60,num2str(round(totaldur(ib,:)'/60/60,1)),'vert','bottom','horiz','center');     
+        end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
-        title('Total duration per stage (hrs)');
+        title('Total duration per sleep stage (hrs)');
+        ylabel('Hours');
         box off
-        ylim([0, max(totaldur/60/60)*1.3]);
+        legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');        
+        ylim([0, max(max(totaldur)/60/60)*1.3]);
         set(gca,'TickLength',[0 0])
-        set(gca,'Yticklabels',[])
-        
-        t = arrayfun(@(x) sprintf('%3.2f',x),totalsum./totaldur*60,'uniformoutput', false);
-        
+        ax = gca;
+        ax.XGrid = 'off';
+        ax.YGrid = 'on';         
+
+        % number of IEDs per minute
         subplot(4,1,3);
-        bar([0 : 4],totalsum./totaldur*60,'k');
-        text([0 : 4],totalsum./totaldur*60,t,'vert','bottom','horiz','center','FontSize',18);
+        hb = bar([0 : 4],IEDrate,1);
+        for ib = 1:numel(hb)
+            %XData property is the tick labels/group centers; XOffset is the offset
+            %of each distinct group
+            xData = hb(ib).XData+hb(ib).XOffset;
+            text(xData,IEDrate(ib,:)',num2str(round(IEDrate(ib,:),1)'),'vert','bottom','horiz','center');     
+        end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
         title('IEDs per minute');
+        ylabel('IEDs per minute');
         box off
-        ylim([0, max(totalsum./totaldur*60)*1.3]);
+        legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');       
+        ylim([0, max(max(IEDrate))*1.3]);
         set(gca,'TickLength',[0 0])
-        set(gca,'Yticklabels',[])
+%         set(gca,'Yticklabels',[])
+        ax = gca;
+        ax.XGrid = 'off';
+        ax.YGrid = 'on';    
         
-        y = totalsum./totaldur*60;
-        y = y ./ y(1);
-        t = arrayfun(@(x) sprintf('%3.2f',x),y,'uniformoutput', false);
-        
+        % IED rate normalized to wake
+        IEDrateNorm = IEDrate ./ IEDrate(:,1);
         subplot(4,1,4);
-        bar([0 : 4],y,'k');
-        text([0 : 4],y,t,'vert','bottom','horiz','center','FontSize',18);
+        hb = bar([0 : 4],IEDrateNorm,1);
+        for ib = 1:numel(hb)
+            %XData property is the tick labels/group centers; XOffset is the offset
+            %of each distinct group
+            xData = hb(ib).XData+hb(ib).XOffset;
+            text(xData,IEDrateNorm(ib,:)',num2str(round(IEDrateNorm(ib,:),1)'),'vert','bottom','horiz','center');
+        end
         xticklabels({'Wake','Stage 1','Stage 2','Stage 3','REM'})
         title('IEDs per minute normalized to wake stage');
+        ylabel('IED rate vs. wake');
         box off
-        ylim([0, max(y)*1.3]);
+        legend({'Night 1', 'Night 2', 'Night 3'},'location','eastoutside');        
+        ylim([0, max(max(IEDrateNorm))*1.3]);
         set(gca,'TickLength',[0 0])
-        set(gca,'Yticklabels',[])
+%         set(gca,'Yticklabels',[])
+        ax = gca;
+        ax.XGrid = 'off';
+        ax.YGrid = 'on'; 
         
         % print to file
         set(h,'PaperOrientation','landscape');

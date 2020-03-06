@@ -31,7 +31,7 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 %% General analyses, looping over patients
 
-for ipatient = 2
+for ipatient =1
     
     % load settings
     config = hspike_setparams;
@@ -41,16 +41,16 @@ for ipatient = 2
     exportHypnogram(config{ipatient});
     
     % read muse markers
-    [MuseStruct] = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct] = readMuseMarkers(config{ipatient}, false);
     
     % align Muse markers according to peaks
-    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, true);
+    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, false);
     
     % automatically detect spikes
     detectSpikes(config{ipatient}, MuseStruct, true, true);
     
     % read hypnogram as table
-    [PSGtable] = PSG2table(config{ipatient}, MuseStruct, true);
+    [PSGtable] = PSG2table(config{ipatient}, MuseStruct, false);
     
     % plot hypnogram
     plotHypnogram(config{ipatient},MuseStruct);

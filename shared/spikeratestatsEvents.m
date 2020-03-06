@@ -6,7 +6,7 @@ end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'all_data_spikedata_stats.mat']);
 if exist(fname,'file') && force == false
-    load(fname,'stats','stats_binned','sdf_orig_out','sdf_bar_out');
+    load(fname,'stats_smooth','stats_binned');
 else
     
     for ipart = 1 : size(SpikeRaw,2)
