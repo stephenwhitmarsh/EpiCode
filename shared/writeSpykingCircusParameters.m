@@ -42,6 +42,7 @@ for ipart = 1 : size(cfg.directorylist,2)
     % write params file 
     nb_channels         = size(cfg.circus.channel,2);
     writeProbeFile(nb_channels,fname_prb);
+
     
 end
 

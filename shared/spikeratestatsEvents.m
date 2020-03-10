@@ -12,7 +12,7 @@ else
     for ipart = 1 : size(SpikeRaw,2)
         
         % fix this for consistency
-        temp                    = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p' num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.ncs']));
+        temp                    = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p' num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
         hdr_fname               = fullfile(temp(1).folder,temp(1).name);
         hdr                     = ft_read_header(hdr_fname); % take the first file to extract the header of the data
         
@@ -46,9 +46,9 @@ else
             bar(stats_smooth{ipart}.isi_1s.time*1000,stats_smooth{ipart}.isi_1s.avg(itemp,:),1);
             [y,indx] = max(stats_smooth{ipart}.isi_1s.avg(itemp,:));
             title(sprintf('Unit: %d, Max ISI: %.1fms',itemp,stats_smooth{ipart}.isi_1s.time(indx)*1000));
-            xlabel('ms');
-            xticks(stats_smooth{ipart}.isi_1s.time*1000);
-            xtickangle(90);
+            %xlabel('ms');
+            %xticks(stats_smooth{ipart}.isi_1s.time*1000);
+            %xtickangle(90);
             axis tight
             grid on
             set(gca,'fontsize',6);
@@ -303,13 +303,13 @@ else
                     for ineg = 1 : size(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusters,2)
                         if stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusters(ineg).prob < cfg.stats.alpha
                             sel = find(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.negclusterslabelmat == ineg);
-                            plot(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth.avg(itemp,round(sel+lag+0.5)),'r','linewidth',2); % smoothed
+                            plot(stats_smooth{ipart}.clusterstat{ilabel}{itemp}.time(sel),sdf_smooth{ipart}.avg(itemp,round(sel+lag+0.5)),'r','linewidth',2); % smoothed
                             si = round(sel+lag);
-                            [Y,I] = min(sdf_smooth.avg(itemp,round(sel+lag+0.5)));
-                            x = sdf_smooth.time(si(I));
-                            y = sdf_smooth.avg(itemp,si(I));
+                            [Y,I] = min(sdf_smooth{ipart}.avg(itemp,round(sel+lag+0.5)));
+                            x = sdf_smooth{ipart}.time(si(I));
+                            y = sdf_smooth{ipart}.avg(itemp,si(I));
                             plot(x,y-0.25,'^','markersize',10,'color',[1 0 0],'markerfacecolor',[1 0 0]);
-                            d = (sdf_smooth.avg(itemp,si(I)) / stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
+                            d = (sdf_smooth{ipart}.avg(itemp,si(I)) / stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100;
                             text(x+0.05,y-0.25,sprintf('%.1f%%\n',d),'HorizontalAlignment','left','VerticalAlignment','middle');
                         end
                     end
@@ -428,10 +428,10 @@ else
                             
                             % plot percentage
                             si = sel+lag;
-                            [Y,I] = max(sdf_bar.avg(sel+lag));
-                            x = sdf_bar.time(si(I));
-                            y = sdf_bar.avg(si(I));
-                            d = (sdf_bar.avg(si(I)) / stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100 - 100;
+                            [Y,I] = max(sdf_bar{ipart}.avg(sel+lag));
+                            x = sdf_bar{ipart}.time(si(I));
+                            y = sdf_bar{ipart}.avg(si(I));
+                            d = (sdf_bar{ipart}.avg(si(I)) / stats_binned{ipart}.clusterstat{ilabel}{itemp}.bl.avg) * 100 - 100;
                             stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.perc{ipos} = d;
                             stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.x{ipos} = x;
                             stats_binned{ipart}.clusterstat{ilabel}{itemp}.maxcluster.y{ipos} = y;
@@ -557,12 +557,13 @@ else
                 stats.template_width(itemp)  = (temptime_int(indx(2))-temptime_int(indx(1)))*1000;
                 
                 % print to file
+
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
                 print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-spikerates_template_',num2str(itemp),'_pattern_',cfg.name{ilabel},'.pdf']),'-r600');
-                set(fig,'PaperOrientation','portrait');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-spikerates_template_',num2str(itemp),'_pattern_',cfg.name{ilabel},'.pdf']),'-r600');
+                %set(fig,'PaperOrientation','portrait');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-spikerates_template_',num2str(itemp),'_pattern_',cfg.name{ilabel},'.png']),'-r600');
                 close all
             end % itemplate
         end % ilabel

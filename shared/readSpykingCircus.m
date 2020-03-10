@@ -47,17 +47,17 @@ else
         
         % find spiking-circus output path, which is based on the name of the
         % first datafile
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result',cfg.circus.postfix,'.hdf5']));
+        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
         if isempty(temp)
-            fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.result',cfg.circus.postfix,'.hdf5']));
+            fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
             return
         else
             fname_spikes = fullfile(temp.folder,temp.name);
         end
         
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates',cfg.circus.postfix,'.hdf5']));
+        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
         if isempty(temp)
-            fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.templates',cfg.circus.postfix,'.hdf5']));
+            fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
             return
         end
         fname_templates = fullfile(temp.folder,temp.name);
@@ -66,7 +66,7 @@ else
         if exist(fname_spikes,'file')
             fprintf('Loading spike data from: %s\n',fname_spikes);
             datinfo     = h5info(fname_spikes);
-            temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'_*.ncs']));
+            temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
             hdr_fname   = fullfile(temp(1).folder,temp(1).name);
             hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
             %             tempdataset{1} = hdr_fname;
@@ -163,7 +163,7 @@ else
                                     FileOffset   = [FileOffset; dirOnset];
                                     trialcount   = trialcount + 1;
                                 end
-                                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'_*.ncs']));
+                                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
                                 hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));
                                 %                             sampleinfo(idir) =
                                 dirOnset    = dirOnset + hdrtemp.nSamples; % assuming all channels have same sampleinfo

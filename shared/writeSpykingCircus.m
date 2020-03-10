@@ -51,7 +51,7 @@ else
                 
                 if write
                     clear fname
-                    temp                            = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{ichan},'*.ncs']));
+                    temp                            = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{ichan},'.ncs']));
                     fname{1}                        = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                     cfgtemp                         = [];
                     cfgtemp.dataset                 = fname{1};
