@@ -30,7 +30,6 @@ function [SpikeRaw, SpikeTrials] = readSpykingCircus(cfg,MuseStruct,force,vararg
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 if isempty(varargin) || strcmp(varargin{1},'all')
     parts_to_read = 1:size(cfg.directorylist,2);
 else
@@ -155,13 +154,15 @@ else
                                     % has to be fixezd for unequalnumber of
                                     % start-end, i.e. for Paul's project's
                                     % Interictal period
-                                    Startsample  = [Startsample; MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent) * hdr.Fs + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
-                                    Endsample    = [Endsample;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(ievent) * hdr.Fs + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
-                                    Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
-                                    Trialnr      = [Trialnr; trialcount];
-                                    Filenr       = [Filenr; idir];
-                                    FileOffset   = [FileOffset; dirOnset];
-                                    trialcount   = trialcount + 1;
+                                    if ievent + cfg.muse.eventindex{ilabel}(2) <= length(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime)
+                                        Startsample  = [Startsample; MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent + cfg.muse.eventindex{ilabel}(1)) * hdr.Fs + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
+                                        Endsample    = [Endsample;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(ievent+ cfg.muse.eventindex{ilabel}(2)) * hdr.Fs + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
+                                        Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
+                                        Trialnr      = [Trialnr; trialcount];
+                                        Filenr       = [Filenr; idir];
+                                        FileOffset   = [FileOffset; dirOnset];
+                                        trialcount   = trialcount + 1;
+                                    end
                                 end
                                 temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
                                 hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));

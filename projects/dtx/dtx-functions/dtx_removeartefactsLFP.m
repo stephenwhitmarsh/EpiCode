@@ -25,7 +25,7 @@ for ipart = 1:size(data, 2)
                         % sample : is not loaded with readLFP
                         nr_notloaded(idir) = 0;
                         for itrialMuse = 1:length(MuseStruct{ipart}{idir}.markers.(cfg.LFP.name{imarker}).synctime)
-                            %if trial of the dir (data.trialinfo(:,3)==idir) as
+                            %if trial of the dir (data.trialinfo(:,3)==idir) does note have
                             %the same index (data.trialinfo(:,1) as Muse LFP marker
                             %then annotate as artefact
                             if ~ismember(itrialMuse, data{ipart}{imarker}.trialinfo((data{ipart}{imarker}.trialinfo(:,3)==idir),1))

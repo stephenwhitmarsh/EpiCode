@@ -25,14 +25,19 @@ imagesavedir = rootpath_analysis;
 
 %% Config common
 %change MuseStartEnd, and toi
+%read LFP : ajouter le event index. faire l'anaylse sur les 3 périodes.
+%remplacer les noms de marker dans les fonctions plots choisis par
+%LFP.name, par muse startend
 configcommon.os                        = os;
-configcommon.name                      = {'SlowWave','Seizure','InterIctal'};
+configcommon.name                      = {'SlowWave'};%,'Seizure','InterIctal'};
 configcommon.datasavedir               = datasavedir;
-configcommon.muse.startend             = {'SlowWave','Crise_End'; 'Crise_Start','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configcommon.muse.startend             = {'SlowWave','SlowWave'};%; 'SlowWave','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configcommon.muse.eventindex           = {[0 0]; [0 0]; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+%trial between 2 files is ignored if eventindex == 1 
 configcommon.align.name                = {'SlowWave'};
 configcommon.align.flip                = {'no'};
 configcommon.align.abs                 = {'no'};
-configcommon.align.method              = {'nearest'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+configcommon.align.method              = {'nearestmax'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 configcommon.align.filter              = {'lp'};
 configcommon.align.freq                = {5};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
 configcommon.align.hilbert             = {'no'};
@@ -53,7 +58,7 @@ configcommon.LFP.baselinewindow{3}     = [0, 1];
 configcommon.LFP.slidestep             = 0.01;
 
 % list of onset timing with respect to start-marker (s)
-configcommon.epoch.toi{1}              = [-5, 5];  
+configcommon.epoch.toi{1}              = [-2, 2];  
 configcommon.epoch.toi{2}              = [-2, 1];  
 configcommon.epoch.toi{3}              = [1, -2];  
 configcommon.epoch.pad{1}              = 10;
@@ -64,29 +69,59 @@ configcommon.circus.reref              = 'no';
 configcommon.circus.refchan            = '';
 configcommon.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configcommon.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configcommon.circus.postfix             = '-1';
+configcommon.circus.postfix             = '-SWplus2';%[];
 
+configcommon.stats.dostat              = {true, false, false};
 configcommon.stats.bltoi{1}            = [-2, -1];
 configcommon.stats.bltoi{2}            = [-2, -1];
-configcommon.stats.bltoi{3}            = [-2, -1];
+configcommon.stats.bltoi{3}            = [1, 20];
 %configcommon.stats.bltoi{3}            = [0, 1];
 configcommon.stats.actoi{1}            = [-1, 0];
 configcommon.stats.actoi{2}            = [-1, 0];
-configcommon.stats.actoi{3}            = [-1, 0];
+configcommon.stats.actoi{3}            = [2, 3];
 %configcommon.stats.actoi{3}            = [1, 0];
 configcommon.stats.alpha               = 0.025;
 
 configcommon.spike.slidestep           = [0.01];
-configcommon.spike.toispikerate{1}     = [-0.1 0.1];           % for plotting spikerate
-configcommon.spike.toispikerate{2}     = [-0.1 0.1];           % for plotting spikerate
-configcommon.spike.toispikerate{3}     = [-0.1 0.1];           % for plotting spikerate
-configcommon.spike.resamplefs          = 1000;
+configcommon.spike.toispikerate{1}     = [-0.2 0.2];           % for plotting spikerate
+configcommon.spike.toispikerate{2}     = [-0.2 0.2];           % for plotting spikerate
+configcommon.spike.toispikerate{3}     = [-1 1];           % for plotting spikerate
+configcommon.spike.resamplefs{1}       = 1000;
+configcommon.spike.resamplefs{2}       = 2;
+configcommon.spike.resamplefs{3}       = 2;
 configcommon.spike.bltoi{1}            = [-2, -1];
 configcommon.spike.bltoi{2}            = [-2, -1];
-configcommon.spike.bltoi{3}            = [-2, -1];
+configcommon.spike.bltoi{3}            = [1, 2];
+configcommon.spike.RPV                 = 3; %refractory period violation : definition in ms
 %configcommon.spike.bltoi{3}            = [0, 1];
-
 configcommon.spike.ISIbins             = [0:0.005:0.150];
+configcommon.spike.ISILim              = [0 150];
+configcommon.spike.ISIBinSize          = 1;
+
+configcommon.spikestage{1}.markerstart          = 'Baseline_Start';
+configcommon.spikestage{1}.markerstartoffset    = 0; %seconds
+configcommon.spikestage{1}.markerend            = 'Injection';
+configcommon.spikestage{1}.indexEnd             = 0;
+configcommon.spikestage{1}.periodmin            = 600; %seconds
+configcommon.spikestage{1}.triallength          = 60; %seconds
+configcommon.spikestage{1}.subdivision          = 'all'; %minimum 2
+configcommon.spikestage{1}.includeend           = false;
+configcommon.spikestage{1}.markerendoffset      = 0; %seconds
+configcommon.spikestage{1}.removeartefact       = 'trial';
+configcommon.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
+
+configcommon.spikestage{2}.markerstart          = 'Crise_End';
+configcommon.spikestage{2}.markerstartoffset    = 1; %seconds
+configcommon.spikestage{2}.markerend            = 'SlowWave';
+configcommon.spikestage{2}.indexEnd             = 1; %if 1 : take the i start marker and the i+1 end marker
+configcommon.spikestage{2}.periodmin            = 30; %seconds
+configcommon.spikestage{2}.triallength          = 5; %seconds
+configcommon.spikestage{2}.subdivision          = 4; %minimum 2
+configcommon.spikestage{2}.includeend           = true; %add the end of the period to the previous subdivisions
+configcommon.spikestage{2}.markerendoffset      = -1; %seconds
+configcommon.spikestage{2}.removeartefact       = 'period'; %period, trial, none
+configcommon.spikestage{2}.stagenumber          = [1, 2, 3, 4, 5]; %array of integers. if single value : gives the same number to all the trials
+
 
 
 %% Rodent 1

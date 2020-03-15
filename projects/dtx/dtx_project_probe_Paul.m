@@ -33,13 +33,13 @@ cfg = config{1}
 for irat = 1:6
     %% Get right LFP data
     % read muse markers
-    [MuseStruct]    = readMuseMarkers(config{irat}, false);
+    [MuseStruct]    = readMuseMarkers(config{irat}, true);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct]    = alignMuseMarkers(config{irat},MuseStruct, false);
+    [MuseStruct]    = alignMuseMarkers(config{irat},MuseStruct, true);
     
     [MuseStruct] =   dtx_remove_wrong_seizure(config{irat}, MuseStruct, true);
-    [dat_LFP] = readLFP(config{irat}, MuseStructtest, true, false);
+    [dat_LFP] = readLFP(config{irat}, MuseStruct, false, false);
     %dat_LFP{ipart}{imarker}
 
     ipart = 1;
@@ -54,6 +54,16 @@ for irat = 1:6
     dtx_plot_timecourse_eeg_emg(config{irat}, dat_LFP, ipart, imarker, 'eeg',electrodeToPlot,[-inf, inf], true);
     dtx_plot_timecourse_eeg_emg(config{irat}, dat_LFP, ipart, imarker, 'eeg',electrodeToPlot,[-5, 25], true);
 
+    %AJOUTER DANS CONFIG SI ON VEUT QUE LE COMPTAGE DES CRISES PRENNE EN
+    %COMPTE LE TEMPS ENTRE DEUX FICHIERS OU L'IGNORE (car ça peut être un
+    %pb par exemple si seulement 1 ou 0 crise par fichier)
+    
+    %En fonction du résultat de l'alignement : voi si mrk EMG à placer
+    %plutôt par rapport à OL ou par rapport à début EMG. 
+    %Ce serait mieux par rappor tà début EMG : permet de moyenner en
+    %fonction de la réponse EMG. Et possibilité si besoin de choisir le LFP
+    %correspondant pour au contraire montrer la réponse par rapport au LFP
+    %Et pour les patients : Replacer les marqueurs EMG du coup
    
     
     
@@ -69,26 +79,27 @@ cfg = config{1}
 
 irat = 1;
 
-[MuseStruct]                     = readMuseMarkers(config{irat}, false);
+[MuseStruct]                     = readMuseMarkers(config{irat}, true);
 
 % align Muse markers according to peaks and detect whether they contain artefacts
 [MuseStruct]                     = alignMuseMarkers(config{irat},MuseStruct, false);
 
-[MuseStruct]                     = dtx_remove_wrong_seizure(config{irat}, MuseStruct, true);
+[MuseStruct]                     = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true, true);
 
 %remove seizure from 5s after SlowWave to Crise_End
-[MuseStruct_without_seizures]    = addMuseBAD(MuseStruct, 'all', 'all', 'SlowWave', 'Crise_End', ':', 5, 0);
+[MuseStruct_without_seizures]    = addMuseBAD(MuseStruct, 'all', 'all', 'SlowWave', 'Crise_End', 'all', 2, 1);
 
 
 [sampleinfo] = writeSpykingCircus(config{irat}, MuseStruct_without_seizures, true, true);
-writeSpykingCircusParameters(config{ipatient})
+writeSpykingCircusParameters(config{irat})
 
 
 % read spike-clustering results, and epoch around events
-[SpikeRaw, SpikeTrials] = readSpykingCircus(config{irat}, MuseStruct, false, 1);
+[SpikeRaw] = readSpykingCircus_SpikeRaw(config{irat},true,'all');
+%[SpikeRaw, SpikeTrials] = readSpykingCircus(config{irat}, MuseStruct, false, 1);
 
 % compute event-related changes of spike rates, and other stats
-[stats_smooth, stats_binned] = spikeratestatsEvents(config{ipatient}, SpikeRaw, SpikeTrials, true);
+[stats_smooth, stats_binned] = spikeratestatsEvents(config{irat}, SpikeRaw, SpikeTrials, true);
 
 %     
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

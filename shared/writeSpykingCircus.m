@@ -189,7 +189,12 @@ else
                     if isfield(MuseStruct{ipart}{idir}.markers,'BAD__START__')
                         if isfield(MuseStruct{ipart}{idir}.markers.BAD__START__,'synctime')
                             % check if there is an equal amount of start and end markers
-                            if size(MuseStruct{ipart}{idir}.markers.BAD__START__.events,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.events,2) == 0
+                            if size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime,2) == 0
+                                
+                                temp = [];
+                                hdr = [];
+                                temp    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{1},'.ncs'])); %firts chan. all chans have the same nr of samples
+                                hdr     = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name));
                                 
                                 fprintf('Great, recovered same number of start and end markers \n')
                                 deadfile_ms         = [deadfile_ms;         MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*1000+last_ms,        MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*1000+last_ms];
@@ -197,11 +202,11 @@ else
                                 last_samples        = last_samples  + hdr.nSamples;
                                 last_ms             = last_ms       + hdr.nSamples/hdr.Fs * 1000;
                                 
-                            elseif size(MuseStruct{ipart}{idir}.markers.BAD__START__.events,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.events,2) > 0
+                            elseif size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime,2) > 0
                                 
                                 fprintf('ERROR! more start than end found in %s \n',MuseStruct{ipart}{idir}.directory);
                                 
-                            elseif size(MuseStruct{ipart}{idir}.markers.BAD__START__.events,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.events,2) < 0
+                            elseif size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime,2) < 0
                                 
                                 fprintf('ERROR! more end than start found in %s - CORRECTING \n',MuseStruct{ipart}{idir}.directory)
                                 for i = 1 : 10

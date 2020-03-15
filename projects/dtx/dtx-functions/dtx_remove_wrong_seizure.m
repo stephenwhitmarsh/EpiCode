@@ -1,9 +1,13 @@
-function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct, force)
+function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct,remove_seizure_between_2_files, force)
 %check if there is slowave without seizure or seizure without slowwave and
 %remove the correspondant marker. It is replace by a BAD__START__ to
 %BAD__END__ period
 %A seizure beginning in one file and ending in the next file is removed
 %Add indexes and number of removed markers in MuseStruct
+
+% remove_seizure_between_2_files : if true, remove seizure if it begins in one file and
+% ends in the next file
+
 %Paul Baudin
 
 
@@ -54,15 +58,20 @@ else
                             
                             
                             
-                            %remove the first crise_end if it is the end of a
-                            %seizure begining in the previous dir
-                            if Crise_End_orig(1)-Crise_Start_orig(1)<0
-                                fprintf('part %d dir %d : remove first Crise_End\n', ipart, idir);
-                                remove_1st_Crise_End{idir}=1;
-                                [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_End", "Crise_End", 1, -1, 1);
-                            else
-                                remove_1st_Crise_End{idir}=0;
-                            end
+                                %remove the first crise_end if it is the end of a
+                                %seizure begining in the previous dir
+                                if Crise_End_orig(1)-Crise_Start_orig(1)<0
+                                    if remove_seizure_between_2_files
+                                        fprintf('part %d dir %d : remove first Crise_End\n', ipart, idir);
+                                        [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_End", "Crise_End", 1, -1, 1);
+                                    end
+                                    remove_1st_Crise_End{idir}=1; %correct index for other seizures
+                                    
+                                else
+                                    remove_1st_Crise_End{idir}=0;
+                                end
+
+                            
                             
                             
                             
@@ -107,12 +116,29 @@ else
                                 %remove the last seizure of the file if seizure ends in the next file
                                 if length(Crise_Start_orig)-length(Crise_End_orig)==1 && iSeizure==length(Crise_Start_orig)
                                     
-                                    fprintf('part %d dir %d : remove last seizure, because cut into 2 files\n', ipart, idir);
+                                    if remove_seizure_between_2_files
+                                        fprintf('part %d dir %d : remove last seizure, because cut into 2 files\n', ipart, idir);
+                                        [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_Start", "Crise_Start", iSeizure, -1, 1);
+                                        remove_cut_Seizure{idir}=1;
+                                        break
+                                    else %add CriseStart and SlowWave without Crise_End
+                                        remove_cut_Seizure{idir}=0;
+                                        iresult = iresult+1;
+                                        marker = ["SlowWave", "Crise_Start"];
+                                        eventindex = {iSlowWave, iSeizure};
+                                        for i=1:2
+                                            imarker = marker(i);
+                                            i_eventindex = eventindex{i};
+                                            for ifield = ["synctime", "clock"]
+                                                MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield)(iresult) = ...
+                                                    MuseStruct{ipart}{idir}.markers.(imarker).(ifield)(i_eventindex);
+                                            end
+                                        end
+                                        
+                                    end
                                     
-                                    [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_Start", "Crise_Start", iSeizure, -1, 1);
+                                    break %break because it is the last seizure
                                     
-                                    remove_cut_Seizure{idir}=1;
-                                    break 
                                 else
                                     remove_cut_Seizure{idir}=0;
                                 end
@@ -140,11 +166,11 @@ else
                                     iSeizure = iSeizure+1;
                                     
                                 end
-
+                                
                                 
                             end %while
-
-                          
+                            
+                            
                             %Add index values to MuseStruct
                             marker = ["SlowWave", "Crise_Start", "Crise_End"];
                             if remove_1st_Crise_End{idir}
@@ -166,7 +192,7 @@ else
                             
                             %Remove wrong marker if there are any after the last good seizure (so not removed by the while loop):
                             
-                                    %Find for SlowWaves
+                            %Find for SlowWaves
                             if iresult + n_removeSlowWave{idir} + remove_cut_Seizure{idir} < length(SlowWave_orig)
                                 
                                 n_lastSlowWaves_removed = length(SlowWave_orig)-iresult;
@@ -175,14 +201,14 @@ else
                                 
                                 [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "SlowWave", "SlowWave", index_temp, -1, 1);
                                 MuseStruct_corrected{ipart}{idir}.markers.SlowWave.originalindex_removed(end+1:end+length(index_temp)) = index_temp;
-                            
+                                
                                 fprintf('part %d dir %d : remove %d last SlowWaves, because of no seizure\n', ipart, idir,n_lastSlowWaves_removed);
                                 
                             end
                             
-                                    %Find for Seizures
+                            %Find for Seizures
                             if iresult + n_removeSeizure{idir} + remove_cut_Seizure{idir} < length(Crise_Start_orig)
-                                                           
+                                
                                 index_temp_start = iresult+1 : length(Crise_Start_orig);
                                 index_temp_end = iresult+1 : length(Crise_End_orig);
                                 n_lastSeizures_removed = length(Crise_Start_orig)-iresult;
@@ -191,16 +217,43 @@ else
                                 
                                 [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_Start", "Crise_Start", index_temp_start, -1, 1);
                                 [MuseStruct_corrected] = addMuseBAD(MuseStruct_corrected, ipart, idir, "Crise_End", "Crise_End", index_temp_end, -1, 1);
-
+                                
                                 MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.originalindex_removed(end+1:end+length(index_temp_start)) = index_temp_start;
                                 MuseStruct_corrected{ipart}{idir}.markers.Crise_End.originalindex_removed(end+1:end+length(index_temp_end)) = index_temp_end;
-                                                          
+                                
                                 fprintf('part %d dir %d : remove %d last seizures, because of no SlowWave\n', ipart, idir, n_lastSeizures_removed);
-
+                                
                             end
-
-                                    %Remove events
-                            for imarker = ["SlowWave", "Crise_Start", "Crise_End"]
+                            
+                            %Remove events
+                            if ~remove_seizure_between_2_files && length(MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.synctime) - length(MuseStruct_corrected{ipart}{idir}.markers.Crise_End.synctime) == 1
+                                %if last cut seizure is not
+                                %removed, there is one Crise_End
+                                %missing
+                                imarker = 'Crise_End';
+                                for ifield = ["synctime", "clock"]
+                                    MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield) = ...
+                                        MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield)(1:iresult-1);
+                                end
+                                marker_list = [];
+                                marker_list = ["SlowWave", "Crise_Start"];
+                                
+                            elseif ~remove_seizure_between_2_files && length(MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.synctime) - length(MuseStruct_corrected{ipart}{idir}.markers.Crise_End.synctime) == -1
+                                % if begins with a Crise_End alone, leave it
+                                imarker = 'Crise_End';
+                                for ifield = ["synctime", "clock"]
+                                    MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield) = ...
+                                        MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield)(1:iresult+1);
+                                end
+                                marker_list = [];
+                                marker_list = ["SlowWave", "Crise_Start"];
+                                
+                            else
+                                marker_list = [];
+                                marker_list = ["SlowWave", "Crise_Start", "Crise_End"];
+                            end
+                            
+                            for imarker = marker_list
                                 for ifield = ["synctime", "clock"]
                                     MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield) = ...
                                         MuseStruct_corrected{ipart}{idir}.markers.(imarker).(ifield)(1:iresult);
@@ -217,9 +270,11 @@ else
                             
                             
                             %safety check
-                            if ~(length(MuseStruct_corrected{ipart}{idir}.markers.SlowWave.synctime) == length(MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.synctime) &&...
-                                    length(MuseStruct_corrected{ipart}{idir}.markers.SlowWave.synctime) == length(MuseStruct_corrected{ipart}{idir}.markers.Crise_End.synctime))
-                                error('something wrong with the removal of markers. %s part %d dir %d', cfg.prefix(1:end-1), ipart, idir);
+                            if remove_seizure_between_2_files
+                                if ~(length(MuseStruct_corrected{ipart}{idir}.markers.SlowWave.synctime) == length(MuseStruct_corrected{ipart}{idir}.markers.Crise_Start.synctime) &&...
+                                        length(MuseStruct_corrected{ipart}{idir}.markers.SlowWave.synctime) == length(MuseStruct_corrected{ipart}{idir}.markers.Crise_End.synctime))
+                                    error('something wrong with the removal of markers. %s part %d dir %d', cfg.prefix(1:end-1), ipart, idir);
+                                end
                             end
                             
                             
@@ -231,13 +286,13 @@ else
         end %idir
         
     end %ipart
-   
+    
     if sum(cell2mat(remove_cut_Seizure))+sum(cell2mat(remove_1st_Crise_End))+...
             sum(cell2mat(n_removeSlowWave))+sum(cell2mat(n_removeSeizure))+...
             sum(cell2mat(n_last_Crise_Start_removed))+sum(cell2mat(n_last_Crise_End_removed)) == 0
         fprintf('No SlowWave or Seizure removed\n');
     end
-                  
+    
     
 end
 
