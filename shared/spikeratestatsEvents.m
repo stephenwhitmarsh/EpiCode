@@ -9,6 +9,12 @@ if exist(fname,'file') && force == false
     load(fname,'stats_smooth','stats_binned');
 else
     
+    %create folder for saving data (PAUL PROVISOIRE)
+    cfg.imagesavedir = fullfile(cfg.imagesavedir, ['spikerate', cfg.circus.postfix]);
+    if ~isfolder(cfg.imagesavedir)
+        mkdir(cfg.imagesavedir);
+    end
+    
     for ipart = 1 : size(SpikeRaw,2)
         
         % fix this for consistency
@@ -64,7 +70,7 @@ else
         
         % do my own way of creating ISI
         for itemp = 1 : nrtemplates
-            stats_smooth{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs * 1000;
+            stats_smooth{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs ;
         end
         
         fig = figure; hold
@@ -236,33 +242,35 @@ else
             sdf_bl{ipart}                   = sdf_orig{ipart};
             sdf_bl{ipart}.trial             = ones(size(sdf_orig{ipart}.trial)) .* nanmean(sdf_orig{ipart}.trial(:,:,slim(1):slim(2)),3); % replace with mean
             
-            % cluster stats per template
-            for itemp = 1 : nrtemplates
-                
-                % statistics
-                cfgtemp = [];
-                cfgtemp.statistic                       = 'ft_statfun_depsamplesT';
-                cfgtemp.alpha                           = cfg.stats.alpha;
-                cfgtemp.clusteralpha                    = 0.01;
-                cfgtemp.method                          = 'montecarlo';
-                cfgtemp.computestat                     = 'yes';
-                cfgtemp.correctm                        = 'cluster';
-                cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig{ipart}.time(end)]; % active period starts after baseline
-                cfgtemp.ivar                            = 1;
-                cfgtemp.uvar                            = 2;
-                cfgtemp.design(1,:)                     = [ones(1,size(sdf_smooth{ipart}.trial,1)) ones(1,size(sdf_bl{ipart}.trial,1)) *2];
-                cfgtemp.design(2,:)                     = [1 : size(sdf_smooth{ipart}.trial,1) 1 : size(sdf_bl{ipart}.trial,1)];
-                cfgtemp.numrandomization                = 100;
-                cfgtemp.channel                         = itemp;
-                stats_smooth{ipart}.clusterstat{ilabel}{itemp} = ft_timelockstatistics(cfgtemp,sdf_smooth{ipart},sdf_bl{ipart});
-                
-                % calculate baseline
-                slim(1) = find(sdf_orig{ipart}.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
-                slim(2) = find(sdf_orig{ipart}.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
-                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_orig{ipart}.avg(itemp,slim(1):slim(2)),2);
-                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.var        = nanmean(sdf_orig{ipart}.var(itemp,slim(1):slim(2)),2);
-                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.dof        = nanmean(sdf_orig{ipart}.dof(itemp,slim(1):slim(2)),2);
-                stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_orig{ipart}.trial(:,itemp,slim(1):slim(2)),3);
+            if cfg.stats.dostat{ilabel}
+                % cluster stats per template
+                for itemp = 1 : nrtemplates
+                    
+                    % statistics
+                    cfgtemp = [];
+                    cfgtemp.statistic                       = 'ft_statfun_depsamplesT';
+                    cfgtemp.alpha                           = cfg.stats.alpha;
+                    cfgtemp.clusteralpha                    = 0.01;
+                    cfgtemp.method                          = 'montecarlo';
+                    cfgtemp.computestat                     = 'yes';
+                    cfgtemp.correctm                        = 'cluster';
+                    cfgtemp.latency                         = [cfg.stats.bltoi{ilabel}(2) sdf_orig{ipart}.time(end)]; % active period starts after baseline
+                    cfgtemp.ivar                            = 1;
+                    cfgtemp.uvar                            = 2;
+                    cfgtemp.design(1,:)                     = [ones(1,size(sdf_smooth{ipart}.trial,1)) ones(1,size(sdf_bl{ipart}.trial,1)) *2];
+                    cfgtemp.design(2,:)                     = [1 : size(sdf_smooth{ipart}.trial,1) 1 : size(sdf_bl{ipart}.trial,1)];
+                    cfgtemp.numrandomization                = 100;
+                    cfgtemp.channel                         = itemp;
+                    stats_smooth{ipart}.clusterstat{ilabel}{itemp} = ft_timelockstatistics(cfgtemp,sdf_smooth{ipart},sdf_bl{ipart});
+                    
+                    % calculate baseline
+                    slim(1) = find(sdf_orig{ipart}.time > cfg.stats.bltoi{ilabel}(1), 1, 'first');
+                    slim(2) = find(sdf_orig{ipart}.time < cfg.stats.bltoi{ilabel}(2), 1, 'last');
+                    stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg        = nanmean(sdf_orig{ipart}.avg(itemp,slim(1):slim(2)),2);
+                    stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.var        = nanmean(sdf_orig{ipart}.var(itemp,slim(1):slim(2)),2);
+                    stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.dof        = nanmean(sdf_orig{ipart}.dof(itemp,slim(1):slim(2)),2);
+                    stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.trialavg   = nanmean(sdf_orig{ipart}.trial(:,itemp,slim(1):slim(2)),3);
+                end
             end
             
             % plot cluster stats per patterns
@@ -327,7 +335,7 @@ else
                     x = [ax(1) ax(2)];
                     baseline = stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg;
                     plot(x,[baseline, baseline],':k');
-                    text(0,2*baseline,sprintf('Bl = %.1f Hz',baseline));
+                    %text(0,2*baseline,sprintf('Bl = %.1f Hz',baseline));
                     
                     
                     % determine zero crossing
@@ -431,7 +439,7 @@ else
                 binsize = diff(e);
                 x = e(1:end-1) + binsize/2;
                 bar(x,y,1,'edgecolor','none','facecolor',[0 0 0]);
-                title(sprintf('Electrode n°%d : %s',SpikeRaw{ipart}.template_maxchan(itemp)-1, SpikeRaw{ipart}.label{itemp}));
+                title(sprintf('Electrode n°%d : %s',SpikeRaw{ipart}.template_maxchan(itemp)-1, SpikeRaw{ipart}.label{itemp}), 'Interpreter', 'none');
                 ylabel('Spikerate (Hz)');
                 xlabel('Time (sec)');
                 axis tight;
@@ -494,7 +502,7 @@ else
                     x = [ax(1) ax(2)];
                     baseline = stats_smooth{ipart}.clusterstat{ilabel}{itemp}.bl.avg;
                     plot(x,[baseline, baseline],':k');
-                    text(0,2*baseline,sprintf('Bl = %.1f Hz',baseline));
+                    %text(0,2*baseline,sprintf('Bl = %.1f Hz',baseline));
                     
                 end %dostat
                 
@@ -512,7 +520,7 @@ else
                 %             patch([-2 -0.15 -0.15 -2],[ax(3) ax(3) ax(4) ax(4)],'b','facealpha',0.2,'edgecolor','none');
                 %             patch([-0.15 0.15 0.15 -0.15],[ax(3) ax(3) ax(4) ax(4)],'r','facealpha',0.2,'edgecolor','none');
                 %
-                %%  plot ISI
+                %%  plot ISI in ms (*1000)
                 subplot(3,3,3); hold;
                 %             barh = bar(stats.isi_1s.time*1000,[stats.isi_1s.avg(itemp,:); stats.isi_pattern_all{ilabel}.avg(itemp,:); stats.isi_pattern_bl{ilabel}.avg(itemp,:); stats.isi_pattern_ac{ilabel}.avg(itemp,:);]',1,'grouped','edgecolor','none');
                 %             barh(1).FaceColor = [0 0 0];
@@ -523,7 +531,7 @@ else
                 %
                 
                 %barh = bar(stats_smooth{ipart}.isi_pattern_all{ilabel}.time*1000,stats_smooth{ipart}.isi_pattern_all{ilabel}.avg(itemp,:));
-                barh = histogram(stats_smooth{ipart}.isi_pattern_all{ilabel}.isi{itemp},'BinWidth',cfg.spike.ISIBinSize,'BinLimits',cfg.spike.ISILim);
+                barh = histogram(stats_smooth{ipart}.isi_pattern_all{ilabel}.isi{itemp}*1000,'BinWidth',cfg.spike.ISIBinSize,'BinLimits',cfg.spike.ISILim);
                 RPV = (length(find(stats_smooth{ipart}.isi_pattern_all{ilabel}.isi{itemp}*1000 < cfg.spike.RPV)) / length(stats_smooth{ipart}.isi_pattern_all{ilabel}.isi{itemp})) * 100;
                 title(sprintf('ISI pattern (RPV : %.1f%%, %dms)',RPV, cfg.spike.RPV));
                 xlabel('ISI (ms)');
@@ -531,8 +539,8 @@ else
                 subplot(3,3,6); hold;
                 
                 %barh = bar(stats_smooth{ipart}.isi_1s.time*1000,stats_smooth{ipart}.isi_1s.avg(itemp,:));
-                barh = histogram(stats_smooth{ipart}.isi{itemp},'BinWidth',cfg.spike.ISIBinSize,'BinLimits',cfg.spike.ISILim);
-                RPV = (length(find(stats_smooth{ipart}.isi{itemp} < cfg.spike.RPV)) / length(stats_smooth{ipart}.isi{itemp}) * 100);
+                barh = histogram(stats_smooth{ipart}.isi{itemp}*1000,'BinWidth',cfg.spike.ISIBinSize,'BinLimits',cfg.spike.ISILim);
+                RPV = (length(find(stats_smooth{ipart}.isi{itemp}*1000 < cfg.spike.RPV)) / length(stats_smooth{ipart}.isi{itemp}) * 100);
                 title(sprintf('ISI all data (RPV : %.1f%%, %dms)',RPV, cfg.spike.RPV));
                 %                         barh(1).FaceColor = [0 0 0];
                 %             barh(2).FaceColor = [0 1 0];
@@ -570,24 +578,25 @@ else
                 
                 x = (Xpos + Xneg(1))/2;
                 y = Yneg(1)*0.1;
-                text(x,y,sprintf('%.0fms',abs(Xpos-Xneg(1))*1000),'HorizontalAlignment','center');
+                text(x,y,sprintf('%.0fus',abs(Xpos-Xneg(1))*1000),'HorizontalAlignment','center');
                 stats.template_pt(itemp) = abs(Xpos-Xneg(1))*1000;
                 
                 x = (Xpos + Xneg(2))/2;
                 y = -Yneg(2)*0.1;
-                text(x,y,sprintf('%.0fms',abs(Xpos-Xneg(2))*1000),'HorizontalAlignment','center');
+                text(x,y,sprintf('%.0fus',abs(Xpos-Xneg(2))*1000),'HorizontalAlignment','center');
                 stats.template_tp(itemp)  = abs(Xpos-Xneg(2))*1000;
                 
                 xlabel('time')
                 
                 midline = min(tempsel_int) + (max(tempsel_int) - min(tempsel_int)) / 2 ;
+                zci  = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0);
                 indx = zci(tempsel_int - midline);
                 indx = indx([ceil(length(indx)/2-0.5), ceil(length(indx)/2+0.5)]);
                 plot(temptime_int(indx),ones(1,length(indx))*midline,'-o','Color',[0 1 0],'MarkerFaceColor',[0 1 0],'MarkerEdgeColor',[0 1 0]);
                 
                 x = sum(temptime_int(indx))/length(indx);
                 y = midline*1.1;
-                text(x,y,sprintf('%.0fms',(temptime_int(indx(2))-temptime_int(indx(1)))*1000),'HorizontalAlignment','center');
+                text(x,y,sprintf('%.0fus',(temptime_int(indx(2))-temptime_int(indx(1)))*1000),'HorizontalAlignment','center');
                 stats.template_width(itemp)  = (temptime_int(indx(2))-temptime_int(indx(1)))*1000;
                 
                 %% print to file
@@ -596,7 +605,6 @@ else
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
                 print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-spikerates_',SpikeTrials{ipart}{ilabel}.label{itemp},'_pattern_',cfg.name{ilabel},'.pdf']),'-r600');
-                %set(fig,'PaperOrientation','portrait');
                 print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-spikerates_',SpikeTrials{ipart}{ilabel}.label{itemp},'_pattern_',cfg.name{ilabel},'.png']),'-r600');
                 close all
             end % itemplate

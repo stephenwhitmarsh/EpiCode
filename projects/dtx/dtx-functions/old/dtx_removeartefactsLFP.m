@@ -1,7 +1,13 @@
 function [data, MuseStruct] = dtx_removeartefactsLFP(data, MuseStruct, cfg, plotdata)
 %Remove artefacted trials in data{ipart}{imarker} according to "BAD" Muse markers
-%MuseStruct is returned with a new 'hasartefact' field.
+%MuseStruct is returned with a new 'hasartefact' field, but the markers are
+%not removed.
 %Add field : data.nr_removedtrials
+
+% /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+%OLD : do not work anymore. Is based on marker name indicated in
+%cfg.LFP.name, it was not a good strategy. See the script removetrialLFP_marker
+% /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
 initial_prefix = cfg.prefix; %for merge
@@ -16,6 +22,7 @@ for ipart = 1:size(data, 2)
             
             % for ipart = 1:length(MuseStruct)
             for idir = 1:length(MuseStruct{ipart})
+                nr_notloaded(idir) = 0;
                 
                 if isfield(MuseStruct{ipart}{idir}.markers,cfg.LFP.name{imarker})
                     if isfield(MuseStruct{ipart}{idir}.markers.(cfg.LFP.name{imarker}), 'synctime')
@@ -23,7 +30,7 @@ for ipart = 1:size(data, 2)
 
                         % if trial begin before first sample or end after last
                         % sample : is not loaded with readLFP
-                        nr_notloaded(idir) = 0;
+                        
                         for itrialMuse = 1:length(MuseStruct{ipart}{idir}.markers.(cfg.LFP.name{imarker}).synctime)
                             %if trial of the dir (data.trialinfo(:,3)==idir) does note have
                             %the same index (data.trialinfo(:,1) as Muse LFP marker
@@ -39,22 +46,22 @@ for ipart = 1:size(data, 2)
                         if isfield(MuseStruct{ipart}{idir}.markers,'BAD__START__')
                             if size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime,2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime,2) == 0
                                 
-                                if isNeuralynx
-                                    error('I have to set the header reading code, not done yet');%hdr = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['.ncs']));
-                                elseif isMicromed
-                                    hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir}, '.TRC']));
-                                elseif isBrainvision
-                                    hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir},'.eeg']));
-                                end
+%                                 if isNeuralynx
+%                                     error('I have to set the header reading code, not done yet');%hdr = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['.ncs']));
+%                                 elseif isMicromed
+%                                     hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir}, '.TRC']));
+%                                 elseif isBrainvision
+%                                     hdr = ft_read_header(fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir},'.eeg']));
+%                                 end
                                 
                                 %convert idir{itrial} to data{ipart}{imarker}{itrial} :
                                 for itrial = n_trials+1 : n_trials+sum(data{ipart}{imarker}.trialinfo(:,3)==idir)
                                     itrialMuse = data{ipart}{imarker}.trialinfo(itrial,1); %trial of loaded data
                                     
-                                    trialinterval = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrialMuse)*hdr.Fs : MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(itrialMuse)*hdr.Fs);
+                                    trialinterval = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrialMuse)*data{ipart}{imarker}.fsample : MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(itrialMuse)*data{ipart}{imarker}.fsample);
                                     
                                     for iartefact = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime,2)
-                                        artefactinterval = round(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime(iartefact)*hdr.Fs : MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(iartefact)*hdr.Fs);
+                                        artefactinterval = round(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime(iartefact)*data{ipart}{imarker}.fsample : MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(iartefact)*data{ipart}{imarker}.fsample);
                                         if intersect(trialinterval,artefactinterval) %intervals are expressed in sample points
                                             fprintf('Found artefact in part %d trial %d for marker %s \n',ipart ,itrial, cfg.LFP.name{imarker});
                                             hasartefact(itrial) = 1;
@@ -97,7 +104,7 @@ for ipart = 1:size(data, 2)
                 %         end
                 
                 cfgtemp = [];
-                cfgtemp.channel = cfg.align.channel{imarker};
+                cfgtemp.channel = cfg.LFP.electrodetoplot{imarker};
                 data_plot = ft_selectdata(cfgtemp, data{ipart}{imarker});
                 
                 fig = figure;
@@ -114,14 +121,17 @@ for ipart = 1:size(data, 2)
                 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
                 ylabel('Number of trials', 'Fontsize',15);
                 if sum(nr_notloaded) == 0
-                    title(sprintf('%s chan %s \nAll trials are loaded \n%d artefacted trials removed of %d trials', cfg.LFP.name{imarker}, data{ipart}{imarker}.label{1}, sum(hasartefact), length(data{ipart}{imarker}.trial)),'Fontsize',20,'Interpreter','none');
+                    title(sprintf('%s chan %s \nAll trials are loaded \n%d artefacted trials removed from %d trials', cfg.LFP.name{imarker}, data_plot.label{1}, sum(hasartefact), length(data{ipart}{imarker}.trial)),'Fontsize',20,'Interpreter','none');
                 else
-                    title(sprintf('%s chan %s \n%d trials are not loaded (too close of begin or end of data) \n%d artefacted trials removed of %d trials', cfg.LFP.name{imarker}, data{ipart}{imarker}.label{1}, sum(nr_notloaded), sum(hasartefact), length(data{ipart}{imarker}.trial)),'Fontsize',20,'Interpreter','none');
+                    title(sprintf('%s chan %s \n%d trials are not loaded (too close from begin or end of data) \n%d artefacted trials removed from %d trials', cfg.LFP.name{imarker}, data_plot.label{1}, sum(nr_notloaded), sum(hasartefact), length(data{ipart}{imarker}.trial)),'Fontsize',20,'Interpreter','none');
                 end
                 set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
-                tick = h;
-                yticks(tick : tick*10 : n_trials*h);
-                yticklabels(n_trials : -10 : 0);
+                tick_interval = round(n_trials/10);
+                if tick_interval == 0
+                    tick_interval = 1;
+                end
+                yticks(h : h*tick_interval : n_trials*h);
+                yticklabels(n_trials : -tick_interval : 0);
                 set(gca,'TickDir','out');
                 axis tight
                 xlim(cfg.epoch.toi{imarker});

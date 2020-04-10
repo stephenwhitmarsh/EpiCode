@@ -1,4 +1,4 @@
-function [data_avg_allchans, data_avg_chanalign, data_avg_EMG] = dtx_get_patient_data(cfg, data, ipart, imarker)
+function [data_avg_allchans, data_avg_chantoplot, data_TFR, data_avg_EMG] = dtx_get_patient_data(cfg, data, ipart, imarker)
 %comparison EEG EMG for now only with motor cortex electrodes (C3 or C4)
 
 data = data{ipart}{imarker};
@@ -8,23 +8,58 @@ data = data{ipart}{imarker};
 %chan align avg
 
 %% avg all channels
-data_avg_allchans               = ft_timelockanalysis([],data);
+
+%keep only channels common for all the rat/patients
+if isfield(cfg, 'commonchans')
+    cfgtemp                         = [];
+    cfgtemp.channel                 = cfg.commonchans;
+    data_commonchans                = ft_selectdata(cfgtemp,data);
+else
+    data_commonchans                = data;
+end
+
+%do avg
+data_avg_allchans               = ft_timelockanalysis([],data_commonchans);
 data_avg_allchans.ID            = cfg.prefix(1:end-1);
+
 
 
 %% avg chan align
 %select channel
-cfgtemp                     = [];
-cfgtemp.channel             = cfg.align.channel{imarker};
-data_chanalign              = ft_selectdata(cfgtemp,data);
+cfgtemp                      = [];
+cfgtemp.channel              = cfg.LFP.electrodetoplot{imarker};
+data_chantoplot              = ft_selectdata(cfgtemp,data);
 
 %avg
-cfgtemp                     = [];
-data_avg_chanalign          = ft_timelockanalysis(cfgtemp,data_chanalign);
+cfgtemp                      = [];
+data_avg_chantoplot          = ft_timelockanalysis(cfgtemp,data_chantoplot);
 
-data_avg_chanalign.label = {'chan_align'};
-data_avg_chanalign.ID = cfg.prefix(1:end-1);
+data_avg_chantoplot.label = cfg.LFP.name(imarker);
+data_avg_chantoplot.ID = cfg.prefix(1:end-1);
 
+%% TFR
+if isfield(cfg.LFP, 'TFR')
+    if cfg.LFP.TFR.doTFR == true
+        cfgtemp                         = [];
+        cfgtemp.channel                 = 'all';
+        cfgtemp.method                  = 'mtmconvol'; %relative change. 'mtmfft' : frequency content
+        cfgtemp.output                  = 'pow';
+        cfgtemp.taper                   = 'hanning';
+        cfgtemp.pad                     = 'nextpow2';
+        cfgtemp.keeptrials              = 'no';
+        cfgtemp.foi                     = 0:0.2:50;%80:0.2:125;
+        cfgtemp.t_ftimwin               = 40./cfgtemp.foi;
+        %cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi))*0.5;
+        cfgtemp.toi                     = 'all';
+        data_TFR                        = ft_freqanalysis(cfgtemp,data_chantoplot);
+        
+        data_TFR.label = cfg.LFP.name(imarker);
+    else
+        data_TFR = [];
+    end
+else
+    data_TFR = [];
+end
 
 %% enveloppe EMG
 
@@ -49,12 +84,12 @@ if any(strfind(cfg.LFP.name{imarker}, 'EMG'))
         env_avg(ioffset) = mean(env_by_offset);
     end   
     
-    %return good data structure
+   %return good data structure
     %remove EMG channel and replace with env
     cfgtemp                     = [];
-    cfgtemp.channel             = {'eeg1020'};
+    cfgtemp.channel             = {'all','-*EMG*'};% {'eeg1020'};
     data_avg_EMG                = ft_selectdata(cfgtemp,data_avg_allchans);
-
+ 
     data_avg_EMG.label{end+1} = 'EMG';   
     data_avg_EMG.avg(end+1,:) = env_avg; %first channel is EEG channel  
     %to be consistent, but those infos are not used :
@@ -62,9 +97,9 @@ if any(strfind(cfg.LFP.name{imarker}, 'EMG'))
     data_avg_EMG.dof(end+1,:) = env_avg;
     
     data_avg_EMG.ID = cfg.prefix(1:end-1);
-    
-    data_avg_allchans = [];
-    data_avg_chanalign = [];
+%     
+%     data_avg_allchans = [];
+%     data_avg_chantoplot = [];
     
 else
     data_avg_EMG = [];

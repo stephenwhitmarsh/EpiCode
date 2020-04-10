@@ -13,20 +13,20 @@ function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct,remov
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_corrected_dtx.mat']);
 if exist(fname,'file') && force == false
-    fprintf('******************************\n');
-    fprintf('****** Loading results  ******\n');
-    fprintf('******************************\n');
-    load(fname,'MuseStruct_corrected_dtx');
+    fprintf('****************************************************\n');
+    fprintf('****** Loading results without wrong seizures ******\n');
+    fprintf('****************************************************\n');
+    load(fname,'MuseStruct_corrected');
 else
     
     if exist(fname,'file') && force == true
-        fprintf('********************************\n');
-        fprintf('******** Forced redoing ********\n');
-        fprintf('********************************\n');
+        fprintf('******************************************************\n');
+        fprintf('******** Forced redoing remove wrong seizures ********\n');
+        fprintf('******************************************************\n');
     else
-        fprintf('*************************\n');
-        fprintf('*** Removing seizures ***\n');
-        fprintf('*************************\n');
+        fprintf('*******************************\n');
+        fprintf('*** Removing wrong seizures ***\n');
+        fprintf('*******************************\n');
     end
     
     MuseStruct_corrected = MuseStruct;
@@ -294,10 +294,11 @@ else
     end
     
     
-end
-
 % save data
 save(fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_corrected_dtx.mat']),'MuseStruct_corrected');
+
+    
+end
 
 end
 

@@ -1,4 +1,4 @@
-function dtx_plot_comparison_eeg_emg(cfg,data,ipart,imarker,saveplot,varargin)
+function envEMG = dtx_plot_comparison_eeg_emg(cfg,data,ipart,imarker,saveplot,varargin)
 
 abscisse_scale = 2;
 
@@ -136,7 +136,10 @@ set(gca,'TickDir','out');
 xlim([-abscisse_scale, abscisse_scale]);
 set(gca,'ycolor','b');
 
-
+%Temporaire Paul pour sortir la valeur
+envEMG{ipart}{imarker}.time{1} = t;
+envEMG{ipart}{imarker}.trial{1} = env_avg; 
+envEMG{ipart}{imarker}.label{1} = 'EMG';
 
 % %  Old method : avg of abs
 % data_EMG_abs                = data_EMG;
@@ -166,7 +169,8 @@ set(gca,'Fontsize',15);
 subplot (3,1,3)
 hold;
 
-plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
+% plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
+% %A REMETTRE
 
 yyaxis left
 set(gca,'ycolor','r');
@@ -174,8 +178,8 @@ ylabel(sprintf('EEG %s (µV)',data_EEG.label{1}), 'Fontsize',15);
 
 axis tight
 xlim([-abscisse_scale, abscisse_scale]);
-ylim_eeg = get(gca,'ylim');
-ylim_rapport = -ylim_eeg(1)/ylim_eeg(2); %to set automatically EMG scale with same 0 as eeg
+%ylim_eeg = get(gca,'ylim');
+%ylim_rapport = -ylim_eeg(1)/ylim_eeg(2); %to set automatically EMG scale with same 0 as eeg
 
 yyaxis right
 
@@ -183,10 +187,10 @@ yyaxis right
 plot(t,env_avg,'b','LineWidth', 2);
 
 %set lower y of emg equal to y=0 eeg
-ylim_emg = get(gca,'ylim');
-ylim_emg_rapport(1)=ylim_emg(1)-ylim_emg(2)*ylim_rapport; %to set automatically EMG scale with same 0 as EEG
-ylim_emg_rapport(2)=ylim_emg(2);
-ylim(ylim_emg_rapport);
+% ylim_emg = get(gca,'ylim');
+% ylim_emg_rapport(1)=ylim_emg(1)-ylim_emg(2)*ylim_rapport; %to set automatically EMG scale with same 0 as EEG
+% ylim_emg_rapport(2)=ylim_emg(2);
+% ylim(ylim_emg_rapport);
 
 
 title('EEG-EMG comparison','Fontsize',18);
@@ -209,11 +213,11 @@ if saveplot
     end
     
     
-    set(fig,'PaperOrientation','landscape');
+    set(fig,'PaperOrientation','portrait');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,['POURDIAPO',cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,['POURDIAPO',cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.png']),'-r600');
     close all
 end
 

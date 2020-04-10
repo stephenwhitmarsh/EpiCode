@@ -1,4 +1,4 @@
-function [EEG_avg_allchan, EEG_align] = dtx_plot_avg_allchannels(cfg,data,ipart,imarker,saveplot)
+function dtx_plot_avg_allchannels(cfg,data,ipart,imarker,toi,saveplot)
 %plot avg of all channels indicates in cfg.labels.macro and
 %cfg.LFP.emg.
 
@@ -16,24 +16,28 @@ end
 
 
 data = data{ipart}{imarker};
-nb_channels = length(cfg.labels.macro);
+nb_channels = length(data.label);
 fig = figure;
 hold;
 
 %h automatic setting :
 cfgtemp = [];
-cfgtemp.channel = cfg.align.channel{imarker};
+cfgtemp.channel = cfg.LFP.electrodetoplot{imarker};
 data_h = ft_selectdata(cfgtemp,data);
 
+%h automatic setting :
 for itrial = 1 : size(data_h.trial,2)
-%     h_temp_max = max(data_h.trial{itrial}(1,:));
-%     h_temp_min = min(data_h.trial{itrial}(1,:));
-%     h_temp_amplitude(itrial) = h_temp_max - h_temp_min;
-% end
-% h = mean(h_temp_amplitude)*2;
-t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data_h.fsample; % offset for which t = 0;
-h_temp(itrial) = max(data_h.trial{itrial}(1,round(-0.5*data_h.fsample)+t_0: round(0.5*data_h.fsample)+t_0)); %max between -0.5s and 0.5s. Avoid noise. Available for EEG and EMG.
+%     h_temp_max = max(data.trial{itrial}(1,:));
+%     h_temp_min = min(data.trial{itrial}(1,:));
+%     h_temp(itrial) = h_temp_max - h_temp_min;
+t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % offset for which t = 0;
+h_temp(itrial) = max(data_h.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %amplitude of peak vs baseline
+bl_period_inf = data_h.time{itrial}>cfg.align.toibaseline{imarker}(1);
+bl_period_sup = data_h.time{itrial}<cfg.align.toibaseline{imarker}(2);
+bl_period = logical(bl_period_inf .* bl_period_sup);
+h_temp(itrial) = max(data_h.trial{itrial}(1, data_h.time{itrial}>-1 & data.time{itrial}<1)) - nanmean(data_h.trial{itrial}(1, bl_period));
 end
+
 h = mean(h_temp);
 
 
@@ -41,21 +45,21 @@ for ichan = 1:nb_channels
 
     %select channel
     cfgtemp = [];
-    cfgtemp.channel = cfg.labels.macro{ichan};
+    cfgtemp.channel = data.label{ichan};
     data_1chan = ft_selectdata(cfgtemp,data);
         
     cfgtemp                  = [];
     data_temp_avg            = ft_timelockanalysis(cfgtemp,data_1chan);
     dat_avg{ichan}           = data_temp_avg;
     
-    plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k');
+    plot(dat_avg{ichan}.time,dat_avg{ichan}.avg+(nb_channels+1)*h-h*ichan,'k'); %first on top
     
 end
 
 plot([0 0],[0 (nb_channels+1)*h], '--r', 'Linewidth', 1);
 
 axis tight
-xlim(cfg.epoch.toi{1});
+xlim(toi);
 %ylim([0 (nb_channels+1)*h]);
 xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 'Fontsize',15);
 ylabel('Channel name', 'Fontsize',15);
@@ -64,7 +68,7 @@ set(gca, 'FontWeight','bold', 'Fontsize',15);
 tick = h;
 yticks(h : tick : nb_channels*h);
 set(gca,'TickDir','out');
-set(gca, 'YTickLabel',[flip(cfg.labels.macro)]);
+set(gca, 'YTickLabel',[flip(data.label')]);
 
 
 %% print to file
@@ -80,8 +84,8 @@ if saveplot
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg','_scale[',num2str(toi),']']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_avg_allchannels_eeg','_scale[',num2str(toi),']']),'-r600');
     close all
 end
 

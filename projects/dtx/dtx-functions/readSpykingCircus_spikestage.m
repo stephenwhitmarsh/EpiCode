@@ -40,7 +40,7 @@ function [SpikeTrials] = readSpykingCircus_spikestage(cfg, SpikeRaw, MuseStruct,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spiketrials_stages.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spiketrials_stages', cfg.circus.postfix,'.mat']);
 
 
 if exist(fname,'file') && force == false
@@ -48,6 +48,10 @@ if exist(fname,'file') && force == false
 else
     
     for ipart = part_list
+                
+        temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
+        hdr_fname   = fullfile(temp(1).folder,temp(1).name);
+        hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
         
         if strcmp(spikestage_list, 'all')
             spikestage_list = 1:length(cfg.spikestage);
@@ -66,6 +70,10 @@ else
             
             if cfg.spikestage{ispikestage}.subdivision < 2
                 error('Need of minimum 2 subdivisions, set cfg.spikestage{ispikestage}.subdivision with an integer >= 2');
+            end
+            
+            if strcmp(cfg.spikestage{ispikestage}.subdivision, 'all')
+                stagenumber_forall = cfg.spikestage{ispikestage}.stagenumber(1);
             end
             
             %get all marker timings
@@ -101,6 +109,7 @@ else
                             if intersect(periodinterval,artefactinterval) %intervals are expressed in sample points
                                 fprintf('Found artefact in part %d, spikestage %d, period %d : period not loaded (%s)\n',ipart, ispikestage ,iperiod, cfg.prefix(1:end-1));
                                 hasartefact= true;
+                                break;
                             end
                         end
                     end
@@ -122,13 +131,14 @@ else
                         end
                         
                         %if asked in cfg : number of the stage is the same for all the cuts.
-                        if length(cfg.spikestage{ispikestage}.stagenumber) == 1
-                            cfg.spikestage{ispikestage}.stagenumber = ones(1,n_cuts) * cfg.spikestage{ispikestage}.stagenumber;
+                        if exist('stagenumber_forall')
+                            cfg.spikestage{ispikestage}.stagenumber = [];
+                            cfg.spikestage{ispikestage}.stagenumber = ones(1,n_cuts) * stagenumber_forall;
                         end
                         
                         %error if not the same amout of stage number and of cuts :
                         if length(cfg.spikestage{ispikestage}.stagenumber) ~= n_cuts + cfg.spikestage{ispikestage}.includeend
-                            error('Not the same amount of cuts and of stage numbers, part %d, spikestage %d', ipart, ispikestage);
+                            error('Not the same amount of cuts and of stage numbers, part %d, spikestage %d, period %d', ipart, ispikestage, iperiod);
                         end
                         
                         
@@ -150,6 +160,7 @@ else
                                     if intersect(trialinterval,artefactinterval) %intervals are expressed in sample points
                                         fprintf('Found artefact in part %d, spikestage %d, period %d, trial %d : trial not loaded (%s)\n',ipart, ispikestage ,iperiod, i_cutperiod, cfg.prefix(1:end-1));
                                         hasartefact= true;
+                                        break;
                                     end
                                 end
                             end

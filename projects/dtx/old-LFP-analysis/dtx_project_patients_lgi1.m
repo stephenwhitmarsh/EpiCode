@@ -72,29 +72,29 @@ for ipatient = 1:length(config)
             if ~isempty(dat_LFP{ipart}{imarker})
                 
                 %is EMG
-%                 if any(strfind(config{ipatient}.LFP.name{imarker}, 'EMG'))
+                if any(strfind(config{ipatient}.LFP.name{imarker}, 'EMG'))
                     
-%                     emgToPlot = config{ipatient}.LFP.emg{imarker};               
-%                     
-%                     dtx_plot_emg_method(config{ipatient},dat_LFP,ipart,imarker,emgToPlot,true);
-%                     
-%                     dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'emg',emgToPlot,config{ipatient}.epoch.toi{imarker}, true);
-%                     
-%                     dtx_plot_comparison_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, true, config{ipatient}.LFP.motorcortex{imarker},emgToPlot);
-%                     
+                    emgToPlot = config{ipatient}.LFP.emg{imarker};               
+                    
+                    dtx_plot_emg_method(config{ipatient},dat_LFP,ipart,imarker,emgToPlot,true);
+                    
+                    dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'emg',emgToPlot,config{ipatient}.epoch.toi{imarker}, true);
+                    
+                    dtx_plot_comparison_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, true, config{ipatient}.LFP.motorcortex{imarker},emgToPlot);
+                    
                     %is EEG
-%                 else
+                else
                                         
-%                     dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'eeg',config{ipatient}.align.channel{imarker},config{ipatient}.epoch.toi{imarker}, true);
-%                     
-%                     dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'eeg',config{ipatient}.LFP.motorcortex{imarker},config{ipatient}.epoch.toi{imarker}, true);
-%                     
-%                     dtx_plot_overdraw_allchannels(config{ipatient},dat_LFP, ipart, imarker, true);
-%                     
-%                     dtx_plot_avg_allchannels(config{ipatient},dat_LFP,ipart,imarker,true);
-%                     
-%                     dtx_plot_SlowWaveTopographyTimecouse(config{ipatient},dat_LFP, ipart, imarker, true);
-%                     
+                    dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'eeg',config{ipatient}.align.channel{imarker},config{ipatient}.epoch.toi{imarker}, true);
+                    
+                    dtx_plot_timecourse_eeg_emg(config{ipatient}, dat_LFP, ipart, imarker, 'eeg',config{ipatient}.LFP.motorcortex{imarker},config{ipatient}.epoch.toi{imarker}, true);
+                    
+                    dtx_plot_overdraw_allchannels(config{ipatient},dat_LFP, ipart, imarker, true);
+                    
+                    dtx_plot_avg_allchannels(config{ipatient},dat_LFP,ipart,imarker,true);
+                    
+                    dtx_plot_SlowWaveTopographyTimecouse(config{ipatient},dat_LFP, ipart, imarker, true);
+                     
                     %[TFR_eeg{ipatient}] = dtx_plot_TFR(config{ipatient}, dat_LFP, ipart, imarker, true);
                     
                     %keep eeg for plot of both SW_R and SW_L in the same figure
@@ -106,6 +106,7 @@ for ipatient = 1:length(config)
                     if ipart == length(config{ipatient}.directorylist)
                         [data_avg_allchans{imarker}{ipatient},...
                             data_avg_chanalign{imarker}{ipatient},...
+                            ~,...
                             data_avg_EMG{imarker}{ipatient}] =...
                             dtx_get_patient_data(config{ipatient}, dat_LFP, ipart, imarker);
                     end

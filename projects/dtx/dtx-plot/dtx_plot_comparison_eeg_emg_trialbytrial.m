@@ -1,4 +1,6 @@
 function dtx_plot_comparison_eeg_emg_trialbytrial(cfg,data,ipart,imarker,saveplot,varargin)
+%one fig of comparison per trial. Made for plotting avg data patient by
+%patient
 
 abscisse_scale = 2;
 
@@ -71,17 +73,17 @@ for itrial = 1:length(data.trial)
     ylabel(sprintf('EEG %s avg', chanEEG), 'Fontsize',15);
     axis tight
     xlim([-abscisse_scale, abscisse_scale]);
-    ylim_eeg = get(gca,'ylim');
-    ylim_rapport = -ylim_eeg(1)/ylim_eeg(2); %to set automatically EMG scale with same 0 as eeg
-    
+%     ylim_eeg = get(gca,'ylim');
+%     ylim_rapport = -ylim_eeg(1)/ylim_eeg(2); %to set automatically EMG scale with same 0 as eeg
+%     
     %plot emg
     yyaxis right
     plot(t, data_EMG.trial{itrial},'b','LineWidth',2);
-    ylim_emg = get(gca,'ylim');
-    ylim_emg_rapport(1)=ylim_emg(1)-ylim_emg(2)*ylim_rapport; %to set automatically EMG scale with same 0 as EEG
-    ylim_emg_rapport(2)=ylim_emg(2);
-    ylim(ylim_emg_rapport);
-    ylabel('EMG avg envelope', 'Fontsize',15);
+%     ylim_emg = get(gca,'ylim');
+%     ylim_emg_rapport(1)=ylim_emg(1)-ylim_emg(2)*ylim_rapport; %to set automatically EMG scale with same 0 as EEG
+%     ylim_emg_rapport(2)=ylim_emg(2);
+%     ylim(ylim_emg_rapport);
+%     ylabel('EMG avg envelope', 'Fontsize',15);
 
     set(gca,'FontWeight','bold' );
     set(gca,'TickDir','out');

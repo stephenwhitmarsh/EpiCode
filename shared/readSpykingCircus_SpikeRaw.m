@@ -38,7 +38,7 @@ else
 end
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata_SpikeRaw.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata_SpikeRaw', cfg.circus.postfix, '.mat']);
 if exist(fname,'file') && force == false
     load(fname,'SpikeRaw');
 else
@@ -85,9 +85,11 @@ else
             
             clear clusternr
             for i = 1 : size(datinfo.Groups(spiketimes_indx).Datasets,1) % number of templates
-                SpikeRaw{ipart}.label{i} = datinfo.Groups(spiketimes_indx).Datasets(i).Name;
-                temp = strsplit(SpikeRaw{ipart}.label{i},'_');
+                %Paul modification : correct label index
+                labeltemp = datinfo.Groups(spiketimes_indx).Datasets(i).Name;
+                temp = strsplit(labeltemp,'_');
                 clusternr(i) = str2double(temp{2});
+                SpikeRaw{ipart}.label{clusternr(i)+1} = labeltemp;
             end
             
             for i = 1:numel(clusternr)
@@ -114,11 +116,11 @@ else
             templates       = sparse(temp_x, temp_y, temp_z, templates_size(1)*templates_size(2), templates_size(3));
             templates_size  = [templates_size(1) templates_size(2) templates_size(3)/2];
             
-            for itemp = 1:numel(clusternr)
-                template = full(reshape(templates(:, itemp), templates_size(2), templates_size(1)))';
-                [~,i] = max(mean(abs(template),2));
-                SpikeRaw{ipart}.template(itemp,:,:) = template;
-                SpikeRaw{ipart}.template_maxchan(itemp) = i;
+            for i = 1:numel(clusternr) %template mal positionné aussi
+                template = full(reshape(templates(:, clusternr(i)+1), templates_size(2), templates_size(1)))';
+                [~,imaxchan] = max(mean(abs(template),2));
+                SpikeRaw{ipart}.template(clusternr(i)+1,:,:) = template;
+                SpikeRaw{ipart}.template_maxchan(clusternr(i)+1) = imaxchan;
             end
             
             

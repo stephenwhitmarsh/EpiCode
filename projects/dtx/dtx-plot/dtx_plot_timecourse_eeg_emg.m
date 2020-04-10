@@ -1,4 +1,4 @@
-function dtx_plot_timecourse_eeg_emg(cfg,data,ipart,imarker,datatype,electrodeToPlot,abscisse_scale,saveplot)
+function dtx_plot_timecourse_eeg_emg(cfg,data,ipart,imarker,datatype,electrodeToPlot,toi,saveplot)
 %data{ipart} 
 %This script is for one ipart and one imarker
 %datatype : 'eeg' or 'emg'
@@ -35,6 +35,7 @@ if isEEG
     cfgtemp = [];
     cfgtemp.channel = electrodeToPlot;
     data = ft_selectdata(cfgtemp,data{imarker});
+   
     
 elseif isEMG
     if isfield(cfg.LFP, 'emg')
@@ -66,11 +67,15 @@ hold;
 
 %h automatic setting :
 for itrial = 1 : nb_trials
-%     h_temp_max = max(data.trial{itrial}(1,:));
-%     h_temp_min = min(data.trial{itrial}(1,:));
-%     h_temp(itrial) = h_temp_max - h_temp_min;
-t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % offset for which t = 0;
-h_temp(itrial) = max(data.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %max between -0.5s and 0.5s. Avoid noise. Available for EEG and EMG.
+    if isEMG %max around t0
+        t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % offset for which t = 0;
+        h_temp(itrial) = max(data.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %amplitude of peak vs baseline
+    elseif isEEG %amplitude t0-baseline
+        bl_period_inf = data.time{itrial}>cfg.align.toibaseline{imarker}(1);
+        bl_period_sup = data.time{itrial}<cfg.align.toibaseline{imarker}(2);
+        bl_period = logical(bl_period_inf .* bl_period_sup);
+        h_temp(itrial) = max(data.trial{itrial}(1, data.time{itrial}>-1 & data.time{itrial}<1)) - nanmean(data.trial{itrial}(1, bl_period));
+    end
 end
 
 h = mean(h_temp)*2;
@@ -83,9 +88,9 @@ h = mean(h_temp)*2;
 %     h = mean(h_temp)*2;
 % end
 
-plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2);
+%plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2); %MODIF TEMPORAIRE PAUL
 %plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
-for itrial = 1 : nb_trials
+for itrial = 50:75%1 : nb_trials 
     plot(data.time{itrial},data.trial{itrial}(1,:)+ (nb_trials+1)*h - itrial*h,'k'); %first on top
 end
 
@@ -94,13 +99,18 @@ xlabel(sprintf('Time from %s (s)', cfg.LFP.name{imarker}),'Interpreter','none', 
 ylabel('Number of seizures', 'Fontsize',15);
 title(sprintf('%s : aligned data from %s (%d trials)', cfg.LFP.name{imarker}, data.label{1}, size(data.trial,2)),'Interpreter','none','Fontsize',20);
 set(gca, 'YTickLabel', '','FontWeight','bold', 'Fontsize',15);
-tick = h;
-yticks(tick : tick*10 : nb_trials*h);
-yticklabels(nb_trials : -10 : 0);
+
+tick_interval = round(nb_trials/10);
+if tick_interval == 0
+    tick_interval = 1;
+end
+yticks(h : h*tick_interval : nb_trials*h);
+yticklabels(nb_trials : -tick_interval : 0);
+
 set(gca,'TickDir','out');
 axis tight
 
-xlim(abscisse_scale);
+xlim(toi);
 
 
 % %% EMG
@@ -171,8 +181,8 @@ if saveplot
     set(fig1,'PaperPosition', [0 0 1 1]);
     set(fig1,'Renderer','Painters');
      
-    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(abscisse_scale),']']),'-r600');
-    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(abscisse_scale),']']),'-r600');
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(toi),']']),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_timecourse_',data.label{1},'_scale[',num2str(toi),']']),'-r600');
     
 
 %     %EMG
