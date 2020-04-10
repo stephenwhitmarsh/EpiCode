@@ -243,16 +243,13 @@ else
                     
                     % find peaks in baseline period
                     [peaks_bl{itrial},~]               = findpeaks(dat_filt_trl.trial{itrial}(t1_bl_indx(itrial):t2_bl_indx(itrial)));
-                    if isempty(peaks_bl{itrial})
-                        peaks_bl{itrial} = 0;
+                    if isempty(peaks_bl{itrial})%if no peak, take avg bl value
+                        peaks_bl{itrial} = nanmean(dat_filt_trl.trial{itrial}(t1_bl_indx(itrial):t2_bl_indx(itrial)));
                     end
                     
                     % select maximum peak in baseline
-                    if ~isempty(peaks_bl{itrial})
-                        max_peaks_bl(itrial)           = max(peaks_bl{itrial});
-                    else
-                        max_peaks_bl(itrial)           = nan;
-                    end
+                    max_peaks_bl(itrial)           = max(peaks_bl{itrial});
+
                 end
                 
                 % threshold peaks with baseline, if asked (i.e. if not 0)
@@ -261,17 +258,25 @@ else
                 
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     
-                    % threshold based on median of max peaks in all baseline periods
-                    peaks_sel_avg               = peaks_ac{itrial} > nanmean(max_peaks_bl) * cfg.align.thresh(imarker);
-                    peaks_ac_sel_avg{itrial}    = peaks_ac{itrial}(peaks_sel_avg);
-                    locs_ac_sel_avg{itrial}     = locs_ac{itrial}(peaks_sel_avg);
+                    if strcmp(cfg.align.thresh.method{imarker},'medianbl') 
+                        % threshold based on median of max peaks in all baseline periods
+                        peaks_sel               = peaks_ac{itrial} > nanmedian(max_peaks_bl) * cfg.align.thresh.value(imarker);
+                        peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
+                        locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
+                    elseif strcmp(cfg.align.thresh.method{imarker},'trial') 
+                        % threshold based on max peak in trial-by-trial baseline
+                        peaks_sel               = peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh.value(imarker);
+                        peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
+                        locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
+                    elseif strcmp(cfg.align.thresh.method{imarker},'both')
+                        peaks_sel               = (peaks_ac{itrial} > nanmedian(max_peaks_bl) * cfg.align.thresh.value(imarker) && peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh.value(imarker));
+                        peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
+                        locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
+                    else
+                        error('wrong cfg.align.thresh.method parameter');
+                    end
                     
-                    % threshold based on median of max peaks in trial-by-trial baseline
-                    peaks_sel_trl               = peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh(imarker);
-                    peaks_ac_sel_trl{itrial}    = peaks_ac{itrial}(peaks_sel_trl);
-                    locs_ac_sel_trl{itrial}     = locs_ac{itrial}(peaks_sel_trl);
-                    
-                    if isempty(locs_ac_sel_avg{itrial})
+                    if isempty(locs_ac_sel{itrial})
                         haspeak(itrial) = false;
                         fprintf('Could not find peak in trial number %d \n',itrial);
                     end
@@ -287,13 +292,13 @@ else
                         
                         % find relevant peak according to method
                         if strcmp(cfg.align.method{imarker},'nearestmax') ||strcmp(cfg.align.method{imarker},'nearestmin') % Min same as 'max' because timecourse was flipped
-                            [~, ip(itrial)] = min(abs(dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1))); % peak-time closest to zero
+                            [~, ip(itrial)] = min(abs(dat_filt_trl.time{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1))); % peak-time closest to zero
                             
                         elseif strcmp(cfg.align.method{imarker},'max')
-                            [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1)); 
+                            [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1)); 
                             
                         elseif strcmp(cfg.align.method{imarker},'min') % Same as 'max' because timecourse was flipped
-                            [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));
+                            [~, ip(itrial)] = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));
                             
                         elseif strcmp(cfg.align.method{imarker},'firstmax')
                             ip(itrial)      = 1; % first peak within search toi
@@ -302,24 +307,24 @@ else
                             ip(itrial)      = 1; % first peak within search toi     
                             
                         elseif strcmp(cfg.align.method{imarker},'lastmax')
-                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));   
+                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));   
                             ip(itrial)      = indx(end); % last peak within search toi   
                             
                         elseif strcmp(cfg.align.method{imarker},'lastmin')
-                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));                             
+                            [~, indx]       = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));                             
                             ip(itrial)      = indx(end); % last peak within search toi  
                             
                         elseif strcmp(cfg.align.method{imarker},'crawlback')
                             % start at max in search window
-                            [~, indx1]              = max(dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}+t1_ac_indx(itrial)-1));       
-                            [~, indx2]              = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel_avg{itrial}(indx1)+t1_ac_indx(itrial)-50));
+                            [~, indx1]              = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));       
+                            [~, indx2]              = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel{itrial}(indx1)+t1_ac_indx(itrial)-50));
                             indx2                   = indx2(end);
                             ip(itrial)              = 1;
-                            locs_ac_sel_avg{itrial} = indx2 - t1_ac_indx(itrial);      
+                            locs_ac_sel{itrial} = indx2 - t1_ac_indx(itrial);      
                         end
                         
                         % align time axis to relevant (peak) index 
-                        timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
                         dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
                         
@@ -344,13 +349,13 @@ else
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
                 
                 i_h_temp = 0;
-                for ipeak = 1:length(peaks_ac_sel_trl)
-                    if ~isempty((peaks_ac_sel_trl{ipeak}))
+                for ipeak = 1:length(peaks_ac_sel)
+                    if ~isempty((peaks_ac_sel{ipeak}))
                         i_h_temp = i_h_temp+1;
-                        h_temp(i_h_temp) = max(peaks_ac_sel_trl{ipeak});
+                        h_temp(i_h_temp) = max(peaks_ac_sel{ipeak});
                     end
                 end
-                h               = mean(h_temp)/5;%1200; 
+                h               = mean(h_temp)/2;%1200; 
            
 
                 subplot(2,2,1);
@@ -358,8 +363,8 @@ else
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
-                        t     = dat_filt_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        t     = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
@@ -385,7 +390,7 @@ else
                     if haspeak(itrial)
                         color = 'k';
                         t       = 0;
-                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
                         
                     else
@@ -413,8 +418,8 @@ else
                 for itrial = 1 : size(dat_sel_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
-                        t       = dat_sel_trl.time{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        t       = dat_sel_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
@@ -440,7 +445,7 @@ else
                     if haspeak(itrial)
                         color = 'k';
                         t       = 0;
-                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel_avg{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';

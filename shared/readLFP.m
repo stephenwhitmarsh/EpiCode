@@ -44,7 +44,7 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-
+    
     % select those markers to load
     %     markerlist = [];
     %     for i = 1 : size(cfg.LFP.name,2)
@@ -57,7 +57,7 @@ else
         
         %         for imarker = markerlist
         for imarker = 1 : size(cfg.LFP.name,2)
-
+            
             
             fprintf('For marker %s\n',cfg.LFP.name{imarker});
             
@@ -67,6 +67,7 @@ else
                 if isfield(MuseStruct{ipart}{idir},'markers')
                     if isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
                         if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
+                            if ~isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime)
                             
                             % create trial segmentation common to resampled
                             % data. Neuralynx : same markers for all files
@@ -132,7 +133,7 @@ else
                             % loop over files
                             if isNeuralynx
                                 nfile = size(cfg.LFP.channel,2); %one file per channel
-                            elseif isMicromed 
+                            elseif isMicromed
                                 nfile = 1; %only one file with all electrodes
                                 fname                             = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
                             elseif isBrainvision
@@ -147,8 +148,7 @@ else
                                     temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.LFP.channel{ifile},'*.ncs']));
                                     fname{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                                     dat                     = ft_read_neuralynx_interp(fname);
-                                    hdr                     = ft_read_header(fname);
-                               
+                                    %hdr                     = ft_read_header(fname);
                                 elseif isMicromed || isBrainvision
                                     cfgtemp.dataset                   = fname;
                                     cfgtemp.channel                   = cfg.labels.macro';
@@ -159,78 +159,105 @@ else
                                 % to cfg
                                 
                                 if isfield(cfg.LFP, 'reref')
-                                    cfgtemp                       = [];
-                                    cfgtemp.reref                 = cfg.LFP.reref;
-                                    cfgtemp.rerefmethod           = cfg.LFP.rerefmethod;
-                                    cfgtemp.refchannel            = cfg.LFP.refchannel;
-                                    dat                           = ft_preprocessing(cfgtemp,dat);
+                                    if strcmp(cfg.LFP.reref, 'yes')
+                                        cfgtemp                       = [];
+                                        cfgtemp.reref                 = cfg.LFP.reref;
+                                        cfgtemp.rerefmethod           = cfg.LFP.rerefmethod;
+                                        cfgtemp.refchannel            = cfg.LFP.refchannel;
+                                        dat                           = ft_preprocessing(cfgtemp,dat);
+                                    end
                                 end
                                 
                                 if isfield(cfg.LFP, 'bsfilter')
-                                    cfgtemp                       = [];
-                                    cfgtemp.bsfilter              = cfg.LFP.bsfilter;
-                                    cfgtemp.bsfreq                = cfg.LFP.bsfreq;
-                                    dat                           = ft_preprocessing(cfgtemp,dat);
+                                    if strcmp(cfg.LFP.bsfilter, 'yes')
+                                        cfgtemp                       = [];
+                                        cfgtemp.bsfilter              = cfg.LFP.bsfilter;
+                                        cfgtemp.bsfreq                = cfg.LFP.bsfreq;
+                                        dat                           = ft_preprocessing(cfgtemp,dat);
+                                    end
                                 end
                                 
                                 if isfield(cfg.LFP, 'hpfilter')
-                                    cfgtemp                       = [];
-                                    cfgtemp.hpfilter              = cfg.LFP.hpfilter;
-                                    cfgtemp.hpfreq                = cfg.LFP.hpfreq;
-                                    dat                           = ft_preprocessing(cfgtemp,dat);
-                                end
-
-                                if isfield(cfg.LFP, 'lpfilter')
-                                    cfgtemp                       = [];
-                                    cfgtemp.lpfilter              = cfg.LFP.lpfilter;
-                                    cfgtemp.lpfreq                = cfg.LFP.lpfreq;
-                                    cfgtemp.lpfilttype            = cfg.LFP.lpfilttype;
-                                    dat                           = ft_preprocessing(cfgtemp,dat);
+                                    if strcmp(cfg.LFP.hpfilter, 'yes')
+                                        cfgtemp                       = [];
+                                        cfgtemp.hpfilter              = cfg.LFP.hpfilter;
+                                        cfgtemp.hpfreq                = cfg.LFP.hpfreq;
+                                        cfgtemp.hpfiltord             = cfg.LFP.hpfiltord;
+                                        cfgtemp.hpfilttype            = cfg.LFP.hpfilttype;
+                                        dat                           = ft_preprocessing(cfgtemp,dat);
+                                    end
                                 end
                                 
-                                hdr                               = ft_read_header(fname);
+                                if isfield(cfg.LFP, 'lpfilter')
+                                    if strcmp(cfg.LFP.lpfilter, 'yes')
+                                        cfgtemp                       = [];
+                                        cfgtemp.lpfilter              = cfg.LFP.lpfilter;
+                                        cfgtemp.lpfreq                = cfg.LFP.lpfreq;
+                                        cfgtemp.lpfilttype            = cfg.LFP.lpfilttype;
+                                        dat                           = ft_preprocessing(cfgtemp,dat);
+                                    end
+                                end
+                                
+                                
                                 
                                 % Load EMG data if any, and append with EEG
                                 % data
                                 if isfield(cfg.LFP, 'emg')
-                                    if ~isempty(cfg.LFP.emg)&& ~strcmp(cfg.LFP.emg{imarker},'no')
-                                        
-                                    cfgtemp                       = [];
-                                    cfgtemp.channel               = cfg.LFP.emg{imarker};%load only the emg associated with eeg marker
-                                    cfgtemp.dataset               = fname;
-                                    data_EMG                      = ft_preprocessing(cfgtemp);
-                                    
-                                    if isfield(cfg.EMG, 'reref')
-                                        cfgtemp                   = [];
-                                        cfgtemp.reref             = cfg.EMG.reref;
-                                        cfgtemp.rerefmethod       = cfg.EMG.rerefmethod;
-                                        cfgtemp.refchannel        = cfg.EMG.refchannel;
-                                        data_EMG                  = ft_preprocessing(cfgtemp, data_EMG);
-                                    end
-                                    
-                                    if isfield(cfg.EMG, 'bsfilter')
-                                        cfgtemp                   = [];
-                                        cfgtemp.bsfilter          = cfg.EMG.bsfilter;
-                                        cfgtemp.bsfreq            = cfg.EMG.bsfreq;
-                                        data_EMG                  = ft_preprocessing(cfgtemp, data_EMG);
-                                    end
-                                                                            
-                                    if isfield(cfg.EMG, 'hpfilter')
-                                        cfgtemp                   = [];
-                                        cfgtemp.hpfilter          = cfg.EMG.hpfilter;
-                                        cfgtemp.hpfreq            = cfg.EMG.hpfreq;
-                                        data_EMG                  = ft_preprocessing(cfgtemp, data_EMG);
-                                    end
-                                    
-                                    %Appendata EEG EMG
-                                    cfgtemp                       = [];
-                                    cfgtemp.keepsampleinfo        = 'yes';
-                                    dat                           = ft_appenddata(cfgtemp, dat, data_EMG);
-                                    
+                                    if ~isempty(cfg.LFP.emg)
+                                        if ~strcmp(cfg.LFP.emg{imarker},'no')
+                                            
+                                            
+                                            loadrefemg = false;
+                                            if isfield(cfg.EMG, 'reref')
+                                                if strcmp(cfg.EMG.reref, 'yes')
+                                                    loadrefemg = true;
+                                                end
+                                            end
+                                            
+                                            if loadrefemg
+                                                cfgtemp                   = [];
+                                                cfgtemp.channel           = {cfg.LFP.emg{imarker}, cfg.EMG.refchannel{1}};%load the emg associated with eeg marker, and the ref
+                                                cfgtemp.dataset           = fname;
+                                                cfgtemp.reref             = cfg.EMG.reref;
+                                                cfgtemp.rerefmethod       = cfg.EMG.rerefmethod;
+                                                cfgtemp.refchannel        = cfg.EMG.refchannel;
+                                                data_EMG                  = ft_preprocessing(cfgtemp);
+                                            else
+                                                cfgtemp                       = [];
+                                                cfgtemp.channel               = cfg.LFP.emg{imarker};%load only the emg associated with eeg marker
+                                                cfgtemp.dataset               = fname;
+                                                data_EMG                      = ft_preprocessing(cfgtemp);
+                                            end
+                                            
+                                            if isfield(cfg.EMG, 'bsfilter')
+                                                if strcmp(cfg.EMG.bsfilter, 'yes')
+                                                    cfgtemp                   = [];
+                                                    cfgtemp.bsfilter          = cfg.EMG.bsfilter;
+                                                    cfgtemp.bsfreq            = cfg.EMG.bsfreq;
+                                                    cfgtemp.bsfiltord         = cfg.EMG.bsfiltord;
+                                                    data_EMG                  = ft_preprocessing(cfgtemp, data_EMG);
+                                                end
+                                            end
+                                            
+                                            if isfield(cfg.EMG, 'hpfilter')
+                                                if strcmp(cfg.EMG.hpfilter, 'yes')
+                                                    cfgtemp                   = [];
+                                                    cfgtemp.hpfilter          = cfg.EMG.hpfilter;
+                                                    cfgtemp.hpfreq            = cfg.EMG.hpfreq;
+                                                    data_EMG                  = ft_preprocessing(cfgtemp, data_EMG);
+                                                end
+                                            end
+                                            
+                                            %Appendata EEG EMG
+                                            cfgtemp                       = [];
+                                            cfgtemp.keepsampleinfo        = 'yes';
+                                            dat                           = ft_appenddata(cfgtemp, dat, data_EMG);
+                                            
+                                        end
                                     end
                                 end
                                 
-
+                                
                                 
                                 % downsample data and correct baseline
                                 cfgtemp                         = [];
@@ -268,6 +295,7 @@ else
                             dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
                             clear filedat*
                             
+                            end
                         end
                     end
                 end
@@ -275,13 +303,13 @@ else
             
             if exist('dirdat','var') %in case there is no marker in the data
                 
-            % concatinate data of different datasets (over trials)
-            LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
-            clear dirdat*
-            
-            % add samplerate
-            LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
-            
+                % concatinate data of different datasets (over trials)
+                LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
+                clear dirdat*
+                
+                % add samplerate
+                LFP{ipart}{imarker}.fsample = cfg.LFP.resamplefs;
+                
             else
                 LFP{ipart}{imarker} = [];
                 fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});

@@ -69,6 +69,7 @@ else
             end
             
             % read muse event file
+            clear f markfile marks
             f = fopen(name_mrk, 'rt');
             markfile = {};
             while true
@@ -117,7 +118,8 @@ else
                 
                 
             elseif isBrainvision %other muse marker file format than neuralynx or micromed
-               
+               clear name_temp name_mrk name classgroupid comment color editable classid 
+                
                 %Get marker names and infos
                 name_temp            = markfile(find(strcmp('#TRIGGER COMMENTS', markfile)) + 1 : find(strcmp('Brain Vision Data Exchange Marker File, Version 1.0', markfile)) - 1);
                 nmarkers             = length(name_temp);
@@ -176,6 +178,7 @@ else
                     %from first Neurlynx .txt file
                     temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},'*.ncs'));
                     [~, f, ~]   = fileparts(temp(1).name);
+                    hdr         = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp(1).name));
                     f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
                     clear timestring
                     
@@ -270,14 +273,15 @@ else
                 
                     
                 elseif isBrainvision
-                    MuseStruct{ipart}{idir}.starttime = header.date;
-                    
+                    MuseStruct{ipart}{idir}.starttime   = header.date;
+                    datafile                            = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
+                    hdr                                 = ft_read_header(datafile);
                     
                 end %end of recover real time. different for each format
                     
                 
                 MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
-
+                MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds(hdr.nSamples / hdr.Fs - hdr.nSamplesPre / hdr.Fs);
                 
                 
                 % create markers details in MuseStruct
