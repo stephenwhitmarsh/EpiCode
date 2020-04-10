@@ -76,7 +76,7 @@ else
     
     %get format to adapt script for each format
     %specificities :
-    [isNeuralynx, isMicromed, isBrainvision, isCED] = get_data_format(cfg);
+    [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
 
     % select those markers to align
