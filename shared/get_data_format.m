@@ -15,9 +15,9 @@ if isempty(listing)
     error('No file detected in %s or in %s',fullfile(cfg.rawdir,cfg.directorylist{1}{1}), cfg.rawdir);
 end
 
-isNeuralynx = 0;
-isMicromed = 0;
-isBrainvision = 0;
+isNeuralynx         = 0;
+isMicromed          = 0;
+isBrainvision       = 0;
 
 for ifile = 1:length(listing)
     [~,~,file_extension] = fileparts(listing(ifile).name);
