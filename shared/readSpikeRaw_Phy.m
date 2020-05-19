@@ -1,14 +1,15 @@
-function [SpikeRaw] = readSpikeraw_Phy(cfg,force,varargin)
+function [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [SpikeRaw] = readSpikeraw_Phy(cfg,force,varargin)
+% [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
 % 
 % Read SpykingCircus analysis results (spike times, templates, amplitudes).
 % Data must have been converted for Phy GUI, with  parameter prelabelling = True.
 % https://spyking-circus.readthedocs.io/en/latest/advanced/extras.html#converting
 % 
 % If data were checked with Phy, neurons are filtered and only the 'good' or
-% 'mua' are loaded. Otherwise all neurons are loaded.
+% 'mua' are loaded. Otherwise (data never opened with Phy), all neurons are 
+% loaded.
 %
 % ### Necessary input:
 % cfg.prefix            = prefix to output files
