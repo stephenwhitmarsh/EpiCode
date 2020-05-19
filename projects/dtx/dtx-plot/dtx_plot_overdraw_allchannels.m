@@ -31,7 +31,7 @@ for itrial = 1 : length(data.trial)
 %     h_temp_min = min(data.trial{itrial}(1,:));
 %     h_temp(itrial) = h_temp_max - h_temp_min;
 t_0 = -(cfg.epoch.toi{imarker}(1)-cfg.epoch.pad{imarker}(1))*data.fsample; % offset for which t = 0;
-h_temp(itrial) = max(data_h.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %amplitude of peak vs baseline
+% h_temp(itrial) = max(data_h.trial{itrial}(1,round(-0.5*data.fsample)+t_0: round(0.5*data.fsample)+t_0)); %amplitude of peak vs baseline
 bl_period_inf = data_h.time{itrial}>cfg.align.toibaseline{imarker}(1);
 bl_period_sup = data_h.time{itrial}<cfg.align.toibaseline{imarker}(2);
 bl_period = logical(bl_period_inf .* bl_period_sup);

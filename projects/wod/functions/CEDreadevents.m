@@ -1,7 +1,7 @@
-function [CEDStruct]  = readCEDMarkers(cfg, force)
+function [CEDStruct]  = CEDreadevents(cfg, force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function readCEDMarkers
+% function readCEDevents
 %
 % Read all the event channels of CED data and return a structure similar to
 % the one created by readMuseMarkers.m. So it can be used with other
@@ -10,7 +10,7 @@ function [CEDStruct]  = readCEDMarkers(cfg, force)
 % 
 % ## INPUT :
 % cfg.prefix                    : name of the subject
-% cfg.CEDrawdir                 : where are the Spike2 data
+% cfg.rawdir                 : where are the Spike2 data
 % cfg.directorylist{part}    : list of all data files, for each part
 % force                         : if force == true, force reading again the
 %                               events from the data file. If force == 
@@ -63,7 +63,8 @@ else
             
             clear marks
             
-            datapath = fullfile(cfg.CEDrawdir, cfg.directorylist{ipart}{idir});
+            temp = dir(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir}, '.smr*']));%.smr* because some data are .smr and other .smrx
+            datapath = fullfile(cfg.rawdir, temp.name);
             fprintf('Extracting marker timings from  %s \n',datapath);
              
             %Open file in Spike2.
@@ -92,52 +93,13 @@ else
             end
             
             
-            %Get channel names
+            %Get channel names and rename it if needed
             nametemp = []; 
             for imarker = 1:length(chanindex)
                 [~, name{imarker}] = CEDS64ChanTitle(fid, chanindex(imarker));
-                
-                % cant make fieldnames with minusses
-                if any(ismember('-',name{imarker}))
-                    fprintf('Channel %s is renamed %s (cant make fieldnames with minusses)\n', name{imarker}, strrep(name{imarker},'-','_'));
-                    name{imarker} = strrep(name{imarker},'-','_');
-                end
-                
-                % cant make fieldnames with white spaces
-                if any(ismember(' ',name{imarker}))
-                    fprintf('Channel %s is renamed %s (cant make fieldnames with white spaces)\n', name{imarker}, strrep(name{imarker},' ','_'));
-                    name{imarker} = strrep(name{imarker},' ','_');
-                end
-                
-                %create name if is empty
-                if isempty(name{imarker})
-                    name{imarker} = sprintf('chan%d', chanindex(imarker));
-                    fprintf('Channel %d is renamed %s (has no name)\n', chanindex(imarker), name{imarker});
-                end
-                
-                %add 'x' to the field name if it begins with a number
-                if ismember(name{imarker}(1), ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-                    name{imarker} = insertBefore(name{imarker},name{imarker},'X');
-                    fprintf('Channel %s is renamed %s (begins with a number)\n', name{imarker}(2:end), name{imarker});
-                end
-                
-                %rename channel if it has the same name that a previous one
-                if any(strcmp(name{imarker}, nametemp))
-                    oldname = name{imarker};
-                    name{imarker} = sprintf('%s_chan%d', name{imarker}, chanindex(imarker));
-                    fprintf('Channel %d %s as the same name that a previous channel : renamed %s\n', chanindex(imarker), oldname, name{imarker});
-                    if any(strcmp(oldname, name))
-                        [~, idx] = ismember(oldname, name);
-                        name{idx} = sprintf('%s_chan%d', name{idx}, chanindex(idx));
-                        fprintf('First channel with the name %s is channel %d : renamed %s\n', oldname, chanindex(idx), name{idx});
-                    end
-                end
-                
-                %keep info for other channels
-                nametemp{imarker} = name{imarker}; 
+                name{imarker}      = CEDrename_chan(name{imarker}, chanindex(imarker),name(1:imarker-1),true); %name{1:imarker-1} is [] if imarker = 1
             end
-            
-            
+
             
             %read timings for each channel
             for imarker = 1:length(chanindex)
@@ -183,14 +145,8 @@ else
             CEDStruct{ipart}{idir}.endtime    = starttime + seconds(maxtime);
 
             for imarker = 1:length(chanindex)
-                CEDStruct{ipart}{idir}.markers.(name{imarker}).events         = [];
                 CEDStruct{ipart}{idir}.markers.(name{imarker}).comment        = sprintf('Spike2 chan nr %d', chanindex(imarker));
-                CEDStruct{ipart}{idir}.markers.(name{imarker}).color          = '';%info not avalaible in CED librairy
-                CEDStruct{ipart}{idir}.markers.(name{imarker}).editable       = 'Yes';
-                CEDStruct{ipart}{idir}.markers.(name{imarker}).classid        = sprintf('+%d', imarker);
-                CEDStruct{ipart}{idir}.markers.(name{imarker}).classgroupid   = '+3';
                 for ievent = 1 : size(marks{imarker},2)
-                    CEDStruct{ipart}{idir}.markers.(name{imarker}).trialnum                 = 1;
                     CEDStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent)         = marks{imarker}(ievent);
                     CEDStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent)) + CEDStruct{ipart}{idir}.starttime;
                 end
@@ -199,7 +155,6 @@ else
     end%ipart
     
     save(fname,'CEDStruct');
-    CEDS64CloseAll();
 end %exist && force
 
 end

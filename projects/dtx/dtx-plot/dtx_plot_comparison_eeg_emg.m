@@ -1,5 +1,7 @@
 function envEMG = dtx_plot_comparison_eeg_emg(cfg,data,ipart,imarker,saveplot,varargin)
 
+savefig = true;
+
 abscisse_scale = 2;
 
 data = data{ipart};
@@ -55,7 +57,7 @@ end
 
 
 
-fig = figure;
+fig = figure('Position', get(0, 'Screensize')); %save as .fig : need it to have big enough subplots
 
 %% Overdraw OL
 subplot(3,1,1);
@@ -87,13 +89,42 @@ set(gca,'ycolor','r');
 set(gca,'Fontsize',15);
 
 
-%% Average OL
+%% Average OL and compute half width
 
 cfgtemp                 = [];
 cfgtemp.vartrllength    = 2;
 data_EEG_rptavg        = ft_timelockanalysis(cfgtemp,data_EEG);
 
 plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
+
+    % Mesure and plot half width
+    t           = data_EEG_rptavg.time;
+    bl          = mean(data_EEG_rptavg.avg(1,(t>cfg.align.toibaseline{imarker}(1)&t<cfg.align.toibaseline{imarker}(2))));
+    peak        = max(data_EEG_rptavg.avg(1,(t>-0.5&t<0.5)));
+    halfamp     = (peak-bl)/2;
+    
+    zci  = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
+    indx_temp = zci(data_EEG_rptavg.avg(1,:) - bl - halfamp);
+    j=0;
+    for i = 1:length(indx_temp)
+%         if t(indx_temp(i))>cfg.align.toiactive{1}(1) && t(indx_temp(i))<cfg.align.toiactive{1}(2)
+        if t(indx_temp(i))>-1 && t(indx_temp(i))<1
+            j = j+1;
+            indx(j) = indx_temp(i);
+        end
+    end
+    % indx = indx(1:2);%TEMPORAIRE A RETIRER
+    % indx = indx([ceil(length(indx)/2-0.5), ceil(length(indx)/2+0.5)]);
+    if length(indx)>=2
+        plot(data_EEG_rptavg.time(indx),ones(1,length(indx))*(halfamp+bl),'-o','Color','b','MarkerFaceColor','b','MarkerEdgeColor','b');
+        
+        x = sum(data_EEG_rptavg.time(indx))/length(indx);
+        y = halfamp-halfamp*0.5+bl;
+        halfwidth = (data_EEG_rptavg.time(indx(2))-data_EEG_rptavg.time(indx(1)))*1000;
+        text(x,y,sprintf('%gms',halfwidth),'HorizontalAlignment','center');
+else
+    halfwidth = [];
+end
 
 
 %% Overdraw and rectified EMG
@@ -169,8 +200,7 @@ set(gca,'Fontsize',15);
 subplot (3,1,3)
 hold;
 
-% plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
-% %A REMETTRE
+plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
 
 yyaxis left
 set(gca,'ycolor','r');
@@ -205,21 +235,30 @@ xlabel('Time (s)','Fontsize',18);
 
 
 %% sava data
+    set(fig,'PaperOrientation','landscape');
+    set(fig,'PaperUnits','normalized');
+    set(fig,'PaperPosition', [0 0 1 1]);
+if savefig
+    
+    if ~(exist (cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        fprintf('Create forlder %s',cfg.imagesavedir);
+    end
+    saveas(fig,fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1}]),'fig');
+end
+
 if saveplot
     
     if ~(exist (cfg.imagesavedir)==7)
         mkdir(cfg.imagesavedir);
-        fprinf('Create forlder %s',cfg.imagesavedir);
+        fprintf('Create forlder %s',cfg.imagesavedir);
     end
-    
-    
-    set(fig,'PaperOrientation','portrait');
-    set(fig,'PaperUnits','normalized');
-    set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,['POURDIAPO',cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,['POURDIAPO',cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_comparisoneegemg_',data_EEG.label{1},'_',data_EMG.label{1},'.png']),'-r600');
     close all
 end
+
+
 
 
 end

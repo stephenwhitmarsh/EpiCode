@@ -15,3 +15,33 @@ module load spyking-circus/0.9.1
 spyking-circus DTX5-p1-multifile-E07.ncs -m whitening,extracting,fitting -c 28
 spyking-circus DTX5-p1-multifile-E07.ncs -m converting -c 28
 sleep 5;
+
+
+cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX2/p1
+
+spyking-circus DTX2-p1-multifile-E08.ncs -c 28
+
+spyking-circus DTX2-p1-multifile-E08.ncs -m converting -c 28
+
+sleep 5;
+
+
+
+cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX4/p1
+
+spyking-circus DTX4-p1-multifile-E07.ncs -c 28
+
+spyking-circus DTX4-p1-multifile-E07.ncs -m converting -c 28
+
+sleep 5;
+
+
+
+cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX6/p1
+
+spyking-circus DTX6-p1-multifile-E07.ncs -c 28
+
+spyking-circus DTX6-p1-multifile-E07.ncs -m converting -c 28
+
+sleep 5;
+

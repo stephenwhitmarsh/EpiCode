@@ -216,7 +216,7 @@ else
                                             
                                             if loadrefemg
                                                 cfgtemp                   = [];
-                                                cfgtemp.channel           = {cfg.LFP.emg{imarker}, cfg.EMG.refchannel{1}};%load the emg associated with eeg marker, and the ref
+                                                cfgtemp.channel           = {cfg.LFP.emg{imarker}, cfg.EMG.refchannel};%load the emg associated with eeg marker, and the ref
                                                 cfgtemp.dataset           = fname;
                                                 cfgtemp.reref             = cfg.EMG.reref;
                                                 cfgtemp.rerefmethod       = cfg.EMG.rerefmethod;

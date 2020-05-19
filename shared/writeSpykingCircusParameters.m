@@ -8,8 +8,9 @@ for ipart = 1 : size(cfg.directorylist,2)
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p',num2str(ipart)];
-    filename        = fullfile(cfg.datasavedir, [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1},'.params']);
+    filename        = [cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1},'.params'];
     fname_params    = fullfile(cfg.datasavedir,subjdir,partdir,filename);
+    nb_channels     = size(cfg.circus.channel,2);
     fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
 
     % read Spyking-Circus params file
@@ -30,7 +31,7 @@ for ipart = 1 : size(cfg.directorylist,2)
     % adjust parameters
     h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None',fname_prb,'','False','SpykingCircus'});
     h2 = ini.SetValues('noedits', {'filter_done','artefacts_done','ground_done','median_done'}, {'False','False','False','False'});
-    h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
+    h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_ms.dead','ms','True'});
     if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
     
     status = ini.WriteFile(fname_params);
@@ -40,8 +41,7 @@ for ipart = 1 : size(cfg.directorylist,2)
     ini.ToString()
     
     % write params file 
-    nb_channels         = size(cfg.circus.channel,2);
-    writeProbeFile(nb_channels,fname_prb);
+    writeProbeFile(nb_channels,fullfile(cfg.datasavedir,subjdir,partdir,fname_prb));
     
 end
 

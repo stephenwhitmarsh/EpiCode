@@ -2,7 +2,6 @@ function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct,remov
 %check if there is slowave without seizure or seizure without slowwave and
 %remove the correspondant marker. It is replace by a BAD__START__ to
 %BAD__END__ period
-%A seizure beginning in one file and ending in the next file is removed
 %Add indexes and number of removed markers in MuseStruct
 
 % remove_seizure_between_2_files : if true, remove seizure if it begins in one file and

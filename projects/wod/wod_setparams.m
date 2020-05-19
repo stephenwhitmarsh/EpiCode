@@ -3,8 +3,7 @@
 
 function [config] = wod_setparams(config)
 
-disp('setting parameters');
-muscale = 50; % multiunit scale
+disp('setting WOD parameters');
 
 if ismac
     error('Platform not supported')
@@ -27,81 +26,63 @@ imagesavedir = rootpath_analysis;
                 %VOIR SI BESOIN D'UTILISER lower(str) POUR CONSISTANCE NOMS 
 %Peut être adapté la stratégie de récupération des markers si le noms ne
 %sont pas consistants sur les différentes manips 
-config{1}.prefix                    = 'WODtest-';
 
-%For this project, Neuralync data are converted into Spike2 data for
-%putting markers. 
-%for getting Spike2 marker and convert it to be usable with Neuralynx data
-config{1}.rawdir                 = fullfile(datasavedir,'data_converted');
-config{1}.CEDrawdir              = fullfile(rootpath_data, 'test');
-config{1}.directorylist{1}       =  {'40-01'}; %without the extension
-config{1}.directorylist{2}       =  {'40-01'}; %
-config{1}.labels.macro              = {'Vm','ECoG-M1G'};
-config{1}.LFP.channel               = config{1}.labels.macro; %white space must be replaced by '_' in this field
-
-%RE PASSER PAR NEURALYNX POUR ANALYSES ANTOINE
-
-%config{1}.rawdir                    = 'dummy';
-%config{1}.directorylist             = 'dummy';
-
-config{1}.os                        = os;
-config{1}.name                      = {'PA_moyen'};
+%subject infos
 config{1}.datasavedir               = datasavedir;
+config{1}.imagesavedir               = imagesavedir;
+config{1}.prefix                    = 'WODtest-';
+config{1}.rawdir                    = fullfile(rootpath_data, 'test');
+config{1}.directorylist{1}          =  {'40-01'}; %without the extension
+config{1}.directorylist{2}          =  {'40-01'}; 
+%ajouter partname ?
 
-%trial between 2 files is ignored if eventindex == 1
+% infos about the peak to align. Already aligned in Spike2, but those infos
+% are usefull for plotting scripts
+config{1}.align.toibaseline{1}      = [-0.2 -0.1];
+config{1}.align.toiactive{1}       = [-0.005, 0.005]; 
 
-% %1 align par mrk, 1 channel par mrk. 
-% %boucle for pour remplir les paramètres communs
-% config{1}.align.name                = {'all_WOD'};
-% config{1}.align.channel             = 'dummy';%eval('MuseStruct{ipart}{idir}.{'E12LFP'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-% config{1}.align.flip                = {'no'};
-% config{1}.align.abs                 = {'no'};
-% config{1}.align.method              = {'min'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-% config{1}.align.filter              = {'no'};
-% config{1}.align.freq                = {5};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-% config{1}.align.hilbert             = {'no'};
-% config{1}.align.thresh.value        = [1, 1];
-% config{1}.align.thresh.method       = {'trial','trial','trial'};%'medianbl','both';
-% config{1}.align.toiplot{1}          = [-20,  20];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% config{1}.align.toiactive{1}        = [-10, 10];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-% config{1}.align.toibaseline{1}      = [-20, -10];
-% % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
+%LFP analysis
+% one field per LFP analysis
+config{1}.LFP.name{1}               = 'PAMoy';
 
+% preprocessing before defining trials
+config{1}.LFP.hpfilter{1}           = 'no';
+config{1}.LFP.hpfreq{1}             = 1;
+config{1}.LFP.hpfiltord{1}          = [];%leave empty : default value
+config{1}.LFP.hpfilttype{1}         = [];%leave empty : default valueco
+config{1}.LFP.bsfilter{1}           = 'no';
+config{1}.LFP.bsfreq{1}             = [1 30];
+config{1}.LFP.lpfilter{1}           = 'no';
+config{1}.LFP.lpfreq{1}             = 30;
+config{1}.LFP.lpfilttype{1}         = 'fir';
+config{1}.LFP.reref{1}              = 'no';
+config{1}.LFP.rerefmethod{1}        = 'avg';
+config{1}.LFP.refchannel{1}         = 'all';
+config{1}.LFP.doresample{1}         = false;
+config{1}.LFP.resamplefs{1}         = 'no';
+config{1}.LFP.baseline{1}           = 'no';
+config{1}.LFP.baselinewindow{1}     = [0, 5];%(before making trl)
 
-config{1}.LFP.electrodetopolot      = 'dummy'; %electrode by which the wod begins
+%defining trials
+config{1}.LFP.channel{1}           = {'Vm'};
+config{1}.LFP.flip{1}               = [false]; %one logical per channel
+config{1}.LFP.dorename{1}           = 'no'; %if trials have to be merged from several channels to one unique channels, xrite the name of the output channel (set 'no' to ignore)
+config{1}.startend(1, 1:2)          = {'PAmoyCt','PAmoyCt'};%(if dorename, one per channel in the imarker line, ie : 3:4, 5:6 etc.)
+config{1}.eventindex{1}             = [0 0]; %index of the event related to the marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+config{1}.epoch.toi{1}              = [-0.2, 0.2];
+config{1}.epoch.pad{1}              = 0;
 
-config{1}.muse.startend             = {'PAmoyCt','PAmoyCt'};%; 'SlowWave','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
-config{1}.muse.eventindex           = {[0 0]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+%plotting
+config{1}.LFP.electrodetoplot{1}        = 'Vm'; %some of my script plot only one channel
+config{1}.TFR.doTFR{1}              = true;
+config{1}.TFR.toi{1}                = [-0.2, 0.2];
+config{1}.TFR.baseline{1}           = 'no';%[-10 -5];
+config{1}.TFR.baselinetype{1}       = 'relchange';
 
-config{1}.LFP.name                  = {'MoyPA_ctrl'};
-config{1}.LFP.hpfilter              = 'no';
-config{1}.LFP.hpfreq                = 1;
-config{1}.LFP.resamplefs            = 25000; %because sampling rate is 3200Hz
-config{1}.LFP.baseline              = 'no';
-config{1}.LFP.baselinewindow{1}     = [-2, -1];
-config{1}.LFP.baselinewindow{2}     = [-2, -1];
-config{1}.LFP.baselinewindow{3}     = [0, 1];
-config{1}.LFP.slidestep             = 0.01;
+% spike analysis
+% Si spike analysis : utiliser CEDstruct pour writeSC et pour définir trl.
+% Juste associer un fichier différent
 
-config{1}.TFR.toi                      = [-15:0.01:35];
-config{1}.TFR.baseline                 = 'no';%[-10 -5];
-config{1}.TFR.baselinetype             = 'relchange';
-
-% list of onset timing with respect to start-marker (s)
-config{1}.epoch.toi{1}              = [-5, 25];
-config{1}.epoch.toi{2}              = [-2, 1];
-config{1}.epoch.toi{3}              = [1, -2];
-config{1}.epoch.pad{1}              = 10;
-config{1}.epoch.pad{2}              = 0.5;
-config{1}.epoch.pad{3}              = 0.5;
-
-config{1}.imagesavedir              = fullfile(imagesavedir, 'DTX5');       % where to print images
-
-%config{1}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-
-%config{1}.LFP.nr_chanCED            = [1];
-%config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
 end
 

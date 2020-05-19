@@ -1,0 +1,10 @@
+0 : merge sur Phy après template matching. supprimer les templates à jeter
+(0 : voir Phy pendant SW)
+
+1/ spike sorting sans les crises, avec les params réglés pour DTX5. - SVG
+2/ merge sur phy et noter dans un doc excel - SVG
+3/ refaire un fichier dead avec toutes les crises
+4/ relancer SC avec les mêmes paramètres - SVG
+5/ merge sur MATLAB GUI - SVG
+
+Pas besoin de suffixe

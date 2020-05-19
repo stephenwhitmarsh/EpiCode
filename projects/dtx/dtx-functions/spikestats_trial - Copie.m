@@ -1,46 +1,14 @@
-function statsspiketrials_norm(cfg,SpikeTrials,ipart,ilabel, input_temp)
-
-cfgtemp             = [];
-cfgtemp.bins        = [0:0.005:150];
-cfg.latency         = 'max';
-cfg.keeptrials      = 'yes';
-cfg.param           = 'coeffvar';
-isidata = ft_spike_isi(cfgtemp,SpikeTrials{ipart}{ilabel});
-
+function spikestats_trial(cfg,SpikeTrials,SpikeTrials_isi,ipart,ilabel,i_unit,method,normtime,saveplot)
 
 %Ajouter CV2, CV, burst index, doublets de PA, baseline
+% output : mean, med, values
 
-% trialtime : debut, fin
-% trial : index pour chaque spike du trial auquel il appartient
-% time : time de chaque spike
-% isidata.isi{itemplate} : isi entre chaque chaque spike. 1er spike du trial :ISI = NaN
+% hold on
+
 smooth_cste = 0.1;
 
-%TEMP, TO CHECK WHAT FREQLIM IS THE BEST
-freqlim_list = {[0,10],[0,20],[0,30],[0,40],[0,50],[0,100],[0,200]}; %FIXME, choose the best
-freqlim = freqlim_list(input_temp);
-cfg.imagesavedir = fullfile(cfg.imagesavedir, ['freqlim_[',strrep(num2str(freqlim{1}), ' ', '_'),']']);
-% check if images directory exists, if not create
-if ~isfolder(cfg.imagesavedir)
-    ft_notice('creating directory %s', cfg.imagesavedir);
-    mkdir(cfg.imagesavedir);
-end
-
-
-for itemplate = 1:size(SpikeTrials{ipart}{ilabel}.label,2)
     
-    %% One figure per template
-    trialkept_index = [];
-%     fig1 = figure(1);
-%     hold;
-%     fig2 = figure(2);
-%     hold;
-%     fig3 = figure(3);
-%     hold;
-%     fig4 = figure(4);
-%     hold;
-%     fig5 = figure(5);
-%     hold;
+
     for itrial = 1:size(SpikeTrials{ipart}{ilabel}.trialinfo,1)
         spike_index = [];
         spike_index = (SpikeTrials{ipart}{ilabel}.trial{itemplate} == itrial); %first is NaN
@@ -351,7 +319,18 @@ set(fig,'PaperPosition', [0 0 1 1]);
 print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name{ilabel},'_','All_Templates','_burstindexOverTrials_Med.pdf']));
 print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name{ilabel},'_','All_Templates','_burstindexOverTrials_Med.png']),'-r600');
 
-close all
+if saveplot
+    cfg.imagesavedir = fullfile(cfg.imagesavedir, ['freqlim_[',strrep(num2str(freqlim{1}), ' ', '_'),']']);
+    % check if images directory exists, if not create
+    if ~isfolder(cfg.imagesavedir)
+        ft_notice('creating directory %s', cfg.imagesavedir);
+        mkdir(cfg.imagesavedir);
+    end
+    
+    
+    close all
+end
+
 
 
 

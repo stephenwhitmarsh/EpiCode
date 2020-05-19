@@ -88,9 +88,9 @@ h = mean(h_temp)*2;
 %     h = mean(h_temp)*2;
 % end
 
-%plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2); %MODIF TEMPORAIRE PAUL
-%plot([0 0],[0 n*h+h], 'color',[0.6 0.6 0.6], 'Linewidth', 2);
-for itrial = 50:75%1 : nb_trials 
+plot([0 0],[0 nb_trials*h+h], 'r', 'Linewidth', 2); %MODIF TEMPORAIRE PAUL
+
+for itrial = 1 : nb_trials 
     plot(data.time{itrial},data.trial{itrial}(1,:)+ (nb_trials+1)*h - itrial*h,'k'); %first on top
 end
 

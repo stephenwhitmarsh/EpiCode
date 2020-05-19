@@ -1,10 +1,9 @@
-function [SpikeRaw] = readSpykingCircus_SpikeRaw(cfg,force,varargin)
+function [SpikeRaw] = readSpikeRaw_SpykingCircus(cfg,force,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% [SpikeRaw] = readSpykingCircus(cfg,MuseStruct{ipart},force)
+% [SpikeRaw] = readSpikeRaw_SpykingCircus(cfg,force,varargin)
 % Read results from Spyking-Circus analysis; spike-times and templates.
-%
 %
 % Necessary input:
 %
@@ -13,10 +12,7 @@ function [SpikeRaw] = readSpykingCircus_SpikeRaw(cfg,force,varargin)
 % cfg.circus.outputdir  = directory delow datasavedir for spyking-circus
 % cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
-%
-% MuseStruct{ipart}     = info (e.g. events, files) of original data,
-%                         used to segment the spikes into trials
-%
+% 
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
 %
@@ -26,8 +22,6 @@ function [SpikeRaw] = readSpykingCircus_SpikeRaw(cfg,force,varargin)
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 %
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
-% 12.03.2020 Paul Baudin : remove trial definition, specific for different 
-% projects
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -38,7 +32,7 @@ else
 end
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata_SpikeRaw', cfg.circus.postfix, '.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'SpikeRaw_SC', cfg.circus.postfix, '.mat']);
 if exist(fname,'file') && force == false
     load(fname,'SpikeRaw');
 else
@@ -62,7 +56,7 @@ else
         end
         fname_templates = fullfile(temp.folder,temp.name);
         
-        % load spiking data
+                % load spiking data
         if exist(fname_spikes,'file')
             fprintf('Loading spike data from: %s\n',fname_spikes);
             datinfo     = h5info(fname_spikes);
@@ -85,11 +79,9 @@ else
             
             clear clusternr
             for i = 1 : size(datinfo.Groups(spiketimes_indx).Datasets,1) % number of templates
-                %Paul modification : correct label index
-                labeltemp = datinfo.Groups(spiketimes_indx).Datasets(i).Name;
-                temp = strsplit(labeltemp,'_');
+                SpikeRaw{ipart}.label{i} = datinfo.Groups(spiketimes_indx).Datasets(i).Name;
+                temp = strsplit(SpikeRaw{ipart}.label{i},'_');
                 clusternr(i) = str2double(temp{2});
-                SpikeRaw{ipart}.label{clusternr(i)+1} = labeltemp;
             end
             
             for i = 1:numel(clusternr)
@@ -116,13 +108,12 @@ else
             templates       = sparse(temp_x, temp_y, temp_z, templates_size(1)*templates_size(2), templates_size(3));
             templates_size  = [templates_size(1) templates_size(2) templates_size(3)/2];
             
-            for i = 1:numel(clusternr) %template mal positionné aussi
-                template = full(reshape(templates(:, clusternr(i)+1), templates_size(2), templates_size(1)))';
-                [~,imaxchan] = max(mean(abs(template),2));
-                SpikeRaw{ipart}.template(clusternr(i)+1,:,:) = template;
-                SpikeRaw{ipart}.template_maxchan(clusternr(i)+1) = imaxchan;
+            for itemp = 1:numel(clusternr)
+                template = full(reshape(templates(:, itemp), templates_size(2), templates_size(1)))';
+                [~,i] = max(mean(abs(template),2));
+                SpikeRaw{ipart}.template(itemp,:,:) = template;
+                SpikeRaw{ipart}.template_maxchan(itemp) = i;
             end
-            
             
         end % if exists spike file.
         

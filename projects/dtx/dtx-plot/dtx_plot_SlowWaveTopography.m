@@ -127,8 +127,8 @@ if saveplot
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     set(fig,'Renderer','Painters');
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'topography']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'topography']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'-topography']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'-topography']),'-r600');
     close all
 end
 

@@ -3,7 +3,7 @@
 
 function [config] = dtx_setparams_probe_lfp(config)
 
-disp('setting parameters');
+disp('setting parameters for probe LFP');
 muscale = 50; % multiunit scale
 
 if ismac
@@ -32,7 +32,9 @@ configcommon.os                        = os;
 configcommon.datasavedir               = datasavedir;
 
 %For lfp analysis
-configcommon.name                      = {'SlowWave_EEG','SLowWave_Intra'};%'Interictal'};%,'Seizure','InterIctal'};
+% SlowWave_EEG_begin, SLowWave_Intra
+% SlowWave_EEG_peak, SLowWave_Intra
+configcommon.name                      = {'SlowWave_EEG_begin','SLowWave_Intra'};%'Interictal'};%,'Seizure','InterIctal'};
 configcommon.muse.startend             = {'SlowWave','SlowWave';'SlowWave','SlowWave'};%; 'SlowWave','Crise_End'; 'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
 configcommon.muse.eventindex           = {[0 0]; [0 0]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
 %Not set in readLFP, but in readSpykingCircus
@@ -50,22 +52,30 @@ configcommon.continous                 = true;
 configcommon.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-configcommon.align.name                = {'SlowWave'};
+configcommon.align.name                = {'SlowWave_EEG_peak'};
 configcommon.align.flip                = {'no'};
 configcommon.align.abs                 = {'no'};
 configcommon.align.method              = {'nearestmax'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 configcommon.align.filter              = {'lp'};
-configcommon.align.freq                = {2};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
+configcommon.align.freq                = {5};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
 configcommon.align.hilbert             = {'no'};
 configcommon.align.thresh.value        = [1, 1];
 configcommon.align.thresh.method       = {'trial','trial','trial'};%'medianbl','both';
 configcommon.align.toiplot             = {[-1,  1], [-1, 1]};                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 configcommon.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-configcommon.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};
+configcommon.align.toibaseline         = {[-10.5, -0.5], [-10.5, -0.5]};
+configcommon.align.maxtimeshift        = 0.3;
+configcommon.align.flip                = 'no';
+configcommon.align.demean              = 'yes';
+%for detection of begin of event
+configcommon.align.begin.name          = 'SlowWave_EEG_begin';
+configcommon.align.begin.maxtimeshift  = 0.3;
+configcommon.align.begin.thresh        = 0.2; % percent of peak
+
 % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
 configcommon.LFP.flip                  = 'false';
-configcommon.LFP.name                  = {'SlowWave_EEG', 'SLowWave_Intra'};
+configcommon.LFP.name                  = configcommon.name;
 configcommon.LFP.hpfilter              = 'no';
 configcommon.LFP.hpfreq                = 1;
 configcommon.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
@@ -75,70 +85,17 @@ configcommon.LFP.baselinewindow{2}     = [-2, -1];
 configcommon.LFP.baselinewindow{3}     = [0, 1];
 configcommon.LFP.slidestep             = 0.01;
 
-configcommon.LFP.TFR.doTFR                    = true;
-configcommon.LFP.TFR.toi                      = [-15:0.01:35];
-configcommon.LFP.TFR.baseline                 = 'no';%[-10 -5];
-configcommon.LFP.TFR.baselinetype             = 'absolute';
+configcommon.LFP.TFR.doTFR                      = true;
+configcommon.LFP.TFR.toi                        = [-15:0.01:35];
+configcommon.LFP.TFR.baseline                   = 'no';%[-10 -5];
+configcommon.LFP.TFR.baselinetype               = 'absolute';
 
-
-
-configcommon.circus.reref              = 'no';
-configcommon.circus.refchan            = '';
-configcommon.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
-configcommon.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configcommon.circus.postfix             = '-nomerge-noSmartSearch';%[];
-
-configcommon.stats.dostat              = {true, false, false};
-configcommon.stats.bltoi{1}            = [-2, -1];
-configcommon.stats.bltoi{2}            = [1, 20];
-configcommon.stats.bltoi{3}            = [1, 20];
-%configcommon.stats.bltoi{3}            = [0, 1];
-configcommon.stats.actoi{1}            = [-1, 0];
-configcommon.stats.actoi{2}            = [2, 3];
-configcommon.stats.actoi{3}            = [2, 3];
-%configcommon.stats.actoi{3}            = [1, 0];
-configcommon.stats.alpha               = 0.025;
-
-configcommon.spike.slidestep           = [0.01];
-configcommon.spike.toispikerate{1}     = [-0.2 0.2];           % for plotting spikerate
-configcommon.spike.toispikerate{2}     = [-1 1];           % for plotting spikerate
-configcommon.spike.toispikerate{3}     = [-1 1];           % for plotting spikerate
-configcommon.spike.resamplefs{1}       = 1000;
-configcommon.spike.resamplefs{2}       = 2;
-configcommon.spike.resamplefs{3}       = 2;
-configcommon.spike.bltoi{1}            = [-2, -1];
-configcommon.spike.bltoi{2}            = [1, 2];
-configcommon.spike.bltoi{3}            = [1, 2];
-configcommon.spike.RPV                 = 5; %refractory period violation : definition in ms
-%configcommon.spike.bltoi{3}            = [0, 1];
-configcommon.spike.ISIbins             = [0:3:150]; %in ms
-configcommon.spike.ISILim              = [0 150]; %in ms
-configcommon.spike.ISIBinSize          = 3; %in ms
-
-configcommon.spikestage{1}.markerstart          = 'Baseline_Start';
-configcommon.spikestage{1}.markerstartoffset    = 0; %seconds
-configcommon.spikestage{1}.markerend            = 'Injection';
-configcommon.spikestage{1}.indexEnd             = 0;
-configcommon.spikestage{1}.periodmin            = 600; %seconds
-configcommon.spikestage{1}.triallength          = 60; %seconds
-configcommon.spikestage{1}.subdivision          = 'all'; %minimum 2
-configcommon.spikestage{1}.includeend           = false;
-configcommon.spikestage{1}.markerendoffset      = 0; %seconds
-configcommon.spikestage{1}.removeartefact       = 'trial';
-configcommon.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
-
-configcommon.spikestage{2}.markerstart          = 'Crise_End';
-configcommon.spikestage{2}.markerstartoffset    = 1; %seconds
-configcommon.spikestage{2}.markerend            = 'SlowWave';
-configcommon.spikestage{2}.indexEnd             = 1; %if 1 : take the i start marker and the i+1 end marker
-configcommon.spikestage{2}.periodmin            = 30; %seconds
-configcommon.spikestage{2}.triallength          = 5; %seconds
-configcommon.spikestage{2}.subdivision          = 4; %minimum 2
-configcommon.spikestage{2}.includeend           = true; %add the end of the period to the previous subdivisions
-configcommon.spikestage{2}.markerendoffset      = -1; %seconds
-configcommon.spikestage{2}.removeartefact       = 'period'; %period, trial, none
-configcommon.spikestage{2}.stagenumber          = [1, 2, 3, 4, 5]; %array of integers. if single value : gives the same number to all the trials
-
+configcommon.stats.toibaseline                  = {[-10.5, -0.5], [-10.5, -0.5]};%{[-4 -1],[-4 -1]};
+configcommon.stats.alpha                        = 0.025;
+configcommon.stats.toiploteeg                   = [-5 5];
+configcommon.stats.toilatency                   = [-0.2 0.2];
+configcommon.topoplot.timestep                  = 0.1;
+configcommon.topoplot.toi                       = [-0.5 0.5];
 
 
 %% Rodent 1

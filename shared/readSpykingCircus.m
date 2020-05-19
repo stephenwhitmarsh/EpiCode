@@ -37,94 +37,35 @@ else
 end
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata_MuseTrials.mat']);
 if exist(fname,'file') && force == false
-    load(fname,'SpikeRaw','SpikeTrials');
+    load(fname,'SpikeTrials');
+    return;
 else
     
     for ipart = parts_to_read
         
         % find spiking-circus output path, which is based on the name of the
         % first datafile
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
-        if isempty(temp)
-            fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
-            return
-        else
-            fname_spikes = fullfile(temp.folder,temp.name);
-        end
+%         temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
+%         if isempty(temp)
+%             fprintf('Could not find Spyking-Circus results: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
+%             return
+%         else
+%             fname_spikes = fullfile(temp.folder,temp.name);
+%         end
         
-        temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
-        if isempty(temp)
-            fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
-            return
-        end
-        fname_templates = fullfile(temp.folder,temp.name);
+%         temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
+%         if isempty(temp)
+%             fprintf('Could not find Spyking-Circus templates: %s\n',fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.templates',cfg.circus.postfix,'.hdf5']));
+%             return
+%         end
+%         fname_templates = fullfile(temp.folder,temp.name);
         
         temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
         hdr_fname   = fullfile(temp(1).folder,temp(1).name);
         hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-        
-        %SpikeRaw done in an other function
-%         % load spiking data
-%         if exist(fname_spikes,'file')
-%             fprintf('Loading spike data from: %s\n',fname_spikes);
-%             datinfo     = h5info(fname_spikes);
-%             temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
-%             hdr_fname   = fullfile(temp(1).folder,temp(1).name);
-%             hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-%             %             tempdataset{1} = hdr_fname;
-%             %             temp        = ft_read_neuralynx_interp(tempdataset);
-%                         timestamps  = ft_read_data(hdr_fname,'timestamp','true');  % take the first concatinated channel to extract the timestamps
-% %             timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
-%             
-%             clear names
-%             % read spiketimes of clusters
-%             for i = 1 : size(datinfo.Groups,1)
-%                 names(i) = string(datinfo.Groups(i).Name);
-%                 if strfind(names(i),'spiketimes')
-%                     spiketimes_indx = i;
-%                 end
-%             end
-%             
-%             clear clusternr
-%             for i = 1 : size(datinfo.Groups(spiketimes_indx).Datasets,1) % number of templates
-%                 SpikeRaw{ipart}.label{i} = datinfo.Groups(spiketimes_indx).Datasets(i).Name;
-%                 temp = strsplit(SpikeRaw{ipart}.label{i},'_');
-%                 clusternr(i) = str2double(temp{2});
-%             end
-%             
-%             for i = 1:numel(clusternr)
-%                 % read spike timings (in seconds)
-%                 datasetname = char(strcat('/spiketimes/',SpikeRaw{ipart}.label{i}));
-%                 SpikeRaw{ipart}.samples{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
-%                 
-%                 % read amplitudes
-%                 datasetname = char(strcat('/amplitudes/',SpikeRaw{ipart}.label{i}));
-%                 SpikeRaw{ipart}.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
-%                 
-%                 % map samplenrs onto timestamps
-%                 SpikeRaw{ipart}.timestamp{clusternr(i)+1} = timestamps(SpikeRaw{ipart}.samples{clusternr(i)+1});
-%                 % SpikeRaw.timestamp{clusternr(i)+1} = int64(SpikeRaw.samples{clusternr(i)+1}) * int64(hdr.TimeStampPerSample) + int64(hdr.FirstTimeStamp);
-%             end
-%             
-%             % load templates
-%             templates_size  = double(h5read(fname_templates, '/temp_shape'));
-%             N_e             = templates_size(2);
-%             N_t             = templates_size(1);
-%             temp_x          = double(h5read(fname_templates, '/temp_x') + 1);
-%             temp_y          = double(h5read(fname_templates, '/temp_y') + 1);
-%             temp_z          = double(h5read(fname_templates, '/temp_data'));
-%             templates       = sparse(temp_x, temp_y, temp_z, templates_size(1)*templates_size(2), templates_size(3));
-%             templates_size  = [templates_size(1) templates_size(2) templates_size(3)/2];
-%             
-%             for itemp = 1:numel(clusternr)
-%                 template = full(reshape(templates(:, itemp), templates_size(2), templates_size(1)))';
-%                 [~,i] = max(mean(abs(template),2));
-%                 SpikeRaw{ipart}.template(itemp,:,:) = template;
-%                 SpikeRaw{ipart}.template_maxchan(itemp) = i;
-%             end
-            
+          
             % create trials
             clear Trials
             for ilabel = 1 : size(cfg.name,2)
@@ -142,11 +83,12 @@ else
                 % create Fieldtrip trl based on concatinated files by adding nr of
                 % samples of each file
                 Startsample = [];
-                Endsample = [];
-                Offset = [];
-                Trialnr = [];
-                Filenr = [];
-                FileOffset = [];
+                Endsample   = [];
+                Offset      = [];
+                Trialnr     = [];
+                Trialdir    = [];
+                Filenr      = [];
+                FileOffset  = [];
                 
                 dirOnset = 0;
                 trialcount = 1;
@@ -154,19 +96,29 @@ else
                     if isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{ilabel})
                         if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}),'synctime')
                             if ~isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2))
+                                
+                                trialcount_dir = 1;
+                                
                                 for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2)
                                     % FIXME
                                     % has to be fixezd for unequalnumber of
                                     % start-end, i.e. for Paul's project's
                                     % Interictal period
-                                    if ievent + cfg.muse.eventindex{ilabel}(2) <= length(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime)
-                                        Startsample  = [Startsample; MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent + cfg.muse.eventindex{ilabel}(1)) * hdr.Fs + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
-                                        Endsample    = [Endsample;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(ievent+ cfg.muse.eventindex{ilabel}(2)) * hdr.Fs + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
+                                    %end of trial : take the following marker, no need to have the same index has begining marker
+                                    ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent) * hdr.Fs);
+                                    idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime * hdr.Fs) >= ss,1,'first');
+                                    es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(idx) * hdr.Fs);
+                                    
+                                    if ~isempty(es)
+                                        Startsample  = [Startsample; ss + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
+                                        Endsample    = [Endsample;   es + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
                                         Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
+                                        Trialdir     = [Trialdir; trialcount_dir];
                                         Trialnr      = [Trialnr; trialcount];
                                         Filenr       = [Filenr; idir];
                                         FileOffset   = [FileOffset; dirOnset];
                                         trialcount   = trialcount + 1;
+                                        trialcount_dir = trialcount_dir+1;
                                     end
                                 end
                                 temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
@@ -184,7 +136,7 @@ else
                 cfgtemp                         = [];
                 cfgtemp.trl                     = [Startsample, Endsample, Offset];
                 cfgtemp.trl(:,4)                = ones(size(cfgtemp.trl,1),1) * idir;
-                cfgtemp.trl(:,5)                = 1:size(cfgtemp.trl,1);                % trialnr. to try to find trials that are missing afterwards
+                cfgtemp.trl(:,5)                = Trialdir;                % trialnr. to try to find trials that are missing afterwards
                 cfgtemp.trl(:,6)                = Startsample;                          % startsample
                 cfgtemp.trl(:,7)                = Endsample;                            % endsample
                 cfgtemp.trl(:,8)                = Offset;                               % offset
@@ -200,6 +152,7 @@ else
                 cfgtemp.hdr                             = hdr;
                 SpikeTrials{ipart}{ilabel}              = ft_spike_maketrials(cfgtemp,SpikeRaw{ipart});
                 SpikeTrials{ipart}{ilabel}.clocktimes   = clocktimes;
+                SpikeTrials{ipart}{ilabel}.hdr          = hdr;
                 
                 % commented out on 9-8-2019 after looking with Zoe
                 %             SpikeRaw.time{ilabel}           = SpikeRaw.samples{ilabel} / hdr.Fs;
@@ -212,10 +165,8 @@ else
         
     end
     
-    save(fname,'SpikeRaw','SpikeTrials');
-    
-    %     save(fname,'SpikeRaw');
-    
+    save(fname,'SpikeTrials');
+        
 end % save / force
 
 

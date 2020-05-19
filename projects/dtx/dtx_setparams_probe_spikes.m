@@ -3,52 +3,42 @@
 
 function [config] = dtx_setparams_probe_spikes(config)
 
-disp('setting parameters');
+disp('setting parameters for probe spike analysis');
 muscale = 50; % multiunit scale
 
 if ismac
     error('Platform not supported')
 elseif isunix
-    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/Analyses_Paul/';
+    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/';
     rootpath_data       = '/network/lustre/iss01/epimicro/rodents/raw/DTX-raw/';
     os                  = 'unix';
 elseif ispc
-    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\DTX-PROBE\Analyses_Paul';
+    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\DTX-PROBE\';
     rootpath_data       = '\\lexport\iss01.epimicro\rodents\raw\DTX-raw\';
     os                  = 'windows';
 else
     error('Platform not supported')
 end
 
-datasavedir = fullfile(rootpath_analysis, 'data'); %removed of config{i} so we can more easily modify it
-imagesavedir = rootpath_analysis;
+datasavedir = fullfile(rootpath_analysis, 'data', 'spike'); %removed of config{i} so we can more easily modify it
+imagesavedir = fullfile(rootpath_analysis, 'image_spike');
 
 %% Config common
-%change MuseStartEnd, and toi
-%read LFP : ajouter le event index. faire l'anaylse sur les 3 périodes.
-%remplacer les noms de marker dans les fonctions plots choisis par
-%LFP.name, par muse startend
+
 configcommon.os                        = os;
 configcommon.datasavedir               = datasavedir;
-
-%for spike analysis
-configcommon.name                      = {'SlowWave','Seizure','InterIctal'};
+configcommon.name                      = {'SlowWave','Seizure','Interictal'};
 configcommon.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
-configcommon.muse.eventindex           = {[0 0]; [0 0] ;[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
-% configcommon.name                      = {'InterIctal'};
-% configcommon.muse.startend             = {'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
-% configcommon.muse.eventindex           = {[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+% configcommon.muse.eventindex           = {[0 0]; [0 0] ;[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+%trial between 2 Neuralynx files is ignored if eventindex == 1
+
 % list of onset timing with respect to start-marker (s)
 configcommon.epoch.toi{1}              = [-2, 2];
-% %configcommon.epoch.toi{1}              = [2, -2];
 configcommon.epoch.toi{2}              = [-2, 2];
 configcommon.epoch.toi{3}              = [2, -2];
-configcommon.epoch.pad{1}              = 10;
+configcommon.epoch.pad{1}              = 10; %for LFP
 configcommon.epoch.pad{2}              = 10;
 configcommon.epoch.pad{3}              = 10;
-
-
-%trial between 2 files is ignored if eventindex == 1
 
 configcommon.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
@@ -56,71 +46,67 @@ configcommon.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E
 configcommon.align.name                = {'SlowWave'};
 configcommon.align.flip                = {'no'};
 configcommon.align.abs                 = {'no'};
-configcommon.align.method              = {'nearestmax'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+configcommon.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 configcommon.align.filter              = {'lp'};
-configcommon.align.freq                = {2};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
+configcommon.align.freq                = {10};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
 configcommon.align.hilbert             = {'no'};
 configcommon.align.thresh.value        = [1, 1];
-configcommon.align.thresh.method       = {'trial','trial','trial'};%'medianbl','both';
+configcommon.align.thresh.method       = {'trial'};%,'trial','trial'};%'medianbl','both';
 configcommon.align.toiplot             = {[-1,  1], [-1, 1]};                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 configcommon.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 configcommon.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};
-% baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+configcommon.align.maxtimeshift        = {0.3};
+configcommon.align.demean              = {'yes'};
+%for detection of begin of event
+configcommon.align.begin.doalign       = {'yes'};
+configcommon.align.begin.thresh        = {0.3}; % percent of peak
 
 configcommon.LFP.flip                  = 'false';
-configcommon.LFP.name                  = {'SlowWave_EEG', 'SLowWave_Intra'};
+configcommon.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
 configcommon.LFP.hpfilter              = 'no';
 configcommon.LFP.hpfreq                = 1;
 configcommon.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
-configcommon.LFP.baseline              = 'yes';
+configcommon.LFP.baseline              = 'no';
 configcommon.LFP.baselinewindow{1}     = [-2, -1];
 configcommon.LFP.baselinewindow{2}     = [-2, -1];
 configcommon.LFP.baselinewindow{3}     = [0, 1];
 configcommon.LFP.slidestep             = 0.01;
 
-configcommon.LFP.TFR.doTFR                    = true;
-configcommon.LFP.TFR.toi                      = [-15:0.01:35];
-configcommon.LFP.TFR.baseline                 = 'no';%[-10 -5];
-configcommon.LFP.TFR.baselinetype             = 'absolute';
-
-
-
 configcommon.circus.reref              = 'no';
 configcommon.circus.refchan            = '';
 configcommon.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configcommon.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configcommon.circus.postfix             = [];
+configcommon.circus.postfix             = '-final';
 
-configcommon.stats.dostat              = {true, true, false};
+configcommon.stats.numrandomization     = 100; %Essayer à 1000
+configcommon.stats.dostat              = {true, true, false}; %for spikeratestatsEvents
 configcommon.stats.bltoi{1}            = [-2, -1];
-%configcommon.stats.bltoi{1}            = [2, 3];
 configcommon.stats.bltoi{2}            = [-2, -1];
 configcommon.stats.bltoi{3}            = [2, 6];
-%configcommon.stats.bltoi{3}            = [0, 1];
-configcommon.stats.actoi{1}            = [-1, 0];
-configcommon.stats.actoi{2}            = [-1, 0];
-configcommon.stats.actoi{3}            = [6, 10];
-%configcommon.stats.actoi{3}            = [1, 0];
 configcommon.stats.alpha               = 0.025;
+%not used for now (but maybe to better select ISI or waveforms of interest) :
+configcommon.stats.actoi{1}            = [-1, 1];
+configcommon.stats.actoi{2}            = [-1, Inf];
+configcommon.stats.actoi{3}            = [6, Inf];
 
-configcommon.spike.slidestep           = [0.01];
-configcommon.spike.toispikerate{1}     = [-0.2 0.2];           % for plotting spikerate
-%configcommon.spike.toispikerate{1}     = [-1 1];           % for plotting spikerate
-configcommon.spike.toispikerate{2}     = [-1 1];           % for plotting spikerate
-configcommon.spike.toispikerate{3}     = [-1 1];           % for plotting spikerate
-configcommon.spike.resamplefs{1}       = 1000;
-configcommon.spike.resamplefs{2}       = 1000;
-configcommon.spike.resamplefs{3}       = 1000;
-configcommon.spike.bltoi{1}            = [-2, -1];
-%configcommon.spike.bltoi{1}            = [2, 3];
-configcommon.spike.bltoi{2}            = [-2, -1];
-configcommon.spike.bltoi{3}            = [2, 6];
-configcommon.spike.RPV                 = 3; %refractory period violation : definition in ms
-%configcommon.spike.bltoi{3}            = [0, 1];
-configcommon.spike.ISIbins             = [0:3:150]; %in ms
-configcommon.spike.ISILim              = [0 150]; %in ms
-configcommon.spike.ISIBinSize          = 3; %in ms
+% to smooth spikerate. Not used for now. Maybe for correlation LFP-spike
+% configcommon.spike.toispikerate{1}     = [-0.01 0.01];            % for plotting spikerate
+% configcommon.spike.toispikerate{1}     = [-1 1];                  % for plotting spikerate
+% configcommon.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
+% configcommon.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
+configcommon.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
+configcommon.spike.interictalname      = {'Interictal'};
+configcommon.spike.resamplefs{1}       = 50; %1/size of bar graph bins
+configcommon.spike.resamplefs{2}       = 50;
+configcommon.spike.resamplefs{3}       = 0.1;
+configcommon.spike.RPV                 = 0.003; %refractory period violation, in seconds
+configcommon.spike.ISIbins             = [0:0.003:0.150]; %in s
 
+configcommon.spikewaveform.toi         = [-0.0015 0.0015]; %in s
+configcommon.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
+configcommon.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load. Can be 'all'. 
+
+%not used for now, for readSpykingCircus_spikestage : 
 configcommon.spikestage{1}.markerstart          = 'Baseline_Start';
 configcommon.spikestage{1}.markerstartoffset    = 0; %seconds
 configcommon.spikestage{1}.markerend            = 'Injection';
@@ -166,7 +152,7 @@ config{1}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11L
 
 config{1}.injectiontime             = datetime('19-Mar-2019 13:55:00');
 
-config{1}.align.channel             = {'ECoGM1G'};%{'E12LFP'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{1}.align.channel             = {'E12LFP'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{1}.LFP.channel               = config{1}.labels.macro;
 config{1}.LFP.electrodetoplot       = {'ECoGM1G', 'E12LFP'};
 config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
@@ -192,8 +178,8 @@ config{2}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12L
 
 config{2}.injectiontime             = datetime('01-Mar-2019 12:33:00');
 
-config{2}.align.channel                = {'ECoGS1'};%{'E13LFP'}; %ATTENTION erreur nom eeg pendant acquisition
-config{2}.LFP.channel                  = config{2}.labels.macro;%ECoG S1 et ECoGM1 renommés respectivement ECoGM1G et ECoGM1D, après l'étape de readLFP
+config{2}.align.channel             = {'E13LFP'};%{'ECoGS1'};% %ATTENTION erreur nom eeg pendant acquisition
+config{2}.LFP.channel               = config{2}.labels.macro;%ECoG S1 et ECoGM1 renommés respectivement ECoGM1G et ECoGM1D, après l'étape de readLFP
 config{2}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'}; %ATTENTION ECoGS1 est renommé ECoGM1G pendant le script LFP
 
 config{2}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
@@ -216,8 +202,8 @@ config{3}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11L
 
 config{3}.injectiontime             = datetime('08-Mar-2019 13:21:00');
 
-config{3}.align.channel                = {'ECoGM1G'};%{'E13LFP'};
-config{3}.LFP.channel                  = config{3}.labels.macro;
+config{3}.align.channel             = {'E13LFP'};%{'ECoGM1G'};%
+config{3}.LFP.channel               = config{3}.labels.macro;
 config{3}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
 config{3}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -257,8 +243,8 @@ config{4}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10L
 
 config{4}.injectiontime             = datetime('22-Mar-2019 13:40:07');
 
-config{4}.align.channel                = {'ECoGM1G'};%{'E13LFP'};
-config{4}.LFP.channel                  = config{4}.labels.macro;
+config{4}.align.channel             = {'E13LFP'};
+config{4}.LFP.channel               = config{4}.labels.macro;
 config{4}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
 config{4}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
@@ -279,8 +265,8 @@ config{5}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12L
 
 config{5}.injectiontime             = datetime('21-Mar-2019 15:08:00');
 
-config{5}.align.channel                = {'ECoGM1G'};%{'E13LFP'};
-config{5}.LFP.channel                  = config{5}.labels.macro;
+config{5}.align.channel             = {'E13LFP'};
+config{5}.LFP.channel               = config{5}.labels.macro;
 config{5}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
 config{5}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 end

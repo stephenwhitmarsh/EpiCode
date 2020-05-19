@@ -23,18 +23,28 @@ function [MuseStruct] = alignMuseMarkers(cfg, varargin)
 % cfg.align.channel             = e.g.: {'_HaT2_1','_HaT2_1'};                                   % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % cfg.align.abs                 = e.g.: {'no','no'};                                             % whether to determine peaks on absolute (both max and min)         
 % cfg.align.method              = e.g.: {'crawlback','min'};                                     % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+% cfg.align.maxtimeshift        = e.g.: {0.05,0.05};                                             % reject the trial as artefact if timeshift is bigger than this value (in seconds)
 % cfg.align.filter              = e.g.: {'bp','bp'};                                             % what filter to use (bp,hp,lp)
 % cfg.align.freq                = e.g.: {[1, 10],[1, 40]};                                       % lowpass filter freq to smooth peak detection (Hz)
+% cfg.align.demean              = e.g.: {'yes', 'yes'}                                           % whether to apply baseline correction (usefull for detecting begining of event)
 % cfg.align.hilbert             = e.g.: {'no','no'};                                             % whether to first create a hilbert transform (to determine peak of frequency response rather than timecourse
-% cfg.align.thresh              = e.g.: [1, 0];                                                  % only peaks that are more than x percent above threshold, 0 to disable
+% cfg.align.thresh.method       = e.g.: {'trial','trial'}                                        % which peak baseline value is selected for thresholding : 'trial' 'medianbl','both'
+% cfg.align.thresh.value        = e.g.: [1, 0];                                                  % only peaks that are more than x percent above threshold, 0 to disable
 % cfg.align.toiplot{1}          = e.g.: [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiactive{1}        = e.g.: [-0.05,  0.150];                                         % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % cfg.align.toibaseline{1}      = e.g.: [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiplot{2}          = e.g.: [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % cfg.align.toiactive{2}        = e.g.: [-0.05,  0.05];                                          % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % cfg.align.toibaseline{2}      = e.g.: [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-%
+% 
+% cfg.align.begin.doalign       = e.g.: {'no','yes'};                                            % whether to align the data at the begining of event instead of the peak. Method uses the peak detected with the previous parameters
+% cfg.align.begin.thresh        = e.g.: {0.2; 0.2};                                              % percent of peak amplitude which will define begining of event
+% 
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+% 
+% Modifications by Paul Baudin : 
+% - add compatibility with Brainvision and Micromed data 
+% - add alignment to the begining of the event
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -74,24 +84,31 @@ else
         fprintf('**************\n\n');
     end
     
+    
+    
     %get format to adapt script for each format
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
 
-    % select those markers to align
-%     markerlist = [];
-%     for i = 1 : size(cfg.align.name,2)
-%         if ismember(cfg.align.name{i},cfg.name)
-%             markerlist = [markerlist, i];
-%         end
-%     end
+    % select those markers to align %FIXME REMETTRE LA VERSION PRECEDENTE
+    markerlist = [];
+    for i = 1 : size(cfg.name,2)
+        if ismember(cfg.name{i}, cfg.align.name)
+            markerlist = [markerlist, i];
+        end
+    end
+    
+    if isempty(markerlist)
+        fprintf('There is no marker to align with alignMuseMarkers.m\n');
+        return
+    end
     
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist,2)
         
 
-        for imarker = 1 : size(cfg.align.name,2)%markerlist
+        for imarker = markerlist
 
             % find data directories that have the required event
             markerindx = [];
@@ -225,9 +242,23 @@ else
                 dat_filt_trl        = ft_redefinetrial(cfgtemp,dat_filt);
                 clear dat_filt
                 
+                if isfield(cfg.align, 'demean')
+                    if strcmp(cfg.align.demean, 'yes')
+                        cfgtem = [];
+                        cfgtemp.demean = 'yes';
+                        cfgtemp.baselinewindow = cfg.align.toibaseline{imarker};
+                        dat_sel_trl = ft_preprocessing(cfgtemp, dat_sel_trl);
+                        dat_filt_trl = ft_preprocessing(cfgtemp, dat_filt_trl);
+                    end
+                end
+                
+
+                
                 if strcmp(cfg.align.method{imarker}, 'crawlback')
                     dat_filt40_trl  = ft_redefinetrial(cfgtemp,dat_filt40);
                 end     
+                
+                
                 
                 % peak detection based on baseline and active period
                 for itrial = 1 : size(dat_filt_trl.trial,2)
@@ -286,6 +317,19 @@ else
                 dat_filt_aligned = dat_filt_trl; %for plot
                 n_haspeak = 0;
                 
+                if isfield(cfg.align, 'begin')
+                    if strcmp(cfg.align.begin.doalign{imarker},'yes')
+                    %prepare dummy variables for begin alignment
+                        for itrial = 1 : size(dat_filt_trl.trial,2)
+                            mean_bl(itrial)         = nanmean(dat_filt_trl.trial{itrial}(t1_bl_indx(itrial):t2_bl_indx(itrial)));
+                        end
+                        med_all_bl = nanmedian(mean_bl);
+                        
+                        zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
+                    end
+                end
+
+                
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         n_haspeak = n_haspeak+1;
@@ -322,15 +366,34 @@ else
                             ip(itrial)              = 1;
                             locs_ac_sel{itrial} = indx2 - t1_ac_indx(itrial);      
                         end
+                        timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        
+                        if strcmp(cfg.align.begin.doalign{imarker},'yes')
+                            %find begin according to peak found before
+                            peak_loc(itrial)        = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
+                            thresh(itrial)          = med_all_bl + (peaks_ac_sel{itrial}(ip(itrial)) - med_all_bl) * cfg.align.begin.thresh{imarker};
+                            index_tresh{itrial}     = zci(dat_filt_trl.trial{itrial}(t1_ac_indx(itrial):peak_loc(itrial)) - thresh(itrial)) + t1_ac_indx(itrial) - 1;
+                            
+                            if ~isempty(index_tresh{itrial})
+                                index_tresh{itrial}             = index_tresh{itrial}(end-1); %take last good index (-1 because last = end of trial)
+                                timeshift                       = dat_filt_trl.time{itrial}(index_tresh{itrial});
+                                
+                                %remove bad detection (assuming that marker is put after wave begining)
+                                if timeshift > 0
+                                    hasartefact(itrial) = true;
+                                end
+                            else
+                                haspeak(itrial) = false;
+                            end
+                        end
                         
                         % align time axis to relevant (peak) index 
-                        timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
                         dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
                         
-%                         if abs(timeshift) > 0.050 
-%                             hasartefact(itrial) = true;
-%                         end 
+                        if abs(timeshift) > cfg.align.maxtimeshift{imarker}
+                            hasartefact(itrial) = true;
+                        end 
 
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                         MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(itrial) + timeshift;
@@ -339,9 +402,10 @@ else
                 end
                 
                 %remove supplemental trials in case some are ignored
-                %because of ~haspeak
-                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(1:n_haspeak);
-                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(1:n_haspeak);
+                %because of ~haspeak or hasartefact
+                last_envent =  size(dat_filt_trl.trial,2) - sum(~haspeak) - sum(hasartefact);
+                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(1:last_envent);
+                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock    = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(1:last_envent);
                 
                 %% Plot alignement
                 
@@ -357,14 +421,23 @@ else
                 end
                 h               = mean(h_temp)/2;%1200; 
            
+                %Find position of the line to plot
+                for itrial = 1 : size(dat_filt_trl.trial,2)
+                    if strcmp(cfg.align.begin.doalign, 'yes')
+                        line_idx(itrial) = index_tresh{itrial};
+                    else
+                        line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
+                    end
+                end
+                
 
                 subplot(2,2,1);
                 hold;
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
-                        t     = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        t     = dat_filt_trl.time{itrial}(line_idx(itrial));
+                        line_position = dat_filt_trl.trial{itrial}(line_idx(itrial));
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
@@ -376,33 +449,34 @@ else
                     end
                     plot(dat_filt_trl.time{itrial},dat_filt_trl.trial{itrial} + itrial*h,'color',color);
                 end
-                title('Peak detection');
+                title('Detection');
                 set(gca, 'YTickLabel', '');
                 xlabel('Time (s)');
                 axis tight
                 ax = axis;
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
+                xlim(cfg.align.toiplot{imarker});
                 
                 subplot(2,2,2);
                 hold;
                 for itrial = 1 : size(dat_sel_trl.trial,2)
-                    if haspeak(itrial)
+                    if haspeak(itrial) && ~hasartefact(itrial)
                         color = 'k';
                         t       = 0;
-                        line_position = dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_filt_trl.trial{itrial}(line_idx(itrial));
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
-                        
-                    else
-                        color = 'r';
-                    end
-                    if hasartefact(itrial)
-                        color = 'c';
+%                         
+%                     else
+%                         color = 'r';
+%                     end
+%                     if hasartefact(itrial)
+%                         color = 'c';
 %                     else
 %                         color = 'k';
-                    end
+%                     end
                    plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
-                    
+                    end
                 end
                 title('Alignment');
                 set(gca, 'YTickLabel', '');
@@ -411,15 +485,15 @@ else
                 ax = axis;
                 fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
-                
+                xlim(cfg.align.toiplot{imarker});
                
                 subplot(2,2,3);
                 hold;
                 for itrial = 1 : size(dat_sel_trl.trial,2)
                     if haspeak(itrial)
                         color = 'k';
-                        t       = dat_sel_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
-                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        t       = dat_sel_trl.time{itrial}(line_idx(itrial));
+                        line_position = dat_sel_trl.trial{itrial}(line_idx(itrial));
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
@@ -438,30 +512,32 @@ else
                 ax = axis;
                 %fill([cfg.align.toiactive{imarker}(1), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(2), cfg.align.toiactive{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 0],'edgecolor','none','facealpha',0.1);
                 %fill([cfg.align.toibaseline{imarker}(1), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(2), cfg.align.toibaseline{imarker}(1)],[ax(3), ax(3),  ax(4),  ax(4)],[0 1 1],'edgecolor','none','facealpha',0.1);
+                xlim(cfg.align.toiplot{imarker});
                 
                 subplot(2,2,4);
                 hold;
                 for itrial = 1 : size(dat_sel_aligned.trial,2)
-                    if haspeak(itrial)
+                    if haspeak(itrial) && ~hasartefact(itrial)
                         color = 'k';
                         t       = 0;
-                        line_position = dat_sel_trl.trial{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                        line_position = dat_sel_trl.trial{itrial}(line_idx(itrial));
                         line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
-                    else
-                        color = 'r';
-                    end
-                    if hasartefact(itrial)
-                        color = 'c';
+%                     else
+%                         color = 'r';
+%                     end
+%                     if hasartefact(itrial)
+%                         color = 'c';
 %                     else
 %                         color = 'k';
-                    end
+%                     end
                     plot(dat_sel_aligned.time{itrial},dat_sel_aligned.trial{itrial} + itrial*h,'color',color);
-          
+                    end
                 end
                 title('Aligned data');
                 set(gca, 'YTickLabel', '');
                 xlabel('Time (s)');
                 axis tight
+                xlim(cfg.align.toiplot{imarker});
                 
                 % print to file
                     

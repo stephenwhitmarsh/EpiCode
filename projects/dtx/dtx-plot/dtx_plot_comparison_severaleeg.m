@@ -138,7 +138,7 @@ if saveplot
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'ComparisonSeveralEEG',eegname,'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'ComparisonSeveralEEG','_comparisonseveraleeg_',eegname,'.png']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'ComparisonSeveralEEG',eegname,'.png']),'-r600');
     close all
 end
 
