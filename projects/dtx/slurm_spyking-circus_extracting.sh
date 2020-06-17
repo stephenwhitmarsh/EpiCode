@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=SC_extracting
-#SBATCH --partition=normal
+#SBATCH --partition=normal,bigmem
 #SBATCH --time=99:99:99
 #SBATCH --mem=120G
 #SBATCH --cpus-per-task=28
@@ -10,38 +10,8 @@
 #SBATCH --mail-user=paul.baudin@icm-institute.org
 #SBATCH --mail-type=ALL
 
-cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/Analyses_Paul/data/DTX5/p1
+cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX7/p1
 module load spyking-circus/0.9.1
-spyking-circus DTX5-p1-multifile-E07.ncs -m whitening,extracting,fitting -c 28
-spyking-circus DTX5-p1-multifile-E07.ncs -m converting -c 28
+spyking-circus DTX7-p1-multifile-E06.ncs -m whitening,extracting,fitting -c 28
+spyking-circus DTX7-p1-multifile-E06.ncs -m converting -c 28
 sleep 5;
-
-
-cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX2/p1
-
-spyking-circus DTX2-p1-multifile-E08.ncs -c 28
-
-spyking-circus DTX2-p1-multifile-E08.ncs -m converting -c 28
-
-sleep 5;
-
-
-
-cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX4/p1
-
-spyking-circus DTX4-p1-multifile-E07.ncs -c 28
-
-spyking-circus DTX4-p1-multifile-E07.ncs -m converting -c 28
-
-sleep 5;
-
-
-
-cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX6/p1
-
-spyking-circus DTX6-p1-multifile-E07.ncs -c 28
-
-spyking-circus DTX6-p1-multifile-E07.ncs -m converting -c 28
-
-sleep 5;
-

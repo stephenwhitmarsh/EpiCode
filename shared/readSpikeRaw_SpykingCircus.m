@@ -65,8 +65,8 @@ else
             hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
             %             tempdataset{1} = hdr_fname;
             %             temp        = ft_read_neuralynx_interp(tempdataset);
-                        timestamps  = ft_read_data(hdr_fname,'timestamp','true');  % take the first concatinated channel to extract the timestamps
-%             timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
+%                         timestamps  = ft_read_data(hdr_fname,'timestamp','true');  % take the first concatinated channel to extract the timestamps
+            %          	  timestamps  =  (0:hdr.nSamples-1) * hdr.TimeStampPerSample; % calculate timemstamps myself, as this is much faster
             
             clear names
             % read spiketimes of clusters
@@ -94,7 +94,7 @@ else
                 SpikeRaw{ipart}.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
                 
                 % map samplenrs onto timestamps
-                SpikeRaw{ipart}.timestamp{clusternr(i)+1} = timestamps(SpikeRaw{ipart}.samples{clusternr(i)+1});
+%                 SpikeRaw{ipart}.timestamp{clusternr(i)+1} = timestamps(SpikeRaw{ipart}.samples{clusternr(i)+1});
                 % SpikeRaw.timestamp{clusternr(i)+1} = int64(SpikeRaw.samples{clusternr(i)+1}) * int64(hdr.TimeStampPerSample) + int64(hdr.FirstTimeStamp);
             end
             

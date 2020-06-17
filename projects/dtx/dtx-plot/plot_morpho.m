@@ -12,6 +12,7 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 % ### INPUT
 % data                    = raw Fieldtrip data structure epoched in trials
 % cfg.channame            = name of the channel to analyse in data.label
+% cfg.plotstd             = 'yes' or 'no', whether to plot std or not
 % cfg.removeoutliers      = whether to plot outlier trials (>10*std to the
 %                           mean). Average is not modified.
 % cfg.mesurehalfwidth     = 'yes' or 'no', whether to compute halfwidth
@@ -39,10 +40,6 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isfield(cfg, 'removeoutliers') %TEMPORARY, to avoid error with running script
-    cfg.removeoutliers = 'no';
-end
-
 %convert some string inputs to usable values
 if strcmp(cfg.toiplot,'all')
     cfg.toiplot = [-Inf Inf];
@@ -63,9 +60,9 @@ if strcmp(cfg.saveplot, 'yes')
 end
 hold on;
 
-%% plot overdraw and avg
+%% plot overdraw, avg, std
 
-%compute avg 
+%compute avg
 data_avg        = ft_timelockanalysis([],data);
 
 %select trials to plot, if more than 1000
@@ -95,8 +92,24 @@ for itrial = 1:size(data.time, 2)
     plot(data.time{itrial},data.trial{itrial},'color',[0.6 0.6 0.6]);
 end
 
+
+%plot std if required
+if strcmp(cfg.plotstd, 'yes')
+    %plot(data_avg.time,data_avg.avg + sqrt(data_avg.var),'k','LineWidth', 2);
+    %plot(data_avg.time,data_avg.avg - sqrt(data_avg.var),'k','LineWidth', 2);
+    std = sqrt(data_avg.var);
+    x = data_avg.time;
+    y = [data_avg.avg - std; std; std]';
+    filled_SD = area(x,y);
+    filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
+    filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
+    filled_SD(2).FaceColor = 'b'; filled_SD(3).FaceColor = 'b';
+    filled_SD(1).ShowBaseLine = 'off';
+end
+
 %plot avg of all trials
-plot(data_avg.time,data_avg.avg,'k','LineWidth', 2);
+plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+
 
 %select active period
 cfgtemp         = [];
@@ -104,44 +117,58 @@ cfgtemp.latency = cfg.toiac;
 data_avg_ac     = ft_selectdata(cfgtemp, data_avg);
 
 %% Mesure and plot half width
-halfwidth = [];
+halfwidth = NaN;
 
 if strcmp(cfg.mesurehalfwidth, 'yes')
-    
-    %measure peak and half hamp
-    if strcmp(cfg.halfwidthmethod, 'bl')
-        cfgtemp         = [];
-        cfgtemp.latency = cfg.toibl;
-        data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
-        bl          = mean(data_avg_bl.avg);
-    elseif strcmp(cfg.halfwidthmethod, 'min')
-        bl          = min(data_avg_ac.avg);
-    else
-        error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.halfwidthmethod);
-    end
-    peak        = max(data_avg_ac.avg);
-    halfamp     = double(bl+(peak-bl)/2);
-    
-    %find halfamp indexes in data active period
-    zci  = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
-    indx = zci(data_avg_ac.avg - halfamp);
-    
-    %If found at least 2 indexes, use the 2 first. Otherwise do not compute/plot halfwidth
-    if length(indx)>=2
-        plot(data_avg_ac.time(indx(1:2)),ones(1,length(indx(1:2)))*(halfamp),'-x','Color','g','MarkerFaceColor','g','MarkerEdgeColor','g');
+    try %TEMPORARY - CHECK DTX4 unit just after 53
+        %measure peak and half hamp
+        if strcmp(cfg.halfwidthmethod, 'bl')
+            cfgtemp         = [];
+            cfgtemp.latency = cfg.toibl;
+            data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
+            bl          = mean(data_avg_bl.avg);
+        elseif strcmp(cfg.halfwidthmethod, 'min')
+            bl          = min(data_avg_ac.avg);
+        else
+            error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.halfwidthmethod);
+        end
+        peak        = max(data_avg_ac.avg);
+        halfamp     = double(bl+(peak-bl)/2);
         
-        halfwidth = (data_avg_ac.time(indx(2))-data_avg_ac.time(indx(1)));
-        [unit, halfwidth_corr] = setunit(halfwidth); %adapt halfwidth unit
+        %find halfamp indexes in data active period
+        zci  = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
+        indx = zci(data_avg_ac.avg - halfamp);
         
-        text(data_avg_ac.time(indx(2)),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
+        
+        %If found at least 2 indexes, use the 2 first. Otherwise do not compute/plot halfwidth
+        if length(indx)>=2
+            
+            %increase time precision *1000 by linear interpolation between 2 samples
+            sel_1           = data_avg_ac.avg(indx(1)) : (data_avg_ac.avg(indx(1)+1)-data_avg_ac.avg(indx(1)))/1000 : data_avg_ac.avg(indx(1)+1);
+            sel_2           = data_avg_ac.avg(indx(2)) : (data_avg_ac.avg(indx(2)+1)-data_avg_ac.avg(indx(2)))/1000 : data_avg_ac.avg(indx(2)+1);
+            indx_temp(1)    = find(sel_1 > halfamp, 1, 'first');
+            indx_temp(2)    = find(sel_2 < halfamp, 1, 'first');
+            samp_interv     = data_avg_ac.time(2) - data_avg_ac.time(1);
+            x_precise(1)    = data_avg_ac.time(indx(1)) + indx_temp(1)*samp_interv/1000;
+            x_precise(2)    = data_avg_ac.time(indx(2)) + indx_temp(2)*samp_interv/1000;
+            
+            plot(x_precise,ones(1,length(indx(1:2)))*(halfamp),'-x','Color','g','MarkerFaceColor','g','MarkerEdgeColor','g');
+            
+            halfwidth = x_precise(2)-x_precise(1);
+            [unit, halfwidth_corr] = setunit(halfwidth); %adapt halfwidth unit
+            
+            text(x_precise(2),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
+        end
+    catch
     end
 end
 
 %% Measure and plot pt and tp
-peaktrough = [];
-troughpeak = [];
+peaktrough = NaN;
+troughpeak = NaN;
 
 if strcmp(cfg.mesurepeaktrough, 'yes')
+     try %TEMPORARY - CHECK DTX7 unit just after 26
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
     % Find throughs
@@ -162,16 +189,17 @@ if strcmp(cfg.mesurepeaktrough, 'yes')
         plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
         
         %add text for each value
-        x = double((Xpos + Xneg(1))/2);
+        x = Xneg(1);
         y = double(Yneg(1)*0.3);
         [unit, peaktrough_corr] = setunit(peaktrough);
         text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
         
-        x = double((Xpos + Xneg(2))/2);
+        x = Xneg(2);
         y = double(-Yneg(2)*0.3);
         [unit, troughpeak_corr] = setunit(troughpeak);
-        text(x,y,sprintf('%.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','center','VerticalAlignment','top','FontWeight', 'bold','FontSize',10);
+        text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
     end
+     end %REMOVEME
 end
 
 axis tight;
@@ -202,9 +230,10 @@ if strcmp(cfg.saveplot, 'yes')
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',channame,'_morphology_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',channame,'_morphology_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.channame,'_morpho_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.channame,'_morpho_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.png']),'-r600');
     close all
+    
 end
 
 

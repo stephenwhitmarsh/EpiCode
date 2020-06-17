@@ -23,118 +23,180 @@ end
 datasavedir = fullfile(rootpath_analysis, 'data', 'spike'); %removed of config{i} so we can more easily modify it
 imagesavedir = fullfile(rootpath_analysis, 'image_spike');
 
-%% Config common
+%% Config for dtx experiments
 
-configcommon.os                        = os;
-configcommon.datasavedir               = datasavedir;
-configcommon.name                      = {'SlowWave','Seizure','Interictal'};
-configcommon.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
-% configcommon.muse.eventindex           = {[0 0]; [0 0] ;[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
+configdtx.type                      = 'dtx';
+configdtx.os                        = os;
+configdtx.datasavedir               = datasavedir;
+configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger'};
+configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+% configdtx.muse.eventindex           = {[0 0]; [0 0] ;[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
 %trial between 2 Neuralynx files is ignored if eventindex == 1
 
 % list of onset timing with respect to start-marker (s)
-configcommon.epoch.toi{1}              = [-2, 2];
-configcommon.epoch.toi{2}              = [-2, 2];
-configcommon.epoch.toi{3}              = [2, -2];
-configcommon.epoch.pad{1}              = 10; %for LFP
-configcommon.epoch.pad{2}              = 10;
-configcommon.epoch.pad{3}              = 10;
+configdtx.epoch.toi{1}              = [-2, 2];
+configdtx.epoch.toi{2}              = [-2, 2];
+configdtx.epoch.toi{3}              = [2, -1];
+configdtx.epoch.toi{4}              = [-80, 20];
+configdtx.epoch.pad{1}              = 10; %for LFP
+configdtx.epoch.pad{2}              = 10;
+configdtx.epoch.pad{3}              = 10;
+configdtx.epoch.pad{4}              = 10;
 
-configcommon.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-configcommon.align.name                = {'SlowWave'};
-configcommon.align.flip                = {'no'};
-configcommon.align.abs                 = {'no'};
-configcommon.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-configcommon.align.filter              = {'lp'};
-configcommon.align.freq                = {10};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-configcommon.align.hilbert             = {'no'};
-configcommon.align.thresh.value        = [1, 1];
-configcommon.align.thresh.method       = {'trial'};%,'trial','trial'};%'medianbl','both';
-configcommon.align.toiplot             = {[-1,  1], [-1, 1]};                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-configcommon.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-configcommon.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};
-configcommon.align.maxtimeshift        = {0.3};
-configcommon.align.demean              = {'yes'};
+configdtx.align.name                = {'SlowWave'};
+configdtx.align.flip                = {'no'};
+configdtx.align.abs                 = {'no'};
+configdtx.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+configdtx.align.filter              = {'lp'};
+configdtx.align.freq                = {10};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
+configdtx.align.hilbert             = {'no'};
+configdtx.align.thresh.value        = [1, 1];
+configdtx.align.thresh.method       = {'trial'};%,'trial','trial'};%'medianbl','both';
+configdtx.align.toiplot             = {[-1,  1], [-1, 1]};                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+configdtx.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
+configdtx.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};
+configdtx.align.maxtimeshift        = {0.3};
+configdtx.align.demean              = {'yes'};
 %for detection of begin of event
-configcommon.align.begin.doalign       = {'yes'};
-configcommon.align.begin.thresh        = {0.3}; % percent of peak
+configdtx.align.begin.doalign       = {'yes'};
+configdtx.align.begin.thresh        = {0.3}; % percent of peak
 
-configcommon.LFP.flip                  = 'false';
-configcommon.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
-configcommon.LFP.hpfilter              = 'no';
-configcommon.LFP.hpfreq                = 1;
-configcommon.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
-configcommon.LFP.baseline              = 'no';
-configcommon.LFP.baselinewindow{1}     = [-2, -1];
-configcommon.LFP.baselinewindow{2}     = [-2, -1];
-configcommon.LFP.baselinewindow{3}     = [0, 1];
-configcommon.LFP.slidestep             = 0.01;
+configdtx.LFP.flip                  = 'false';
+configdtx.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
+configdtx.LFP.hpfilter              = 'no';
+configdtx.LFP.hpfreq                = 1;
+configdtx.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
+configdtx.LFP.baseline              = 'no';
+configdtx.LFP.baselinewindow{1}     = [-2, -1];
+configdtx.LFP.baselinewindow{2}     = [-2, -1];
+configdtx.LFP.baselinewindow{3}     = [0, 1];
+configdtx.LFP.slidestep             = 0.01;
 
-configcommon.circus.reref              = 'no';
-configcommon.circus.refchan            = '';
-configcommon.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
-configcommon.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configcommon.circus.postfix             = '-final';
+configdtx.circus.reref              = 'no';
+configdtx.circus.refchan            = '';
+configdtx.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
+configdtx.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
+configdtx.circus.postfix             = [];%'-final';
 
-configcommon.stats.numrandomization     = 100; %Essayer à 1000
-configcommon.stats.dostat              = {true, true, false}; %for spikeratestatsEvents
-configcommon.stats.bltoi{1}            = [-2, -1];
-configcommon.stats.bltoi{2}            = [-2, -1];
-configcommon.stats.bltoi{3}            = [2, 6];
-configcommon.stats.alpha               = 0.025;
+configdtx.stats.numrandomization     = 1000; %Essayer à 1000
+configdtx.stats.dostat              = {true, true, false}; %for spikeratestatsEvents
+configdtx.stats.bltoi{1}            = [-2, -1];
+configdtx.stats.bltoi{2}            = [-2, -1];
+configdtx.stats.bltoi{3}            = [2, 6];
+configdtx.stats.alpha               = 0.025;
 %not used for now (but maybe to better select ISI or waveforms of interest) :
-configcommon.stats.actoi{1}            = [-1, 1];
-configcommon.stats.actoi{2}            = [-1, Inf];
-configcommon.stats.actoi{3}            = [6, Inf];
+configdtx.stats.actoi{1}            = [-1, 1];
+configdtx.stats.actoi{2}            = [-1, Inf];
+configdtx.stats.actoi{3}            = [6, Inf];
 
 % to smooth spikerate. Not used for now. Maybe for correlation LFP-spike
-% configcommon.spike.toispikerate{1}     = [-0.01 0.01];            % for plotting spikerate
-% configcommon.spike.toispikerate{1}     = [-1 1];                  % for plotting spikerate
-% configcommon.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
-% configcommon.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
-configcommon.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
-configcommon.spike.interictalname      = {'Interictal'};
-configcommon.spike.resamplefs{1}       = 50; %1/size of bar graph bins
-configcommon.spike.resamplefs{2}       = 50;
-configcommon.spike.resamplefs{3}       = 0.1;
-configcommon.spike.RPV                 = 0.003; %refractory period violation, in seconds
-configcommon.spike.ISIbins             = [0:0.003:0.150]; %in s
+% configdtx.spike.toispikerate{1}     = [-0.01 0.01];            % for plotting spikerate
+% configdtx.spike.toispikerate{1}     = [-1 1];                  % for plotting spikerate
+% configdtx.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
+% configdtx.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
+configdtx.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
+configdtx.spike.baselinename      = 'Interictal';
+configdtx.spike.resamplefs{1}       = 50; %1/size of bar graph bins
+configdtx.spike.resamplefs{2}       = 50;
+configdtx.spike.resamplefs{3}       = 0.1;
+configdtx.spike.RPV                 = 0.003; %refractory period violation, in seconds
+configdtx.spike.ISIbins             = [0:0.003:0.150]; %in s
 
-configcommon.spikewaveform.toi         = [-0.0015 0.0015]; %in s
-configcommon.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
-configcommon.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load. Can be 'all'. 
+configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
+configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
+configdtx.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load. Can be 'all'. 
 
 %not used for now, for readSpykingCircus_spikestage : 
-configcommon.spikestage{1}.markerstart          = 'Baseline_Start';
-configcommon.spikestage{1}.markerstartoffset    = 0; %seconds
-configcommon.spikestage{1}.markerend            = 'Injection';
-configcommon.spikestage{1}.indexEnd             = 0;
-configcommon.spikestage{1}.periodmin            = 600; %seconds
-configcommon.spikestage{1}.triallength          = 60; %seconds
-configcommon.spikestage{1}.subdivision          = 'all'; %minimum 2
-configcommon.spikestage{1}.includeend           = false;
-configcommon.spikestage{1}.markerendoffset      = 0; %seconds
-configcommon.spikestage{1}.removeartefact       = 'trial';
-configcommon.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
+configdtx.spikestage{1}.markerstart          = 'Baseline_Start';
+configdtx.spikestage{1}.markerstartoffset    = 0; %seconds
+configdtx.spikestage{1}.markerend            = 'Injection';
+configdtx.spikestage{1}.indexEnd             = 0;
+configdtx.spikestage{1}.periodmin            = 600; %seconds
+configdtx.spikestage{1}.triallength          = 60; %seconds
+configdtx.spikestage{1}.subdivision          = 'all'; %minimum 2
+configdtx.spikestage{1}.includeend           = false;
+configdtx.spikestage{1}.markerendoffset      = 0; %seconds
+configdtx.spikestage{1}.removeartefact       = 'trial';
+configdtx.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
 
-configcommon.spikestage{2}.markerstart          = 'Crise_End';
-configcommon.spikestage{2}.markerstartoffset    = 1; %seconds
-configcommon.spikestage{2}.markerend            = 'SlowWave';
-configcommon.spikestage{2}.indexEnd             = 1; %if 1 : take the i start marker and the i+1 end marker
-configcommon.spikestage{2}.periodmin            = 30; %seconds
-configcommon.spikestage{2}.triallength          = 5; %seconds
-configcommon.spikestage{2}.subdivision          = 4; %minimum 2
-configcommon.spikestage{2}.includeend           = true; %add the end of the period to the previous subdivisions
-configcommon.spikestage{2}.markerendoffset      = -2; %seconds
-configcommon.spikestage{2}.removeartefact       = 'period'; %period, trial, none
-configcommon.spikestage{2}.stagenumber          = [1, 2, 3, 4, 5]; %array of integers. if single value : gives the same number to all the trials
+configdtx.spikestage{2}.markerstart          = 'Crise_End';
+configdtx.spikestage{2}.markerstartoffset    = 1; %seconds
+configdtx.spikestage{2}.markerend            = 'SlowWave';
+configdtx.spikestage{2}.indexEnd             = 1; %if 1 : take the i start marker and the i+1 end marker
+configdtx.spikestage{2}.periodmin            = 30; %seconds
+configdtx.spikestage{2}.triallength          = 5; %seconds
+configdtx.spikestage{2}.subdivision          = 4; %minimum 2
+configdtx.spikestage{2}.includeend           = true; %add the end of the period to the previous subdivisions
+configdtx.spikestage{2}.markerendoffset      = -2; %seconds
+configdtx.spikestage{2}.removeartefact       = 'period'; %period, trial, none
+configdtx.spikestage{2}.stagenumber          = [1, 2, 3, 4, 5]; %array of integers. if single value : gives the same number to all the trials
 
+%% config for control experiments
+% no seizure-time-locked trials
+% markers : Baseline_Start, Analysis_End, Injection, BAD
+configctrl.type                      = 'ctrl';
+configctrl.os                        = os;
+configctrl.datasavedir               = datasavedir;
+configctrl.name                      = {'Control'};
 
+configctrl.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+    'ECoGM1G','ECoGM1D','ECoGPtA'};
+
+% configctrl.muse.startend             = {'Injection','Analysis_End'};  
+
+configctrl.LFP.name                  = []; %do not load LFP
+configctrl.align.name                = []; %do not align muse markers
+
+% list of onset timing with respect to start-marker (s)
+configctrl.epoch.toi{1}              = [0, 0];
+configctrl.epoch.pad{1}              = 10; %for LFP
+
+configctrl.circus.reref              = 'no';
+configctrl.circus.refchan            = '';
+configctrl.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
+configctrl.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
+configctrl.circus.postfix             = [];%'-final';
+
+configctrl.spike.triallength         = 600; %seconds
+configctrl.spike.baselinename        = 'Control';
+configctrl.spike.eventsname          = [];
+configctrl.spike.RPV                 = 0.001; %refractory period violation, in seconds
+configctrl.spike.ISIbins             = [0:0.003:0.150]; %in s
+
+configctrl.spikewaveform.toi         = [-0.0015 0.0015]; %in s
+configctrl.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
+configctrl.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
+
+%not used for now, for readSpykingCircus_spikestage : 
+configctrl.spikestage{1}.markerstart          = 'Baseline_Start';
+configctrl.spikestage{1}.markerstartoffset    = 0; %seconds
+configctrl.spikestage{1}.markerend            = 'Injection';
+configctrl.spikestage{1}.indexEnd             = 0;
+configctrl.spikestage{1}.periodmin            = 600; %seconds
+configctrl.spikestage{1}.triallength          = 60; %seconds
+configctrl.spikestage{1}.subdivision          = 'all'; %minimum 2
+configctrl.spikestage{1}.includeend           = false;
+configctrl.spikestage{1}.markerendoffset      = 0; %seconds
+configctrl.spikestage{1}.removeartefact       = 'trial';
+configctrl.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
+
+configctrl.spikestage{2}.markerstart          = 'Injection';
+configctrl.spikestage{2}.markerstartoffset    = 0; %seconds
+configctrl.spikestage{2}.markerend            = 'Analysis_End';
+configctrl.spikestage{2}.indexEnd             = 0; %if 1 : take the i start marker and the i+1 end marker
+configctrl.spikestage{2}.periodmin            = 600; %seconds
+configctrl.spikestage{2}.triallength          = 60; %seconds
+configctrl.spikestage{2}.subdivision          = 'all'; %minimum 2
+configctrl.spikestage{2}.includeend           = false; %add the end of the period to the previous subdivisions
+configctrl.spikestage{2}.markerendoffset      = 0; %seconds
+configctrl.spikestage{2}.removeartefact       = 'trial'; %period, trial, none
+configctrl.spikestage{2}.stagenumber          = 1; %array of integers. if single value : gives the same number to all the trials
 
 %% Rodent 1
-config{1}                           = configcommon;
+config{1}                           = configdtx;
 config{1}.prefix                    = 'DTX5-';
 config{1}.rawdir                    = fullfile(rootpath_data, 'DTX5-M1-10uM', '2019_03_19_DTX-5');
 config{1}.imagesavedir              = fullfile(imagesavedir, 'DTX5');       % where to print images
@@ -161,7 +223,7 @@ config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13'
 %% Rodent 2
 %ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS? CORRIGES AU DEBUT DU
 %SCRIPT DTX_PROJECT_PROBE
-config{2}                           = configcommon;
+config{2}                           = configdtx;
 config{2}.prefix                    = 'DTX2-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'DTX2-M1-10uM', '2019_03_01_DTX-2');
 config{2}.imagesavedir              = fullfile(imagesavedir, 'DTX2');       % where to print images
@@ -186,7 +248,7 @@ config{2}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14'
 
 
 %% Rodent 3
-config{3}                           = configcommon;
+config{3}                           = configdtx;
 config{3}.prefix                    = 'DTX4-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'DTX4-M1-10uM', '2019_03_08_DTX-4');
 config{3}.imagesavedir              = fullfile(imagesavedir,'DTX4');       % where to print images
@@ -207,28 +269,9 @@ config{3}.LFP.channel               = config{3}.labels.macro;
 config{3}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
 config{3}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
-% %% Rodent 4
-% config{4}                           = configcommon;
-% config{4}.prefix                    = 'DTX10-';
-% config{4}.rawdir                    = fullfile(rootpath_data, 'DTX10-M1-10uM', '2019_03_28_DTX-10');
-% config{4}.imagesavedir              = fullfile(imagesavedir,'DTX10');       % where to print images
-% config{4}.directorylist{1}          =  {'2019-03-28_13-41',...
-%                                         '2019-03-28_14-50',...
-%                                         '2019-03-28_15-06',...
-%                                         '2019-03-28_17-06',...
-%                                         '2019-03-28_19-06'};
-%
-% config{4}.labels.micro              = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-% config{4}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
-%     'ECoGM1G','ECoGM1D','ECoGPtA'};
-%
-% config{4}.align.channel                = {'E13LFP'};
-% config{4}.LFP.channel                  = config{4}.labels.macro;
-% config{4}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-
 
 %% Rodent 4
-config{4}                           = configcommon;
+config{4}                           = configdtx;
 config{4}.prefix                    = 'DTX7-';
 config{4}.rawdir                    = fullfile(rootpath_data, 'DTX7-M1-10uM', '2019_03_22_DTX-7');
 config{4}.imagesavedir              = fullfile(imagesavedir,'DTX7');       % where to print images
@@ -250,14 +293,13 @@ config{4}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12'
 
 
 %% Rodent 5
-config{5}                           = configcommon;
+%Remove the first 2 files and keep only the 2 lasts because the probe was moved in
+%order to have better unit activity
+config{5}                           = configdtx;
 config{5}.prefix                    = 'DTX6-';
 config{5}.rawdir                    = fullfile(rootpath_data, 'DTX6-M1-10uM', '2019_03_21_DTX-6');
 config{5}.imagesavedir              = fullfile(imagesavedir,'DTX6');       % where to print images
-config{5}.directorylist{1}          =  {'2019-03-21_14-12',...
-    '2019-03-21_16-12',...
-    '2019-03-21_18-12',...
-    '2019-03-21_20-12'};
+config{5}.directorylist{1}          =  {'2019-03-21_18-12', '2019-03-21_20-12'};
 
 config{5}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 config{5}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
@@ -269,6 +311,55 @@ config{5}.align.channel             = {'E13LFP'};
 config{5}.LFP.channel               = config{5}.labels.macro;
 config{5}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
 config{5}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+
+
+%% Rodent 6
+%Remove the first 2 files and keep only the 2 lasts because the probe was moved in
+%order to have better unit activity
+%INJ TIME AND DIRLIST
+config{6}                           = configctrl;
+config{6}.prefix                    = 'DTX43-';
+config{6}.rawdir                    = fullfile(rootpath_data, 'DTX43_2020-05-22-PROBE-CONTROLE', '2020_05_22_DTX43-ctrl');
+config{6}.imagesavedir              = fullfile(imagesavedir,'DTX43');       % where to print images
+config{6}.directorylist{1}          =  {'2020-05-22_14-05',...
+    '2020-05-22_16-05',...
+    '2020-05-22_18-05',...
+    '2020-05-22_20-05',...
+    '2020-05-22_22-05'};
+
+config{6}.labels.micro              = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{6}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+    'ECoGM1G','ECoGM1D','ECoGPtA'};
+
+config{6}.injectiontime             = datetime('22-May-2020 15:08:02');
+
+config{6}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+
+%% Rodent 7
+%Remove the first 2 files and keep only the 2 lasts because the probe was moved in
+%order to have better unit activity
+%INJ TIME AND DIRLIST
+config{7}                           = configctrl;
+config{7}.prefix                    = 'DTX44-';
+config{7}.rawdir                    = fullfile(rootpath_data, 'DTX44_2020-05-24-Probe-controle', '2020_05_24_DTX44-ctrl-probe');
+config{7}.imagesavedir              = fullfile(imagesavedir,'DTX44');       % where to print images
+config{7}.directorylist{1}          =  {'2020-05-24_13-10',...
+    '2020-05-24_15-10',...
+    '2020-05-24_17-10',...
+    '2020-05-24_19-10',...
+    '2020-05-24_21-10',...
+    '2020-05-24_23-10',...
+    '2020-05-25_01-10'};
+
+config{7}.labels.micro              = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{7}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+    'ECoGM1G','ECoGM1D','ECoGPtA'};
+
+config{7}.injectiontime             = datetime('24-May-2020 14:14:02');
+
+config{7}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+
+
 end
 
 

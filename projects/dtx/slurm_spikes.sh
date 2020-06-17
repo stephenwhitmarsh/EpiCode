@@ -20,8 +20,7 @@
 
 #SBATCH --mail-type=ALL
 
-#SBATCH --array=2-5
-
+#SBATCH --array=1-5
 
 
 module load MATLAB/R2019b

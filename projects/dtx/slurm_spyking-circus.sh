@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=SC_end
+#SBATCH --job-name=SC
 
-#SBATCH --partition=normal
+#SBATCH --partition=normal,bigmem
 
 #SBATCH --time=99:99:99
 
@@ -25,16 +25,10 @@
 module load spyking-circus/0.9.1
 
 
+cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX43/p1
 
+spyking-circus DTX43-p1-multifile-E06.ncs -c 28
 
-
-cd /network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/data/spike/DTX7/p1
-
-spyking-circus DTX7-p1-multifile-E06.ncs -c 28
-
-spyking-circus DTX7-p1-multifile-E06.ncs -m converting -c 28
+spyking-circus DTX43-p1-multifile-E06.ncs -m converting -c 28
 
 sleep 5;
-
-
-

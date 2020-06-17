@@ -43,7 +43,7 @@ else
     %get format to adapt script for each format
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
-    
+    LFP = [];
     
     % select those markers to load
     %     markerlist = [];
@@ -276,6 +276,9 @@ else
                                 cfgtemp.trl(:,4)                = trialnr;
                                 cfgtemp.trl(:,6)                = idir;
                                 cfgtemp.trl(:,7)                = Stage;
+                                cfgtemp.trl(:,8)                = Startsample;
+                                cfgtemp.trl(:,9)                = Endsample;
+                                cfgtemp.trl(:,10)               = Offset;
                                 cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat.trial{1}),:); % so not to read before BOF or after EOFs
                                 filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
                                 clear dat

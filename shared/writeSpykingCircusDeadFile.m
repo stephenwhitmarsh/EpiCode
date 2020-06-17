@@ -89,11 +89,11 @@ for ipart = part_list
     subjdir     = cfg.prefix(1:end-1);
     partdir     = ['p',num2str(ipart)];
     
-    filename    = sprintf('SpykingCircus_artefacts_ms-%s.dead', suffix);
+    filename    = sprintf('SpykingCircus_artefacts_ms%s.dead', suffix);
     fprintf('Writing artefacts for Spyking-Circus to: %s\n',filename);
     dlmwrite(fullfile(cfg.datasavedir,subjdir,partdir,filename),deadfile_ms,'delimiter','	','precision','%.4f');
     
-    filename = sprintf('SpykingCircus_artefacts_samples-%s.dead', suffix);
+    filename = sprintf('SpykingCircus_artefacts_samples%s.dead', suffix);
     fprintf('Writing artefacts for Spyking-Circus to: %s\n',filename);
     dlmwrite(fullfile(cfg.datasavedir,subjdir,partdir,filename),deadfile_samples,'delimiter','	','precision','%.4f');
     

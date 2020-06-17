@@ -82,7 +82,7 @@ config_origin = config;
 for ipatient = pat_idx%1:length(config)
     
         %% TEMPORAIRE PAUL
-%     config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir,config{ipatient}.name{1},'test_CSD'); %FIXME remove test_CSD
+    config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir,config{ipatient}.name{1},'test_CSD'); %FIXME remove test_CSD
     config{ipatient}.datasavedir = fullfile(config{ipatient}.datasavedir, config{ipatient}.name{1});
     
     

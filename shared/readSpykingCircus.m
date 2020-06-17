@@ -4,6 +4,8 @@ function [SpikeTrials] = readSpykingCircus(cfg,MuseStruct,SpikeRaw,force,varargi
 %
 % [SpikeRaw, SpikeTrials] = readSpykingCircus(cfg,MuseStruct{ipart},force)
 % Read results from Spyking-Circus analysis; spike-times and templates.
+% Trials separated between 2 files (ie begin on one file and end on the
+% following file) are ignored.
 %
 %
 % Necessary input:
@@ -27,6 +29,7 @@ function [SpikeTrials] = readSpykingCircus(cfg,MuseStruct,SpikeRaw,force,varargi
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+% Modified by Paul Baudin : LISTER LES MODIFS
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,7 +40,7 @@ else
 end
 
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikedata_MuseTrials.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'SpikeTrials_Muse.mat']);
 if exist(fname,'file') && force == false
     load(fname,'SpikeTrials');
     return;
@@ -90,13 +93,19 @@ else
                 Filenr      = [];
                 FileOffset  = [];
                 
-                dirOnset = 0;
+                dirOnset(1) = 0;
                 trialcount = 1;
                 for idir = 1 : size(MuseStruct{ipart},2)
+                    %compute dir onset of the next dir based of the length
+                    %of this dir. Do it before searching for events to avoid
+                    %error if one dir has no event
+                     temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
+                     hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));
+                     dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples; % assuming all channels have same sampleinfo
+                    
                     if isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{ilabel})
                         if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}),'synctime')
                             if ~isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2))
-                                
                                 trialcount_dir = 1;
                                 
                                 for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2)
@@ -110,21 +119,17 @@ else
                                     es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(idx) * hdr.Fs);
                                     
                                     if ~isempty(es)
-                                        Startsample  = [Startsample; ss + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset];
-                                        Endsample    = [Endsample;   es + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset];
+                                        Startsample  = [Startsample; ss + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset(idir)];
+                                        Endsample    = [Endsample;   es + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset(idir)];
                                         Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
                                         Trialdir     = [Trialdir; trialcount_dir];
                                         Trialnr      = [Trialnr; trialcount];
                                         Filenr       = [Filenr; idir];
-                                        FileOffset   = [FileOffset; dirOnset];
+                                        FileOffset   = [FileOffset; dirOnset(idir)];
                                         trialcount   = trialcount + 1;
                                         trialcount_dir = trialcount_dir+1;
                                     end
                                 end
-                                temp        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
-                                hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));
-                                %                             sampleinfo(idir) =
-                                dirOnset    = dirOnset + hdrtemp.nSamples; % assuming all channels have same sampleinfo
                             else
                                 fprintf('No events starting with %s found in filenr %d\n',cfg.muse.startend{ilabel},idir);
                             end
@@ -153,6 +158,7 @@ else
                 SpikeTrials{ipart}{ilabel}              = ft_spike_maketrials(cfgtemp,SpikeRaw{ipart});
                 SpikeTrials{ipart}{ilabel}.clocktimes   = clocktimes;
                 SpikeTrials{ipart}{ilabel}.hdr          = hdr;
+                SpikeTrials{ipart}{ilabel}.label        = cfg.name{ilabel};
                 
                 % commented out on 9-8-2019 after looking with Zoe
                 %             SpikeRaw.time{ilabel}           = SpikeRaw.samples{ilabel} / hdr.Fs;

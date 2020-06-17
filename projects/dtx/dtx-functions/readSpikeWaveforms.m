@@ -28,7 +28,7 @@ if strcmp(parts_to_read,'all')
     parts_to_read = 1:size(cfg.directorylist,2);
 end
 
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'spike_waveform_1000.mat']); %FIXME remove _1000
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spike_waveform.mat']);
 
 if exist(fname,'file') && force == false
     fprintf('*******************************************\n');
@@ -114,10 +114,10 @@ for ipart = parts_to_read
                             
                             %filter data
                             cfgtemp.hpfilter                = 'yes';
-                            cfgtemp.hpfilttype              = 'but'; %same as SpikingCircus
-                            cfgtemp.hpfiltord               = 3;%same as Spyking Circus
+                            cfgtemp.hpfilttype              = 'but'; %same as Spiking Circus
+                            cfgtemp.hpfiltord               = 3;     %same as Spyking Circus
                             cfgtemp.hpfreq                  = cfg.spikewaveform.cutoff;
-                            cfgtemp.padding                 = 1 / cfg.spikewaveform.cutoff * 20; %20 cycles for filtering
+                            cfgtemp.padding                 = 1 / cfg.spikewaveform.cutoff * 5; %5 cycles for filtering
                             
                             cfgtemp.dataset = datafile;
                             
