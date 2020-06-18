@@ -33,9 +33,9 @@ config = dtx_setparams_probe_spikes([]);
 %     if strcmp(config{irat}.type, 'dtx')
 %         [MuseStruct]                     = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true, true);
 %         %save deadfile without removing seizures
-%         writeSpykingCircusDeadFile(config{irat},MuseStruct, '-withSeizures', 'all');
+%         writeSpykingCircusDeadFile(config{irat},MuseStruct);
 %         %remove all seizures
-%         [MuseStruct]    = addMuseBAD(MuseStruct, 'all', 'all', 'SlowWave', 'Crise_End', 'all', -2, 2);
+%         [MuseStruct]    = addMuseBAD(config{irat},MuseStruct);
 %     end
 %
 %     %create multifile and dead file, and slurm file

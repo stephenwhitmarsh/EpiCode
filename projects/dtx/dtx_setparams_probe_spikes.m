@@ -46,6 +46,11 @@ configdtx.epoch.pad{4}              = 10;
 configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
+configdtx.bad.markerStart              = 'SlowWave';
+configdtx.bad.markerEnd                = 'Crise_End';
+configdtx.bad.time_from_begin          = -2;
+configdtx.bad.time_from_end            = 2;
+
 configdtx.align.name                = {'SlowWave'};
 configdtx.align.flip                = {'no'};
 configdtx.align.abs                 = {'no'};
@@ -79,7 +84,8 @@ configdtx.circus.reref              = 'no';
 configdtx.circus.refchan            = '';
 configdtx.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configdtx.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configdtx.circus.postfix             = [];%'-final';
+configdtx.circus.postfix            = [];%'-final';
+configdtx.circus.deadfilesuffix     = 'withseizures';
 
 configdtx.stats.numrandomization     = 1000; %Essayer à 1000
 configdtx.stats.dostat              = {true, true, false}; %for spikeratestatsEvents

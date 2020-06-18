@@ -1,4 +1,4 @@
-function writeSpykingCircusDeadFile(cfg, MuseStruct, suffix, part_list)
+function writeSpykingCircusDeadFile(cfg, MuseStruct)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function writeSpykingCircusDeadFile(MuseStruct)
@@ -8,22 +8,40 @@ function writeSpykingCircusDeadFile(cfg, MuseStruct, suffix, part_list)
 % by readMuseMarkers.m, and edited before writing it to artefact files for
 % SpikingCircus
 %
-% Example:
+% ## Mandatory inputs :
+% cfg.prefix            : name of the data to analyse, will be appended at
+%                         the begining of each data file
+% cfg.rawdir            : path where to find the raw data
+% cfg.directorylist     : list of folders with the neuralynx files (one file
+%                         per electrode)
+% cfg.circus.channel    : list of channels to process with Spyking-Circus
+%                         (the first one is used to find header)
+% cfg.datasavedir       : where to save the data. The folder with Spyking-
+%                         Circus results is created relative to this path.
+% MuseStruct            :  structure with all the marker timings created by 
+%                          Muse (see readMuseMarkers.m)
 %
-% writeSpykingCircusDeadFile(MuseStruct);
+% ## Optional cfg fields :
+% cfg.circus.deadfilesuffix : suffix string to append to the dead file
+%                             name. Default = [];
+% cfg.bad.part_list         : Array of integers with the parts numbers to 
+%                             analyze. Can be 'all'. Default = 'all'
 %
 % Code by Stephen Whitmarsh (stephen.whitmarsh@icm-institute)
-%
 % Paul Baudin : add suffix, to more easily create several different dead
 % files for the same analysis.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if strcmp(part_list, 'all')
-    part_list = 1:size(MuseStruct,2);
+% get the default options
+cfg.circus.deadfilesuffix   = ft_getopt(cfg.circus, 'deadfilesuffix', []);
+cfg.bad.part_list           = ft_getopt(cfg, 'part_list', 'all');
+
+if strcmp(cfg.bad.part_list, 'all')
+    cfg.bad.part_list  = 1:size(MuseStruct,2);
 end
 
-for ipart = part_list
+for ipart = cfg.bad.part_list 
     
     deadfile_ms         = [];
     deadfile_samples    = [];
@@ -89,11 +107,11 @@ for ipart = part_list
     subjdir     = cfg.prefix(1:end-1);
     partdir     = ['p',num2str(ipart)];
     
-    filename    = sprintf('SpykingCircus_artefacts_ms%s.dead', suffix);
+    filename    = sprintf('SpykingCircus_artefacts_ms%s.dead', cfg.circus.deadfilesuffix);
     fprintf('Writing artefacts for Spyking-Circus to: %s\n',filename);
     dlmwrite(fullfile(cfg.datasavedir,subjdir,partdir,filename),deadfile_ms,'delimiter','	','precision','%.4f');
     
-    filename = sprintf('SpykingCircus_artefacts_samples%s.dead', suffix);
+    filename = sprintf('SpykingCircus_artefacts_samples%s.dead', cfg.circus.deadfilesuffix);
     fprintf('Writing artefacts for Spyking-Circus to: %s\n',filename);
     dlmwrite(fullfile(cfg.datasavedir,subjdir,partdir,filename),deadfile_samples,'delimiter','	','precision','%.4f');
     

@@ -1,16 +1,39 @@
 function writeSpykingCircusParameters(cfg)
-% write .params and .prb file 
-% .params file is based on the one in the template folder of EpiCode.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function writeSpykingCircusParameters(cfg)
+%
+% Write .params and .prb file for Spyking Circus analysis.
+% The .params file is based on the one in the template folder of EpiCode.
 % Change this file to have new default values.
-% write slurm files and create slurm dir to store the spyking circus
-% outputs when launched on the cluster (work only for paths begining with
-% '/network/lustre/iss01' if this script is launched on windows
+%
+% ## Mandatory inputs :
+% cfg.prefix            : name of the data to analyse, will be appended at
+%                         the begining of each data file
+% cfg.directorylist     : list of folders with the neuralynx raw files (one 
+%                         file per electrode)
+% cfg.circus.channel    : list of channels to process with Spyking-Circus
+%                         (the first one is used to name the .param file)
+% cfg.datasavedir       : where to save the data. The folder with Spyking-
+%
+% ## Optional cfg fields :
+% cfg.circus.partlist   : Array of integers with the parts numbers to 
+%                         analyze. Can be 'all'. Default = 'all'
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% get the default options
+cfg.circus.partlist                = ft_getopt(cfg.circus, 'part_list', 'all');
+
+if strcmp(cfg.circus.partlist, 'all')
+    cfg.circus.partlist = 1:size(MuseStruct,2);
+end
 
 [p, ~, ~]               = fileparts(mfilename('fullpath'));
 [p, ~, ~]               = fileparts(p);
 fname_params_default    = fullfile(p,'templates','SpykingCircus.params');
 
-for ipart = 1 : size(cfg.directorylist,2)
+for ipart = 1 : cfg.circus.partlist
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p',num2str(ipart)];
@@ -49,58 +72,5 @@ for ipart = 1 : size(cfg.directorylist,2)
     % write params file 
     writeProbeFile(nb_channels,fullfile(cfg.datasavedir,subjdir,partdir,fname_prb));
     
-    %% write 2 slurm files : one for launching spyking circus, the other to only process template matching 
-    
-    %deal with issue that this script might be launched on pc wheread slurm script needs to be launched on unix
-    if ispc
-        temp = split(cfg.datasavedir,'\');
-        datadir = '/network/lustre/iss01';
-        for i = 1:size(temp,1)
-            if ~isempty(temp{i}) && ~strcmp(temp{i}, 'lexport')
-                temp{i} = strrep(temp{i}, 'iss01.', []);
-                datadir = [datadir,'/',temp{i}];
-            end
-        end
-    else
-        datadir = cfg.datasavedir;
-    end
-    
-    for islurm_file = [1 2] 
-        if islurm_file == 1
-            fname = fullfile(cfg.datasavedir,subjdir,partdir,'slurm_spyking-circus.sh');
-        else
-            fname = fullfile(cfg.datasavedir,subjdir,partdir,'slurm_spyking-circus_extracting.sh');
-        end
-        
-        fid = fopen(fname,'w+');
-        
-        fprintf(fid,'#!/bin/bash\n');
-        if islurm_file == 1
-            fprintf(fid,'#SBATCH --job-name=spyking-circus\n');
-        else
-            fprintf(fid,'#SBATCH --job-name=sc_extracting\n');
-        end
-        fprintf(fid,'#SBATCH --partition=normal,bigmem\n');
-        fprintf(fid,'#SBATCH --time=24:00:00\n');
-        fprintf(fid,'#SBATCH --mem=120G\n');
-        fprintf(fid,'#SBATCH --cpus-per-task=28\n');
-        fprintf(fid,'#SBATCH --chdir=.\n');
-        fprintf(fid,'#SBATCH --output=%s/slurm_output/output-%%j-%%x.txt\n',datadir);
-        fprintf(fid,'#SBATCH --error=%s/slurm_output/error-%%j-%%x.txt\n\n',datadir);
-        
-        fprintf(fid,'module load spyking-circus/0.9.1\n');
-        if islurm_file == 1
-            fprintf(fid,'spyking-circus %s.ncs -c 28\n', filename(1:end-7));
-        else
-            fprintf(fid,'spyking-circus %s.ncs -m whitening,extracting,fitting -c 28\n', filename(1:end-7));
-        end
-        fprintf(fid,'spyking-circus %s.ncs -m converting -c 28\n', filename(1:end-7));
-        fprintf(fid,'sleep 5\n');
-        
-        fclose(fid);
-    end
-    
-    %create dir to store slurm text outputs and errors
-    mkdir(fullfile(cfg.datasavedir,subjdir,partdir,'slurm_output'));
 end
 
