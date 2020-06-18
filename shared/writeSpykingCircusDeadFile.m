@@ -24,8 +24,8 @@ function writeSpykingCircusDeadFile(cfg, MuseStruct)
 % ## Optional cfg fields :
 % cfg.circus.deadfilesuffix : suffix string to append to the dead file
 %                             name. Default = [];
-% cfg.partlist              : Array of integers with the parts numbers to 
-%                             analyze. Can be 'all. Default = 'all'
+% cfg.bad.part_list         : Array of integers with the parts numbers to 
+%                             analyze. Can be 'all'. Default = 'all'
 %
 % Code by Stephen Whitmarsh (stephen.whitmarsh@icm-institute)
 % Paul Baudin : add suffix, to more easily create several different dead
@@ -35,13 +35,13 @@ function writeSpykingCircusDeadFile(cfg, MuseStruct)
 
 % get the default options
 cfg.circus.deadfilesuffix   = ft_getopt(cfg.circus, 'deadfilesuffix', []);
-cfg.partlist                = ft_getopt(cfg, 'partlist', 'all');
+cfg.bad.part_list           = ft_getopt(cfg, 'part_list', 'all');
 
-if strcmp(cfg.part_list, 'all')
-    cfg.part_list = 1:size(MuseStruct,2);
+if strcmp(cfg.bad.part_list, 'all')
+    cfg.bad.part_list  = 1:size(MuseStruct,2);
 end
 
-for ipart = cfg.part_list
+for ipart = cfg.bad.part_list 
     
     deadfile_ms         = [];
     deadfile_samples    = [];
