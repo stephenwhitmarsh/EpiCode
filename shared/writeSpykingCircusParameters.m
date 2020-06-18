@@ -17,23 +17,24 @@ function writeSpykingCircusParameters(cfg)
 % cfg.datasavedir       : where to save the data. The folder with Spyking-
 %
 % ## Optional cfg fields :
-% cfg.circus.partlist   : Array of integers with the parts numbers to 
+% cfg.circus.part_list  : Array of integers with the parts numbers to 
 %                         analyze. Can be 'all'. Default = 'all'
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the default options
-cfg.circus.partlist                = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.part_list                = ft_getopt(cfg.circus, 'part_list', 'all');
 
-if strcmp(cfg.circus.partlist, 'all')
-    cfg.circus.partlist = 1:size(MuseStruct,2);
+if strcmp(cfg.circus.part_list, 'all')
+    cfg.circus.part_list = 1:size(MuseStruct,2);
 end
 
 [p, ~, ~]               = fileparts(mfilename('fullpath'));
 [p, ~, ~]               = fileparts(p);
 fname_params_default    = fullfile(p,'templates','SpykingCircus.params');
 
-for ipart = 1 : cfg.circus.partlist
+for ipart = 1 : cfg.circus.part_list
+
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p',num2str(ipart)];
