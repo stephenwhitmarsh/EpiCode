@@ -1,4 +1,4 @@
-function [MuseStruct] = addMuseBAD(MuseStruct, cfg.part_list, cfg.dir_list, cfg.markerStart, cfg.markerEnd, cfg.sample_list, cfg.time_from_begin, cfg.time_from_end)
+function [MuseStruct] = addMuseBAD(cfg,MuseStruct)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [MuseStruct] = addMuseBAD(cfg, MuseStruct)
