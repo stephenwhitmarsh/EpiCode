@@ -60,16 +60,23 @@ else
                     fname{1}                        = cfgtemp.dataset;
                     dirdat{idir}                    = ft_read_neuralynx_interp(fname);
                     
+                    %rereferencing, if required
                     if strcmp(cfg.circus.reref,'yes')
-                        temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan,'.ncs']));
-                        cfgtemp                     = [];
-                        cfgtemp.dataset             = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
-                        fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
-                        clear fname
-                        fname{1}                    = cfgtemp.dataset;
-                        refdat                      = ft_read_neuralynx_interp(fname);
-                        dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
-                        clear refdat
+                        for iref = 1:size(cfg.circus.refchan, 2)
+                            %For each reference channel, search if the
+                            %current channel has to be rereferenced
+                            if any(strcmp(cfg.circus.channel{ichan},cfg.circus.chanstoref{iref}))
+                                temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan{iref},'.ncs']));
+                                cfgtemp                     = [];
+                                cfgtemp.dataset             = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
+                                fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
+                                clear fname
+                                fname{1}                    = cfgtemp.dataset;
+                                refdat                      = ft_read_neuralynx_interp(fname);
+                                dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
+                                clear refdat
+                            end
+                        end
                     end
                     
                     % creation of artefacts caused by large offsets

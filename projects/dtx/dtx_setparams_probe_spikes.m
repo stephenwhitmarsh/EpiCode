@@ -80,7 +80,7 @@ configdtx.LFP.baselinewindow{2}     = [-2, -1];
 configdtx.LFP.baselinewindow{3}     = [0, 1];
 configdtx.LFP.slidestep             = 0.01;
 
-configdtx.circus.reref              = 'no';
+configdtx.circus.reref              = 'yes';
 configdtx.circus.refchan            = '';
 configdtx.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configdtx.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
