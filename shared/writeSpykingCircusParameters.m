@@ -26,7 +26,7 @@ function writeSpykingCircusParameters(cfg)
 cfg.circus.part_list                = ft_getopt(cfg.circus, 'part_list', 'all');
 
 if strcmp(cfg.circus.part_list, 'all')
-    cfg.circus.part_list = 1:size(MuseStruct,2);
+    cfg.circus.part_list = 1:size(cfg.directorylist,2);
 end
 
 [p, ~, ~]               = fileparts(mfilename('fullpath'));
