@@ -1,4 +1,4 @@
-function [shifted, nshift] = alignXcorr(input,nriter)
+function [shifted, nshift] = alignXcorr(input,maxiter)
 
 if size(input,1) == 1
     fprintf('Cannot align only one trial!\n');
@@ -9,7 +9,7 @@ shifted = input;
 nshift  = zeros(1, size(input,1));
 toshift = zeros(1, size(input,1));
 
-for iter = 1 : nriter
+for iter = 1 : maxiter
     avg = nanmean(shifted);
     for itrial = 1 : size(input,1)
         [X2,lags]           = nanxcorr(avg, shifted(itrial,:));
@@ -19,6 +19,10 @@ for iter = 1 : nriter
         nshift(itrial)      = nshift(itrial) + toshift(itrial);
         shifted(itrial,:)   = shift(shifted(itrial,:), toshift(itrial));
     end
-    fprintf('Iteration %d of %d: average absolute shift: %0.1f samples\n', iter,nriter, nanmean(abs(toshift)));
+    fprintf('Iteration %d of max %d: max absolute shift: %d samples\n', iter, maxiter, max(abs(toshift)));
+    if max(abs(toshift)) <= 1
+        fprintf('No need to continue\n');
+        return
+    end
 end
 
