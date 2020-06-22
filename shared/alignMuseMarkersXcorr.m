@@ -47,7 +47,7 @@ else
     cfgtemp                 = rmfield(cfg,'LFP');
     cfgtemp.LFP.name        = cfg.align.name;
     cfgtemp.LFP.channel     = cfg.align.channel;
-    [LFP]                   = readLFP(cfgtemp, MuseStruct, true, false);
+    [LFP]                   = readLFP(cfgtemp, MuseStruct, false);
     
     for ipart = 1:size(cfg.directorylist,2)
         
@@ -95,7 +95,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,6);
-            plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(~rejected,:)');
+%             plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(~rejected,:)');
+            plot(dat.time{1},LFP_concatinated(~rejected,:)');
             axis tight
             
             subplot(2,5,2);
@@ -104,7 +105,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,7);
-            plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(rejected,:)');
+%             plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(rejected,:)');
+            plot(dat.time{1},LFP_concatinated(rejected,:)');
             axis tight
             
             subplot(2,5,3);
@@ -113,7 +115,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,8);
-            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(~rejected,:)');
+%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(~rejected,:)');
+            plot(dat.time{1},shifted(~rejected,:)');
             axis tight
             
             subplot(2,5,4);
@@ -121,7 +124,8 @@ else
             title('Misaligned');
             set(gca,'xtick',[]);
             subplot(2,5,9);
-            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(rejected,:)');
+%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(rejected,:)');
+            plot(dat.time{1},shifted(rejected,:)');
             axis tight
             
             subplot(2,5,5);
@@ -130,7 +134,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,10);
-            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted_clean_z');
+%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted_clean_z');
+            plot(dat.time{1},shifted_clean_z');
             axis tight
             
             set(fig,'PaperOrientation','landscape');
@@ -179,4 +184,3 @@ else
     % save data
     save(fname,'MuseStruct');
 end
-
