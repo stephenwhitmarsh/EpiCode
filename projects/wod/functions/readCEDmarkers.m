@@ -1,4 +1,4 @@
-function [CEDStruct]  = CEDreadevents(cfg, force)
+function [CEDStruct]  = readCEDmarkers(cfg, force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function readCEDevents
@@ -78,11 +78,15 @@ else
             
             
             %Select all channels which are event or marker channels
-            chanindex = [];
+            chanindex       = [];
+            textmarkindex   = [];
             for ichan = 1:channr
                 [iType] = CEDS64ChanType(fid, ichan);
-                if ismember(iType, [2, 3, 4, 5, 6, 7, 8])
+                if ismember(iType, [2, 3, 4, 5]) %FIXME : 6 and 7 : realmark, wavemark. See if need to implement for those chan types
                     chanindex = [chanindex, ichan];
+                elseif iType == 8 %textmark
+                    chanindex     = [chanindex, ichan];
+                    textmarkindex = [textmarkindex, ichan];
                 end
             end
             
@@ -97,7 +101,7 @@ else
             nametemp = []; 
             for imarker = 1:length(chanindex)
                 [~, name{imarker}] = CEDS64ChanTitle(fid, chanindex(imarker));
-                name{imarker}      = CEDrename_chan(name{imarker}, chanindex(imarker),name(1:imarker-1),true); %name{1:imarker-1} is [] if imarker = 1
+                name{imarker}      = renamechan_CED(name{imarker}, chanindex(imarker),name(1:imarker-1),true); %name{1:imarker-1} is [] if imarker = 1
             end
 
             
@@ -106,7 +110,7 @@ else
                 [iread, events] = CEDS64ReadEvents(fid,chanindex(imarker),1000000,0);
                 
                 if iread > 1000000
-                    error('Too many events in channel %d of file %s. \nIncrese the corresponding argument in CEDS64ReadEvents just above this line', ichan, datapath);
+                    error('Too many events in channel %d of file %s. \nIncrease the corresponding argument in CEDS64ReadEvents just above this line', ichan, datapath);
                 end
                 if iread < 0
                     error('Error while loading events of channel %d in file %s', chanindex(imarker), datapath);
@@ -142,10 +146,24 @@ else
             %markers with writeMusemarkers.m
             CEDStruct{ipart}{idir}.starttime = starttime;
             CEDStruct{ipart}{idir}.directory = cfg.directorylist{ipart}{idir};
-            CEDStruct{ipart}{idir}.endtime    = starttime + seconds(maxtime);
+            CEDStruct{ipart}{idir}.endtime   = starttime + seconds(maxtime);
 
             for imarker = 1:length(chanindex)
                 CEDStruct{ipart}{idir}.markers.(name{imarker}).comment        = sprintf('Spike2 chan nr %d', chanindex(imarker));
+                if ismember(chanindex(imarker), textmarkindex)
+                    [iread, marksinfos] = CEDS64ReadExtMarks(fid, chanindex(imarker),1000000,0);
+                    if iread > 1000000
+                        error('Too many events in channel %d of file %s. \nIncrease the corresponding argument in CEDS64ReadEvents just above this line', ichan, datapath);
+                    end
+                    %get code from marks info
+                    for ievent = 1:size(marksinfos, 1)
+%                         CEDStruct{ipart}{idir}.markers.(name{imarker}).textmark(ievent) = marksinfos(ievent).m_Data;
+                        CEDStruct{ipart}{idir}.markers.(name{imarker}).code_1(ievent)   = marksinfos(ievent).m_Code1;
+                        CEDStruct{ipart}{idir}.markers.(name{imarker}).code_2(ievent)   = marksinfos(ievent).m_Code2;
+                        CEDStruct{ipart}{idir}.markers.(name{imarker}).code_3(ievent)   = marksinfos(ievent).m_Code3;
+                        CEDStruct{ipart}{idir}.markers.(name{imarker}).code_4(ievent)   = marksinfos(ievent).m_Code4;
+                    end
+                end
                 for ievent = 1 : size(marks{imarker},2)
                     CEDStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent)         = marks{imarker}(ievent);
                     CEDStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent)) + CEDStruct{ipart}{idir}.starttime;

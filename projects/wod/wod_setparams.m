@@ -33,7 +33,7 @@ config{1}.imagesavedir               = imagesavedir;
 config{1}.prefix                    = 'WODtest-';
 config{1}.rawdir                    = fullfile(rootpath_data, 'test');
 config{1}.directorylist{1}          =  {'40-01'}; %without the extension
-config{1}.directorylist{2}          =  {'40-01'}; 
+% config{1}.directorylist{2}          =  {'40-01'}; 
 %ajouter partname ?
 
 % infos about the peak to align. Already aligned in Spike2, but those infos

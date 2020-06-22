@@ -1,4 +1,4 @@
-function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force,varargin)
+function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
@@ -6,14 +6,13 @@ function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,forc
 % Cut a Fieldtrip raw spike structure into consecutive equal trials of 
 % length defined in cfg. Make a trialinfo array similar to
 % readSpikeTrials_MuseMarkers.m so the same analysis can be applied.
-% Trials not complete at the end of the file is not created
+% Note : last trial, if not complete at the end of the file, is not created
 %
 % ### Necessary input:
 %
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of results
 % cfg.circus.outputdir  = directory delow datasavedir for spyking-circus
-% cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
 % cfg.spike.triallength = length of the trials, in seconds. All the data
 %                         will be cut in consecutive trials of this length.
@@ -23,24 +22,30 @@ function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,forc
 %                         one created in readSpikeTrials_MuseMarkers.m (eg 
 %                         for later removing of artefacts based on Muse 
 %                         Markers).
-%
+% SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
+% 
+% ### Optional cfg field
+% cfg.circus.postfix     = string postfix appended to spike data results. 
+%                         Default = []. 
+% cfg.circus.part_list  = list of parts to analyse. Can be an array of
+%                         integers, or 'all'. Default = 'all'.
 %
 % ### Output:
-% SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
 % Paul Baudin (paul.baudin@live.fr) 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isempty(varargin) || strcmp(varargin{1},'all')
-    parts_to_read = 1:size(cfg.directorylist,2);
-else
-    parts_to_read = varargin{1};
-end
+% get the default cfg options
+cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
+cfg.circus.part_list    = ft_getopt(cfg.circus, 'part_list', 'all');
 
+if strcmp(cfg.circus.part_list,'all')
+    cfg.circus.part_list = 1:size(cfg.directorylist,2);
+end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'SpikeTrials_continuous.mat']);
 if exist(fname,'file') && force == false
@@ -51,7 +56,7 @@ else
     fprintf('(re-)computing SpikeTrials_continuous for %s\n', cfg.prefix(1:end-1));
 end
 
-for ipart = parts_to_read
+for ipart = cfg.circus.part_list
     
     temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
     hdr_fname   = fullfile(temp(1).folder,temp(1).name);

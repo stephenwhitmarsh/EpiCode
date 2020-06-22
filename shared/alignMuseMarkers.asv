@@ -91,10 +91,10 @@ else
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
 
-    % select those markers to align
+    % select those markers to align 
     markerlist = [];
-    for i = 1 : size(cfg.align.name,2)
-        if ismember(cfg.align.name{i},cfg.name)
+    for i = 1 : size(cfg.name,2)
+        if ismember(cfg.name{i}, cfg.align.name)
             markerlist = [markerlist, i];
         end
     end
@@ -156,6 +156,7 @@ else
                     dataset = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
                     
                 end
+                
                 
                            
                 %load data and header

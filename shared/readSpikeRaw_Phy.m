@@ -1,7 +1,7 @@
-function [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
+function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
+% function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 % 
 % Read SpykingCircus analysis results (spike times, templates, amplitudes).
 % Data must have been converted for Phy GUI, with  parameter prelabelling = True.
@@ -14,11 +14,15 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
 % ### Necessary input:
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of Phy converted results
-% cfg.circus.postfix    = postfix in the name of spike data, if need to
-%                         separate several analysis.
 % cfg.circus.channel    = analyzed-electrode names
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
+% 
+% ### Optional cfg fields : 
+% cfg.circus.postfix     = string postfix appended to spike data results. 
+%                         Default = []. 
+% cfg.circus.part_list  = list of parts to analyse. Can be an array of
+%                         integers, or 'all'. Default = 'all'.
 %
 % ### Output:
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
@@ -31,13 +35,13 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%to avoid specificity of our analysis paths : input hdr, phy_datapath, do not save data
-%include fieldtrip tools to check datatype and cfg
+% get the default cfg options
+cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
+cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 
-if isempty(varargin) || strcmp(varargin{1},'all')
-    parts_to_read = 1:size(cfg.directorylist,2);
-else
-    parts_to_read = varargin{1};
+
+if strcmp(cfg.circus.part_list,'all')
+    cfg.circus.part_list = 1:size(cfg.directorylist,2);
 end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'SpikeRaw_Phy', cfg.circus.postfix, '.mat']);
@@ -48,7 +52,7 @@ if exist(fname,'file') && force == false
     return
 end
 
-for ipart = parts_to_read
+for ipart = cfg.circus.part_list
     
     
     %% find spiking-circus output path, which is based on the name of the first datafile

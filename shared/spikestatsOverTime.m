@@ -2,52 +2,85 @@ function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [stats, legend] = spikestatsOverTime(cfg)
-% Compute stats over time, trial by trial, for one unit. Time can be
-% normalized or not. The computed stat is selected in cfg.
+% Compute stats over time, trial by trial, for one unit. 
 %
-% ### INPUT
+% ### Necessary input
 % spikedata           = spike data epoched in FieldTrip trial data structure
 % cfg.spikechannel    = label of the unit to analyse
-% cfg.normtime        = 'yes' or 'no', whether to normalize time or not
-% cfg.normvalues      = Only two options for now : 'no' or 'begin' (first sample = 1)
-% cfg.cutlength       = Time window for computing stats on ISI. If
-%                       normtime = 'yes', must be between 0 and 1.
+% cfg.cutlength       = Time window for computing stats. If
+%                       cfg.normtime = 'yes', must be between 0 and 1.
 %                       Otherwise, it is in seconds. Ignored if cfg.plot =
-%                       'trialavg' or 'scatter'.
+%                       'trialavg' or 'scatter', because in those cases
+%                       only one value is computed per trial.
 % cfg.method          = can be 'isi', 'freq', 'cv2', 'cv', 'fanofactor', 
 %                       'burstindex' or 'amplitude'
-% cfg.removebursts    = 'yes' or 'no'.
 % cfg.timelock        = 'begin', 'end', 'no', whether to align data from the
 %                       begin or the end of each trial. If 'no', no
 %                       alignment is performed and real time is used in
-%                       abscisse.
-% cfg.removeempty     = 'yes' or 'no', whether to ignore trials with no
-%                       spike (for freq or ISI, otherwise need at least 2
-%                       spikes)
-% cfg.removeoutlier   = 'yes' or 'no', whether to remove outliers wit
-%                       rmoutliers.m
+%                       x axis.
 % cfg.plot            = 'raw' (plot all data), 'raw+avg' (plot all data,
 %                       and avg), 'avg' (plot only the avg of all the
 %                       trials), 'trialavg' (plot avg of each trial),
 %                       'scatter' (plot one point per trial), 'movmean',
 %                       'movmean+avg'.
+%
+% ### Optional cfg fields
+% cfg.trial_list      = list of trials to analyse. Can be an array of
+%                       integers with trials numbers, 'last', or 'all'. 
+%                       Default = 'all'.
+% cfg.removebursts    = 'yes' or 'no', whether to detect bursts (several
+%                       spikes with ISI <10ms), and to keep only the first 
+%                       spike. Default = 'no'.
+% cfg.removeempty     = 'yes' or 'no', whether to ignore trials with no
+%                       spike. If no, and trial has no spike, ISI is put at 
+%                       0 and freq is put at Inf. For other cfg.methods, if 
+%                       less than 2 spikes, the value is set to NaN 
+%                       regardless to cfg.removeempty. Default = 'no'.
+% cfg.removeoutlier   = 'yes' or 'no', whether to remove outliers wit
+%                       rmoutliers.m. Default = 'no'.
+% cfg.normtime        = 'yes' or 'no', whether to normalize time or not.
+%                       Default = 'no'.
+% cfg.normvalues      = Only two options for now : 'no' or 'begin' (first
+%                       sample value is set to 1). Default = 'no'.
 % cfg.color           = optional field to change the default colors of the
-%                       plot.
-% cfg.saveplot        = 'yes' or 'no', whether to save and close the
-%                       plot or to output it (respectively)
-% cfg.name            = name of the analysis (for title of plot and of
-%                       saved file)
-% cfg.imagesavedir    = if cfg.saveplot = 'yes', where to save the plot.
+%                       plot. Can be 'defaults', or a color indications
+%                       (letter or array of 3 numbers). Default = 'default'.
+% cfg.saveplot        = 'yes' or 'no', whether respectively to save and 
+%                       close the plot or to output it. Default = 'no'.
+% 
+% # Necessary cfg fields if cfg.saveplot = 'yes' :
+% cfg.name            = if cfg.saveplot, name of the analysis (for title of 
+%                       plot and of saved file)
+% cfg.imagesavedir    = if cfg.saveplot, if cfg.saveplot = 'yes', where to  
+%                       save the plot.
 % cfg.prefix          = if cfg.saveplot = 'yes', prefix attached to the
 %                       name of the saved-image
-%
+% 
 % ### OUTPUT
 % stats               = values, avg and std of computed method.
-% legend              = target to add a legend
+% legend              = target to add a legend afterwards
 %
 % Paul Baudin (paul.baudin@live.fr)
+% 
+% FIXME : ajouter liste des trials à process, ajouter getopt et continue
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%get defaults cfg parameters
+cfg.trial_list          = ft_getopt(cfg, 'trial_list'   , 'all');
+cfg.removebursts        = ft_getopt(cfg, 'removebursts' , 'no');
+cfg.removeempty         = ft_getopt(cfg, 'removeempty'  , 'no');
+cfg.removeoutlier       = ft_getopt(cfg, 'removeoutlier', 'no');
+cfg.normtime            = ft_getopt(cfg, 'normtime'     , 'no');
+cfg.normvalues          = ft_getopt(cfg, 'normvalues'   , 'no');
+cfg.color               = ft_getopt(cfg, 'color'        , 'default');
+cfg.saveplot            = ft_getopt(cfg, 'saveplot'     , 'no');
+
+if strcmp(cfg.trial_list, 'all')
+    cfg.trial_list = 1:size(spikedata.trialinfo,1);
+elseif strcmp(cfg.trial_list, 'last')
+    cfg.trial_list = size(spikedata.trialinfo,1);
+end
 
 %Find unit index
 unit_idx = find(strcmp(spikedata.label,cfg.spikechannel));
@@ -114,7 +147,7 @@ end
 values = nan(size(spikedata.trialinfo,1),max_cuts);
 
 %compute values
-for itrial = 1:size(spikedata.trialinfo,1)
+for itrial = cfg.trial_list
     clear x freq cv2 cv fanofactor burstindex isi_smooth amplitude
     spike_index = [];
     spike_index = spikedata.trial{unit_idx} == spikedata.trialinfo(itrial,7);
@@ -275,14 +308,10 @@ switch cfg.timelock
         for itrial = 1:size(values,1)
             starttime = spikedata.trialinfo(itrial, 3) / spikedata.hdr.Fs;
             x = (0 : max_cuts-1) * cfg.cutlength + starttime; %-1 because starts at zero
-            if isfield(cfg, 'color')
-                if ~isempty(cfg.color)
-                    color = cfg.color;
-                else
-                    color = 'k';
-                end
-            else
+            if strcmp(cfg.color, 'default')
                 color = 'k';
+            else
+                color = cfg.color;
             end
             
             switch cfg.plot
@@ -312,14 +341,10 @@ switch cfg.timelock
         c_greys = 0.9 : -0.9/size(values,1) : 0; %Color darker for the last trials
         
         for itrial = 1:size(values,1)
-            if isfield(cfg, 'color')
-                if ~isempty(cfg.color)
-                    color = cfg.color;
-                else
-                    color = [c_greys(itrial), c_greys(itrial), c_greys(itrial)];
-                end
-            else
+            if strcmp(cfg.color, 'default')
                 color = [c_greys(itrial), c_greys(itrial), c_greys(itrial)];
+            else
+                color = cfg.color;
             end
             
             switch cfg.plot

@@ -23,19 +23,18 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 config = dtx_setparams_probe_spikes([]);
 
-%% prepare data for spyking circus analysis
-% if ismember(slurm_task_id, [6, 7])
+%% prepare data for spyking-circus analysis
+% for irat = slurm_task_id
 %
-%     irat = slurm_task_id;
 %     [MuseStruct]                     = readMuseMarkers(config{irat}, false);
 % 
 %     %remove seizures for non-control experiments
 %     if strcmp(config{irat}.type, 'dtx')
-%         [MuseStruct]                     = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true, true);
+%         [MuseStruct]                 = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true, true);
 %         %save deadfile without removing seizures
 %         writeSpykingCircusDeadFile(config{irat},MuseStruct);
 %         %remove all seizures
-%         [MuseStruct]    = addMuseBAD(config{irat},MuseStruct);
+%         [MuseStruct]                 = addMuseBAD(config{irat},MuseStruct);
 %     end
 %
 %     %create multifile and dead file, and slurm file
@@ -49,140 +48,66 @@ config = dtx_setparams_probe_spikes([]);
 
 
 %% analyse spyking circus output
+% separation of 'dtx' experiments from 'ctrl' experiments for some
+% analysis. Done by filtering with cfg.type
 
 for irat = slurm_task_id
-    %FIXME pour enregistrements controle : définir un unique trial entre
-    %Baseline_Start et Analysis_End
-    
+   
     %align markers and remove wrong seizures
     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
     [MuseStruct]                    = alignMuseMarkers(config{irat},MuseStruct, false);
-    if strcmp(config{irat}.type, 'dtx'), MuseStruct = dtx_remove_wrong_seizure(config{irat}, MuseStruct,false, false); end
-    %[mrk_clock mark_synctime] = concatenateMuseMarkers(config{irat},MuseStruct, ipart, 'SlowWave');
-    
+%     MuseStruct = alignMuseMarkersXcorr(config{irat}, MuseStruct, true);
+    if strcmp(config{irat}.type, 'dtx') 
+        MuseStruct = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true); 
+    end
+       
     %read LFP data
-    dat_LFP                         = readLFP(config{irat}, MuseStruct, false, false);
-    %for itrial=1:size(dat_LFP{1}{2}.trial,2), plot(dat_LFP{1}{2}.time{itrial}, dat_LFP{1}{2}.trial{itrial}(strcmp(dat_LFP{1}{2}.label, 'E12LFP'),:)+itrial*10000,'k'); end
-    [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP);
+    dat_LFP                         = readLFP(config{irat}, MuseStruct, false);
+    [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP); %correct an error in channel name during acquisition, for rat DTX2
     
     %read spike data
-    [SpikeRaw]                      = readSpikeRaw_Phy(config{irat},true,'all');
-    %     test = readSpikeRaw_SpykingCircus(config{irat},true,'all');
+    SpikeRaw                        = readSpikeRaw_Phy(config{irat},false);
+
     if strcmp(config{irat}.type, 'dtx')
         %make trials based on Muse Markers
-        [SpikeTrials]                   = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true, 'all');
-        %FIXME rename readSpikeTrials_Muse
+        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
     elseif strcmp(config{irat}.type, 'ctrl')
-        %make 10 minuts continuous trials on all the data, with same
-        [SpikeTrials]                   = readSpikeTrials_continuous(config{irat}, MuseStruct,SpikeRaw, false, 'all'); %FIXME rename readSpikeTrials_Muse
-        %FIXME faire le texte d'intro de cette fonction
-    else
-        error('config{%d}.type ''%s'' is not an available value', irat, config{irat}.type);
+        %make trials of continuous length on all the data
+        SpikeTrials                     = readSpikeTrials_continuous(config{irat}, MuseStruct,SpikeRaw, false);
     end
-    %FIXME pull request ft_spike_maketrials because I added the selection
-    %FIXE pull request stephen avec bug si un dossier sans trials
-    %of some other fields.      % and for ft_spike_select
-    %FIXME rename readSpikeTrials
     
-    return %REMOVEME
     clear SpikeRaw
     
-%     FIXME FIND A WAY OF IMPROVE THIS FUNCTION - CORRECT BUGS
-%     avec DTX2, 6 trials à rejeter
-    %remove BAD LFP/Spike trials
-    try %REMOVEME
+    % remove artefacted trials    
+    % Plot the trials to see the artefacted Slow Waves (no LFP loaded for ctrl experiments)
     cfgtemp                         = [];
-    cfgtemp                         = config{irat};
-    if strcmp(config{irat}.type, 'dtx')
-        cfgtemp.keeptrials               = 'yes';
-        cfgtemp.LFP.electrodetoplot     = config{irat}.align.channel(1);
-        cfgtemp.plotdata                = 'yes';
-    else
-        cfgtemp.keeptrials               = 'no';
-        cfgtemp.LFP.electrodetoplot     = [];
-        cfgtemp.plotdata                = 'no';
-    end
-    
-    cfgtemp.method                  = 'remove';
-    cfgtemp.markerstart             = 'BAD__START__';
-    cfgtemp.markerend               = 'BAD__END__';
-    cfgtemp.indexstart              = 0;
-    cfgtemp.indexend                = 0;
-    cfgtemp.timefrombegin           = 0;
-    cfgtemp.timefromend             = 0;
-    
-    [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct, 'all', 'all');
-    [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct, 'all', 'all');
-    end %try, REMOVEME
-    
+    cfgtemp                         = config{irat}; %info of where to save images
+    cfgtemp.remove.plotdata         = 'yes';
+    cfgtemp.remove.electrodetoplot  = ft_getopt(config{irat}.align,'channel', []);
+    [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct);
+    [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
+
     %read spike waveforms
-    [SpikeWaveforms]                = readSpikeWaveforms(config{irat}, SpikeTrials, true, 'all');
-    %FIXME add _1000 for loading precomputed data quickly
-    %FIXME : ctrl are set to 1000 : do again with all
+    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
+    %Relance avec un _1000 pour voir si pas d'erreur, et un avec un 'all'
     
-%     for i_imagesavedir = [1 2] %REMOVEME
-        
-%         if i_imagesavedir == 2, config{irat}.imagesavedir = fullfile(config{irat}.imagesavedir,'Same_analysis_an_other_time'); end %FIXME REMOVEME
-        %stats per unit
-        stats                           = spikeratestats_Events_Baseline(config{irat},SpikeTrials,SpikeWaveforms,dat_LFP,'all',true);
-        %FIXME voir les try/end dans plot_morpho
-        %FIXME : trouver un meilleur moyen de raccourcir les trials trop long
-        %avec la cfg input
-        %stats = spikeratestats_Events_Baseline(config{irat},[],[],[],[],false);
-        %stats = spikeratestats_Events_Baseline(config{irat},SpikeTrials,[],[],'all',true);
-        %FIXME : ajouter doublets de PA avec spikestatsOverTime
-        %FIXME : pull request Fieldtrip
-        
-%     end %i_imagesavedir %REMOVEME
-    
+    %create a separated config to avoid useless increase of memory use, if loop over patients
+    cfgtemp                 = [];
+    cfgtemp                 = config{irat};
+    cfgtemp.dataLFP         = dat_LFP;          clear dat_LFP
+    cfgtemp.SpikeTrials     = SpikeTrials;      clear SpikeTrials
+    cfgtemp.SpikeWaveforms  = SpikeWaveforms;   clear SpikeWaveforms
+    spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
+    %FIXME voir les try/end dans plot_morpho
+           
 end %irat
 return
 
-%% Pool over rats
-
-%load all spiketrials{irat]
-%fill spikeTrials with hand-annotated infos, based on previous plots
-%plot all-units morpho, and select in/pn according to that
-%plot the rest : freq, cv2, comportement OL, comportement interictal : avec
-%infos sua mua, pn in, proche ou non du site d'injection
-% une ligne par neurone avec représentation en couleur de l'amplitude de la
-% fonction spike density. Pour 1 rat. Pour plusieurs rats, voir si merge
-% avec profondeur calculée par l'histo
-% corrélation spikerate et LFP
-
-
-%cross-correlogram pour voir si connexions monosynaptiques. Voir si
-%évolue au cours du temps interictal, et pendant SW
-%SUA et MUA, sur une grande feuille A2
-
-%Spiky pour voir évolution de la synchronie au cours du temps.
-%edge effects, utiliser des trials incluant un padding
-%Pour chaque trial
-%Uniquement pour les SUA, et avec SUA+MUA
-
-%Représentation spatiale avec une ligne par unit
 
 %% Load precomputed data
 for irat = 1:7
-    stats{irat} = spikeratestats_Events_Baseline(config{irat},[],[],[],[],false);
-%     if strcmp(config{irat}.type, 'dtx'), SpikeTrials{irat} = readSpikeTrials_MuseMarkers(config{irat}, [],[], false, 'all');end
-%     if strcmp(config{irat}.type, 'ctrl'), SpikeTrials{irat} = readSpikeTrials_continuous(config{irat}, [],[], false, 'all');end
+    stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
 end
-
-%REMOVEME
-% for irat = 1:5
-%     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth,2)
-%         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth{i_unit})
-%            stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth{i_unit} = NaN;
-%         end
-%         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.peaktrough{i_unit})
-%            stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.peaktrough{i_unit} = NaN;
-%         end
-%         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.troughpeak{i_unit})
-%            stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.troughpeak{i_unit} = NaN;
-%         end
-%     end
-% end
 
 %do it after filtering and keeping only sua
 unit_table = readtable('Z:\analyses\lgi1\DTX-PROBE\classification_units.xlsx');
@@ -356,114 +281,7 @@ end
 xlim([0 3]);
 ylim([0 2]);
 
-%% behavior during slowwave
-figure;hold;
-for irat = 1:7
-    ipart = 1;
-    for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
-        if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
-            check_empty = [check_empty, [num2str(irat), ';',stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit},';']]
-        else
-            if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
-                if strcmp (config{irat}.type, 'dtx')
-                    x =  stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).code_slowwave{i_unit} + (rand-0.5)*0.2;
-                    y = rand;
-                    
-                    if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
-                        plottype = 'ob';
-                    elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
-                        plottype = 'or';
-                    end
-                    scatter(x,y,plottype, 'filled');
-                end
-            end
-        end
-    end
-end
-
-%% max discharge during slowwave, interictal spikerate and cv2, compared to deep
-% à faire en fonction de la vraie profondeur
-%Interessant pour le code SW
-figure;hold;
-for irat = 1:7
-    ipart = 1;
-    for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
-        if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
-            check_empty = [check_empty, [num2str(irat), ';',stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit},';']]
-        else
-            if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
-                if strcmp (config{irat}.type, 'dtx')
-                    x = stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{i_unit} + (rand-0.5)*0.2;
-%                     y = stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).maxfreq.max{i_unit};
-                    y = stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).code_slowwave{i_unit} + (rand-0.5)*0.2;
-%                     y = stats{irat}{ipart}.(config{irat}.spike.baselinename).code_spikerate{i_unit}+ (rand-0.5)*0.2;
-%                     y = stats{irat}{ipart}.(config{irat}.spike.baselinename).code_cv2{i_unit}+ (rand-0.5)*0.2;
-                    
-                    
-                    if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
-                        plottype = 'ob';
-                    elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
-                        plottype = 'or';
-                    end
-                    scatter(x,y,plottype, 'filled');
-                end
-            end
-        end
-    end
-end
-
-%% interical behavior code
-%FREQ
-figure;hold;
-for irat = 1:7
-    ipart = 1;
-    for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
-        if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
-            check_empty = [check_empty, [num2str(irat), ';',stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit},';']]
-        else
-            if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
-                if strcmp (config{irat}.type, 'dtx')
-                    x =  stats{irat}{ipart}.(config{irat}.spike.baselinename).code_spikerate{i_unit} + (rand-0.5)*0.2;
-                    y = rand;
-                    
-                    if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
-                        plottype = 'ob';
-                    elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
-                        plottype = 'or';
-                    end
-                    scatter(x,y,plottype, 'filled');
-                end
-            end
-        end
-    end
-end
-
-%CV2
-figure;hold;
-for irat = 1:7
-    ipart = 1;
-    for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
-        if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
-            check_empty = [check_empty, [num2str(irat), ';',stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit},';']]
-        else
-            if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
-                if strcmp (config{irat}.type, 'dtx')
-                    x =  stats{irat}{ipart}.(config{irat}.spike.baselinename).code_cv2{i_unit} + (rand-0.5)*0.2;
-                    y = rand;
-                    
-                    if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
-                        plottype = 'ob';
-                    elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
-                        plottype = 'or';
-                    end
-                    scatter(x,y,plottype, 'filled');
-                end
-            end
-        end
-    end
-end
-
-%% colorline for each neuron
+%% plot sdf of each neuron during slow wave
 figure;hold;
 emax_list = nan;
 sdf_avg = nan(1,length(stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.avg));
@@ -492,32 +310,6 @@ for i=1:size(sdf_avg,1)
     sdf_avg_filt(i,:) = imgaussfilt(sdf_avg(i,:),1); %smooth the spike density function values
     sdf_filt_blcorrect(i,:) = (sdf_avg_filt(i,:)) - nanmean((sdf_avg_filt(i,1:20))); %correct baseline
 end
-
-% imagesc(log10(abs(sdf_avg_filt)));
-% imagesc(log10(abs(sdf_filt_blcorrect)));
-% c = caxis;
-% caxis([0 c(2)]);
-% clb = colorbar;
-% axis tight
-% xticklabels(sdf_time(xticks+1));
-% set(gca,'TickDir','out');
-% func_temp = @(v) sprintf('10\\^%s',v);
-% clb.TickLabels = cellfun(func_temp,clb.TickLabels,'UniformOutput',false);
-% 
-% % plot baseline patch
-% x = [0 20 20 0];
-% ax = axis;
-% y = [ax(3) ax(3) ax(4) ax(4)];
-% patch('XData',x,'YData',y,'facecolor',[1 1 1],'edgecolor','none','facealpha',0.2);
-% 
-% % plot spike infos
-% C = linspecer(sum(~isnan(unique(emax_list_sorted))),'qualitative');
-% for ineuron = 1:size(celltype,2)
-% %     if strcmp(celltype{ineuron},'pn'), plottype='^w';end
-% %     if strcmp(celltype{ineuron},'in'), plottype='or';end
-%     idx=find(unique(emax_list_sorted)==emax_list_sorted(ineuron));
-%     scatter(size(sdf_avg,2)-1,ineuron,'s','filled','MarkerEdgeColor', C(idx,:), 'MarkerFaceColor', C(idx,:));
-% end
 
 % plot pn and in separately
 figure;
@@ -590,25 +382,5 @@ xlim([-60 0]);
 ylim([0.5 1.8]);
 ylim([0 3]);
 
-%
-% figure;hold;
-% for iunit = 1:23
-%     for itrial = 1:17
-%         plot(stats{1}.Interictal.stats_over_time.freq{iunit}.time, stats{1}.Interictal.stats_over_time.freq{iunit}.values(itrial,:), 'k');
-%         plot(stats{1}.Interictal.stats_over_time.freq{iunit}.time, movmean(stats{1}.Interictal.stats_over_time.freq{iunit}.values(itrial,:),4), 'r');
-%     end
-% end
-% axis tight
-
-%plot avg of freq over time
-% figure;hold;
-% for i_unit = 1:size(stats{irat}{1}.Interictal.stats_over_time.freq,2)
-%     plot(stats{irat}{1}.Interictal.stats_over_time.freq{i_unit}.time,stats{irat}{1}.Interictal.stats_over_time.freq{i_unit}.avg);
-% end
-figure;hold;
-%FREQ TIMENORM SERA REMPLACE PAR CV2WITHOUTBURSTS
-for i_unit = 1:size(stats{irat}{1}.Interictal.stats_over_time.freq,2)
-    plot(stats{irat}{1}.Interictal.stats_over_time.freq_timenorm{i_unit}.time,stats{irat}{1}.Interictal.stats_over_time.freq_timenorm{i_unit}.avg);
-end
 end
 %

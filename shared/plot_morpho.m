@@ -6,30 +6,39 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %
 % Note :
 % - If there are more than 1000 trials, only 1000 random-selected trials
-% are plotted. The average remains the average of all the trials.
+% are plotted. The average (and std) remain calculated on all the trials.
 % - Measurements may not work well if data events are unclear or artefacted
 %
-% ### INPUT
+% ### Necessary input
 % data                    = raw Fieldtrip data structure epoched in trials
-% cfg.channame            = name of the channel to analyse in data.label
-% cfg.plotstd             = 'yes' or 'no', whether to plot std or not
+% cfg.channame            = name of the channel to analyse (in data.label)
+% 
+% ### Optionnal cfg fields :
+% cfg.plotstd             = 'yes' or 'no', whether to plot std or not.
+%                           Default = 'no'.
+% cfg.toiplot             = x limits of plot. Can be 'all'. Default = 'all'.
+% cfg.saveplot            = 'yes' or 'no', whether to save and close the
+%                           plot or to output it (respectively). Default =
+%                           'no'.
 % cfg.removeoutliers      = whether to plot outlier trials (>10*std to the
-%                           mean). Average is not modified.
-% cfg.mesurehalfwidth     = 'yes' or 'no', whether to compute halfwidth
+%                           mean). Average is not modified. Default = 'no'.
+% cfg.mesurehalfwidth     = 'yes' or 'no', whether to compute halfwidth.
+%                           Default = 'no'.
 % cfg.halfwidthmethod     = 'min' or 'bl' : reference for peak-amplitude
-%                           measurement if mesurehalfwidth = 'yes'
+%                           measurement if mesurehalfwidth = 'yes'. 
+%                           Default = 'bl' (baseline)
 % cfg.mesurepeaktrough    = 'yes' or 'no', whether to compute peak-trough
-%                           and trough-peak
+%                           and trough-peak. Default = 'no'.
+% 
+% ### Necessary cfg fields if cfg.mesurehalfwidth = 'yes' or cfg.mesurepeaktrough = 'yes'
 % cfg.toiac               = active period for measurements. Can be 'all'
 % cfg.toibl               = baseline period if cfg.halfwidthmethod = 'bl'
-% cfg.toiplot             = x limits of plot. Can be 'all'
-% cfg.saveplot            = 'yes' or 'no', whether to save and close the
-%                           plot or to output it (respectively)
-% cfg.name                = name of the analysis (for title of plot and of
-%                           saved file)
-% cfg.imagesavedir        = if saveplot = 'yes', where to save the plot.
-% cfg.prefix              = if saveplot = 'yes', prefix attached to the
-%                           name of the saved-image
+% 
+% ### Necessary cfg fields if cfg.saveplot = 'yes'
+% cfg.name                = name of the analysis (title of plot and of
+%                           output image file)
+% cfg.imagesavedir        = where to save the image.
+% cfg.prefix              = prefix attached to the name of the saved-image
 %
 % ### OUTPUT
 % halfwidth               = mesured halfwidth value, in seconds, or [].
@@ -40,7 +49,16 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%convert some string inputs to usable values
+
+%Get default cfg parameters
+cfg.plotstd                     = ft_getopt(cfg, 'plotstd'          , 'no');
+cfg.removeoutliers              = ft_getopt(cfg, 'removeoutliers'  	, 'no');
+cfg.mesurehalfwidth             = ft_getopt(cfg, 'mesurehalfwidth'	, 'no');
+cfg.halfwidthmethod             = ft_getopt(cfg, 'halfwidthmethod' 	, 'bl');
+cfg.mesurepeaktrough            = ft_getopt(cfg, 'mesurepeaktrough'	, 'no');
+cfg.toiplot                     = ft_getopt(cfg, 'toiplot'          , 'all');
+cfg.saveplot                    = ft_getopt(cfg, 'saveplot'         , 'no');
+
 if strcmp(cfg.toiplot,'all')
     cfg.toiplot = [-Inf Inf];
 end
@@ -159,8 +177,7 @@ if strcmp(cfg.mesurehalfwidth, 'yes')
             
             text(x_precise(2),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
         end
-    catch
-    end
+    end %REMOVEME
 end
 
 %% Measure and plot pt and tp
@@ -168,7 +185,7 @@ peaktrough = NaN;
 troughpeak = NaN;
 
 if strcmp(cfg.mesurepeaktrough, 'yes')
-     try %TEMPORARY - CHECK DTX7 unit just after 26
+    try %TEMPORARY - CHECK DTX7 unit just after 26
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
     % Find throughs
@@ -211,9 +228,9 @@ ylabel('µV');
 xlim(cfg.toiplot);
 
 if strcmp(cfg.removeoutliers, 'yes')
-    title(sprintf('%s chan %s: %d trials (%d outliers removed)', cfg.name, data.label{1},sum(~isOutlierTrial), sum(isOutlierTrial)), 'Fontsize',18, 'Interpreter','none');
+    title(sprintf('Chan %s: %d trials (%d outliers removed)', data.label{1},sum(~isOutlierTrial), sum(isOutlierTrial)), 'Fontsize',18, 'Interpreter','none');
 else
-    title(sprintf('%s chan %s: %d trials', cfg.name, data.label{1},length(data.trial)), 'Fontsize',18, 'Interpreter','none');
+    title(sprintf('Chan %s: %d trials', data.label{1},length(data.trial)), 'Fontsize',18, 'Interpreter','none');
 end
 
 

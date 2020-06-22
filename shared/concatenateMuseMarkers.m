@@ -1,7 +1,8 @@
-function [marker_clock, marker_synctime] = concatenateMuseMarkers(cfg, MuseStruct, ipart, markerName)
-% Concatenate markers over all the dirs of the MuseStruct part.
+function [marker_clock, marker_synctime] = concatenateMuseMarkers(MuseStruct, ipart, markerName)
+% Concatenate markers over all the dirs of one MuseStruct part.
 % First line of the output array : clock or synctime
 % Second line of the output array : nr of the dir
+% Paul Baudin (paul.baudin@live.fr)
 
 marker_clock = [];
 marker_synctime = [];
@@ -33,7 +34,7 @@ for idir = 1:size(MuseStruct{ipart},2)
     
 end
 
-fprintf('%d times found for %s in %s \n',size(marker_clock,2),markerName, cfg.prefix(1:end-1));
+fprintf('%d times found for %s\n',size(marker_clock,2),markerName);
 
 % convert clock time to synctime
 for isample = 1:size(marker_clock,2) 

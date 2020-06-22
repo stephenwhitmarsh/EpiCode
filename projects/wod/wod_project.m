@@ -22,7 +22,7 @@ end
 ft_defaults
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neuralynx
 
-[config] = wod_setparams([]);
+config = wod_setparams([]);
 cfg=config{1};
 
 for irat = 1:length(config)
@@ -40,15 +40,14 @@ for irat = 1:length(config)
 %read all events
 %directorylist CED
 %datasavedir pour data coupées et event
-    [CEDStruct]               = CEDreadevents(config{irat}, true);
-    dat_LFP                   = CEDmaketrials(config{irat},CEDStruct,true,true);
+    [CEDStruct]               = readCEDmarkers(config{irat}, true);
+    dat_LFP                   = readCEDcontinuous(config{irat},CEDStruct,true,true);
     
    %remove artefacts voir mon script 
+   %test plot lfp pour voir si pas d'erreur
    imarker = 1;
    dtx_plot_overdraw_allchannels(config{irat},dat_LFP, ipart, imarker,config{irat}.epoch.toi{imarker}, true);
    dtx_plot_morpho(config{irat},dat_LFP,ipart,imarker,config{irat}.LFP.electrodetoplot{imarker}, [-0.02 0.02],false, true);
 
     %% Plot
     
-% cf script dtx_lfp
-

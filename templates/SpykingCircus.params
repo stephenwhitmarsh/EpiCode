@@ -79,7 +79,7 @@ drift_limit    = 0.1        # Distance for drifts. The higher, the more non-over
 erase_all      = True      	# If False, a prompt will ask you to export if export has already been done
 export_pcs     = none       # Can be prompt [default] or in none, all, some
 export_all     = True       # If True, unfitted spikes will be exported as the last Ne templates
-sparse_export  = False      # For recent versions of phy, and large number of templates/channels
+sparse_export  = True      # For recent versions of phy, and large number of templates/channels
 prelabelling   = True      	# If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
 
 [validating]

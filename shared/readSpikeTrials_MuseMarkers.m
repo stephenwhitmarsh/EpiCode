@@ -1,41 +1,43 @@
-function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg,MuseStruct,SpikeRaw,force,varargin)
+function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg,MuseStruct,SpikeRaw,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg,MuseStruct,SpikeRaw,force,varargin)
+% [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg,MuseStruct,SpikeRaw,force)
 % Make a Fieldtrip spike trials structure based on a Fieldtrip raw spike 
 % structure and on timings defined by Muse Markers.
 % Trials separated between 2 files (ie begin on one file and end on the
 % following file) are not created.
 %
 % ### Necessary input:
-%
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of results
 % cfg.circus.outputdir  = directory delow datasavedir for spyking-circus
-% cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
-%
-% MuseStruct{ipart}     = info (e.g. events, files) of original data,
+% MuseStruct            = info (e.g. events, files) of original data,
 %                         used to segment the spikes into trials
-%
+% SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
 %
+% ### Optional cfg fields :
+% cfg.circus.postfix     = string postfix appended to spike data results. 
+%                         Default = []. 
+% cfg.circus.part_list  = list of parts to analyse. Can be an array of
+%                         integers, or 'all'. Default = 'all'.
+
 % ### Output:
-%
-% SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
-%
-% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
-% Modified by Paul Baudin (paul.baudin@live.fr)
+% 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isempty(varargin) || strcmp(varargin{1},'all')
-    parts_to_read = 1:size(cfg.directorylist,2);
-else
-    parts_to_read = varargin{1};
+% get the default cfg options
+cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
+cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
+
+
+if strcmp(cfg.circus.part_list,'all')
+    cfg.circus.part_list = 1:size(cfg.directorylist,2);
 end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'SpikeTrials_MuseMarkers.mat']);
@@ -47,7 +49,7 @@ else
     fprintf('(re-)computing SpikeTrials_MuseMarkers for %s\n', cfg.prefix);
 end
 
-for ipart = parts_to_read
+for ipart = cfg.circus.part_list
     
     temp        = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.ncs']));
     hdr_fname   = fullfile(temp(1).folder,temp(1).name);
@@ -87,37 +89,41 @@ for ipart = parts_to_read
             hdrtemp     = ft_read_header(fullfile(temp(1).folder,temp(1).name));
             dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples; % assuming all channels have same sampleinfo
             
-            if isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{ilabel})
-                if isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}),'synctime')
-                    if ~isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2))
-                        trialcount_dir = 1;
-                        
-                        for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2)
-                            %end of trial : take the following marker, no need to have the same index has begining marker
-                            ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent) * hdr.Fs);
-                            idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime * hdr.Fs) >= ss,1,'first');
-                            es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(idx) * hdr.Fs);
-                            
-                            if ~isempty(es)
-                                Startsample  = [Startsample; ss + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset(idir)];
-                                Endsample    = [Endsample;   es + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset(idir)];
-                                Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
-                                Trialdir     = [Trialdir; trialcount_dir];
-                                Trialnr      = [Trialnr; trialcount];
-                                Filenr       = [Filenr; idir];
-                                FileOffset   = [FileOffset; dirOnset(idir)];
-                                trialcount   = trialcount + 1;
-                                trialcount_dir = trialcount_dir+1;
-                            end
-                        end
-                    else
-                        fprintf('No events starting with %s found in filenr %d\n',cfg.muse.startend{ilabel},idir);
-                    end
-                end
+            %Check than data has events
+            if ~isfield(MuseStruct{ipart}{idir}.markers,cfg.muse.startend{ilabel})
+                fprintf('No events starting with %s found in filenr %d\n',cfg.muse.startend{ilabel},idir);
+                continue
             end
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}),'synctime')
+                continue
+            end
+            if isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2))
+                continue
+            end
+            trialcount_dir = 1;
             
-        end
-        
+            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel}).synctime,2)
+                %end of trial : take the following marker, no need to have the same index has begining marker
+                ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,1}).synctime(ievent) * hdr.Fs);
+                idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime * hdr.Fs) >= ss,1,'first');
+                es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{ilabel,2}).synctime(idx) * hdr.Fs);
+                
+                if isempty(es)
+                    continue
+                end
+                
+                Startsample  = [Startsample; ss + cfg.epoch.toi{ilabel}(1) * hdr.Fs + dirOnset(idir)];
+                Endsample    = [Endsample;   es + cfg.epoch.toi{ilabel}(2) * hdr.Fs + dirOnset(idir)];
+                Offset       = [Offset; cfg.epoch.toi{ilabel}(1) * hdr.Fs];
+                Trialdir     = [Trialdir; trialcount_dir];
+                Trialnr      = [Trialnr; trialcount];
+                Filenr       = [Filenr; idir];
+                FileOffset   = [FileOffset; dirOnset(idir)];
+                trialcount   = trialcount + 1;
+                trialcount_dir = trialcount_dir+1;
+            end
+        end %idir
+
         cfgtemp                         = [];
         cfgtemp.trl                     = [Startsample, Endsample, Offset];
         cfgtemp.trl(:,4)                = ones(size(cfgtemp.trl,1),1) * idir;
@@ -126,9 +132,9 @@ for ipart = parts_to_read
         cfgtemp.trl(:,7)                = Endsample;                            % endsample
         cfgtemp.trl(:,8)                = Offset;                               % offset
         cfgtemp.trl(:,9)                = Endsample-Startsample+1;              % duration in samples
-        cfgtemp.trl(:,10)               = Trialnr;                              % 
-        cfgtemp.trl(:,11)               = Filenr;                               %
-        cfgtemp.trl(:,12)               = FileOffset;                           % 
+        cfgtemp.trl(:,10)               = Trialnr;                              % Trial nr, find missing trials afterwards
+        cfgtemp.trl(:,11)               = Filenr;                               % nr of the nlx dir
+        cfgtemp.trl(:,12)               = FileOffset;                           % starting sample of the nlx dir
         
         cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr.nSamples,:); % so not to read before BOF or after EOFs
         

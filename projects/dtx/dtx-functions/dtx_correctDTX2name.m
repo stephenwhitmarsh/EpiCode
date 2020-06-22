@@ -5,6 +5,7 @@ function [cfg,data] = dtx_correctDTX2name(cfg,data)
 % For all other rats than DTX2, do nothing.
 
 if strcmp(cfg.prefix,'DTX2-')
+    fprintf('Rat is DTX2, correct cfg and LFP channel names\n');
     
     for ipart = 1:length(data)
         for imarker = 1:length(data{ipart})

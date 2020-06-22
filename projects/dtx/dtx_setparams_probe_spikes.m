@@ -30,8 +30,6 @@ configdtx.os                        = os;
 configdtx.datasavedir               = datasavedir;
 configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger'};
 configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
-% configdtx.muse.eventindex           = {[0 0]; [0 0] ;[0 1]};%; [0 1]}; %index of the event related to the muse marker. ie : if is 1, take the next marker, else if it is 0, take the marker of the event
-%trial between 2 Neuralynx files is ignored if eventindex == 1
 
 % list of onset timing with respect to start-marker (s)
 configdtx.epoch.toi{1}              = [-2, 2];
@@ -51,6 +49,7 @@ configdtx.bad.markerEnd                = 'Crise_End';
 configdtx.bad.time_from_begin          = -2;
 configdtx.bad.time_from_end            = 2;
 
+% OLD ALIGN
 configdtx.align.name                = {'SlowWave'};
 configdtx.align.flip                = {'no'};
 configdtx.align.abs                 = {'no'};
@@ -68,27 +67,38 @@ configdtx.align.demean              = {'yes'};
 %for detection of begin of event
 configdtx.align.begin.doalign       = {'yes'};
 configdtx.align.begin.thresh        = {0.3}; % percent of peak
+% ALIGN XCORR : 
+% configdtx.align.name                = {'SlowWave'};                               % Name of markers/patterns to align
+% configdtx.align.channel             = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP'};    % Channels to use for alignment
+% configdtx.align.demean              = 'yes';
+% configdtx.align.baselinewindow      = [-2 -1.5];
+% configdtx.align.reref               = 'no';
+% configdtx.align.refmethod           = 'bipolar';
+% configdtx.align.latency             = [-1, 1];  
 
 configdtx.LFP.flip                  = 'false';
 configdtx.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
 configdtx.LFP.hpfilter              = 'no';
-configdtx.LFP.hpfreq                = 1;
 configdtx.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
-configdtx.LFP.baseline              = 'no';
+configdtx.LFP.baseline              = 'yes';
 configdtx.LFP.baselinewindow{1}     = [-2, -1];
 configdtx.LFP.baselinewindow{2}     = [-2, -1];
 configdtx.LFP.baselinewindow{3}     = [0, 1];
-configdtx.LFP.slidestep             = 0.01;
+configdtx.LFP.write                 = true;
+
+configdtx.bad.markerStart           = 'Crise_Start';
+configdtx.bad.markerEnd             = 'Crise_End';
+configdtx.bad.time_from_begin       = -2;
+configdtx.bad.time_from_end         = 2;    
 
 configdtx.circus.reref              = 'no';
-configdtx.circus.refchan            = '';
 configdtx.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configdtx.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
 configdtx.circus.postfix            = [];%'-final';
 configdtx.circus.deadfilesuffix     = 'withseizures';
 
 configdtx.stats.numrandomization     = 1000; %Essayer à 1000
-configdtx.stats.dostat              = {true, true, false}; %for spikeratestatsEvents
+% configdtx.stats.dostat              = {true, true, false}; %not used
 configdtx.stats.bltoi{1}            = [-2, -1];
 configdtx.stats.bltoi{2}            = [-2, -1];
 configdtx.stats.bltoi{3}            = [2, 6];
@@ -104,41 +114,22 @@ configdtx.stats.actoi{3}            = [6, Inf];
 % configdtx.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
 % configdtx.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
 configdtx.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
-configdtx.spike.baselinename      = 'Interictal';
+configdtx.spike.baselinename        = 'Interictal';
 configdtx.spike.resamplefs{1}       = 50; %1/size of bar graph bins
 configdtx.spike.resamplefs{2}       = 50;
 configdtx.spike.resamplefs{3}       = 0.1;
 configdtx.spike.RPV                 = 0.003; %refractory period violation, in seconds
 configdtx.spike.ISIbins             = [0:0.003:0.150]; %in s
+configdtx.spike.sdflatency{1}   = 'maxperiod';
+configdtx.spike.sdflatency{2}   = 'maxperiod';
+configdtx.spike.sdflatency{3}   = 'maxperiod';
+configdtx.spike.sdftimewin{1}   = [-1/2 * 1/50 1/2 * 1/50]; %1/resamplef, so no effect of the convolution
+configdtx.spike.sdftimewin{2}   = [-1/2 * 1/50 1/2 * 1/50];
+configdtx.spike.sdftimewin{3}   = [-1/2 * 1/0.1 1/2 * 1/0.1];
 
 configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
-configdtx.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load. Can be 'all'. 
-
-%not used for now, for readSpykingCircus_spikestage : 
-configdtx.spikestage{1}.markerstart          = 'Baseline_Start';
-configdtx.spikestage{1}.markerstartoffset    = 0; %seconds
-configdtx.spikestage{1}.markerend            = 'Injection';
-configdtx.spikestage{1}.indexEnd             = 0;
-configdtx.spikestage{1}.periodmin            = 600; %seconds
-configdtx.spikestage{1}.triallength          = 60; %seconds
-configdtx.spikestage{1}.subdivision          = 'all'; %minimum 2
-configdtx.spikestage{1}.includeend           = false;
-configdtx.spikestage{1}.markerendoffset      = 0; %seconds
-configdtx.spikestage{1}.removeartefact       = 'trial';
-configdtx.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
-
-configdtx.spikestage{2}.markerstart          = 'Crise_End';
-configdtx.spikestage{2}.markerstartoffset    = 1; %seconds
-configdtx.spikestage{2}.markerend            = 'SlowWave';
-configdtx.spikestage{2}.indexEnd             = 1; %if 1 : take the i start marker and the i+1 end marker
-configdtx.spikestage{2}.periodmin            = 30; %seconds
-configdtx.spikestage{2}.triallength          = 5; %seconds
-configdtx.spikestage{2}.subdivision          = 4; %minimum 2
-configdtx.spikestage{2}.includeend           = true; %add the end of the period to the previous subdivisions
-configdtx.spikestage{2}.markerendoffset      = -2; %seconds
-configdtx.spikestage{2}.removeartefact       = 'period'; %period, trial, none
-configdtx.spikestage{2}.stagenumber          = [1, 2, 3, 4, 5]; %array of integers. if single value : gives the same number to all the trials
+configdtx.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load. Can be 'all'. 
 
 %% config for control experiments
 % no seizure-time-locked trials
@@ -161,7 +152,6 @@ configctrl.epoch.toi{1}              = [0, 0];
 configctrl.epoch.pad{1}              = 10; %for LFP
 
 configctrl.circus.reref              = 'no';
-configctrl.circus.refchan            = '';
 configctrl.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configctrl.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
 configctrl.circus.postfix             = [];%'-final';
@@ -174,32 +164,8 @@ configctrl.spike.ISIbins             = [0:0.003:0.150]; %in s
 
 configctrl.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configctrl.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
-configctrl.spikewaveform.nspikes     = 1000;%'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
+configctrl.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
 
-%not used for now, for readSpykingCircus_spikestage : 
-configctrl.spikestage{1}.markerstart          = 'Baseline_Start';
-configctrl.spikestage{1}.markerstartoffset    = 0; %seconds
-configctrl.spikestage{1}.markerend            = 'Injection';
-configctrl.spikestage{1}.indexEnd             = 0;
-configctrl.spikestage{1}.periodmin            = 600; %seconds
-configctrl.spikestage{1}.triallength          = 60; %seconds
-configctrl.spikestage{1}.subdivision          = 'all'; %minimum 2
-configctrl.spikestage{1}.includeend           = false;
-configctrl.spikestage{1}.markerendoffset      = 0; %seconds
-configctrl.spikestage{1}.removeartefact       = 'trial';
-configctrl.spikestage{1}.stagenumber          = 0; %array of integers. to give the same number to all the trials, write one single value
-
-configctrl.spikestage{2}.markerstart          = 'Injection';
-configctrl.spikestage{2}.markerstartoffset    = 0; %seconds
-configctrl.spikestage{2}.markerend            = 'Analysis_End';
-configctrl.spikestage{2}.indexEnd             = 0; %if 1 : take the i start marker and the i+1 end marker
-configctrl.spikestage{2}.periodmin            = 600; %seconds
-configctrl.spikestage{2}.triallength          = 60; %seconds
-configctrl.spikestage{2}.subdivision          = 'all'; %minimum 2
-configctrl.spikestage{2}.includeend           = false; %add the end of the period to the previous subdivisions
-configctrl.spikestage{2}.markerendoffset      = 0; %seconds
-configctrl.spikestage{2}.removeartefact       = 'trial'; %period, trial, none
-configctrl.spikestage{2}.stagenumber          = 1; %array of integers. if single value : gives the same number to all the trials
 
 %% Rodent 1
 config{1}                           = configdtx;
@@ -227,8 +193,8 @@ config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13'
 
 
 %% Rodent 2
-%ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS? CORRIGES AU DEBUT DU
-%SCRIPT DTX_PROJECT_PROBE
+%ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS? CORRIGES AVEC
+%DTC_CORRECTDTX2NAME
 config{2}                           = configdtx;
 config{2}.prefix                    = 'DTX2-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'DTX2-M1-10uM', '2019_03_01_DTX-2');
@@ -320,9 +286,6 @@ config{5}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13'
 
 
 %% Rodent 6
-%Remove the first 2 files and keep only the 2 lasts because the probe was moved in
-%order to have better unit activity
-%INJ TIME AND DIRLIST
 config{6}                           = configctrl;
 config{6}.prefix                    = 'DTX43-';
 config{6}.rawdir                    = fullfile(rootpath_data, 'DTX43_2020-05-22-PROBE-CONTROLE', '2020_05_22_DTX43-ctrl');
@@ -342,9 +305,6 @@ config{6}.injectiontime             = datetime('22-May-2020 15:08:02');
 config{6}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
 %% Rodent 7
-%Remove the first 2 files and keep only the 2 lasts because the probe was moved in
-%order to have better unit activity
-%INJ TIME AND DIRLIST
 config{7}                           = configctrl;
 config{7}.prefix                    = 'DTX44-';
 config{7}.rawdir                    = fullfile(rootpath_data, 'DTX44_2020-05-24-Probe-controle', '2020_05_24_DTX44-ctrl-probe');

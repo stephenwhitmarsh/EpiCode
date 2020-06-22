@@ -12,6 +12,8 @@ function [MuseStruct] = addMuseBAD(cfg,MuseStruct)
 % ## Mandatory input :
 % MuseStruct        : structure with all the marker timings created by Muse
 %                     (see readMuseMarkers.m)
+% 
+% ## necessary cfg fields :
 % cfg.bad.markerStart : name of the Muse marker used to identify timings to
 %                     convert into BAD__START__. Can be 'begin', in this
 %                     case the BAD__START__ marker is put at the begining
@@ -21,8 +23,8 @@ function [MuseStruct] = addMuseBAD(cfg,MuseStruct)
 %                     occurence of cfg.bad.markerEnd after the selected 
 %                     cfg.bad.markerStart.Can be 'end', in this case the 
 %                     BAD__END__ marker is put at the end of the dir.
-%
-% ## Optional cfg fields :
+% 
+% Optional cfg fields : 
 % cfg.bad.part_list : list of parts to analyse. Can be 'all', 'last', or any
 %                     array of indexes. Default = 'all'.
 % cfg.bad.dir_list  : list of directories to analyse. Can be 'all', 'last',

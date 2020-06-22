@@ -1,4 +1,4 @@
-function [CEDtrials] = CEDmaketrials(cfg,CEDStruct,force,savedat)
+function [CEDtrials] = readCEDcontinuous(cfg,CEDStruct,force,savedat)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
