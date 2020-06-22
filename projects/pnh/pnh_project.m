@@ -58,6 +58,29 @@ for ipatient =  1 : 3
     
 end
 
+
+%% inter-event timings
+
+for ipatient =  1 : 3
+    
+    config = setparams([]); 
+    
+    % read muse markers
+    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
+    
+    % align Muse markers according to peaks and detect whether they contain artefacts
+    [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    
+    % read LFP data
+    [~, dat_macro{ipatient}] = readLFP(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    
+    % plot LFP timecourse examples for article
+    % plotTimeCourses(config{ipatient});
+    
+    % plot LFP data
+%     [FFT_micro_trials{ipatient}, TFR_micro_trials{ipatient}, TFR_macro_trials{ipatient}, stat_TFR_micro{ipatient}, corrs{ipatient}] = plotLFP(config{ipatient}, dat_micro, dat_macro, false);
+end
+
 %% revised calculation of unit firing charateristics
         
 for ipatient = 1 : 3
