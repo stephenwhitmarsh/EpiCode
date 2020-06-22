@@ -55,13 +55,18 @@ if exist(fname_out,'file') && force == false
     fprintf('*** Loading precomputed LFP data ***\n');
     fprintf('************************************\n\n');
     load(fname_out,'LFP');
+    return
 else
     fprintf('********************************\n');
     fprintf('*** (re-) computing LFP data ***\n');
     fprintf('********************************\n\n');
+end
     
     % get file format 
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
+    
+    % initialize LFP, to return empty array in case there is no LFP to load
+    LFP = {};
 
     % loop over parts within subject
     for ipart = 1:length(MuseStruct)
@@ -123,28 +128,19 @@ else
                     cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
                     cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);                        
                     dat                     = ft_preprocessing(cfgtemp,dat);  
-                    
-                    %%%%% PAUL: please simplify logic here; why not just check
-                    %%%%% for cfg.EMG, and place channelnames there? This
-                    %%%%% is in any case very confusing
-                    
+                
                     % append EMG data (if any)
-                    if isfield(cfg.LFP, 'emg') 
-
-                        if isfield(cfg.EMG, 'reref') && strcmp(cfg.EMG.reref, 'yes')
-                            cfgtemp                   = [];
-                            cfgtemp.channel           = {cfg.LFP.emg{imarker}, cfg.EMG.refchannel{1}}; % load the emg associated with eeg marker, and the ref
-                            cfgtemp.dataset           = fname;
-                            cfgtemp.reref             = cfg.EMG.reref;
-                            cfgtemp.rerefmethod       = cfg.EMG.rerefmethod;
-                            cfgtemp.refchannel        = cfg.EMG.refchannel;
-                            data_EMG                  = ft_preprocessing(cfgtemp);
-                        else
-                            cfgtemp                   = [];
-                            cfgtemp.channel           = cfg.LFP.emg{imarker}; % load only the emg associated with eeg marker
-                            cfgtemp.dataset           = fname;
-                            data_EMG                  = ft_preprocessing(cfgtemp);
-                        end
+                    if isMicromed || isBrainvision %not adapted for nlx data (1 file per electrode) for now
+                        
+                        cfg.EMG = ft_getopt(cfg, 'EMG', []);
+                        
+                        cfgtemp                   = [];
+                        cfgtemp.channel           = {cfg.LFP.emg{imarker}, ft_getopt(cfg.EMG, 'refchannel', [])}; % load the emg associated with eeg marker, and the ref if any
+                        cfgtemp.dataset           = fname;
+                        cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
+                        cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
+                        cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
+                        data_EMG                  = ft_preprocessing(cfgtemp);
                         
                         % filtering
                         cfgtemp                 = [];
@@ -162,8 +158,8 @@ else
                         cfgtemp                 = [];
                         cfgtemp.keepsampleinfo  = 'yes';
                         dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
-                        
                     end
+                    
                     
                     % downsample data and correct baseline
                     if isfield(cfg.LFP,'resamplefs')
@@ -178,7 +174,9 @@ else
                         end  
                         dat                             = ft_resampledata(cfgtemp,dat);
                     end        
-                                 
+                      
+                    fsample = dat.fsample; %store this info for output LFP
+                    
                     % create trial segmentation common to resampled
                     % data. Neuralynx : same markers for all files
                     % of one dir.
@@ -250,6 +248,9 @@ else
                     cfgtemp.trl(:,4)                = trialnr;
                     cfgtemp.trl(:,6)                = idir;
                     cfgtemp.trl(:,7)                = Stage;
+                    cfgtemp.trl(:,8)                = Startsample;
+                    cfgtemp.trl(:,9)                = Endsample;
+                    cfgtemp.trl(:,10)               = Offset;
                     cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat.trial{1}),:); % don't read before BOF or after EOF
                     filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
                     clear dat
@@ -275,6 +276,7 @@ else
                 
                 % concatinate data of different datasets (over trials)
                 LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
+                LFP{ipart}{imarker}.fsample = fsample;
                 clear dirdat*              
             else
                 LFP{ipart}{imarker} = [];
@@ -285,8 +287,7 @@ else
         
     end % ipart
    
-end
-
+    
 if write
     save(fname_out,'LFP','-v7.3');
 end
