@@ -14,8 +14,8 @@ output_dir     =            # By default, generated data are in the same folder 
 [detection]
 radius         = auto       # Radius [in um] (if auto, read from the prb file)
 N_t            = 3          # Width of the templates [in ms]
-spike_thresh   = 6          # Threshold for spike detection
-peaks          = negative   # Can be negative (default), positive or both
+spike_thresh   = 6         # Threshold for spike detection
+peaks          = positive   # Can be negative (default), positive or both
 dead_channels  =            # If not empty or specified in the probe, a dictionary {channel_group : [list_of_valid_ids]}
 
 [filtering]
@@ -31,8 +31,8 @@ trig_unit      = ms         # The unit in which times are expressed: can be ms o
 clean_artefact = False      # If True, external artefacts induced by triggers will be suppressed from data
 dead_file      =            # Portion of the signals that should be excluded from the analysis [in dead units]
 dead_unit      = ms         # The unit in which times for dead regions are expressed: can be ms or timestep
-ignore_times   = False      # If True, any spike in the dead regions will be ignored by the analysis
-make_plots     =            # Generate sanity plots of the averaged artefacts [Nothing or None if no plots]
+ignore_times   = True       # If True, any spike in the dead regions will be ignored by the analysis
+make_plots     =        	# Generate sanity plots of the averaged artefacts [Nothing or None if no plots]
 
 [whitening]
 spatial        = True       # Perform spatial whitening
@@ -57,8 +57,8 @@ make_plots     = png        # Generate sanity plots of the clustering [Nothing o
 [fitting]
 amp_limits     = (0.3, 5)   # Amplitudes for the templates during spike detection [if not auto]
 amp_auto       = True       # True if amplitudes are adjusted automatically for every templates
-collect_all    = False      # If True, one garbage template per electrode is created, to store unfitted spikes
-ratio_thresh   = 0.9        # Ratio of the spike_threshold used while fitting [0-1]. The lower the slower
+collect_all    = True       # If True, one garbage template per electrode is created, to store unfitted spikes
+ratio_thresh   = 0.9        	# Ratio of the spike_threshold used while fitting [0-1]. The lower the slower
 
 [merging]
 erase_all      = True       # If False, a prompt will ask you to remerge if merged has already been done
@@ -75,11 +75,11 @@ merge_drifts   = False      # Try to automatically merge drifts, i.e. non overla
 drift_limit    = 0.1        # Distance for drifts. The higher, the more non-overlapping the activities should be
 
 [converting]
-erase_all      = True       # If False, a prompt will ask you to export if export has already been done
-export_pcs     = prompt     # Can be prompt [default] or in none, all, some
-export_all     = False      # If True, unfitted spikes will be exported as the last Ne templates
-sparse_export  = True       # For recent versions of phy, and large number of templates/channels
-prelabelling   = False      # If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
+erase_all      = True      	# If False, a prompt will ask you to export if export has already been done
+export_pcs     = none       # Can be prompt [default] or in none, all, some
+export_all     = True       # If True, unfitted spikes will be exported as the last Ne templates
+sparse_export  = True      # For recent versions of phy, and large number of templates/channels
+prelabelling   = True      	# If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
 
 [validating]
 nearest_elec   = auto       # Validation channel (e.g. electrode closest to the ground truth cell)
@@ -99,11 +99,11 @@ make_plots     = png        # Generate sanity plots of the validation [Nothing o
 safety_time    = 1          # Temporal zone around which spikes are isolated [in ms]
 max_elts       = 1000       # Max number of collected events per templates
 output_dim     = 5          # Percentage of variance explained while performing PCA
-cc_merge       = 0.975      # If CC between two templates is higher, they are merged
+cc_merge       = 0.975      # If CC between two templates is higher, they are merged 0.975
 noise_thr      = 0.8        # Minimal amplitudes are such than amp*min(templates) < noise_thr*threshold
 
 [noedits]
-filter_done    = True              #!! AUTOMATICALLY EDITED: DO NOT MODIFY !!
+filter_done    = False      # Will become True automatically after removing artefacts
 artefacts_done = False      # Will become True automatically after removing artefacts
 median_done    = False      # Will become True automatically after removing common median
 ground_done    = False      # Will become True automatically after removing common ground
