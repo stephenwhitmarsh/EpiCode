@@ -66,7 +66,7 @@ end
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
     % initialize LFP, to return empty array in case there is no LFP to load
-    LFP = [];
+    LFP = {};
 
     % loop over parts within subject
     for ipart = 1:length(MuseStruct)

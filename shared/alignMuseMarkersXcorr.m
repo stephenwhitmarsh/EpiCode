@@ -24,6 +24,8 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Paul (removeme) : see how to plot data
+
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
 
@@ -47,7 +49,7 @@ else
     cfgtemp                 = rmfield(cfg,'LFP');
     cfgtemp.LFP.name        = cfg.align.name;
     cfgtemp.LFP.channel     = cfg.align.channel;
-    [LFP]                   = readLFP(cfgtemp, MuseStruct, false);
+    [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
     
     for ipart = 1:size(cfg.directorylist,2)
         
