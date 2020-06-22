@@ -304,5 +304,12 @@ else
             end
         end
     end
+    
+    % check if data directory exists, if not create
+    if ~isfolder(cfg.datasavedir)
+        ft_notice('creating directory %s', cfg.datasavedir);
+        mkdir(cfg.datasavedir);
+    end
+    
     save(fname,'MuseStruct');
 end

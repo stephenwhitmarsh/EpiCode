@@ -34,6 +34,7 @@ end
 fname_params_default    = fullfile(p,'templates','SpykingCircus.params');
 
 for ipart = 1 : cfg.circus.part_list
+
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p',num2str(ipart)];
