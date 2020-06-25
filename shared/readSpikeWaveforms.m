@@ -35,7 +35,6 @@ function [SpikeWaveforms] = readSpikeWaveforms(cfg,SpikeTrials,force)
 %                                 (corresponding to cfg.name), there is one
 %                                 cell per unit, one trial per spike.
 %
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -57,7 +57,6 @@ function [MuseStruct] = addMuseBAD(cfg,MuseStruct)
 % - all BAD markers are sorted in ascending order after all were added, to
 %   avoid bug with Spyking-Circus
 %
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

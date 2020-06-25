@@ -101,7 +101,6 @@ function [stats] = spikeratestats_Events_Baseline(cfg,force)
 %       > readSpikeWaveforms.m
 % - Used in this script : plot_morpho.m, spikestatsOverTime.m
 % 
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -2,7 +2,6 @@ function [marker_clock, marker_synctime] = concatenateMuseMarkers(MuseStruct, ip
 % Concatenate markers over all the dirs of one MuseStruct part.
 % First line of the output array : clock or synctime
 % Second line of the output array : nr of the dir
-% Paul Baudin (paul.baudin@live.fr)
 
 marker_clock = [];
 marker_synctime = [];

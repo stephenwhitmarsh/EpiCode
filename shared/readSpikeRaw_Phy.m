@@ -31,7 +31,6 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 % - npy-matlab (https://github.com/kwikteam/npy-matlab)
 % - Fieldtrip
 %
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

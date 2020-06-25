@@ -60,9 +60,6 @@ function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
 % stats               = values, avg and std of computed method.
 % legend              = target to add a legend afterwards
 %
-% Paul Baudin (paul.baudin@live.fr)
-% 
-% FIXME : ajouter liste des trials à process, ajouter getopt et continue
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

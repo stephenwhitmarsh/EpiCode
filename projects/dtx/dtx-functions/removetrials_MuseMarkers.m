@@ -75,9 +75,6 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 % - the alignment failed for this marker, so it is removed before loading
 %   and cutting data into trials.
 %
-% Paul Baudin
-% paul.baudin@live.fr
-%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get the default cfg options
@@ -339,4 +336,3 @@ for ipart = cfg.remove.part_list
 end %ipart
 
 end
-

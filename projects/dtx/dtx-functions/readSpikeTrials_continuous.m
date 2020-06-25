@@ -1,8 +1,8 @@
-function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force)
+function [SpikeTrials] = readSpikeTrials_continuous(cfg,SpikeRaw,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
-% [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force,varargin)
+% [SpikeTrials] = readSpikeTrials_continuous(cfg,SpikeRaw,force,varargin)
 % Cut a Fieldtrip raw spike structure into consecutive equal trials of 
 % length defined in cfg. Make a trialinfo array similar to
 % readSpikeTrials_MuseMarkers.m so the same analysis can be applied.
@@ -17,11 +17,6 @@ function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,forc
 % cfg.spike.triallength = length of the trials, in seconds. All the data
 %                         will be cut in consecutive trials of this length.
 %
-% MuseStruct{ipart}     = info (e.g. events, files) of original data,
-%                         used to  make a trialinfo array similar to the 
-%                         one created in readSpikeTrials_MuseMarkers.m (eg 
-%                         for later removing of artefacts based on Muse 
-%                         Markers).
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
@@ -35,7 +30,6 @@ function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,forc
 % ### Output:
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
-% Paul Baudin (paul.baudin@live.fr) 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -80,7 +74,7 @@ for ipart = cfg.circus.part_list
         
         dirOnset(1) = 1;
         trialcount = 1;
-        for idir = 1 : size(MuseStruct{ipart},2)
+        for idir = 1 : size(cfg.directorylist{ipart},2)
             clear ss es 
             
             temp                = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
@@ -96,7 +90,6 @@ for ipart = cfg.circus.part_list
             Trialnr                 = [Trialnr; (trialcount:trialcount+size(ss,2)-1)'];
             Filenr                  = [Filenr; ones(size(ss,2),1)*idir];
             FileOffset              = [FileOffset; ones(size(ss,2),1)*dirOnset(idir)];
-            clocktimes              = [clocktimes, MuseStruct{ipart}{idir}.starttime : seconds(cfg.spike.triallength): MuseStruct{ipart}{idir}.starttime + seconds(cfg.spike.triallength)*(size(ss,2)-1)];
             
             trialcount      = trialcount + size(ss,2);
             
