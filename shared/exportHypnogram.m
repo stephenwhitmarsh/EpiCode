@@ -1,4 +1,4 @@
-function export_hypnogram(cfg)
+function exportHypnogram(cfg)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function export_hypnogram(cfg)

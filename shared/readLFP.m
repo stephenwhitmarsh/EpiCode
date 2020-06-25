@@ -42,8 +42,9 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'data_aligned.mat']);
+fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'LFP.mat']);
 write     = ft_getopt(cfg.LFP, 'write', false);
+
 if write
     fprintf('*** Will write LFP to: %s ***\n',fname_out);
 else
