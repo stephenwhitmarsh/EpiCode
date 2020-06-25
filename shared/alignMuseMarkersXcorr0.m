@@ -24,6 +24,7 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 % cfg.align.reref             = e.g.: 'yes';
 % cfg.align.refmethod         = e.g.: 'bipolar';
 % cfg.align.latency           = e.g.: [-0.1, 0.2];                                            % timeperiod to use for crosscorrelation
+%
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -40,6 +41,7 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+%
 
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
