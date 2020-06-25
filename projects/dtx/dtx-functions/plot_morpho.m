@@ -35,10 +35,10 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 % cfg.morpho.toibl        = baseline period if cfg.morpho.halfwidthmethod = 'bl'
 % 
 % ### Necessary cfg fields if cfg.morpho.saveplot = 'yes'
-% cfg.morpho.name         = name of the analysis (title of plot and of
+% cfg.name         = name of the analysis (title of plot and of
 %                           output image file)
-% cfg.morpho.imagesavedir = where to save the image.
-% cfg.morpho.prefix       = prefix attached to the name of the saved-image
+% cfg.imagesavedir = where to save the image.
+% cfg.prefix       = prefix attached to the name of the saved-image
 %
 % ### OUTPUT
 % halfwidth               = mesured halfwidth value, in seconds, or [].
@@ -56,7 +56,7 @@ cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'
 cfg.morpho.halfwidthmethod             = ft_getopt(cfg.morpho, 'halfwidthmethod' 	, 'bl');
 cfg.morpho.mesurepeaktrough            = ft_getopt(cfg.morpho, 'mesurepeaktrough'	, 'no');
 cfg.morpho.toiplot                     = ft_getopt(cfg.morpho, 'toiplot'          , 'all');
-cfg.morpho.toiac                     = ft_getopt(cfg.morpho, 'toiac'            , 'all');
+cfg.morpho.toiac                       = ft_getopt(cfg.morpho, 'toiac'            , 'all');
 cfg.morpho.saveplot                    = ft_getopt(cfg.morpho, 'saveplot'         , 'no');
 
 if strcmp(cfg.morpho.toiplot,'all')
@@ -235,16 +235,16 @@ if strcmp(cfg.morpho.saveplot, 'yes')
     
     set(gca,'Fontsize',15);
     
-    if ~(exist(cfg.morpho.imagesavedir)==7)
-        mkdir(cfg.morpho.imagesavedir);
-        fprintf('Create forlder %s',cfg.morpho.imagesavedir);
+    if ~(exist(cfg.imagesavedir)==7)
+        mkdir(cfg.imagesavedir);
+        fprintf('Create forlder %s',cfg.imagesavedir);
     end
     
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.morpho.imagesavedir,[cfg.morpho.prefix,cfg.morpho.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.morpho.imagesavedir,[cfg.morpho.prefix,cfg.morpho.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.png']),'-r600');
     close all
     
 end
