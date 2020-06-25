@@ -12,10 +12,15 @@ toshift = zeros(1, size(input,1));
 for iter = 1 : maxiter
     avg = nanmean(shifted);
     for itrial = 1 : size(input,1)
-        [X2,lags]           = nanxcorr(avg, shifted(itrial,:));
+        [X2,lags]           = nanxcorr(avg, shifted(itrial,:));          
         [~, lagindx]        = findpeaks(X2);
-        [~, shiftindx]      = min(abs(lags(lagindx))) ;
+        [~, shiftindx]      = min(abs(lags(lagindx))); % closest peak in xcorr
         toshift(itrial)     = lags(lagindx(shiftindx));
+        
+        % highest peak in xcorr
+        % [~, lagindx]        = findpeaks(X2,'NPeaks',1,'SortStr','descend');
+        % toshift(itrial)     = lags(lagindx);
+        
         nshift(itrial)      = nshift(itrial) + toshift(itrial);
         shifted(itrial,:)   = shift(shifted(itrial,:), toshift(itrial));
     end

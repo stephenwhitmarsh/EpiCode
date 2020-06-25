@@ -78,7 +78,6 @@ else
     %specificities :
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-
     % select those markers to align
 %     markerlist = [];
 %     for i = 1 : size(cfg.align.name,2)
