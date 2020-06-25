@@ -1,4 +1,4 @@
-function dtx_stats(slurm_task_id)
+function dtx_LFP_stats(slurm_task_id)
 
 
 %% Set parameters

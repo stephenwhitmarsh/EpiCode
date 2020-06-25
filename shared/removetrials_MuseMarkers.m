@@ -26,7 +26,7 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %   'remove'         : remove all trials which intersect with the period
 %   'keep'           : keep only trials which intersect with the period
 %   Default = 'remove'.
-% cfg.remove.markerstart    : name of the marker which define the beginnin of the
+% cfg.remove.markerstart    : name of the marker which define the beginning of the
 %                             period. Default = 'BAD__START__'.
 % cfg.remove.markerend      : name of the marker which define the the end of the
 %                             period. Default = 'BAD__END__'.
@@ -40,6 +40,9 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %                             define the period to search. Default = 0.
 % cfg.remove.timefromend    : relative time from cfg.remove.markerend in seconds, to
 %                             define the period to search. Default = 0.
+% cfg.remove.searchdirection : 'before', 'after', 'all'. Default = 'all'.
+% Where the begin of the searched trial has to be compared to the begin of
+% the data trial
 % cfg.remove.keepindexes    : 'yes' or 'no', whether to keep indexes of removed
 %                             trials in MuseStruct. This option use cfg.remove.muse.startend,
 %                             so the trials have to be defined by readLFP or
@@ -89,6 +92,7 @@ cfg.remove.indexstart       = ft_getopt(cfg.remove, 'indexstart'    , 0);
 cfg.remove.indexend         = ft_getopt(cfg.remove, 'indexend'      , 0);
 cfg.remove.timefrombegin    = ft_getopt(cfg.remove, 'timefrombegin' , 0);
 cfg.remove.timefromend      = ft_getopt(cfg.remove, 'timefromend'   , 0);
+cfg.remove.searchdirection  = ft_getopt(cfg.remove, 'searchdirection', 'all');
 cfg.remove.keepindexes      = ft_getopt(cfg.remove, 'keepindexes'   , 'no');
 cfg.remove.plotdata         = ft_getopt(cfg.remove, 'plotdata'      , 'no');
 cfg.remove.part_list        = ft_getopt(cfg.remove, 'part_list'     , 'all');
@@ -118,7 +122,7 @@ for ipart = cfg.remove.part_list
     
     for ilabel = cfg.remove.label_list
         
-        fprintf('*** %s ***\n', cfg.name{ilabel});
+        fprintf('*** For ilabel = %d ***\n', ilabel);
         
         if isempty(data{ipart}{ilabel})
             continue
@@ -193,6 +197,12 @@ for ipart = cfg.remove.part_list
                 for itrial = trials_idx
                     i = i+1;
                     
+                    %waitbar
+                    try eval(['fprintf(repmat(''\b'', 1, length(waitbar)));']); end %error the first time. \b to remove previous text
+                    waitbar = sprintf('dir %d/%d : trial %d/%d',idir, length(MuseStruct{ipart}),i, length(trials_idx)); 
+                    fprintf('%s', waitbar);
+                    
+                    
                     trialinterval_begin     = data{ipart}{ilabel}.trialinfo(itrial, startcolumn) - dir_onset;
                     trialinterval_end       = data{ipart}{ilabel}.trialinfo(itrial, endcolumn) - dir_onset;
                     trialinterval           = round(trialinterval_begin : trialinterval_end);
@@ -209,6 +219,13 @@ for ipart = cfg.remove.part_list
                             else %first marker exists but last marker exceeds file size
                                 searchedinterval_end = seconds(MuseStruct{ipart}{idir}.endtime - MuseStruct{ipart}{idir}.starttime) * Fs;
                             end
+                            
+                            if strcmp(cfg.remove.searchdirection, 'before') && searchedinterval_begin > trialinterval_begin
+                                continue
+                            elseif strcmp(cfg.remove.searchdirection, 'after') && searchedinterval_begin < trialinterval_begin
+                                continue
+                            end
+                                
                             
                             searchedinterval             = round(searchedinterval_begin : searchedinterval_end);
                             
@@ -238,9 +255,9 @@ for ipart = cfg.remove.part_list
             end
             
             if sum([trialremoved{:}]) > 0
-                fprintf('Remove %d trials\n', sum([trialremoved{:}]));
+                fprintf('\nRemove %d trials\n', sum([trialremoved{:}]));
             else
-                fprintf('No searched-trials found : all trials are kept\n');
+                fprintf('\nNo searched-trials found : all trials are kept\n');
             end
             
             

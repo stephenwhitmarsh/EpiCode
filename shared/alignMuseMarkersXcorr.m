@@ -47,13 +47,28 @@ else
     end
     
     cfgtemp                 = rmfield(cfg,'LFP');
+    cfgtemp                 = rmfield(cfgtemp,'epoch');
+    %convert align cfg to lfp cfg
+    for imarker = 1 : size(cfg.align.name,2)
+        %correct latency if 'all'
+        try if strcmp(cfg.align.latency{imarker}, 'all'), cfg.align.latency{imarker} = cfg.epoch.toi{imarker}; end, end
+        %if find a latency for this marker, select it as a period to load
+        %LFP. Else use the LFP parameter.
+        try 
+            cfgtemp.epoch.toi{imarker} = cfg.align.latency{imarker};
+        catch
+            cfgtemp.epoch.toi{imarker} = cfg.epoch.toi{imarker};
+        end
+        %no need of padding for alignment
+        cfgtemp.epoch.pad{imarker} = 0;
+    end
     cfgtemp.LFP.name        = cfg.align.name;
     cfgtemp.LFP.channel     = cfg.align.channel;
     [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
     
     for ipart = 1:size(cfg.directorylist,2)
         
-        for imarker = 1 : size(cfg.align.name,1)
+        for imarker = 1 : size(cfg.align.name,2)
             
             % baseline correct & bipolar rereferencing
             cfgtemp                 = [];
@@ -63,10 +78,11 @@ else
             cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
             dat                     = ft_preprocessing(cfgtemp,LFP{ipart}{imarker});
             
-            % select data
-            cfgtemp                 = [];
-            cfgtemp.latency         = ft_getopt(cfg.align, 'latency', 'all');
-            dat                     = ft_selectdata(cfgtemp,dat);
+%             % select data Not needed anymore because load only data of
+%             interest
+%             cfgtemp                 = [];
+%             cfgtemp.latency         = ft_getopt(cfg.align, 'latency', 'all');
+%             dat                     = ft_selectdata(cfgtemp,dat);
             
             % put all data in single matrix with concatinated channels
             fprintf('Preparing alignment');
@@ -86,7 +102,8 @@ else
             % z-normalize data
             shifted_clean_z = nanznorm(shifted_clean);
             shifted_clean_z(isnan(shifted_clean_z)) = 0;
-            
+           
+            try
             % draw figure
             fig = figure(1);
             fig.Renderer = 'Painters';
@@ -97,8 +114,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,6);
-%             plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(~rejected,:)');
-            plot(dat.time{1},LFP_concatinated(~rejected,:)');
+            plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(~rejected,:)');
+%             plot(dat.time{1},LFP_concatinated(~rejected,:)');
             axis tight
             
             subplot(2,5,2);
@@ -107,8 +124,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,7);
-%             plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(rejected,:)');
-            plot(dat.time{1},LFP_concatinated(rejected,:)');
+            plot(cumsum(repmat(dat.time{1},1,d(1))),LFP_concatinated(rejected,:)');
+%             plot(dat.time{1},LFP_concatinated(rejected,:)');
             axis tight
             
             subplot(2,5,3);
@@ -117,8 +134,8 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,8);
-%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(~rejected,:)');
-            plot(dat.time{1},shifted(~rejected,:)');
+            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(~rejected,:)');
+%             plot(dat.time{1},shifted(~rejected,:)');
             axis tight
             
             subplot(2,5,4);
@@ -126,8 +143,8 @@ else
             title('Misaligned');
             set(gca,'xtick',[]);
             subplot(2,5,9);
-%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(rejected,:)');
-            plot(dat.time{1},shifted(rejected,:)');
+            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted(rejected,:)');
+%             plot(dat.time{1},shifted(rejected,:)');
             axis tight
             
             subplot(2,5,5);
@@ -136,14 +153,18 @@ else
             set(gca,'xtick',[]);
             
             subplot(2,5,10);
-%             plot(cumsum(repmat(dat.time{1},1,d(1))),shifted_clean_z');
-            plot(dat.time{1},shifted_clean_z');
+            plot(cumsum(repmat(dat.time{1},1,d(1))),shifted_clean_z');
+%             plot(dat.time{1},shifted_clean_z');
             axis tight
             
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
             print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignmentXcorr.png']));
+            
+            catch 
+                fprintf('Error with x-axis\n');
+            end %REMOVEME
             
             close all
             clear shifted shifted_clear shifted_clean_z

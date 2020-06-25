@@ -31,7 +31,7 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %                           and trough-peak. Default = 'no'.
 % 
 % ### Necessary cfg fields if cfg.mesurehalfwidth = 'yes' or cfg.mesurepeaktrough = 'yes'
-% cfg.toiac               = active period for measurements. Can be 'all'
+% cfg.toiac               = active period for measurements. Can be 'all' (default)
 % cfg.toibl               = baseline period if cfg.halfwidthmethod = 'bl'
 % 
 % ### Necessary cfg fields if cfg.saveplot = 'yes'
@@ -57,6 +57,7 @@ cfg.mesurehalfwidth             = ft_getopt(cfg, 'mesurehalfwidth'	, 'no');
 cfg.halfwidthmethod             = ft_getopt(cfg, 'halfwidthmethod' 	, 'bl');
 cfg.mesurepeaktrough            = ft_getopt(cfg, 'mesurepeaktrough'	, 'no');
 cfg.toiplot                     = ft_getopt(cfg, 'toiplot'          , 'all');
+cfg.toiac                     = ft_getopt(cfg, 'toiac'            , 'all');
 cfg.saveplot                    = ft_getopt(cfg, 'saveplot'         , 'no');
 
 if strcmp(cfg.toiplot,'all')

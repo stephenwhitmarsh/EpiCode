@@ -52,7 +52,17 @@ config = dtx_setparams_probe_spikes([]);
 % analysis. Done by filtering with cfg.type
 
 for irat = slurm_task_id
+%     %%%%%%%%%%%%%%%% REMOVE
+%     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
+%     SpikeRaw                        = readSpikeRaw_Phy(config{irat},false);
+%     SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
+%     return
+%     %%%%%%%%%%%%%%%%%%%%%%%%
    
+    %TEMPORARY_REMOVEME
+%     config{irat}.imagesavedir = fullfile(config{irat}.imagesavedir, 'test_alignXCorr');
+%     if ~isfolder(config{irat}.imagesavedir), mkdir (config{irat}.imagesavedir); end 
+    
     %align markers and remove wrong seizures
     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
     [MuseStruct]                    = alignMuseMarkers(config{irat},MuseStruct, false);
@@ -62,7 +72,7 @@ for irat = slurm_task_id
     end
        
     %read LFP data
-    dat_LFP                         = readLFP(config{irat}, MuseStruct, false);
+    dat_LFP                         = readLFP(config{irat}, MuseStruct, true);
     [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP); %correct an error in channel name during acquisition, for rat DTX2
     
     %read spike data
@@ -70,11 +80,13 @@ for irat = slurm_task_id
 
     if strcmp(config{irat}.type, 'dtx')
         %make trials based on Muse Markers
-        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
+        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
     elseif strcmp(config{irat}.type, 'ctrl')
         %make trials of continuous length on all the data
         SpikeTrials                     = readSpikeTrials_continuous(config{irat}, MuseStruct,SpikeRaw, false);
     end
+    
+    return
     
     clear SpikeRaw
     
@@ -88,8 +100,11 @@ for irat = slurm_task_id
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
 
     %read spike waveforms
-    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
-    %Relance avec un _1000 pour voir si pas d'erreur, et un avec un 'all'
+    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, true);
+    
+    %TEMPORARY_REMOVEME, folder to save stats file
+%     config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
+%     if ~isfolder(config{irat}.datasavedir), mkdir (config{irat}.datasavedir); end 
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
     cfgtemp                 = [];
@@ -105,7 +120,9 @@ return
 
 
 %% Load precomputed data
+ipart = 1;
 for irat = 1:7
+%      config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
     stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
 end
 
@@ -282,7 +299,9 @@ xlim([0 3]);
 ylim([0 2]);
 
 %% plot sdf of each neuron during slow wave
-figure;hold;
+% imagesc(log10(stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).sdf.avg));
+% xlim([80 120])
+
 emax_list = nan;
 sdf_avg = nan(1,length(stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.avg));
 sdf_time = stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.time;
@@ -300,11 +319,11 @@ for irat = 1:5
 end
 [emax_list_sorted, deep_idx] = sort(emax_list, 'descend');
 
-deep_idx = deep_idx(~isnan(emax_list_sorted));
-emax_list_sorted = emax_list_sorted(~isnan(emax_list_sorted));
-sdf_avg = sdf_avg(deep_idx,:);
-celltype = celltype(deep_idx);
-group = group(deep_idx);
+deep_idx            = deep_idx(~isnan(emax_list_sorted));
+emax_list_sorted    = emax_list_sorted(~isnan(emax_list_sorted));
+sdf_avg             = sdf_avg(deep_idx,:);
+celltype            = celltype(deep_idx);
+group               = group(deep_idx);
 
 for i=1:size(sdf_avg,1)
     sdf_avg_filt(i,:) = imgaussfilt(sdf_avg(i,:),1); %smooth the spike density function values
@@ -318,11 +337,12 @@ for i_celltype = ["pn", "in"]
     if strcmp(i_celltype, "pn"), subplot(2,1,1);hold; else, subplot(2,1,2);hold; end
     imagesc(log10(abs(sdf_filt_blcorrect(strcmp(celltype,i_celltype),:))));
     c = caxis;
-    caxis([0 c(2)]);
+    caxis([0 1.5]);
     clb = colorbar;
     axis tight
     xticklabels(sdf_time(xticks+1));
     func_temp = @(v) sprintf('10\\^%s',v);
+%       func_temp = @(v) eval(sprintf('round(10^%s)',v));
     clb.TickLabels = cellfun(func_temp,clb.TickLabels,'UniformOutput',false);
     % plot baseline patch and zero line
     x = [0 20 20 0];
@@ -342,7 +362,7 @@ for i_celltype = ["pn", "in"]
         end
     end
     set(gca, 'TickDir', 'out', 'FontWeight', 'bold', 'FontSize', 10);
-    xlabel('Time to begin of SlowWave (s)');
+    xlabel('Time from begin of SlowWave (s)');
 end
 
 %% plot of cv2 with bursts, without bursts and freq over time : avg for each neuron

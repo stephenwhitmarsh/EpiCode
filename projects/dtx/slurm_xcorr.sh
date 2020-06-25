@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=spikes
-#SBATCH --partition=bigmem,normal
+#SBATCH --job-name=xcorr
+#SBATCH --partition=normal,bigmem
 #SBATCH --time=99:99:99
-#SBATCH --mem=32G
+#SBATCH --mem=4G
 #SBATCH --cpus-per-task=2
 #SBATCH --chdir=.
 #SBATCH --output=/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/slurm-output/output-%j_%a-%x.txt
@@ -12,7 +12,7 @@
 #SBATCH --array=1-7
 
 module load MATLAB/R2019b
-matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "dtx_project_spikes($SLURM_ARRAY_TASK_ID);"
+matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "compute_spike_xcorr($SLURM_ARRAY_TASK_ID);"
 
 sleep 5;
 

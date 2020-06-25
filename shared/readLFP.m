@@ -65,7 +65,7 @@ end
     % get file format 
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
     
-    % initialize LFP, to return empty array in case there is no LFP to load
+    % initialize LFP, to return empty cell in case there is no LFP to load
     LFP = {};
 
     % loop over parts within subject
@@ -275,8 +275,9 @@ end
             if exist('dirdat','var') % in case there is no marker in the data
                 
                 % concatinate data of different datasets (over trials)
-                LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
-                LFP{ipart}{imarker}.fsample = fsample;
+                LFP{ipart}{imarker}                 = ft_appenddata([],dirdat{find(hasmarker)});
+                LFP{ipart}{imarker}.fsample         = fsample;
+                LFP{ipart}{imarker}.analysis_name   = cfg.name{imarker};
                 clear dirdat*              
             else
                 LFP{ipart}{imarker} = [];
