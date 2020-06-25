@@ -1,4 +1,4 @@
-function findPattern(cfg, dat_micro, dat_macro, force)
+function findPattern(cfg, dat_in, force)
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'patterns_found.mat']);
 if exist(fname,'file') && force == false
@@ -10,7 +10,7 @@ else
     
     
     
-    for imarker = 1 : size(dat_macro,2)
+    for imarker = 1 : size(dat_in,2)
         
         
         if force == true
@@ -27,7 +27,7 @@ else
         cfgtemp = [];
         cfgtemp.demean = 'yes';
         cfgtemp.baselinewindow = [-0.6 -0.3];
-        dat{imarker} = ft_preprocessing(cfgtemp,dat_macro{imarker});
+        dat{imarker} = ft_preprocessing(cfgtemp,dat_in{imarker});
         
         % select data
         cfgtemp = [];

@@ -1,8 +1,28 @@
 function [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg)
-% Return 1 in the respective variable if the format corresponds.
+
+% get_data_format returns 1 in the respective variable if the format corresponds
 % Otherwise returns 0.
+% Use as
+%   [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg)
+%
 % Format used : Neuralynx (.ncs), Micromed (.TRC), Brainvision (.eeg)
 % Error if format is different
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
+%
+%    EpiCode is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    EpiCode is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 datapath = fullfile(cfg.rawdir,cfg.directorylist{1}{1});
 listing = dir(datapath);
@@ -46,4 +66,3 @@ end
 
 
 end
-
