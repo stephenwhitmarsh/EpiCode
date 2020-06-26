@@ -71,7 +71,6 @@ else
     fprintf('*** (re-) computing LFP data ***\n');
     fprintf('********************************\n\n');
 end
-<<<<<<< HEAD
     
     % get file format 
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
