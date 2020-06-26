@@ -9,5 +9,5 @@
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/error-%j.txt
 
 module load MATLAB
-matlab -nodesktop -softwareopengl -nosplash -nodisplay < /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/hspike/hspike_cluster.m
+matlab -nodesktop -softwareopengl -nosplash -nodisplay < /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/hspike_cluster.m
 sleep 5;

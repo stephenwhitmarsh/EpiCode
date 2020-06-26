@@ -1,4 +1,4 @@
-function datout = shift(dat,steps)
+function datout = shift(dat, steps)
 
 datout = circshift(dat,steps);
 
@@ -7,4 +7,3 @@ if steps > 0
 elseif steps < 0
     datout(end+steps:end) = nan;
 end
-

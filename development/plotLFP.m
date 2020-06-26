@@ -1,16 +1,37 @@
-function [FFT_micro_trials,TFR_micro_trials,TFR_macro_trials,stat_TFR_micro, corrs] = plotLFP(cfg,dat_micro,dat_macro,force)
+function [FFT_micro_trials,TFR_micro_trials,TFR_macro_trials,stat_TFR_micro, corrs] = plotLFP(cfg, dat_micro, dat_macro, force)
+
+  % PLOTLFP creates statistics based on hypnogram and markers in MuseStruct
+  %
+  % use as
+  %   [t] = plotHypnogram(config, MuseStruct)
+
+  % This file is part of EpiCode, see
+  % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
+  %
+  %   EpiCode is free software: you can redistribute it and/or modify
+  %   it under the terms of the GNU General Public License as published by
+  %   the Free Software Foundation, either version 3 of the License, or
+  %   (at your option) any later version.
+  %
+  %   EpiCode is distributed in the hope that it will be useful,
+  %   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  %   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  %   GNU General Public License for more details.
+  %
+  %   You should have received a copy of the GNU General Public License
+  %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'_TFR_LFP.mat']);
 if exist(fname,'file') && force == false
     fprintf('****************************************\n');
     fprintf('*** Loading precomputed TFR-LFP data ***\n');
     fprintf('****************************************\n\n');
-    
+
     load(fname,'FFT_micro_trials','TFR_micro_trials','TFR_macro_trials','stat_TFR_micro', 'corrs');
 else
-    
+
     for imarker = 1 : size(cfg.name,2)
-        
+
         % find datafilename corresponding to channel
         channelindx = [];
         for ilabel = 1 : size(dat_micro{imarker}.label,1)
@@ -18,51 +39,51 @@ else
                 channelindx = ilabel;
             end
         end
-  
+
         % select channel for plotting
         cfgtemp                 = [];
         cfgtemp.channel         = channelindx;
         dat_micro_chansel       = ft_selectdata(cfgtemp,dat_micro{imarker});
         cfgtemp.channel         = 1; % closes to micro
         dat_macro_chansel       = ft_selectdata(cfgtemp,dat_macro{imarker});
-        
+
         % average over trials for plotting
         cfgtemp                 = [];
         cfgtemp.vartrllength    = 2;
         dat_micro_rptavg        = ft_timelockanalysis(cfgtemp,dat_micro_chansel);
         cfgtemp.channel         = 1;
         dat_macro_rptavg        = ft_timelockanalysis(cfgtemp,dat_macro_chansel);
-        
+
         % select time interval
         cfgtemp                 = [];
         cfgtemp.latency         = [cfg.epoch.toi{imarker}(1) cfg.epoch.toi{imarker}(2)];
         dat_micro_rptavg        = ft_selectdata(cfgtemp,dat_micro_rptavg);
         dat_macro_rptavg        = ft_selectdata(cfgtemp,dat_macro_rptavg);
-        
+
         % map all trials onto time-independant grid (average over channels)
         maxsamples              = -cfg.epoch.toi{imarker}(1)*dat_micro_chansel.fsample + cfg.epoch.toi{imarker}(2)*dat_micro_chansel.fsample;
         trialgrid_micro         = nan(size(dat_micro_chansel.trial,2),maxsamples);
         trialgrid_macro         = nan(size(dat_macro_chansel.trial,2),maxsamples);
-        
+
         for itrial = 1 : size(dat_micro{imarker}.trial,2)
-            
+
             i1 = find(dat_micro_chansel.time{itrial} >= cfg.epoch.toi{imarker}(1),1,'first');
             i2 = find(dat_micro_chansel.time{itrial} >= cfg.epoch.toi{imarker}(2),1,'first');
-            
+
             n = (dat_micro_chansel.trial{itrial}(i1:i2) - mean(dat_micro_chansel.trial{itrial}(i1:i2))) / max(abs(dat_micro_chansel.trial{itrial}(i1:i2)));
             %     n = dat_micro_chansel.trial{itrial}(i1:i2);
-            
+
             trialgrid_micro(itrial,1:size(n,2)) = n;
-            
+
             n = (dat_macro_chansel.trial{itrial}(i1:i2) - mean(dat_macro_chansel.trial{itrial}(i1:i2))) / max(abs(dat_macro_chansel.trial{itrial}(i1:i2)));
             %     n = dat_macro_chansel.trial{itrial}(i1:i2);
-            
+
             trialgrid_macro(itrial,1:size(n,2)) = n;
         end
-        
-        
+
+
         %% calculate correlation between first rereference micro and macro to most superficial macro
-        
+
         % chanindx = 0;
         % for ichan = 1 : size(dat_micro{imarker}.label,1)
         %     if strcmp(cfg.channel,dat_micro{imarker}.label{ichan})
@@ -72,9 +93,9 @@ else
         % if chanindx == 0
         %     fprintf('Can not find channel %s! \n',cfg.channel);
         % end
-        
+
         % corrs = zeros(size(dat_micro.trial,2),size(dat_macro.label,1));
-        
+
         corrs = [];
         for itrial = 1 : size(dat_micro{imarker}.trial,2)
             fprintf('Correlating trial %d of %d \n',itrial, size(dat_micro{imarker}.trial,2));
@@ -87,12 +108,12 @@ else
             %     Ar = A - B(:,8);
             [corrs{imarker}.c(itrial,:), corrs{imarker}.ptrial(itrial,:)] = corr(Ar, Br, 'type','pearson');
         end
-        
+
         corrs{imarker}.avg = mean(corrs{imarker}.c,1);
         corrs{imarker}.sem = std(corrs{imarker}.c,1) ./ sqrt(size(dat_macro{imarker}.trial,2));
         [~, corrs{imarker}.max] = max(abs(corrs{imarker}.avg ));
         [corrs{imarker}.h,corrs{imarker}.p,corrs{imarker}.ci,corrs{imarker}.stats] = ttest(corrs{imarker}.c);
-        
+
         % time frequency analysis around peaks
         cfgtemp                         = [];
         cfgtemp.channel                 = channelindx;
@@ -105,22 +126,22 @@ else
         cfgtemp.t_ftimwin               = 7./cfgtemp.foi;
         cfgtemp.toi                     = cfg.epoch.toi{imarker}(1):cfg.LFP.slidestep:cfg.epoch.toi{imarker}(2);
         TFR_micro_trials{imarker}       = ft_freqanalysis(cfgtemp,dat_micro{imarker});
-        
+
         cfgtemp.channel                 = corrs{imarker}.max;
         cfgtemp.keeptrials              = 'no';
         TFR_macro_trials{imarker}       = ft_freqanalysis(cfgtemp,dat_macro{imarker});
-        
+
         %% cluster stats on TFR
         cfgtemp                         = [];
         cfgtemp.baseline                = cfg.LFP.baselinewindow{imarker};
         cfgtemp.baselinetype            = 'relchange';
         TFR_micro_trials{imarker}       = ft_freqbaseline(cfgtemp,TFR_micro_trials{imarker});
-        
+
         cfgtemp                         = [];
         cfgtemp.baseline                = cfg.LFP.baselinewindow{imarker};
         cfgtemp.baselinetype            = 'relchange';
         TFR_macro_trials{imarker}       = ft_freqbaseline(cfgtemp,TFR_macro_trials{imarker});
-        
+
         cfgtemp                         = [];
         cfgtemp.latency                 = [cfg.LFP.baselinewindow{imarker}(2) cfg.epoch.toi{imarker}(2)];
         cfgtemp.frequency               = 'all';
@@ -134,79 +155,79 @@ else
         cfgtemp.numrandomization        = 500;
         cfgtemp.ivar                    = 1;
         cfgtemp.design                  = [ones(1,size(TFR_micro_trials{imarker}.trialinfo,1)) ones(1,size(TFR_micro_trials{imarker}.trialinfo,1))*2];
-        
+
         dummy                           = TFR_micro_trials{imarker};
         dummy.powspctrm                 = zeros(size(dummy.powspctrm));
-        
+
         stat_TFR_micro{imarker}         = ft_freqstatistics(cfgtemp,TFR_micro_trials{imarker}, dummy);
         stat_TFR_micro{imarker}.corrs   = corrs{imarker};
-        
+
         posclust = zeros(size(stat_TFR_micro{imarker}.mask));
         for ipos = 1 : size(stat_TFR_micro{imarker}.posclusters,2)
             if stat_TFR_micro{imarker}.posclusters(ipos).prob < 0.025
                 posclust(stat_TFR_micro{imarker}.posclusterslabelmat == ipos) = 1;
             end
         end
-        
+
         negclust = zeros(size(stat_TFR_micro{imarker}.mask));
         for ineg = 1 : size(stat_TFR_micro{imarker}.negclusters,2)
             if stat_TFR_micro{imarker}.negclusters(ineg).prob < 0.025
                 negclust(stat_TFR_micro{imarker}.negclusterslabelmat == ineg) = 1;
             end
         end
-        
+
         d = size(TFR_micro_trials{imarker}.powspctrm,4) - size(stat_TFR_micro{imarker}.mask,3);
-        
+
         TFR_micro_trials{imarker}.mask      = cat(3, zeros(size(stat_TFR_micro{imarker}.mask,1),size(stat_TFR_micro{imarker}.mask,2),d), stat_TFR_micro{imarker}.mask);
         TFR_micro_trials{imarker}.mask      = repmat(TFR_micro_trials{imarker}.mask, size(TFR_micro_trials{imarker}.powspctrm,1),1,1,1);
         TFR_micro_trials{imarker}.mask      = reshape(TFR_micro_trials{imarker}.mask, size(TFR_micro_trials{imarker}.powspctrm));
-        
+
         TFR_micro_trials{imarker}.maskpos   = cat(3, zeros(size(stat_TFR_micro{imarker}.mask,1),size(stat_TFR_micro{imarker}.mask,2),d), posclust);
         TFR_micro_trials{imarker}.maskpos   = repmat(TFR_micro_trials{imarker}.maskpos, size(TFR_micro_trials{imarker}.powspctrm,1),1,1,1);
         TFR_micro_trials{imarker}.maskpos   = reshape(TFR_micro_trials{imarker}.maskpos, size(TFR_micro_trials{imarker}.powspctrm));
-        
+
         TFR_micro_trials{imarker}.maskneg   = cat(3, zeros(size(stat_TFR_micro{imarker}.mask,1),size(stat_TFR_micro{imarker}.mask,2),d), negclust);
         TFR_micro_trials{imarker}.maskneg   = repmat(TFR_micro_trials{imarker}.maskneg, size(TFR_micro_trials{imarker}.powspctrm,1),1,1,1);
         TFR_micro_trials{imarker}.maskneg   = reshape(TFR_micro_trials{imarker}.maskneg, size(TFR_micro_trials{imarker}.powspctrm));
-        
+
         TFR_micro_trials{imarker}.masked    = TFR_micro_trials{imarker}.powspctrm;
         TFR_micro_trials{imarker}.masked(~TFR_micro_trials{imarker}.mask) = nan;
-        
+
         TFR_micro_trials{imarker}.maskedpos = TFR_micro_trials{imarker}.powspctrm;
         TFR_micro_trials{imarker}.maskedpos(~TFR_micro_trials{imarker}.maskpos) = nan;
-        
+
         TFR_micro_trials{imarker}.maskedneg = TFR_micro_trials{imarker}.powspctrm;
         TFR_micro_trials{imarker}.maskedneg(~TFR_micro_trials{imarker}.maskneg) = nan;
-        
+
         powpos = nanmean(TFR_micro_trials{imarker}.maskedpos,1);
         powpos = nanmean(powpos,4);
         powpos = squeeze(powpos);
-        
+
         powneg = nanmean(TFR_micro_trials{imarker}.maskedneg,1);
         powneg = nanmean(powneg,4);
         powneg = squeeze(powneg);
-        
+
         powall = nanmean(TFR_micro_trials{imarker}.powspctrm,1);
         powall = nanmean(powall,4);
         powall = squeeze(powall);
-        
+
         %% Figure
         fig = figure; hold;
-        
+
         plot(TFR_micro_trials{imarker}.freq,powall)
         plot(TFR_micro_trials{imarker}.freq,powpos)
         plot(TFR_micro_trials{imarker}.freq,powneg)
-        
+
         [PKS,LOCS] = findpeaks(powall,'NPeaks',10);
         TFR_micro_trials{imarker}.maxfreq = TFR_micro_trials{imarker}.freq(LOCS);
         TFR_micro_trials{imarker}.maxpow  = PKS;
-        
+
         % print to file
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
         print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'FFT_',cfg.name{imarker},'.pdf']),'-r600');
-        
+
         cfgtemp                 = [];
         cfgtemp.method          = 'mtmfft';
         cfgtemp.output          = 'pow';
@@ -216,19 +237,19 @@ else
         cfgtemp.foi             = 1:200;
         %     cfgtemp.t_ftimwin       = ones(size(cfgtemp.foi))*0.5;
         cfgtemp.t_ftimwin       = 7./cfgtemp.foi;
-        
+
         % cfgtemp.toi             = cfg.epoch.toi{imarker}(1):cfg.LFP.slidestep:cfg.epoch.toi{imarker}(2);
         FFT_micro_trials{imarker} = ft_freqanalysis(cfgtemp,dat_micro{imarker});
-        
+
         save(fname,'FFT_micro_trials','TFR_micro_trials','TFR_macro_trials','stat_TFR_micro','corrs','-v7.3');
-        
-        
-        
+
+
+
         %%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%
-        
+
         % Find representative trials
-        
+
         cfgtemp                 = [];
         cfgtemp.vartrllength    = 2;
         avg                     = ft_timelockanalysis(cfgtemp,dat_micro{imarker});
@@ -239,9 +260,9 @@ else
             i2          = find(dat_micro{imarker}.time{itrial} >= cfg.epoch.toi{imarker}(2),1,'first');
             c(itrial)   = corr(avg.avg(channelindx,i1:i2)',dat_micro{imarker}.trial{itrial}(channelindx,i1:i2)');
         end
-        
+
         %% FIGURE
-        
+
         fig = figure;
         subplot(5,2,1);
         hold;
@@ -257,7 +278,7 @@ else
         ylabel('Trials');
         xlabel('Time (s)');
         axis tight
-        
+
         subplot(5,2,2);
         hold;
         h = 150;
@@ -271,7 +292,7 @@ else
         ylabel('Trials');
         xlabel('Time (s)');
         axis tight
-        
+
         % plot grid of trial voltages (micro)
         subplot(5,2,3);
         image(trialgrid_micro*255);
@@ -281,18 +302,18 @@ else
         ylabel('Trials');
         axis tight
         ax = axis;
-        
+
         % plot grid of trial voltages (micro)
         subplot(5,2,4);
         image(trialgrid_macro*255);
         %     colormap hot(255)
         colormap parula(255^2)
-        
+
         % title('Raw trial amplitudes over time');
         ylabel('Trials');
         axis tight
         set(gca, 'XTickLabel', '');
-        
+
         % plot TFR micro
         subplot(5,2,5);
         cfgtemp                 = [];
@@ -307,11 +328,11 @@ else
         cfgtemp.colormap        = parula(5000);
         cfgtemp.renderer        = 'painters';
         ft_singleplotTFR(cfgtemp,TFR_micro_trials{imarker});
-        
+
         % title('Time-frequency-representation');
         ylabel('Freq');
         set(gca, 'XTickLabel', '');
-        
+
         % plot TFR macro
         subplot(5,2,6);
         cfgtemp = [];
@@ -326,8 +347,8 @@ else
         % title('Time-frequency-representation');
         ylabel('Freq');
         set(gca, 'XTickLabel', '');
-        
-        
+
+
         % plot TFR micro MASKED
         subplot(5,2,7);
         cfgtemp                 = [];
@@ -347,7 +368,7 @@ else
         % title('Time-frequency-representation');
         ylabel('Freq');
         set(gca, 'XTickLabel', '');
-        
+
         % plot average peak micro
         subplot(5,2,9); hold;
         [~,~,W,P] = findpeaks(dat_micro_rptavg.avg,dat_micro_rptavg.time,'MinPeakProminence',40,'Annotate','extents');
@@ -358,11 +379,11 @@ else
         title(sprintf('Peak analysis: W=%.0fms, P=%.0fmV',W(ci)*1000,P(ci)));
         axis tight
         set(gca, 'XTickLabel', '');
-        
+
         % plot correlations with macro electrodes
         subplot(5,2,10); hold;
         boxplot(corrs.c,'orientation','horizontal','outliersize',1);
-        
+
         % % plot FFT micro
         % subplot(6,2,11); hold;
         % plot(FFT_micro_trials.freq,mean(FFT_micro_trials.powspctrm,1),'k');
@@ -385,7 +406,7 @@ else
         % % title('Distribution of durations');
         % ylabel('Nr. of observations');
         % xlabel('Duration (s)');
-        
+
         %
         % [ymax,imax] = max(histcount);
         %
@@ -406,58 +427,58 @@ else
         % [yright,iright] = find(histcount>0,1,'last');
         % txt = ['\downarrow ', num2str(edges(iright)+cfg.binsize/2) ,'s'];
         % text(edges(iright)+cfg.binsize/2,yright+20,txt,'color','r')
-        
+
         % print to file
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
         print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'overview_analyses_',cfg.name{imarker},'.pdf']),'-r600');
-        
+
     end
-    
-    
+
+
 end
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% plot single event examples %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -60,10 +60,15 @@ end
 
 
 %% inter-event timings
+fig = figure;
+subplots  = [3, 2, 1, 6, 5, 4, 8, 7];
+binwidths = [1, 1, 0.25, 1, 1, 0.25, 1, 0.25];
+binlimits = [60, 60, 15, 60, 60, 15, 60, 15];
+i = 1;
 
 for ipatient =  1 : 3
     
-    config = setparams([]); 
+    config = pnh_setparams([]);
     
     % read muse markers
     [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
@@ -71,15 +76,47 @@ for ipatient =  1 : 3
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
     
+    
     % read LFP data
-    [~, dat_macro{ipatient}] = readLFP(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
+    [intervals] = inter_trial_intervals(config{ipatient},MuseStruct_micro,true);
+    s = fieldnames(intervals);
     
-    % plot LFP timecourse examples for article
-    % plotTimeCourses(config{ipatient});
+    for ss = s'
+        subplot(3,3,subplots(i));
+        histogram(intervals.(cell2mat(ss))(:,4),'BinLimits',[0 binlimits(i)],'BinWidth',binwidths(i),'EdgeColor','black','facecolor','k');
+        me = nanmedian(intervals.(cell2mat(ss))(:,4));
+        mo = mode(intervals.(cell2mat(ss))(:,4));
+        m  = nanmean(intervals.(cell2mat(ss))(:,4));
+        sd = nanstd(intervals.(cell2mat(ss))(:,4));
+        axis tight
+%         title(sprintf('Nodule: %d, Pattern: %s, Median: %1.2f, Mode: %1.2f, Mean: %1.2f, SD: %1.2f',ipatient,cell2mat(ss),me,mo,m,sd));
+        title(sprintf('Nodule: %d, Pattern: %s',ipatient,cell2mat(ss)));
+        xlabel('Seconds');
+        ylabel('Count');
+        box off
+        
+        %         % print ISI to file
+        %         fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
+        %         set(fig,'PaperOrientation','landscape');
+        %         set(fig,'PaperUnits','normalized');
+        %         set(fig,'PaperPosition', [0 0 1 1]);
+        %         xlabel('Seconds');
+        %         ylabel('Count');
+        %         box off
+        %
+        %         print(fig, '-dpdf', fullfile(config{ipatient}.imagesavedir,['N',num2str(ipatient),'_inter-trial-intervals_',cell2mat(ss)]));
+        i = i + 1;
+    end
     
-    % plot LFP data
-%     [FFT_micro_trials{ipatient}, TFR_micro_trials{ipatient}, TFR_macro_trials{ipatient}, stat_TFR_micro{ipatient}, corrs{ipatient}] = plotLFP(config{ipatient}, dat_micro, dat_macro, false);
 end
+% print ISI to file
+fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
+set(fig,'PaperOrientation','landscape');
+set(fig,'PaperUnits','normalized');
+set(fig,'PaperPosition', [0 0 1 1]);
+
+print(fig, '-dpdf', fullfile(config{ipatient}.imagesavedir,'Inter-trial-intervals'));
+
 
 %% revised calculation of unit firing charateristics
         

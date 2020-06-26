@@ -3,15 +3,18 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 % 
-% Read SpykingCircus analysis results (spike times, templates, amplitudes).
-% Data must have been converted for Phy GUI, with  parameter prelabelling = True.
+% SPIKERAW reads SpykingCircus results (spike times, templates, amplitudes).
+% Data must have been converted for Phy GUI, with  parameter prelabelling = True
 % https://spyking-circus.readthedocs.io/en/latest/advanced/extras.html#converting
-% 
-% If data were checked with Phy, neurons are filtered and only the 'good' or
-% 'mua' are loaded. Otherwise (data never opened with Phy), all neurons are 
-% loaded.
 %
-% ### Necessary input:
+% use as
+%    [SpikeRaw] = readSpikeRaw_Phy(cfg,force,varargin)
+%
+% If data were checked with Phy, neurons are filtered and only the 'good' or
+% 'mua' are read. Otherwise (data never opened with Phy), all neurons are
+% read.
+%
+% Necessary input:
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of Phy converted results
 % cfg.circus.channel    = analyzed-electrode names
@@ -24,20 +27,33 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 % cfg.circus.part_list  = list of parts to analyse. Can be an array of
 %                         integers, or 'all'. Default = 'all'.
 %
-% ### Output:
+% # Output:
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
-% 
-% Dependencies : 
+%
+% Dependencies :
 % - npy-matlab (https://github.com/kwikteam/npy-matlab)
 % - Fieldtrip
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
+%   EpiCode is free software: you can redistribute it and/or modify
+%   it under the terms of the GNU General Public License as published by
+%   the Free Software Foundation, either version 3 of the License, or
+%   (at your option) any later version.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   EpiCode is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%   GNU General Public License for more details.
+%
+%   You should have received a copy of the GNU General Public License
+%   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
-
 
 if strcmp(cfg.circus.part_list,'all')
     cfg.circus.part_list = 1:size(cfg.directorylist,2);
@@ -53,9 +69,8 @@ end
 
 for ipart = cfg.circus.part_list
     
-    
     %% find spiking-circus output path, which is based on the name of the first datafile
-    
+
     datadir             = fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)]);
     phydir              = fullfile(datadir,'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1},cfg.circus.postfix,'.GUI']);
 %     temp                = dir(phydir_temp);
@@ -67,9 +82,9 @@ for ipart = cfg.circus.part_list
     datafile            = [temp{end}(1 : end - length(cfg.circus.postfix) - length('.GUI')), '.ncs'];
     
     %% load spike data
-    
+
     fprintf('Loading spike data from %s\n', phydir);
-    
+
     phydata.cluster_group           = tdfread(fullfile(phydir,'cluster_group.tsv'));   %phy classification.
     phydata.spike_times             = readNPY(fullfile(phydir,'spike_times.npy'));     %each timing of any spike, in samples
     phydata.spike_templates         = readNPY(fullfile(phydir,'spike_templates.npy')); %for each timing, which (non merged) template. Include the garbage templates 
@@ -114,7 +129,7 @@ for ipart = cfg.circus.part_list
     %% reorganize data to make a Fieldtrip structure
     
     %filter data if checked on Phy. Otherwise load all templates
-    if ischecked     
+    if ischecked
         cluster_list   = phydata.cluster_group.cluster_id(phydata.cluster_group.group(:,1) ~= 'n')'; %only good, or mua clusters (not noise)
     else
         cluster_list   = unique(phydata.spike_templates)';
@@ -153,13 +168,13 @@ for ipart = cfg.circus.part_list
         
         %add Phy group info (good, mua)
         if ischecked
-            SpikeRaw{ipart}.cluster_group{icluster}         = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster),:); 
+            SpikeRaw{ipart}.cluster_group{icluster}         = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster),:);
         end
-    
+
     end
-    
+
     clear timestamps
-    
+
 end % ipart
 
 save(fname,'SpikeRaw');
