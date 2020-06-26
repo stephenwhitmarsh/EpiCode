@@ -62,7 +62,7 @@ for irat = slurm_task_id
     %TEMPORARY_REMOVEME
 %     config{irat}.imagesavedir = fullfile(config{irat}.imagesavedir, 'test_alignXCorr');
 %     if ~isfolder(config{irat}.imagesavedir), mkdir (config{irat}.imagesavedir); end 
-    
+
     %align markers and remove wrong seizures
     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
     [MuseStruct]                    = alignMuseMarkers(config{irat},MuseStruct, false);
@@ -72,7 +72,7 @@ for irat = slurm_task_id
     end
        
     %read LFP data
-    dat_LFP                         = readLFP(config{irat}, MuseStruct, true);
+    dat_LFP                         = readLFP(config{irat}, MuseStruct, false);
     [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP); %correct an error in channel name during acquisition, for rat DTX2
     
     %read spike data
@@ -80,14 +80,12 @@ for irat = slurm_task_id
 
     if strcmp(config{irat}.type, 'dtx')
         %make trials based on Muse Markers
-        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
+        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
     elseif strcmp(config{irat}.type, 'ctrl')
         %make trials of continuous length on all the data
         SpikeTrials                     = readSpikeTrials_continuous(config{irat}, MuseStruct,SpikeRaw, false);
     end
-    
-    return
-    
+
     clear SpikeRaw
     
     % remove artefacted trials    
@@ -100,11 +98,7 @@ for irat = slurm_task_id
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
 
     %read spike waveforms
-    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, true);
-    
-    %TEMPORARY_REMOVEME, folder to save stats file
-%     config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
-%     if ~isfolder(config{irat}.datasavedir), mkdir (config{irat}.datasavedir); end 
+    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
     cfgtemp                 = [];
@@ -302,6 +296,7 @@ ylim([0 2]);
 % imagesc(log10(stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).sdf.avg));
 % xlim([80 120])
 
+figure;hold;
 emax_list = nan;
 sdf_avg = nan(1,length(stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.avg));
 sdf_time = stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.time;

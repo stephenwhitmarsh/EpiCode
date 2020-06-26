@@ -31,6 +31,7 @@ configdtx.datasavedir               = datasavedir;
 configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1'};
 configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
 
+
 % list of onset timing with respect to start-marker (s)
 configdtx.epoch.toi{1}              = [-2, 2];
 configdtx.epoch.toi{2}              = [-2, 2];
@@ -40,6 +41,7 @@ configdtx.epoch.toi{5}              = [-10, -1];
 configdtx.epoch.toi{6}              = [-2, -1];
 configdtx.epoch.toi{7}              = [-1, 0];
 configdtx.epoch.toi{8}              = [-1, 1];
+
 configdtx.epoch.pad{1}              = 10; %for LFP
 configdtx.epoch.pad{2}              = 10;
 configdtx.epoch.pad{3}              = 10;
@@ -48,6 +50,7 @@ configdtx.epoch.pad{5}              = 10;
 configdtx.epoch.pad{6}              = 10;
 configdtx.epoch.pad{7}              = 10;
 configdtx.epoch.pad{8}              = 10;
+
 
 configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
@@ -75,19 +78,22 @@ configdtx.align.demean              = {'yes'};
 %for detection of begin of event
 configdtx.align.begin.doalign       = {'yes'};
 configdtx.align.begin.thresh        = {0.3}; % percent of peak
-% % ALIGN XCORR : 
-% ATTENTION RETIRER ALIGN.CHANNEL RAT PAR RAT
+
+% ALIGN XCORR : 
 % configdtx.align.name                = {'SlowWave'};                               % Name of markers/patterns to align
 % configdtx.align.channel             = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP'};    % Channels to use for alignment
-% configdtx.align.demean              = 'no';
+% configdtx.align.demean              = 'yes';
+% configdtx.align.baselinewindow      = [-2 -1.5];
 % configdtx.align.reref               = 'no';
-% configdtx.align.latency             = {[-1, 1]};  
+% configdtx.align.refmethod           = 'bipolar';
+% configdtx.align.latency             = [-1, 1];  
 
 configdtx.LFP.flip                  = 'false';
 configdtx.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
 configdtx.LFP.hpfilter              = 'no';
 configdtx.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
 configdtx.LFP.baseline              = 'no';
+
 configdtx.LFP.baselinewindow{1}     = [-2, -1];
 configdtx.LFP.baselinewindow{2}     = [-2, -1];
 configdtx.LFP.baselinewindow{3}     = [0, 1];
@@ -136,7 +142,7 @@ configdtx.spike.sdftimewin{3}   = [-1/2 * 1/0.1 1/2 * 1/0.1];
 
 configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
-configdtx.spikewaveform.nspikes     = 200000;%'all'; %maximum number of spike waveforms to load. Can be 'all'. 
+configdtx.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load. Can be 'all'. 
 
 %% config for control experiments
 % no seizure-time-locked trials
@@ -149,12 +155,12 @@ configctrl.name                      = {'Control'};
 configctrl.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-% configctrl.muse.startend             = {'Injection','Analysis_End'};  
+% configctrl.muse.startend           = {'Injection','Analysis_End'};  
 
 configctrl.LFP.name                  = []; %do not load LFP
-configctrl.LFP.channel                  = []; %do not load LFP
+configctrl.LFP.channel               = []; %do not load LFP
 configctrl.align.name                = []; %do not align muse markers
-configctrl.align.channel                = []; %do not align muse markers
+configctrl.align.channel             = []; %do not align muse markers
 
 % list of onset timing with respect to start-marker (s)
 configctrl.epoch.toi{1}              = [0, 0];
@@ -163,7 +169,7 @@ configctrl.epoch.pad{1}              = 10; %for LFP
 configctrl.circus.reref              = 'no';
 configctrl.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configctrl.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configctrl.circus.postfix             = [];%'-final';
+configctrl.circus.postfix            = [];%'-final';
 
 configctrl.spike.triallength         = 600; %seconds
 configctrl.spike.baselinename        = 'Control';

@@ -111,7 +111,7 @@ else
             for itemp = 1:numel(clusternr)
                 template = full(reshape(templates(:, itemp), templates_size(2), templates_size(1)))';
                 [~,i] = max(mean(abs(template),2));
-                SpikeRaw{ipart}.template(itemp,:,:) = template;
+                SpikeRaw{ipart}.template{itemp} = template;
                 SpikeRaw{ipart}.template_maxchan(itemp) = i;
             end
             

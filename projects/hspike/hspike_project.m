@@ -7,9 +7,11 @@
 
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/    
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/DBSCAN/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
@@ -17,9 +19,11 @@ end
 
 if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development    
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\  
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\DBSCAN\      
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
@@ -31,21 +35,72 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 %% General analyses, looping over patients
 
-for ipatient =1
-    
+for ipatient = 1 : 3   
     % load settings
     config = hspike_setparams;
     
     % export hypnogram to muse
     %% REDO AND CHECK 02718; 15_04-31
-    exportHypnogram(config{ipatient});
+    %% 02680_2019-01-16_01-31
+    
+    %     exportHypnogram(config{ipatient});
     
     % read muse markers
-    [MuseStruct] = readMuseMarkers(config{ipatient}, false);
+    [MuseStruct_orig]       = readMuseMarkers(config{ipatient}, true);
+    [LFP_orig]              = readLFP(config{ipatient}, MuseStruct_orig, true);
     
-    % align Muse markers according to peaks
-    [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, false);
-    
+    config{1}.align.write   = false;
+    [MuseStruct_aligned]    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, true);
+    [LFP_aligned]           = readLFP(config{ipatient}, MuseStruct_aligned, true);
+        
+figure; 
+subplot(2,1,1);
+plot(LFP_avg_orig.avg')
+subplot(2,1,2);
+plot(LFP_avg_aligned.avg')
+
+    [clusterindx, LFP_cluster] = clusterLFP(config{ipatient}, MuseStruct, false);
+
+end
+
+% read LFP data
+config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');
+
+[LFP] = readLFP(config{ipatient}, MuseStruct, true);
+     
+     % average for 'template'
+     cfg = [];
+     temp = ft_timelockanalysis(cfg, LFP{1}{1});
+     
+%      labels_nonum    = regexprep(temp.label, '[0-9_]', '');
+%      [~,~,indx]      = unique(labels_nonum);
+%      clear group
+%      for i = 1 : max(indx)
+%          cfgtemp             = [];
+%          cfgtemp.reref       = 'yes';
+%          cfgtemp.refmethod   = 'bipolar';
+%          cfgtemp.channel     = temp.label(indx==i);
+%          group{i}            = ft_preprocessing(cfgtemp,temp);
+%      end
+%      template = ft_appenddata([],group{:});
+%      clear group
+     
+     C = detectTemplate(config{ipatient}, MuseStruct, template, true);
+     
+     % loop over parts within subject
+     for ipart = 1 : size(config{ipatient}.directorylist,2)
+         % loop over directories
+         C2{ipart} = [];
+         for idir = 1 : size(config{ipatient}.directorylist{ipart}, 2)
+             C2{ipart} = cat(1,C2{ipart},C{ipart}{idir});
+         end
+     end
+     figure; plot(C2{1}(:,4))
+     
+%     end
+%     % align Muse markers according to peaks
+%     [MuseStruct] = alignMuseMarkers(config{ipatient},MuseStruct, false);
+
     % automatically detect spikes
     detectSpikes(config{ipatient}, MuseStruct, true, true);
     
@@ -86,7 +141,7 @@ for ipatient =1
     [SpikeStatsPSG] = spikeratestatsPSG(config{ipatient}, SpikeRawPSG, SpikeTrialsPSG, hypnogram, true);
     
     % read LFP data
-    [LFP] = readLFP(config{ipatient}, MuseStruct, false, false);
+    [LFP] = readLFP(config{ipatient}, MuseStruct, false);
 end
      
 figure; hold;

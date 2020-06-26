@@ -1,4 +1,20 @@
-function detectSpikes(cfg,MuseStruct_micro,MuseStruct_macro,force,writeMuseMarker)
+function detectSpikes(cfg, MuseStruct_micro, MuseStruct_macro, force, writeMuseMarker)
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
+%
+%    EpiCode is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    EpiCode is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_detectedSpikes.mat']);
 
@@ -8,7 +24,7 @@ if exist(fname_out,'file') && force == false
     fprintf('************************************\n\n');
     load(fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_detectedSpikes.mat']));
 else
-    
+
     if force == true
         fprintf('**************************************\n');
         fprintf('** Forced redoing of spikedetection **\n');
@@ -18,11 +34,11 @@ else
         fprintf('** Detecting spikes **\n');
         fprintf('**********************\n\n');
     end
-    
-    for ipart = 1:length(MuseStruct_macro)   
-        
-        for idir = 1:length(MuseStruct_macro{ipart})       
-            
+
+    for ipart = 1:length(MuseStruct_macro)
+
+        for idir = 1:length(MuseStruct_macro{ipart})
+
             % select MICRO files
             micro_filenrs = [];
             for ifile = 1 : size(MuseStruct_micro{ipart}{idir}.filenames,2)
@@ -33,7 +49,7 @@ else
                     end
                 end
             end
-            
+
             % select MACRO files
             macro_filenrs = [];
             for ifile = 1 : size(MuseStruct_macro{ipart}{idir}.filenames,2)
@@ -44,7 +60,7 @@ else
                     end
                 end
             end
-            
+
             hasdata_micro = true(size(micro_filenrs));
             hasdata_macro = true(size(macro_filenrs));
             %
@@ -60,10 +76,10 @@ else
             %                 catch
             %                 end
             %             end
-            
+
             % load trials for selected MACRO channels
             for ifile = macro_filenrs
-                
+
                 % to deal with missing data
                 fname{1}                = fullfile(MuseStruct_macro{ipart}{idir}.directory, MuseStruct_macro{ipart}{idir}.filenames{ifile});
                 try
@@ -74,15 +90,15 @@ else
                     hasdata_micro(ifile) = false;
                 end
             end
-            
-            
+
+
             % concatinate channels, separately for MICRO/MACRO
             cfgtemp                             = [];
             %             cfgtemp.keepsampleinfo              = 'no';
             %             dirdat_micro{idir}                  = ft_appenddata(cfgtemp,filedat_micro{micro_filenrs(hasdata_micro)});
             dat_macro_append{idir}                  = ft_appenddata(cfgtemp,dat_macro{macro_filenrs(hasdata_macro)});
             clear dat_macro
-            
+
             % rereference
 %             cfgtemp = [];
 %             cfgtemp.reref = 'yes';
@@ -91,8 +107,8 @@ else
 
             % flip data positive negative
             dat_macro_append{idir}.trial{1} = -dat_macro_append{idir}.trial{1};
-            
-            
+
+
             LS = 5;         % Left half-wave slope; default: 7
             RS = 5;         % Right half-wave slope; default: 7
             TAMP = 400;     % Total amplitude; default: 600
@@ -104,10 +120,10 @@ else
             TroughSearch = 40; % distance in ms to search for a trough on each side of a detected peak
             DetThresholds = [ LS; RS; TAMP; LD; RD;];
             FilterSpec =  [20; 50; 1; 35;];
-            
+
             [SpikeIndex, ChanId, SpikeFV] = mDetectSpike(dat_macro_append{idir}.trial{1}',dat_macro_append{idir}.fsample, ...
                 cfg.spikedetect.BlockSize,cfg.spikedetect.SCALE,cfg.spikedetect.STDCoeff,cfg.spikedetect.DetThresholds,cfg.spikedetect.FilterSpec,cfg.spikedetect.TroughSearch);
-            
+
             % iterate to remove detections that are too close together
             for i = 1 : 10
                 toremove = diff(SpikeIndex / dat_macro_append{idir}.fsample) < 0.100;
@@ -124,14 +140,14 @@ else
                 cfgtemp.trl(:,4)                = ChanId;
                 dat_timelocked{idir}            = ft_redefinetrial(cfgtemp,dat_macro_append{idir});
                 clear dat_macro_append
-                
+
                 avg_timelocked{idir}            = ft_timelockanalysis([],dat_timelocked{idir});
-                
-                
+
+
                 % plot
                 fig             = figure;
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
-                
+
                 subplot(2,1,1);
                 hold;
                 h               = 1200;
@@ -144,7 +160,7 @@ else
                 plot(avg_timelocked{idir}.time,avg_timelocked{idir}.avg);
                 xlabel('Time (s)');
                 axis tight
-                
+
                 % print to file
                 set(fig,'PaperOrientation','landscape');
                 set(fig,'PaperUnits','normalized');
@@ -152,18 +168,18 @@ else
                 print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_d',num2str(idir),'-',MuseStruct_macro{ipart}{idir}.filenames{ifile}(1:end-6),'.pdf']));
 %                 print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_d',num2str(idir),'-',MuseStruct_macro{ipart}{idir}.filenames{ifile}(1:end-6),'.png']),'-r300');
                 close all
-                
+
                 clear avg_timelocked dat_timelocked
-                
+
                 % write markers to muse
-                
+
                 % update marker
                 MuseStruct_macro{ipart}{idir}.markers.SpikeDetect.offset = 0;
                 if writeMuseMarker
-                    
+
                     %  read Muse events file
                     name_mrk    = fullfile(MuseStruct_macro{ipart}{idir}.directory,'Events.mrk');
-                    
+
                     % backup markerfile
                     if ~exist(cfg.muse.backupdir,'DIR')
                         error('Backup directory does not exist');
@@ -176,7 +192,7 @@ else
                     fname_backup = sprintf('Events_%s.mrk', datestr(now, 'mm-dd-yyyy_HH-MM-SS'));
                     eval(sprintf('!cp %s %s',name_mrk,fullfile(cfg.muse.backupdir,d,fname_backup)));
                     fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir,d,fname_backup));
-                    
+
                     MuseStruct_macro{ipart}{idir}.markers.SpikeDetect.comment       = 'Added by detectSpikes (Stephen)';
                     MuseStruct_macro{ipart}{idir}.markers.SpikeDetect.color         = 'red';
                     MuseStruct_macro{ipart}{idir}.markers.SpikeDetect.offset        = 'Added by detectSpikes (Stephen)';
@@ -187,7 +203,7 @@ else
                     writeMuseMarkers(MuseStruct_macro{ipart}{idir},name_mrk);
                 end
             end % ~isempty(SpikeIndx)
-            
+
         end % idir
     end % ipart
 end

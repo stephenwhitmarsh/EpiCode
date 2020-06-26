@@ -1,10 +1,12 @@
 function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
+% ALIGNMUSEMARKERSXCORR determines timing shift of MUSE markers according
+% to crosscorrelation with average
 %
-% Automatically determines timing shift of events read from MUSE, according
-% to crosscorrelation between channels. Multiple channels can be used simultaneously.
+% use as
+%    [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
+%
+% Multiple channels can be used simultaneously.
 % Results are saved in a 'timeshift' field for every marker event in the MuseStruct.
 % Later functions can use this to align the data (or just read data)
 % Put last argument on TRUE if you want to function to re-compute the
@@ -12,22 +14,40 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %
 % Necessary fields (as defined in _setparams function):
 %
-% cfg.align.name                = e.g.: {'Hspike','SpikeDetect'};                               % Name of markers/patterns to align
-% cfg.align.channel             = e.g.: {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};    % Channels to use for alignment
-% cfg.align.demean              = e.g.: 'yes';
-% cfg.align.baselinewindow      = e.g.: [-0.2 -0.1];
-% cfg.align.reref               = e.g.: 'yes';
-% cfg.align.refmethod           = e.g.: 'bipolar';
-% cfg.align.latency             = e.g.: [-0.1, 0.2];                                            % timeperiod to use for crosscorrelation
+% cfg.epoch.toi{1}            = [-0.5  1];
+% cfg.epoch.toi{2}            = [-0.5  1];
+% cfg.epoch.pad               = {0.5, 0.5, 0.5};
+% cfg.align.name              = e.g.: {'Hspike','SpikeDetect'};                               % Name of markers/patterns to align
+% cfg.align.channel           = e.g.: {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};    % Channels to use for alignment
+% cfg.align.demean            = e.g.: 'yes';
+% cfg.align.baselinewindow    = e.g.: [-0.2 -0.1];
+% cfg.align.reref             = e.g.: 'yes';
+% cfg.align.refmethod         = e.g.: 'bipolar';
+% cfg.align.latency           = e.g.: [-0.1, 0.2];                                            % timeperiod to use for crosscorrelation
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
-% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
+%    EpiCode is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    EpiCode is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 % Paul (removeme) : see how to plot data
 
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
+
+write   = ft_getopt(cfg.align, 'write', true);
+latency = ft_getopt(cfg.align, 'latency', 'all');
 
 if exist(fname,'file') && force == false
     fprintf('*******************************\n');
@@ -198,12 +218,14 @@ else
                         todelete = [todelete, ievent];
                     end
                 end
-                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(todelete)       = [];
-                MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(todelete)          = [];
-            end % idir
-        end % imarker
-    end % ipart
-    
-    % save data
+            end
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(todelete)       = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(todelete)          = [];
+        end % idir
+    end % imarker
+end % ipart
+
+% save data
+if write
     save(fname,'MuseStruct');
 end

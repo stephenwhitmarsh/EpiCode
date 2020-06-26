@@ -12,6 +12,7 @@
 #SBATCH --array=1-7
 
 module load MATLAB/R2019b
+
 matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "dtx_project_spikes($SLURM_ARRAY_TASK_ID);"
 
 sleep 5;

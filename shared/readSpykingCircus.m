@@ -1,37 +1,41 @@
 function [SpikeTrials] = readSpykingCircus(cfg,MuseStruct,SpikeRaw,force,varargin)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% READSPYKINGCIRCUS reads Spyking-Circus results: spike-times and templates.
 %
-% [SpikeRaw, SpikeTrials] = readSpykingCircus(cfg,MuseStruct{ipart},force)
-% Read results from Spyking-Circus analysis; spike-times and templates.
-% Trials separated between 2 files (ie begin on one file and end on the
-% following file) are ignored.
-%
+% use as
+% [SpikeRaw, SpikeTrials] = readSpykingCircus(cfg,MuseStruct,force,varargin)
 %
 % Necessary input:
-%
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of results
 % cfg.circus.outputdir  = directory delow datasavedir for spyking-circus
 % cfg.circus.suffix     = from spyking-circus params files
 % cfg.circus.channel    = micro electrode names
-%
 % MuseStruct{ipart}     = info (e.g. events, files) of original data,
 %                         used to segment the spikes into trials
-%
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
 %
-%
 % Output:
-%
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
-% Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
-% Modified by Paul Baudin : LISTER LES MODIFS
+%   EpiCode is free software: you can redistribute it and/or modify
+%   it under the terms of the GNU General Public License as published by
+%   the Free Software Foundation, either version 3 of the License, or
+%   (at your option) any later version.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   EpiCode is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%   GNU General Public License for more details.
+%
+%   You should have received a copy of the GNU General Public License
+%   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 if isempty(varargin) || strcmp(varargin{1},'all')
     parts_to_read = 1:size(cfg.directorylist,2);
@@ -45,9 +49,9 @@ if exist(fname,'file') && force == false
     load(fname,'SpikeTrials');
     return;
 else
-    
+
     for ipart = parts_to_read
-        
+
         % find spiking-circus output path, which is based on the name of the
         % first datafile
 %         temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],'SpykingCircus',[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{1}(1:end-2),'*.result',cfg.circus.postfix,'.hdf5']));
@@ -69,10 +73,11 @@ else
         hdr_fname   = fullfile(temp(1).folder,temp(1).name);
         hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
           
+
             % create trials
             clear Trials
             for ilabel = 1 : size(cfg.name,2)
-                
+
                 % clock time of each event
                 clocktimes = [];
                 for ifile = 1 : size(MuseStruct{ipart},2)
@@ -82,7 +87,7 @@ else
                         end
                     end
                 end
-                
+
                 % create Fieldtrip trl based on concatinated files by adding nr of
                 % samples of each file
                 Startsample = [];
@@ -94,6 +99,7 @@ else
                 FileOffset  = [];
                 
                 dirOnset(1) = 0;
+
                 trialcount = 1;
                 for idir = 1 : size(MuseStruct{ipart},2)
                     %compute dir onset of the next dir based of the length
@@ -135,9 +141,9 @@ else
                             end
                         end
                     end
-                    
+
                 end
-                
+
                 cfgtemp                         = [];
                 cfgtemp.trl                     = [Startsample, Endsample, Offset];
                 cfgtemp.trl(:,4)                = ones(size(cfgtemp.trl,1),1) * idir;
@@ -149,9 +155,9 @@ else
                 cfgtemp.trl(:,10)               = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
                 cfgtemp.trl(:,11)               = Filenr;                               % trialnr. to try to find trials that are missing afterwards
                 cfgtemp.trl(:,12)               = FileOffset;                           % trialnr. to try to find trials that are missing afterwards
-                
+
                 cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr.nSamples,:); % so not to read before BOF or after EOFs
-                
+
                 % create spiketrials timelocked to events
                 cfgtemp.trlunit                         = 'samples';
                 cfgtemp.hdr                             = hdr;
@@ -159,20 +165,22 @@ else
                 SpikeTrials{ipart}{ilabel}.clocktimes   = clocktimes;
                 SpikeTrials{ipart}{ilabel}.hdr          = hdr;
                 SpikeTrials{ipart}{ilabel}.label        = cfg.name{ilabel};
-                
+
                 % commented out on 9-8-2019 after looking with Zoe
                 %             SpikeRaw.time{ilabel}           = SpikeRaw.samples{ilabel} / hdr.Fs;
                 %             SpikeRaw.trial{ilabel}          = ones(size(SpikeRaw.samples{ilabel}));
-                
+
             end % patterns
             SpikeRaw{ipart}.trialtime = [0 hdr.nSamples / hdr.Fs];
-            
+
         end % if exists spike file.
-        
+
     end
     
     save(fname,'SpikeTrials');
         
 end % save / force
 
+    %     save(fname,'SpikeRaw');
 
+end % save / force
