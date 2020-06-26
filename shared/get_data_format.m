@@ -56,7 +56,9 @@ elseif isMicromed
     fprintf('Data is Micromed\n');
 elseif isBrainvision
     fprintf('Data is Brainvision\n');
+
 end
+
 
 if isNeuralynx + isMicromed + isBrainvision == 0
     error('Cannot detect good data format in datapath = %s \nData have to be Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)\n', datapath);

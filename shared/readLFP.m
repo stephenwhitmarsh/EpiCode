@@ -71,11 +71,12 @@ else
     fprintf('*** (re-) computing LFP data ***\n');
     fprintf('********************************\n\n');
 end
-
-    % get file format
+<<<<<<< HEAD
+    
+    % get file format 
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
-
-    % initialize LFP, to return empty array in case there is no LFP to load
+    
+    % initialize LFP, to return empty cell in case there is no LFP to load
     LFP = {};
 
     % loop over parts within subject
@@ -136,14 +137,14 @@ end
                     cfgtemp.lpfreq          = ft_getopt(cfg.LFP, 'lpfreq', []);
                     cfgtemp.hpfreq          = ft_getopt(cfg.LFP, 'hpfreq', []);
                     cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
-                    cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);
-                    dat                     = ft_preprocessing(cfgtemp,dat);
-
+                    cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);                        
+                    dat                     = ft_preprocessing(cfgtemp,dat);  
+                
                     % append EMG data (if any)
                     if isMicromed || isBrainvision %not adapted for nlx data (1 file per electrode) for now
-
+                        
                         cfg.EMG = ft_getopt(cfg, 'EMG', []);
-
+                        
                         cfgtemp                   = [];
                         cfgtemp.channel           = {cfg.LFP.emg{imarker}, ft_getopt(cfg.EMG, 'refchannel', [])}; % load the emg associated with eeg marker, and the ref if any
                         cfgtemp.dataset           = fname;
@@ -170,7 +171,6 @@ end
                         dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
                     end
 
-
                     % downsample data and correct baseline
                     if isfield(cfg.LFP,'resamplefs')
 
@@ -183,8 +183,8 @@ end
                             cfgtemp.baselinewindow      = cfg.LFP.baselinewindow{imarker};
                         end
                         dat                             = ft_resampledata(cfgtemp,dat);
-                    end
-
+                    end        
+                      
                     fsample = dat.fsample; %store this info for output LFP
 
                     % create trial segmentation common to resampled
@@ -285,9 +285,9 @@ end
             if exist('dirdat','var') % in case there is no marker in the data
 
                 % concatinate data of different datasets (over trials)
-                LFP{ipart}{imarker} = ft_appenddata([],dirdat{find(hasmarker)});
-                LFP{ipart}{imarker}.fsample = fsample;
-                clear dirdat*
+                LFP{ipart}{imarker}                 = ft_appenddata([],dirdat{find(hasmarker)});
+                LFP{ipart}{imarker}.fsample         = fsample;
+                clear dirdat*              
             else
                 LFP{ipart}{imarker} = [];
                 fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});
@@ -296,8 +296,6 @@ end
         end % imarker
 
     end % ipart
-
-
 if write
     save(fname_out,'LFP','-v7.3');
 end

@@ -297,7 +297,15 @@ for ipart = 1 : size(cfg.directorylist, 2)
             end
         end
     end
+    
+    % check if data directory exists, if not create it
+    if ~isfolder(cfg.datasavedir)
+        ft_notice('creating directory %s', cfg.datasavedir);
+        mkdir(cfg.datasavedir);
+    end
+    
 end
+
 if write
     save(fname,'MuseStruct');
 end
