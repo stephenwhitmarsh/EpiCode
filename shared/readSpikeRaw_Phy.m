@@ -1,6 +1,5 @@
 function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 % 
 % SPIKERAW reads SpykingCircus results (spike times, templates, amplitudes).
@@ -50,6 +49,7 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg,force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
@@ -67,7 +67,6 @@ if exist(fname,'file') && force == false
 end
 
 for ipart = cfg.circus.part_list
-
     
     %% find spiking-circus output path, which is based on the name of the first datafile
 
@@ -155,7 +154,7 @@ for ipart = cfg.circus.part_list
         
         %add template maxchan
         if ischecked 
-            imaxchan                                    = phydata.cluster_info.ch(phydata.cluster_info.id == cluster_list(icluster)) +1;%+1 because chans idx begin at zero 
+            imaxchan                                    = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster)) +1; %+1 because chans idx begin at zero 
         else 
             [~,imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}),3));
         end
@@ -168,8 +167,15 @@ for ipart = cfg.circus.part_list
         
         %add Phy group info (good, mua)
         if ischecked
-            SpikeRaw{ipart}.cluster_group{icluster}         = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster),:); 
+            SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster),:); 
+            SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster)); 
+            %new field with purity index in 0.9.9 version of Spyking-Circus
+            try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id == cluster_list(icluster)); end
+        else
+            [~,imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}),3));
+            SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1; %-1 because chans idx begin at zero with Phy
         end
+
     end
 
     clear timestamps

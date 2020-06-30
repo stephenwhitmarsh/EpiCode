@@ -1,6 +1,5 @@
-function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
+function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct, force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 % 
 % Search for time periods in data, defined by Muse markers. Then, search if
@@ -54,6 +53,8 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %                             integers, or 'all'. Default = 'all'.
 % cfg.remove.label_list     : list of groups of trials to analyse. Can be an array
 %                             of integers, or 'all'. Default = 'all'.
+% cfg.remove.write          : 'yes' (default) or 'no', wheter to write 
+%                             output data on disk or not.
 %
 % # cfg fields to plot data if required (necessary if cfg.remove.plotdata = 'yes') :
 % cfg.remove.electrodetoplot : name of the electrode used for the plot.
@@ -78,10 +79,14 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 % - the alignment failed for this marker, so it is removed before loading
 %   and cutting data into trials.
 %
-% Paul Baudin
-% paul.baudin@live.fr
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_MuseMarkers_WithoutArtefacts.mat']);;
+
+if exist(fname) && force == false
+    fprint('Loading precomputed removal of artefacts\n%s\n', fname);
+    data = load(fname);
+    return
+end
 
 % get the default cfg options
 cfg.remove                  = ft_getopt(cfg,'remove',[]);
@@ -97,6 +102,7 @@ cfg.remove.keepindexes      = ft_getopt(cfg.remove, 'keepindexes'   , 'no');
 cfg.remove.plotdata         = ft_getopt(cfg.remove, 'plotdata'      , 'no');
 cfg.remove.part_list        = ft_getopt(cfg.remove, 'part_list'     , 'all');
 cfg.remove.label_list       = ft_getopt(cfg.remove, 'label_list'    , 'all');
+cfg.remove.write            = ft_getopt(cfg.remove, 'write     '    , 'yes');
 
 
 if isempty(data), fprintf('removetrials_MuseMarkers : Data is empty, nothing is done\n'); return, end
@@ -355,5 +361,9 @@ for ipart = cfg.remove.part_list
     end %ilabel
 end %ipart
 
+%save data
+if strcmp(cfg.remove.write, 'yes')
+    save(fname, data, '-v7.3');
 end
 
+end

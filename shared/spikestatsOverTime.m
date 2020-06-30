@@ -1,51 +1,50 @@
 function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [stats, legend] = spikestatsOverTime(cfg)
 % Compute stats over time, trial by trial, for one unit. 
 %
 % ### Necessary input
-% spikedata           = spike data epoched in FieldTrip trial data structure
-% cfg.spikechannel    = label of the unit to analyse
-% cfg.cutlength       = Time window for computing stats. If
+% spikedata                  = spike data epoched in FieldTrip trial data structure
+% cfg.statstime.spikechannel = label of the unit to analyse
+% cfg.statstime.cutlength   = Time window for computing stats. If
 %                       cfg.normtime = 'yes', must be between 0 and 1.
 %                       Otherwise, it is in seconds. Ignored if cfg.plot =
 %                       'trialavg' or 'scatter', because in those cases
 %                       only one value is computed per trial.
-% cfg.method          = can be 'isi', 'freq', 'cv2', 'cv', 'fanofactor', 
+% cfg.statstime.method      = can be 'isi', 'freq', 'cv2', 'cv', 'fanofactor', 
 %                       'burstindex' or 'amplitude'
-% cfg.timelock        = 'begin', 'end', 'no', whether to align data from the
+% cfg.statstime.timelock    = 'begin', 'end', 'no', whether to align data from the
 %                       begin or the end of each trial. If 'no', no
 %                       alignment is performed and real time is used in
 %                       x axis.
-% cfg.plot            = 'raw' (plot all data), 'raw+avg' (plot all data,
+% cfg.statstime.plot        = 'raw' (plot all data), 'raw+avg' (plot all data,
 %                       and avg), 'avg' (plot only the avg of all the
 %                       trials), 'trialavg' (plot avg of each trial),
 %                       'scatter' (plot one point per trial), 'movmean',
 %                       'movmean+avg'.
 %
 % ### Optional cfg fields
-% cfg.trial_list      = list of trials to analyse. Can be an array of
+% cfg.statstime.trial_list = list of trials to analyse. Can be an array of
 %                       integers with trials numbers, 'last', or 'all'. 
 %                       Default = 'all'.
-% cfg.removebursts    = 'yes' or 'no', whether to detect bursts (several
+% cfg.statstime.removebursts= 'yes' or 'no', whether to detect bursts (several
 %                       spikes with ISI <10ms), and to keep only the first 
 %                       spike. Default = 'no'.
-% cfg.removeempty     = 'yes' or 'no', whether to ignore trials with no
+% cfg.statstime.removeempty= 'yes' or 'no', whether to ignore trials with no
 %                       spike. If no, and trial has no spike, ISI is put at 
 %                       0 and freq is put at Inf. For other cfg.methods, if 
 %                       less than 2 spikes, the value is set to NaN 
 %                       regardless to cfg.removeempty. Default = 'no'.
-% cfg.removeoutlier   = 'yes' or 'no', whether to remove outliers wit
+% cfg.statstime.removeoutlier= 'yes' or 'no', whether to remove outliers wit
 %                       rmoutliers.m. Default = 'no'.
-% cfg.normtime        = 'yes' or 'no', whether to normalize time or not.
+% cfg.statstime.normtime  = 'yes' or 'no', whether to normalize time or not.
 %                       Default = 'no'.
-% cfg.normvalues      = Only two options for now : 'no' or 'begin' (first
+% cfg.statstime.normvalues= Only two options for now : 'no' or 'begin' (first
 %                       sample value is set to 1). Default = 'no'.
-% cfg.color           = optional field to change the default colors of the
+% cfg.statstime.color     = optional field to change the default colors of the
 %                       plot. Can be 'defaults', or a color indications
 %                       (letter or array of 3 numbers). Default = 'default'.
-% cfg.saveplot        = 'yes' or 'no', whether respectively to save and 
+% cfg.statstime.saveplot  = 'yes' or 'no', whether respectively to save and 
 %                       close the plot or to output it. Default = 'no'.
 % 
 % # Necessary cfg fields if cfg.saveplot = 'yes' :
@@ -60,11 +59,7 @@ function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
 % stats               = values, avg and std of computed method.
 % legend              = target to add a legend afterwards
 %
-% Paul Baudin (paul.baudin@live.fr)
-% 
-% FIXME : ajouter liste des trials à process, ajouter getopt et continue
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %get defaults cfg parameters
 cfg.trial_list          = ft_getopt(cfg, 'trial_list'   , 'all');

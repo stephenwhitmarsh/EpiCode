@@ -1,7 +1,5 @@
 function [stats] = spikeratestats_Events_Baseline(cfg,force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
 % [stats] = spikeratestats_Events_Baseline(cfg,force)
 %
 % Compare spike activity during short events versus resting periods.
@@ -100,8 +98,7 @@ function [stats] = spikeratestats_Events_Baseline(cfg,force)
 %       > readLFP.m
 %       > readSpikeWaveforms.m
 % - Used in this script : plot_morpho.m, spikestatsOverTime.m
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
 
 % load precomputed stats if required
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikeratestats_events_baseline', cfg.circus.postfix, '.mat']);
@@ -279,7 +276,7 @@ for ipart = cfg.stats.part_list
             cfgtemp.cutlength       = 0; %no cut length with trialavg
             cfgtemp.method          = 'freq';
             cfgtemp.timelock        = 'no';
-            cfgtemp.removeempty     = 'yes';
+            cfgtemp.removeempty     = 'no';
             cfgtemp.plot            = 'trialavg';
             cfgtemp.color           = 'b';              
             [stats{ipart}.(cfg.name{baseline_index}).freq_trialavg{i_unit}, legend_Bl] = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
@@ -360,12 +357,12 @@ for ipart = cfg.stats.part_list
             template.label{1} = 'template';
             
             cfgtemp                     = [];
-            cfgtemp.channame            = 'template';
-            cfgtemp.mesurehalfwidth     = 'yes';
-            cfgtemp.halfwidthmethod     = 'min'; 
-            cfgtemp.mesurepeaktrough    = 'yes';
-            cfgtemp.toiac               = 'all';
-            cfgtemp.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod = 'min'; 
+            cfgtemp.morpho.channame            = 'template';
+            cfgtemp.morpho.mesurehalfwidth     = 'yes';
+            cfgtemp.morpho.halfwidthmethod     = 'min'; 
+            cfgtemp.morpho.mesurepeaktrough    = 'yes';
+            cfgtemp.morpho.toiac               = 'all';
+            cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod = 'min'; 
             [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,template);
             
             title([]);
@@ -423,15 +420,15 @@ for ipart = cfg.stats.part_list
                     
                     %plot
                     cfgtemp                     = [];
-                    cfgtemp.channame            = nlx_channame;
-                    cfgtemp.plotstd             = 'yes';
-                    cfgtemp.removeoutliers      = 'yes';
-                    cfgtemp.toiplot             = cfg.epoch.toi{ievent};
-                    cfgtemp.toibl               = cfg.stats.bltoi{ievent};
-                    cfgtemp.toiac               = cfg.stats.actoi{ievent};
-                    cfgtemp.mesurehalfwidth     = 'yes';
-                    cfgtemp.halfwidthmethod     = 'bl';
-                    cfgtemp.name                = cfg.LFP.name{ievent};
+                    cfgtemp.morpho.channame            = nlx_channame;
+                    cfgtemp.morpho.plotstd             = 'yes';
+                    cfgtemp.morpho.removeoutliers      = 'yes';
+                    cfgtemp.morpho.toiplot             = cfg.epoch.toi{ievent};
+                    cfgtemp.morpho.toibl               = cfg.stats.bltoi{ievent};
+                    cfgtemp.morpho.toiac               = cfg.stats.actoi{ievent};
+                    cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                    cfgtemp.morpho.halfwidthmethod     = 'bl';
+                    cfgtemp.morpho.name                = cfg.LFP.name{ievent};
                     [hw_lfp, ~, ~] = plot_morpho(cfgtemp,cfg.dataLFP{ipart}{iLFP});
                     
                     stats{ipart}.(cfg.name{ievent}).LFP.channel{strcmp(cfg.dataLFP{ipart}{iLFP}.label,nlx_channame)'}     = nlx_channame;
@@ -632,15 +629,15 @@ for ipart = cfg.stats.part_list
                     if ~isempty(cfg.SpikeWaveforms{ipart}{iplot}{i_unit})
                         
                         cfgtemp                     = [];
-                        cfgtemp.channame            = cfg.SpikeWaveforms{ipart}{iplot}{i_unit}.label{1};
-                        cfgtemp.plotstd             = 'yes';
-                        cfgtemp.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
-                        cfgtemp.mesurehalfwidth     = 'yes';
-                        cfgtemp.halfwidthmethod     = 'min';
-                        cfgtemp.mesurepeaktrough    = 'yes';
-                        cfgtemp.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod     = 'min';
-                        cfgtemp.toiac               = 'all';
-                        cfgtemp.name                = cfg.name{iplot};
+                        cfgtemp.morpho.channame            = cfg.SpikeWaveforms{ipart}{iplot}{i_unit}.label{1};
+                        cfgtemp.morpho.plotstd             = 'yes';
+                        cfgtemp.morpho.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
+                        cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                        cfgtemp.morpho.halfwidthmethod     = 'min';
+                        cfgtemp.morpho.mesurepeaktrough    = 'yes';
+                        cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod     = 'min';
+                        cfgtemp.morpho.toiac               = 'all';
+                        cfgtemp.morpho.name                = cfg.name{iplot};
                         [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,cfg.SpikeWaveforms{ipart}{iplot}{i_unit});
                         
                         xlabel('Time (ms)');
@@ -706,7 +703,7 @@ for ipart = cfg.stats.part_list
             %% saveplot
             if ~(exist(cfg.imagesavedir)==7)
                 mkdir(cfg.imagesavedir);
-                fprintf('Create forlder %s',cfg.imagesavedir);
+                fprintf('Create folder %s\n',cfg.imagesavedir);
             end
             
             set(fig,'PaperOrientation','landscape');
@@ -714,8 +711,13 @@ for ipart = cfg.stats.part_list
             set(fig,'PaperPosition', [0 0 1 1]);
             fig.PaperType = 'A2';
             
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{ievent},'_',cfg.name{baseline_index},'.pdf']),'-r600');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{ievent},'_',cfg.name{baseline_index},'.png']),'-r600');
+            if hasevent
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{ievent},'_',cfg.name{baseline_index},'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{ievent},'_',cfg.name{baseline_index},'.png']),'-r600');
+            else
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{baseline_index},'.pdf']),'-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{ievent}.label{i_unit},'-spikestats_',cfg.name{baseline_index},'.png']),'-r600');
+            end
             close all
             
         end %i_unit
