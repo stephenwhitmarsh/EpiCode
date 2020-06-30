@@ -83,7 +83,7 @@ for irat = slurm_task_id
         SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
     elseif strcmp(config{irat}.type, 'ctrl')
         %make trials of continuous length on all the data
-        SpikeTrials                     = readSpikeTrials_continuous(config{irat}, MuseStruct,SpikeRaw, false);
+        SpikeTrials                     = readSpikeTrials_continuous(config{irat},SpikeRaw, false);
     end
 
     clear SpikeRaw
@@ -98,7 +98,7 @@ for irat = slurm_task_id
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
 
     %read spike waveforms
-    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
+    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, true);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
     cfgtemp                 = [];
@@ -108,7 +108,7 @@ for irat = slurm_task_id
     cfgtemp.SpikeWaveforms  = SpikeWaveforms;   clear SpikeWaveforms
     spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
     %FIXME voir les try/end dans plot_morpho
-           
+              
 end %irat
 return
 

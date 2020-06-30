@@ -1,4 +1,4 @@
-function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
+function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
@@ -11,70 +11,76 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %
 % ### Necessary input
 % data                    = raw Fieldtrip data structure epoched in trials
-% cfg.channame            = name of the channel to analyse (in data.label)
+% cfg.morpho.channame     = name or index of the channel to analyse (in
+%                           data.label). Default = 1.
 % 
 % ### Optionnal cfg fields :
-% cfg.plotstd             = 'yes' or 'no', whether to plot std or not.
+% cfg.morpho.plotstd      = 'yes' or 'no', whether to plot std or not.
 %                           Default = 'no'.
-% cfg.toiplot             = x limits of plot. Can be 'all'. Default = 'all'.
-% cfg.saveplot            = 'yes' or 'no', whether to save and close the
+% cfg.morpho.toiplot      = x limits of plot. Can be 'all'. Default = 'all'.
+% cfg.morpho.saveplot     = 'yes' or 'no', whether to save and close the
 %                           plot or to output it (respectively). Default =
 %                           'no'.
-% cfg.removeoutliers      = whether to plot outlier trials (>10*std to the
+% cfg.morpho.removeoutliers = whether to plot outlier trials (>10*std to the
 %                           mean). Average is not modified. Default = 'no'.
-% cfg.mesurehalfwidth     = 'yes' or 'no', whether to compute halfwidth.
+% cfg.morpho.mesurehalfwidth= 'yes' or 'no', whether to compute halfwidth.
 %                           Default = 'no'.
-% cfg.halfwidthmethod     = 'min' or 'bl' : reference for peak-amplitude
+% cfg.morpho.mesureamplitude= 'yes' or 'no', wheter to compute amplitude of
+%                           the LFP event. Default = 'no'. Need cfg.bl. 
+% cfg.morpho.blmethod     = 'min' or 'bl' : reference for peak-amplitude
 %                           measurement if mesurehalfwidth = 'yes'. 
 %                           Default = 'bl' (baseline)
-% cfg.mesurepeaktrough    = 'yes' or 'no', whether to compute peak-trough
+% cfg.morpho.mesurepeaktrough = 'yes' or 'no', whether to compute peak-trough
 %                           and trough-peak. Default = 'no'.
 % 
-% ### Necessary cfg fields if cfg.mesurehalfwidth = 'yes' or cfg.mesurepeaktrough = 'yes'
-% cfg.toiac               = active period for measurements. Can be 'all' (default)
-% cfg.toibl               = baseline period if cfg.halfwidthmethod = 'bl'
+% ### Necessary cfg fields if cfg.morpho.mesurehalfwidth = 'yes' or cfg.morpho.mesurepeaktrough = 'yes'
+% cfg.morpho.toiac        = active period for measurements. Can be 'all' (default)
+% cfg.morpho.toibl        = baseline period if cfg.morpho.blmethod = 'bl'
 % 
-% ### Necessary cfg fields if cfg.saveplot = 'yes'
-% cfg.name                = name of the analysis (title of plot and of
-%                           output image file)
-% cfg.imagesavedir        = where to save the image.
-% cfg.prefix              = prefix attached to the name of the saved-image
+% ### Necessary cfg fields if cfg.morpho.saveplot = 'yes'
+% cfg.morpho.name  = name of the analysis (title of plot and of
+%                    output image file)
+% cfg.imagesavedir = where to save the image.
+% cfg.prefix       = prefix attached to the name of the saved-image
 %
 % ### OUTPUT
 % halfwidth               = mesured halfwidth value, in seconds, or [].
 % peaktrough              = mesured peaktrough value, in seconds, or [].
 % troughpeak              = mesured troughpeak value, in seconds, or [].
+% amplitude               = amplitude of LFP event (max - baseline)
 %
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %Get default cfg parameters
-cfg.plotstd                     = ft_getopt(cfg, 'plotstd'          , 'no');
-cfg.removeoutliers              = ft_getopt(cfg, 'removeoutliers'  	, 'no');
-cfg.mesurehalfwidth             = ft_getopt(cfg, 'mesurehalfwidth'	, 'no');
-cfg.halfwidthmethod             = ft_getopt(cfg, 'halfwidthmethod' 	, 'bl');
-cfg.mesurepeaktrough            = ft_getopt(cfg, 'mesurepeaktrough'	, 'no');
-cfg.toiplot                     = ft_getopt(cfg, 'toiplot'          , 'all');
-cfg.toiac                     = ft_getopt(cfg, 'toiac'            , 'all');
-cfg.saveplot                    = ft_getopt(cfg, 'saveplot'         , 'no');
+cfg.morpho                             = ft_getopt(cfg, 'morpho', []);
+cfg.morpho.channame                    = ft_getopt(cfg.morpho, 'channame', 1);
+cfg.morpho.plotstd                     = ft_getopt(cfg.morpho, 'plotstd'          , 'no');
+cfg.morpho.removeoutliers              = ft_getopt(cfg.morpho, 'removeoutliers'  	, 'no');
+cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'	, 'no');
+cfg.morpho.mesureamplitude             = ft_getopt(cfg.morpho, 'mesureamplitude'	, 'no');
+cfg.morpho.blmethod                    = ft_getopt(cfg.morpho, 'blmethod' 	, 'bl');
+cfg.morpho.mesurepeaktrough            = ft_getopt(cfg.morpho, 'mesurepeaktrough'	, 'no');
+cfg.morpho.toiplot                     = ft_getopt(cfg.morpho, 'toiplot'          , 'all');
+cfg.morpho.toiac                       = ft_getopt(cfg.morpho, 'toiac'            , 'all');
+cfg.morpho.saveplot                    = ft_getopt(cfg.morpho, 'saveplot'         , 'no');
 
-if strcmp(cfg.toiplot,'all')
-    cfg.toiplot = [-Inf Inf];
+if strcmp(cfg.morpho.toiplot,'all')
+    cfg.morpho.toiplot = [-Inf Inf];
 end
-if strcmp(cfg.toiac,'all')
-    cfg.toiac = [-Inf Inf];
+if strcmp(cfg.morpho.toiac,'all')
+    cfg.morpho.toiac = [-Inf Inf];
 end
 
 %select channel to analyse
 cfgtemp         = [];
-cfgtemp.channel = cfg.channame;
+cfgtemp.channel = cfg.morpho.channame;
 data            = ft_selectdata(cfgtemp, data);
 if isempty(data), error('Channel %s was not found in data', channame); end
 
 %prepare figure
-if strcmp(cfg.saveplot, 'yes')
+if strcmp(cfg.morpho.saveplot, 'yes')
     fig = figure;
 end
 hold on;
@@ -96,7 +102,7 @@ data = ft_selectdata(cfgtemp, data);
 
 %search for outlier trials if asked
 isOutlierTrial = false(1, size(data.trial,2));
-if strcmp(cfg.removeoutliers, 'yes')
+if strcmp(cfg.morpho.removeoutliers, 'yes')
     for itrial = 1:size(data.trial,2)
         if any(data.trial{itrial} > 10 * sqrt(data_avg.var) + abs(data_avg.avg)) || any(data.trial{itrial} < -10 * sqrt(data_avg.var) + abs(data_avg.avg))
             isOutlierTrial(itrial) = true;
@@ -113,7 +119,7 @@ end
 
 
 %plot std if required
-if strcmp(cfg.plotstd, 'yes')
+if strcmp(cfg.morpho.plotstd, 'yes')
     %plot(data_avg.time,data_avg.avg + sqrt(data_avg.var),'k','LineWidth', 2);
     %plot(data_avg.time,data_avg.avg - sqrt(data_avg.var),'k','LineWidth', 2);
     std = sqrt(data_avg.var);
@@ -126,30 +132,33 @@ if strcmp(cfg.plotstd, 'yes')
     filled_SD(1).ShowBaseLine = 'off';
 end
 
-%plot avg of all trials
-plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+%plot avg of all trials. If only One trial, avg is plotted with linewidth =1
+if size(data.time, 2) ==1
+    plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 1);
+else
+    plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+end
 
 
 %select active period
 cfgtemp         = [];
-cfgtemp.latency = cfg.toiac;
+cfgtemp.latency = cfg.morpho.toiac;
 data_avg_ac     = ft_selectdata(cfgtemp, data_avg);
 
 %% Mesure and plot half width
 halfwidth = NaN;
 
-if strcmp(cfg.mesurehalfwidth, 'yes')
-    try %TEMPORARY - CHECK DTX4 unit just after 53
+if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
         %measure peak and half hamp
-        if strcmp(cfg.halfwidthmethod, 'bl')
+        if strcmp(cfg.morpho.blmethod, 'bl')
             cfgtemp         = [];
-            cfgtemp.latency = cfg.toibl;
+            cfgtemp.latency = cfg.morpho.toibl;
             data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
             bl          = mean(data_avg_bl.avg);
-        elseif strcmp(cfg.halfwidthmethod, 'min')
+        elseif strcmp(cfg.morpho.blmethod, 'min')
             bl          = min(data_avg_ac.avg);
         else
-            error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.halfwidthmethod);
+            error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.morpho.blmethod);
         end
         peak        = max(data_avg_ac.avg);
         halfamp     = double(bl+(peak-bl)/2);
@@ -178,15 +187,39 @@ if strcmp(cfg.mesurehalfwidth, 'yes')
             
             text(x_precise(2),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
         end
-    end %REMOVEME
 end
+
+
+
+%% Mesure and plot amplitude
+amplitude = NaN;
+
+if strcmp(cfg.morpho.mesureamplitude, 'yes')
+    if strcmp(cfg.morpho.blmethod, 'bl')
+        cfgtemp         = [];
+        cfgtemp.latency = cfg.morpho.toibl;
+        data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
+        bl          = mean(data_avg_bl.avg);
+    elseif strcmp(cfg.morpho.blmethod, 'min')
+        bl          = min(data_avg_ac.avg);
+    else
+        error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.morpho.blmethod);
+    end
+    [peak, peak_idx]        = max(data_avg_ac.avg);
+    amplitude               = peak-bl;
+    amplitude_loc            = data_avg_ac.time(peak_idx);
+        
+    scatter(amplitude_loc, peak, 'ob', 'filled');
+    scatter(amplitude_loc, bl, 'ob', 'filled');
+    text(amplitude_loc,peak,sprintf('%.1fuV',amplitude),'Color','k','HorizontalAlignment','center','VerticalAlignment','bottom','FontSize',10,'FontWeight','bold');
+end
+
 
 %% Measure and plot pt and tp
 peaktrough = NaN;
 troughpeak = NaN;
 
-if strcmp(cfg.mesurepeaktrough, 'yes')
-    try %TEMPORARY - CHECK DTX7 unit just after 26
+if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
     % Find throughs
@@ -217,7 +250,6 @@ if strcmp(cfg.mesurepeaktrough, 'yes')
         [unit, troughpeak_corr] = setunit(troughpeak);
         text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
     end
-     end %REMOVEME
 end
 
 axis tight;
@@ -226,9 +258,9 @@ set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 xlabel('Time (s)');
 ylabel('µV');
-xlim(cfg.toiplot);
+xlim(cfg.morpho.toiplot);
 
-if strcmp(cfg.removeoutliers, 'yes')
+if strcmp(cfg.morpho.removeoutliers, 'yes')
     title(sprintf('Chan %s: %d trials (%d outliers removed)', data.label{1},sum(~isOutlierTrial), sum(isOutlierTrial)), 'Fontsize',18, 'Interpreter','none');
 else
     title(sprintf('Chan %s: %d trials', data.label{1},length(data.trial)), 'Fontsize',18, 'Interpreter','none');
@@ -236,7 +268,7 @@ end
 
 
 %% sava data
-if strcmp(cfg.saveplot, 'yes')
+if strcmp(cfg.morpho.saveplot, 'yes')
     
     set(gca,'Fontsize',15);
     
@@ -248,8 +280,8 @@ if strcmp(cfg.saveplot, 'yes')
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.channame,'_morpho_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.name,'_',cfg.channame,'_morpho_scale',strrep(num2str(cfg.toiplot),'  ','_'),'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.morpho.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.morpho.name,'_',cfg.morpho.channame,'_morpho_scale',strrep(num2str(cfg.morpho.toiplot),'  ','_'),'.png']),'-r600');
     close all
     
 end

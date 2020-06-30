@@ -22,64 +22,11 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 %% batch for peak or begin
 
-isPatient = false;
-
-if slurm_task_id<=12
-    ispeak = true;
-else
-    ispeak = false;
-end
-
-if ismember(slurm_task_id,[1,2,3,4,5,6]) || ismember(slurm_task_id,[13,14,15,16,17,18])% slurm_task_id == 4% == 1 || slurm_task_id == 4
-    config = dtx_setparams_patients_lgi1([]);
-    if ispeak
-        for i=1:length(config)
-            config{i}.name{1} = 'SlowWave_R_peak';
-            config{i}.name{2} = 'SlowWave_L_peak';
-            config{i}.LFP.name = config{i}.name;
-        end
-    end
-    isPatient = true;
-    if ismember(slurm_task_id,[1,2,3,4,5,6])
-        [~,pat_idx] = ismember(slurm_task_id,[1,2,3,4,5,6]);
-    elseif ismember(slurm_task_id,[13,14,15,16,17,18])
-        [~,pat_idx] = ismember(slurm_task_id,[13,14,15,16,17,18]);
-    end
-    
-elseif slurm_task_id == 7 || slurm_task_id == 19
-    config = dtx_setparams_eegvideo([]);
-    if ispeak
-        for i=1:length(config)
-            config{i}.name{1} = 'SlowWave_peak';
-            config{i}.LFP.name = config{i}.name;
-        end
-    end
-    isEEGvideo = true;
-    pat_idx = 1;
-    
-elseif ismember(slurm_task_id,[8,9,10,11,12]) || ismember(slurm_task_id,[20,21,22,23,24])%slurm_task_id == 6
-    [config] = dtx_setparams_probe_lfp([]);
-    isProbe = true;
-    if ispeak
-        for i=1:length(config)
-            config{i}.name{1} = 'SlowWave_EEG_peak';
-            config{i}.LFP.name = config{i}.name;
-        end
-    end
-    if ismember(slurm_task_id,[8,9,10,11,12])
-        [~,pat_idx] = ismember(slurm_task_id,[8,9,10,11,12]);
-    elseif ismember(slurm_task_id,[20,21,22,23,24])
-        [~,pat_idx] = ismember(slurm_task_id,[20,21,22,23,24]);
-    end
-end
-
-pause(60*(slurm_task_id)); %TEMPORARY PAUL
-
 
 config_origin = config;
 
 
-for ipatient = pat_idx%1:length(config)
+for ipatient = slurm_task_id
     
         %% TEMPORAIRE PAUL
 %     config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir,config{ipatient}.name{1},'test_CSD'); %FIXME remove test_CSD

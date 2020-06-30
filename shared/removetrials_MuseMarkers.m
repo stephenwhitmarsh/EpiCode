@@ -257,7 +257,7 @@ for ipart = cfg.remove.part_list
             if sum([trialremoved{:}]) > 0
                 fprintf('\nRemove %d trials\n', sum([trialremoved{:}]));
             else
-                fprintf('\nNo searched-trials found : all trials are kept\n');
+                fprintf('No searched-trials found : all trials are kept\n');
             end
             
             

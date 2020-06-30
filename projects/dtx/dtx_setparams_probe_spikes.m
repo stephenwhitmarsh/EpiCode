@@ -162,6 +162,7 @@ configctrl.LFP.channel               = []; %do not load LFP
 configctrl.align.name                = []; %do not align muse markers
 configctrl.align.channel             = []; %do not align muse markers
 
+configctrl.muse.write                = true;
 % list of onset timing with respect to start-marker (s)
 configctrl.epoch.toi{1}              = [0, 0];
 configctrl.epoch.pad{1}              = 10; %for LFP
@@ -179,7 +180,7 @@ configctrl.spike.ISIbins             = [0:0.003:0.150]; %in s
 
 configctrl.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configctrl.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
-configctrl.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
+configctrl.spikewaveform.nspikes     = 200000;%'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
 
 
 %% Rodent 1

@@ -1,27 +1,22 @@
-function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force)
+function [SpikeTrials] = readSpikeTrials_continuous(cfg,SpikeRaw,force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-% [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,force,varargin)
 % Cut a Fieldtrip raw spike structure into consecutive equal trials of 
 % length defined in cfg. Make a trialinfo array similar to
 % readSpikeTrials_MuseMarkers.m so the same analysis can be applied.
-% Note : last trial, if not complete at the end of the file, is not created
+% Note : a trial cutted between 2 files is not created
 %
 % ### Necessary input:
 %
 % cfg.prefix            = prefix to output files
 % cfg.datasavedir       = data directory of results
+% cfg.directorylist     = list of Neuralynx folders to analyse
 % cfg.circus.outputdir  = directory delow datasavedir for spyking-circus
 % cfg.circus.channel    = micro electrode names
 % cfg.spike.triallength = length of the trials, in seconds. All the data
 %                         will be cut in consecutive trials of this length.
+% cfg.spike.latency     = period during which define trials. Can be 'all'
+%                        (default)
 %
-% MuseStruct{ipart}     = info (e.g. events, files) of original data,
-%                         used to  make a trialinfo array similar to the 
-%                         one created in readSpikeTrials_MuseMarkers.m (eg 
-%                         for later removing of artefacts based on Muse 
-%                         Markers).
 % SpikeRaw              = raw spike data in FieldTrip raw spike data structure
 % force                 = whether to redo analyses or read previous save
 %                         (true/false)
@@ -35,13 +30,12 @@ function [SpikeTrials] = readSpikeTrials_continuous(cfg,MuseStruct,SpikeRaw,forc
 % ### Output:
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
-% Paul Baudin (paul.baudin@live.fr) 
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
-cfg.circus.part_list    = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
+cfg.spike.latency        = ft_getopt(cfg.spike , 'latency', 'all');
 
 if strcmp(cfg.circus.part_list,'all')
     cfg.circus.part_list = 1:size(cfg.directorylist,2);
@@ -80,15 +74,24 @@ for ipart = cfg.circus.part_list
         
         dirOnset(1) = 1;
         trialcount = 1;
-        for idir = 1 : size(MuseStruct{ipart},2)
+        lag = 0; 
+        
+        for idir = 1 : size(cfg.directorylist{ipart},2)
             clear ss es 
             
             temp                = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*', cfg.circus.channel{1}(1:end-2),'*.ncs']));
             hdrtemp             = ft_read_header(fullfile(temp(1).folder,temp(1).name));
             dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples; % assuming all channels have same sampleinfo
             
-            ss                      = dirOnset(idir) : hdrtemp.Fs * cfg.spike.triallength : dirOnset(idir) + hdrtemp.nSamples - hdrtemp.Fs * cfg.spike.triallength;%remove one cycle size so endsample is still in the file
+            ss                      = dirOnset(idir)+lag : hdrtemp.Fs * cfg.spike.triallength : dirOnset(idir) + hdrtemp.nSamples;
             es                      = ss + hdrtemp.Fs * cfg.spike.triallength - 1;
+            % remove last trial if not complete 
+            if es(end) > hdrtemp.nSamples
+                ss = ss(1:end-1);
+                es = es(1:end-1);
+            end
+            
+            %design trialinfo
             Startsample             = [Startsample, ss];
             Endsample               = [Endsample, es];
             Offset                  = [Offset, zeros(1,size(ss,2))];
@@ -96,10 +99,26 @@ for ipart = cfg.circus.part_list
             Trialnr                 = [Trialnr; (trialcount:trialcount+size(ss,2)-1)'];
             Filenr                  = [Filenr; ones(size(ss,2),1)*idir];
             FileOffset              = [FileOffset; ones(size(ss,2),1)*dirOnset(idir)];
-            clocktimes              = [clocktimes, MuseStruct{ipart}{idir}.starttime : seconds(cfg.spike.triallength): MuseStruct{ipart}{idir}.starttime + seconds(cfg.spike.triallength)*(size(ss,2)-1)];
             
             trialcount      = trialcount + size(ss,2);
             
+            %trial between 2 dirs
+            if idir < size(cfg.directorylist{ipart},2)
+                clear ss es 
+                ss = Endsample(end);
+                es = Endsample(end)+ hdrtemp.Fs * cfg.spike.triallength - 1;
+                Startsample             = [Startsample, ss];
+                Endsample               = [Endsample, es];
+                Offset                  = [Offset, 0];
+                Trialdir                = [Trialdir; Trialdir(end)+1];
+                Trialnr                 = [Trialnr; Trialnr(end)+1];
+                Filenr                  = [Filenr; Filenr(end)];
+                FileOffset              = [FileOffset; FileOffset(end)];
+                
+                trialcount = trialcount+1;
+                lag        = es - hdrtemp.nSamples; %sample nr at the end of the trial, in the next dir.
+            end
+                        
         end
         
         cfgtemp                         = [];
@@ -113,8 +132,13 @@ for ipart = cfg.circus.part_list
         cfgtemp.trl(:,10)               = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
         cfgtemp.trl(:,11)               = Filenr;                               % trialnr. to try to find trials that are missing afterwards
         cfgtemp.trl(:,12)               = FileOffset;                           % trialnr. to try to find trials that are missing afterwards
+        
+        %remove trials which are not in the selected latency
+        if ~strcmp(cfg.spike.latency, 'all')
+            cfgtemp.trl = cfgtemp.trl(Startsample >= latency(1) & Endsample <= latency(2),:); 
+        end
                
-        % create spiketrials 
+        % create Fieldtrip spike trials 
         cfgtemp.trlunit                          = 'samples';
         cfgtemp.hdr                              = hdr;
         SpikeTrials{ipart}{ilabel}               = ft_spike_maketrials(cfgtemp,SpikeRaw{ipart});
@@ -129,6 +153,3 @@ end % ipart
 save(fname,'SpikeTrials');
 
 end
-
-
-

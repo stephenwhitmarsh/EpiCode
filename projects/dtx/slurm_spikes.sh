@@ -9,7 +9,7 @@
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/slurm-error/error-%j_%a-%x.txt
 #SBATCH --mail-user=paul.baudin@icm-institute.org
 #SBATCH --mail-type=ALL
-#SBATCH --array=1-7
+#SBATCH --array=7
 
 module load MATLAB/R2019b
 

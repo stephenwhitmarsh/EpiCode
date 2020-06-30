@@ -1,26 +1,39 @@
-function dtx_plot_SlowWaveTopographyTimecouse(cfg,data,ipart,imarker,saveplot)
+function dtx_plot_SlowWaveTopographyTimecouse(cfg,data)
 %plot topography of event related to one or two markers, according to 1020
 %human EEG layout.
 %cfg.labels.emg.
 %One figure per marker
 
-%rename prefix in case of "merge" data
-if isfield(cfg, 'merge')
-    if cfg.merge == true
-        if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
-            cfg.prefix = [cfg.prefix, 'MERGED-'];
-        else
-            cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
-        end
-    end
+% %rename prefix in case of "merge" data
+% if isfield(cfg, 'merge')
+%     if cfg.merge == true
+%         if ipart > 1 && ipart == length(cfg.directorylist) %last part = merge (except if only one part, nothing to merge)
+%             cfg.prefix = [cfg.prefix, 'MERGED-'];
+%         else
+%             cfg.prefix = [cfg.prefix, cfg.directorylist{ipart}{:}, '-'];
+%         end
+%     end
+% end
+
+suffix = ft_getopt(cfg.topoplot, 'suffix', []);
+part_list       = ft_getopt(cfg.topoplot, 'part_list'       , 'all');
+marker_list     = ft_getopt(cfg.topoplot, 'marker_list'     , 'all');
+
+if strcmp(part_list, 'all')
+    part_list = 1:size(data,2);
 end
 
+for ipart = part_list 
 
 data = data{ipart};
 
 abscisse_limits = 1; %s
 
-
+    if strcmp(marker_list, 'all')
+        marker_list = 1:size(data{ipart},2);
+    end
+    
+    for imarker = marker_list
 
 % avg
 cfgtemp = [];
@@ -88,7 +101,6 @@ ft_movieplotER(cfgtemp,dat_EEG_avg);
 
 
 %% print to file
-if saveplot
     
     if ~(exist (cfg.imagesavedir)==7)
         mkdir(cfg.imagesavedir);
@@ -99,12 +111,13 @@ if saveplot
     set(fig1,'PaperUnits','normalized');
     set(fig1,'PaperPosition', [0 0 1 1]);
     set(fig1,'Renderer','Painters');
-    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse']),'-r600');
-    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse']),'-r600');
+    print(fig1, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse',suffix]),'-r600');
+    print(fig1, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,cfg.LFP.name{imarker},'_topography_timecourse',suffix]),'-r600');
     
-    savefig(fig2,fullfile(cfg.imagesavedir,[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},'.fig']));
+    savefig(fig2,fullfile(cfg.imagesavedir,[cfg.prefix,'topography_movie_',cfg.LFP.name{imarker},suffix,'.fig']));
     
     close all
+    end
 end
 end
 

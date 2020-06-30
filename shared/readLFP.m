@@ -122,8 +122,12 @@ end
                         fname{1}            = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                         dat                 = ft_read_neuralynx_interp(fname);
                     else
+                        cfgtemp             = [];
                         cfgtemp.dataset     = fname;
-                        cfgtemp.channel     = cfg.labels.macro';
+                        cfgtemp.channel     = cfg.LFP.channel;
+                        cfgtemp.reref       = ft_getopt(cfg.LFP, 'reref', 'no');
+                        cfgtemp.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
+                        cfgtemp.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
                         dat                 = ft_preprocessing(cfgtemp);
                     end
 
@@ -144,30 +148,34 @@ end
                         
                         cfg.EMG = ft_getopt(cfg, 'EMG', []);
                         
-                        cfgtemp                   = [];
-                        cfgtemp.channel           = {cfg.LFP.emg{imarker}, ft_getopt(cfg.EMG, 'refchannel', [])}; % load the emg associated with eeg marker, and the ref if any
-                        cfgtemp.dataset           = fname;
-                        cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
-                        cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
-                        cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
-                        data_EMG                  = ft_preprocessing(cfgtemp);
-
-                        % filtering
-                        cfgtemp                 = [];
-                        cfgtemp.lpfilter        = ft_getopt(cfg.EMG, 'lpfilter', 'no');
-                        cfgtemp.hpfilter        = ft_getopt(cfg.EMG, 'hpfilter', 'no');
-                        cfgtemp.bpfilter        = ft_getopt(cfg.EMG, 'bpfilter', 'no');
-                        cfgtemp.bsfilter        = ft_getopt(cfg.EMG, 'bsfilter', 'no');
-                        cfgtemp.lpfreq          = ft_getopt(cfg.EMG, 'lpfreq', []);
-                        cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
-                        cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
-                        cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
-                        data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
-
-                        % append EMG to EEG data
-                        cfgtemp                 = [];
-                        cfgtemp.keepsampleinfo  = 'yes';
-                        dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
+                        if ~isempty(cfg.EMG)
+                            if ~isempty(cfg.EMG.channel{imarker})
+                                cfgtemp                   = [];
+                                cfgtemp.channel           = cfg.EMG.channel{imarker}; % load the emg associated with eeg marker, and the ref if any
+                                cfgtemp.dataset           = fname;
+                                cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
+                                cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
+                                cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
+                                data_EMG                  = ft_preprocessing(cfgtemp);
+                                
+                                % filtering
+                                cfgtemp                 = [];
+                                cfgtemp.lpfilter        = ft_getopt(cfg.EMG, 'lpfilter', 'no');
+                                cfgtemp.hpfilter        = ft_getopt(cfg.EMG, 'hpfilter', 'no');
+                                cfgtemp.bpfilter        = ft_getopt(cfg.EMG, 'bpfilter', 'no');
+                                cfgtemp.bsfilter        = ft_getopt(cfg.EMG, 'bsfilter', 'no');
+                                cfgtemp.lpfreq          = ft_getopt(cfg.EMG, 'lpfreq', []);
+                                cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
+                                cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
+                                cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
+                                data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
+                                
+                                % append EMG to EEG data
+                                cfgtemp                 = [];
+                                cfgtemp.keepsampleinfo  = 'yes';
+                                dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
+                            end
+                        end
                     end
 
                     % downsample data and correct baseline

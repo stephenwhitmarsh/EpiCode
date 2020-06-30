@@ -46,7 +46,7 @@ for irat = slurm_task_id
         MuseStruct = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true);
         SpikeTrials = readSpikeTrials_MuseMarkers(config{irat}, [],[], false);
     elseif strcmp(config{irat}.type, 'ctrl')
-        SpikeTrials = readSpikeTrials_continuous(config{irat}, [],[], false);
+        SpikeTrials = readSpikeTrials_continuous(config{irat}, [], false);
     end
     
     [SpikeTrials, ~]                = removetrials_MuseMarkers([], SpikeTrials, MuseStruct); %remove BAD trials
@@ -79,11 +79,10 @@ for irat = slurm_task_id
             
             %filter spikedata
             if strcmp(i_group, "mua")
-                group_sel = ~contains(spikedata.cluster_group, 'noise');
+                group_sel = find(~contains(spikedata.cluster_group, 'noise'));
             elseif strcmp(i_group, "sua")
-                group_sel = ~contains(spikedata.cluster_group, 'noise') & ~contains(spikedata.cluster_group, 'mua');
+                group_sel = find(~contains(spikedata.cluster_group, 'noise') & ~contains(spikedata.cluster_group, 'mua'));
             end
-            group_sel = find(group_sel);
             
             cfgtemp = [];
             cfgtemp.spikechannel = group_sel;
@@ -91,8 +90,8 @@ for irat = slurm_task_id
             
             %% compute xcorr
             cfgtemp             = [];
-            cfgtemp.binsize     = 0.0005;
-            cfgtemp.maxlag      = 0.015;
+            cfgtemp.binsize     = 0.001;
+            cfgtemp.maxlag      = 0.08;
             cfgtemp.debias      = 'yes';
             cfgtemp.method      = 'xcorr';
             cfgtemp.outputunit  = 'raw';
@@ -127,13 +126,17 @@ for irat = slurm_task_id
                     end
                     
                     if ix == iy
-                        c = [0 0 0.8];
+                        %color for mua
+                        if contains(spikedata.cluster_group{ix}, 'mua')
+                            c = 'm';
+                        else
+                        %color for sua
+                            c = 'b';
+                        end
                     end
                     
                     x =xcorr{ilabel}.(i_group).time; %abscisse xcorr
                     y = squeeze(xcorr{ilabel}.(i_group).xcorr(ix,iy,:)); %value of the xcorr : cluster ix in x-axis, iy in y-axis
-                    
-                    
                     
                     h = subplot(size(xcorr{ilabel}.(i_group).xcorr,1),size(xcorr{ilabel}.(i_group).xcorr,2),i);
                     hold;
@@ -182,23 +185,23 @@ for irat = slurm_task_id
             %% print to file
             fprintf('Print to file and save data\n');
             
-            if ~isfolder(fullfile(config{irat}.imagesavedir,'xcorrs'))
-                mkdir(fullfile(config{irat}.imagesavedir,'xcorrs'));
+            if ~isfolder(fullfile(config{irat}.imagesavedir,'xcorrs_80ms'))
+                mkdir(fullfile(config{irat}.imagesavedir,'xcorrs_80ms'));
             end
             
             fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(config{irat}.imagesavedir,[config{irat}.prefix,'p',num2str(ipart),'-xcorr_',str2mat(i_group),'_',config{irat}.name{ilabel},'.pdf']),'-r600');
-            print(fig, '-dpng', fullfile(config{irat}.imagesavedir,[config{irat}.prefix,'p',num2str(ipart),'-xcorr_',str2mat(i_group),'_',config{irat}.name{ilabel},'.png']),'-r600');
+            print(fig, '-dpdf', fullfile(config{irat}.imagesavedir,'xcorrs_80ms',[config{irat}.prefix,'p',num2str(ipart),'-xcorr_',str2mat(i_group),'_',config{irat}.name{ilabel},'.pdf']),'-r600');
+            print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'xcorrs_80ms',[config{irat}.prefix,'p',num2str(ipart),'-xcorr_',str2mat(i_group),'_',config{irat}.name{ilabel},'.png']),'-r600');
             
             close all
             
         end %i_group
     end %ilabel
     
-    fname = fullfile(config{irat}.datasavedir, [config{irat}.prefix(1:end-1), '_xcorr.mat']);
+    fname = fullfile(config{irat}.datasavedir, [config{irat}.prefix(1:end-1), '_xcorr_80ms.mat']);
     save(fname, 'xcorr', '-v7.3');
     clear xcorr
 end %irat

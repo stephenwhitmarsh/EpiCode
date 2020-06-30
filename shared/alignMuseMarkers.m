@@ -366,6 +366,7 @@ else
                         end
                         timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
                         
+                        if isfield(cfg.align, 'begin')
                         if strcmp(cfg.align.begin.doalign{imarker},'yes')
                             %find begin according to peak found before
                             peak_loc(itrial)        = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
@@ -384,12 +385,13 @@ else
                                 haspeak(itrial) = false;
                             end
                         end
+                        end
                         
                         % align time axis to relevant (peak) index 
                         dat_sel_aligned.time{itrial}    = dat_sel_trl.time{itrial} - timeshift;
                         dat_filt_aligned.time{itrial}   = dat_filt_trl.time{itrial} - timeshift; %for plot
                         
-                        if abs(timeshift) > cfg.align.maxtimeshift{imarker}
+                        if abs(timeshift) > cfg.align.maxtimeshift
                             hasartefact(itrial) = true;
                         end 
 
@@ -421,13 +423,13 @@ else
            
                 %Find position of the line to plot
                 for itrial = 1 : size(dat_filt_trl.trial,2)
-                    if strcmp(cfg.align.begin.doalign, 'yes')
-                        line_idx(itrial) = index_tresh{itrial};
-                    else
-                        line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
+                    line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
+                    if isfield(cfg.align, 'begin')
+                        if strcmp(cfg.align.begin.doalign, 'yes')
+                            line_idx(itrial) = index_tresh{itrial};
+                        end
                     end
                 end
-
 
                 subplot(2,2,1);
                 hold;
