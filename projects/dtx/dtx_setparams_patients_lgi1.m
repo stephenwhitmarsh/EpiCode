@@ -106,6 +106,7 @@ configcommon.align.demean              = 'yes';
 % configcommon.alignEMG.hpfreq           = 10;
 
 configcommon.LFP.name                  = {'SlowWave_R','SlowWave_L'};
+configcommon.LFP.write                 = true;
 % configcommon.LFP.emgmarker             = {'no','no','SlowWave_R_EMG','SlowWave_L_EMG','SlowWave_R_EMG','SlowWave_L_EMG'};
 configcommon.LFP.motorcortex           = {'C4','C3'};
 % configcommon.LFP.TFR.doTFR             = false;

@@ -35,8 +35,7 @@ unit_table = table2struct(unit_table);
 ipart=1;
 
 
-%FIXME : dans script projet : script pour filtrer spiketrials, script xcorr
-% en fonction
+%FIXME : dans script projet : filtrer spiketrials dans mon projet, puis script xcorr appelé en fonction
 
 for irat = slurm_task_id
     

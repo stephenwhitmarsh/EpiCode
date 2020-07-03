@@ -25,13 +25,13 @@ config = dtx_setparams_patients_lgi1;
 
 for ipatient = slurm_task_id
     
-    config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir, 'alignpeak');
+%     config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir, 'alignpeak');
     
     % read and align data
     [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
-    [MuseStruct]                    = alignMuseMarkers(config{ipatient},MuseStruct, true);
+    [MuseStruct]                    = alignMuseMarkers(config{ipatient},MuseStruct, false);
 %     [MuseStruct]                    = alignMuseMarkersXcorr(config{ipatient},MuseStruct, true);
-    [dat_LFP]                       = readLFP(config{ipatient}, MuseStruct, true); %dat_LFP{ipart}{imarker}
+    [dat_LFP]                       = readLFP(config{ipatient}, MuseStruct, false); %dat_LFP{ipart}{imarker}
     
     % flip data
     if ft_getopt(config{ipatient}.LFP, 'flip', false) == true
@@ -60,7 +60,8 @@ for ipatient = slurm_task_id
     end
     
     % remove trials which intersest BAD markers
-    [dat_LFP, ~]           = removetrials_MuseMarkers([], dat_LFP, MuseStruct);
+    
+    [dat_LFP, ~]           = removetrials_MuseMarkers(config{ipatient}, dat_LFP, MuseStruct);
     
     % Compute CSD
     %     neigbours found here :https://github.com/fieldtrip/fieldtrip/blob/master/template/neighbours/elec1020_neighb.mat

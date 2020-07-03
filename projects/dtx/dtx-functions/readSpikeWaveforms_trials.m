@@ -1,4 +1,4 @@
-function [SpikeWaveforms] = readSpikeWaveforms(cfg,SpikeTrials,force)
+function [SpikeWaveforms] = readSpikeWaveforms_trials(cfg,spikedata,force)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -35,7 +35,6 @@ function [SpikeWaveforms] = readSpikeWaveforms(cfg,SpikeTrials,force)
 %                                 (corresponding to cfg.name), there is one
 %                                 cell per unit, one trial per spike.
 %
-% Paul Baudin (paul.baudin@live.fr)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -50,7 +49,7 @@ cfg.spikewaveform.part_list    = ft_getopt(cfg.spikewaveform , 'part_list' , 'al
 
 
 if strcmp(cfg.spikewaveform.part_list,'all')
-    cfg.spikewaveform.part_list = 1:size(SpikeTrials,2);
+    cfg.spikewaveform.part_list = 1:size(spikedata,2);
 end
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'spike_waveform.mat']);
@@ -77,7 +76,7 @@ end
 
 for ipart = cfg.spikewaveform.part_list
     
-    for ilabel = 1:size(cfg.name,2)
+    for ilabel = 1:size(spikedata{ipart},2)
         
         for ichan = 1:size(cfg.circus.channel,2)
             
@@ -93,7 +92,7 @@ for ipart = cfg.spikewaveform.part_list
             hdr = ft_read_header(datafile);
             
             clusters_idx = [];
-            clusters_idx = find(SpikeTrials{ipart}{ilabel}.template_maxchan == ichan - 1); %-1 because Phy starts counting at zero
+            clusters_idx = find(spikedata{ipart}{ilabel}.template_maxchan == ichan - 1); %-1 because Phy starts counting at zero
             
             if isempty(clusters_idx)
                 continue
@@ -103,12 +102,12 @@ for ipart = cfg.spikewaveform.part_list
                 
                 %Select random spike if required
                 if strcmp(cfg.spikewaveform.nspikes, 'all')
-                    spikes_idx_sel = 1:size(SpikeTrials{ipart}{ilabel}.trial{icluster},2);
+                    spikes_idx_sel = 1:size(spikedata{ipart}{ilabel}.trial{icluster},2);
                 else
-                    if size(SpikeTrials{ipart}{ilabel}.trial{icluster},2) > cfg.spikewaveform.nspikes
-                        spikes_idx_sel = randperm(size(SpikeTrials{ipart}{ilabel}.trial{icluster},2), cfg.spikewaveform.nspikes);
+                    if size(spikedata{ipart}{ilabel}.trial{icluster},2) > cfg.spikewaveform.nspikes
+                        spikes_idx_sel = randperm(size(spikedata{ipart}{ilabel}.trial{icluster},2), cfg.spikewaveform.nspikes);
                     else
-                        spikes_idx_sel = 1:size(SpikeTrials{ipart}{ilabel}.trial{icluster},2);
+                        spikes_idx_sel = 1:size(spikedata{ipart}{ilabel}.trial{icluster},2);
                     end
                 end
                 
@@ -126,8 +125,8 @@ for ipart = cfg.spikewaveform.part_list
                 
                 for ispike = spikes_idx_sel
                     trialcount   = trialcount + 1;
-                    Startsample  = [Startsample; round(SpikeTrials{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(1) * hdr.Fs)];
-                    Endsample    = [Endsample;   round(SpikeTrials{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(2) * hdr.Fs)];
+                    Startsample  = [Startsample; round(spikedata{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(1) * hdr.Fs)];
+                    Endsample    = [Endsample;   round(spikedata{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(2) * hdr.Fs)];
                     Offset       = [Offset; round(cfg.spikewaveform.toi(1) * hdr.Fs)];
                     Trialnr      = [Trialnr; trialcount];
                 end
@@ -154,8 +153,8 @@ for ipart = cfg.spikewaveform.part_list
                 
                 SpikeWaveforms{ipart}{ilabel}{icluster}                     = ft_preprocessing(cfgtemp);
                 SpikeWaveforms{ipart}{ilabel}{icluster}.label               = [];
-                SpikeWaveforms{ipart}{ilabel}{icluster}.label{1}            = SpikeTrials{ipart}{ilabel}.label{icluster};
-                SpikeWaveforms{ipart}{ilabel}{icluster}.template_maxchan    = SpikeTrials{ipart}{ilabel}.template_maxchan(icluster);
+                SpikeWaveforms{ipart}{ilabel}{icluster}.label{1}            = spikedata{ipart}{ilabel}.label{icluster};
+                SpikeWaveforms{ipart}{ilabel}{icluster}.template_maxchan    = spikedata{ipart}{ilabel}.template_maxchan(icluster);
                 
             end %icluster
         end %ichan

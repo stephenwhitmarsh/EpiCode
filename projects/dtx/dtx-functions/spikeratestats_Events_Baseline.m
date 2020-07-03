@@ -99,7 +99,7 @@ function [stats] = spikeratestats_Events_Baseline(cfg,force)
 %       > readSpikeTrials_MuseMarkers.m or readSpikeTrials_continuous
 %       > readLFP.m
 %       > readSpikeWaveforms.m
-% - Used in this script : plot_morpho.m, spikestatsOverTime.m
+% - Used in this script : plot_morpho.m, spikestatsOverTime_trials.m
 % 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -283,13 +283,13 @@ for ipart = cfg.stats.part_list
             cfgtemp.removeempty     = 'yes';
             cfgtemp.plot            = 'trialavg';
             cfgtemp.color           = 'b';              
-            [stats{ipart}.(cfg.name{baseline_index}).freq_trialavg{i_unit}, legend_Bl] = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
+            [stats{ipart}.(cfg.name{baseline_index}).freq_trialavg{i_unit}, legend_Bl] = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
 
             if hasevent
                 %for Event
                 cfgtemp.plot            = 'scatter';
                 cfgtemp.color           = 'r';
-                [stats{ipart}.(cfg.name{ievent}).freq_trialavg{i_unit}, legend_Ev] = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{ievent});
+                [stats{ipart}.(cfg.name{ievent}).freq_trialavg{i_unit}, legend_Ev] = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{ievent});
             end
             
             axis tight
@@ -315,13 +315,13 @@ for ipart = cfg.stats.part_list
             cfgtemp.plot            = 'trialavg';
             cfgtemp.color           = 'b';
             
-            [stats{ipart}.(cfg.name{baseline_index}).amplitude_trialavg{i_unit}, legend_Bl] = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
+            [stats{ipart}.(cfg.name{baseline_index}).amplitude_trialavg{i_unit}, legend_Bl] = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
 
             if hasevent
                 %for events
                 cfgtemp.plot            = 'scatter';
                 cfgtemp.color           = 'r';
-                [stats{ipart}.(cfg.name{ievent}).amplitude_trialavg{i_unit}, legend_Ev] = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{ievent});
+                [stats{ipart}.(cfg.name{ievent}).amplitude_trialavg{i_unit}, legend_Ev] = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{ievent});
             end
             
             axis tight
@@ -361,12 +361,12 @@ for ipart = cfg.stats.part_list
             template.label{1} = 'template';
             
             cfgtemp                     = [];
-            cfgtemp.channame            = 'template';
-            cfgtemp.mesurehalfwidth     = 'yes';
-            cfgtemp.halfwidthmethod     = 'min'; 
-            cfgtemp.mesurepeaktrough    = 'yes';
-            cfgtemp.toiac               = 'all';
-            cfgtemp.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod = 'min'; 
+            cfgtemp.morpho.channame            = 'template';
+            cfgtemp.morpho.mesurehalfwidth     = 'yes';
+            cfgtemp.morpho.halfwidthmethod     = 'min'; 
+            cfgtemp.morpho.mesurepeaktrough    = 'yes';
+            cfgtemp.morpho.toiac               = 'all';
+            cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod = 'min'; 
             [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,template);
             
             title([]);
@@ -424,15 +424,15 @@ for ipart = cfg.stats.part_list
                     
                     %plot
                     cfgtemp                     = [];
-                    cfgtemp.channame            = nlx_channame;
-                    cfgtemp.plotstd             = 'yes';
-                    cfgtemp.removeoutliers      = 'yes';
-                    cfgtemp.toiplot             = cfg.epoch.toi{ievent};
-                    cfgtemp.toibl               = cfg.stats.bltoi{ievent};
-                    cfgtemp.toiac               = cfg.stats.actoi{ievent};
-                    cfgtemp.mesurehalfwidth     = 'yes';
-                    cfgtemp.halfwidthmethod     = 'bl';
-                    cfgtemp.name                = cfg.LFP.name{ievent};
+                    cfgtemp.morpho.channame            = nlx_channame;
+                    cfgtemp.morpho.plotstd             = 'yes';
+                    cfgtemp.morpho.removeoutliers      = 'yes';
+                    cfgtemp.morpho.toiplot             = cfg.epoch.toi{ievent};
+                    cfgtemp.morpho.toibl               = cfg.stats.bltoi{ievent};
+                    cfgtemp.morpho.toiac               = cfg.stats.actoi{ievent};
+                    cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                    cfgtemp.morpho.halfwidthmethod     = 'bl';
+                    cfgtemp.morpho.name                = cfg.LFP.name{ievent};
                     [hw_lfp, ~, ~] = plot_morpho(cfgtemp,cfg.dataLFP{ipart}{iLFP});
                     
                     stats{ipart}.(cfg.name{ievent}).LFP.channel{strcmp(cfg.dataLFP{ipart}{iLFP}.label,nlx_channame)'}     = nlx_channame;
@@ -633,15 +633,15 @@ for ipart = cfg.stats.part_list
                     if ~isempty(cfg.SpikeWaveforms{ipart}{iplot}{i_unit})
                         
                         cfgtemp                     = [];
-                        cfgtemp.channame            = cfg.SpikeWaveforms{ipart}{iplot}{i_unit}.label{1};
-                        cfgtemp.plotstd             = 'yes';
-                        cfgtemp.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
-                        cfgtemp.mesurehalfwidth     = 'yes';
-                        cfgtemp.halfwidthmethod     = 'min';
-                        cfgtemp.mesurepeaktrough    = 'yes';
-                        cfgtemp.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod     = 'min';
-                        cfgtemp.toiac               = 'all';
-                        cfgtemp.name                = cfg.name{iplot};
+                        cfgtemp.morpho.channame            = cfg.SpikeWaveforms{ipart}{iplot}{i_unit}.label{1};
+                        cfgtemp.morpho.plotstd             = 'yes';
+                        cfgtemp.morpho.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
+                        cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                        cfgtemp.morpho.halfwidthmethod     = 'min';
+                        cfgtemp.morpho.mesurepeaktrough    = 'yes';
+                        cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.halfwidthmethod     = 'min';
+                        cfgtemp.morpho.toiac               = 'all';
+                        cfgtemp.morpho.name                = cfg.name{iplot};
                         [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,cfg.SpikeWaveforms{ipart}{iplot}{i_unit});
                         
                         xlabel('Time (ms)');
@@ -672,7 +672,7 @@ for ipart = cfg.stats.part_list
                 cfgtemp.removeempty     = 'yes';
                 cfgtemp.removeoutlier   = 'yes';
                 cfgtemp.plot            = 'movmean';               
-                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.freq{i_unit} = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
+                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.freq{i_unit} = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
                 
                 ylabel('Spikerate (Hz)');
                 setfig();
@@ -684,7 +684,7 @@ for ipart = cfg.stats.part_list
                 subplot(7,4,[19 20]); hold;
                 
                 cfgtemp.method          = 'cv2';
-                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.cv2{i_unit} = spikestatsOverTime(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
+                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.cv2{i_unit} = spikestatsOverTime_trials(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
                 
                 title([]);
                 ylabel('Spikerate CV2');
@@ -696,7 +696,7 @@ for ipart = cfg.stats.part_list
                 cfgtemp.method          = 'cv2';
                 cfgtemp.removebursts    = 'yes';
                 
-                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.cv2_withoutbursts{i_unit} = spikestatsOverTime(cfgtemp, cfg.SpikeTrials{ipart}{baseline_index});
+                stats{ipart}.(cfg.name{baseline_index}).stats_over_time.cv2_withoutbursts{i_unit} = spikestatsOverTime_trials(cfgtemp, cfg.SpikeTrials{ipart}{baseline_index});
                 
                 ylabel(sprintf('CV2 without \nbursts'));
                 xlabel(sprintf('Time from end of %s',cfg.name{baseline_index}));

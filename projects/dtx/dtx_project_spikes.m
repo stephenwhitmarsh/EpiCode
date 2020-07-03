@@ -98,7 +98,7 @@ for irat = slurm_task_id
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
 
     %read spike waveforms
-    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, true);
+    SpikeWaveforms                  = readSpikeWaveforms_trials(config{irat}, SpikeTrials, true);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
     cfgtemp                 = [];

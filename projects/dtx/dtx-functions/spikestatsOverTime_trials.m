@@ -1,4 +1,4 @@
-function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
+function [stats, legend_out] = spikestatsOverTime_trials(cfg, spikedata)
 
 % [stats, legend] = spikestatsOverTime(cfg)
 % Compute stats over time, trial by trial, for one unit. 
@@ -62,32 +62,32 @@ function [stats, legend_out] = spikestatsOverTime(cfg, spikedata)
 %
 
 %get defaults cfg parameters
-cfg.trial_list          = ft_getopt(cfg, 'trial_list'   , 'all');
-cfg.removebursts        = ft_getopt(cfg, 'removebursts' , 'no');
-cfg.removeempty         = ft_getopt(cfg, 'removeempty'  , 'no');
-cfg.removeoutlier       = ft_getopt(cfg, 'removeoutlier', 'no');
-cfg.normtime            = ft_getopt(cfg, 'normtime'     , 'no');
-cfg.normvalues          = ft_getopt(cfg, 'normvalues'   , 'no');
-cfg.color               = ft_getopt(cfg, 'color'        , 'default');
-cfg.saveplot            = ft_getopt(cfg, 'saveplot'     , 'no');
+cfg.statstime.trial_list          = ft_getopt(cfg.statstime, 'trial_list'   , 'all');
+cfg.statstime.removebursts        = ft_getopt(cfg.statstime, 'removebursts' , 'no');
+cfg.statstime.removeempty         = ft_getopt(cfg.statstime, 'removeempty'  , 'no');
+cfg.statstime.removeoutlier       = ft_getopt(cfg.statstime, 'removeoutlier', 'no');
+cfg.statstime.normtime            = ft_getopt(cfg.statstime, 'normtime'     , 'no');
+cfg.statstime.normvalues          = ft_getopt(cfg.statstime, 'normvalues'   , 'no');
+cfg.statstime.color               = ft_getopt(cfg.statstime, 'color'        , 'default');
+cfg.statstime.saveplot            = ft_getopt(cfg.statstime, 'saveplot'     , 'no');
 
-if strcmp(cfg.trial_list, 'all')
-    cfg.trial_list = 1:size(spikedata.trialinfo,1);
-elseif strcmp(cfg.trial_list, 'last')
-    cfg.trial_list = size(spikedata.trialinfo,1);
+if strcmp(cfg.statstime.trial_list, 'all')
+    cfg.statstime.trial_list = 1:size(spikedata.trialinfo,1);
+elseif strcmp(cfg.statstime.trial_list, 'last')
+    cfg.statstime.trial_list = size(spikedata.trialinfo,1);
 end
 
 %Find unit index
-unit_idx = find(strcmp(spikedata.label,cfg.spikechannel));
+unit_idx = find(strcmp(spikedata.label,cfg.statstime.spikechannel));
 
 % Prepare figure
-if strcmp(cfg.saveplot, 'yes')
+if strcmp(cfg.statstime.saveplot, 'yes')
     fig = figure;
 end
 hold on;
 
 %remove bursts if required
-if strcmp(cfg.removebursts, 'yes')
+if strcmp(cfg.statstime.removebursts, 'yes')
     % get timings and ISIs
     t               = spikedata.time{unit_idx};
     isi_all         = diff(t);
@@ -126,28 +126,28 @@ end
 spikeisi = ft_spike_isi([], spikedata);
 
 % Initialize values array
-if strcmp(cfg.plot, 'trialavg')  || strcmp(cfg.plot, 'scatter')
+if strcmp(cfg.statstime.plot, 'trialavg')  || strcmp(cfg.statstime.plot, 'scatter')
     max_cuts = 1;
-    cfg.cutlength = 0; %ignore cfg.cutlenght because no need to cut data
+    cfg.statstime.cutlength = 0; %ignore cfg.statstime.cutlenght because no need to cut data
 else
-    if strcmp(cfg.normtime, 'yes')
-        max_cuts = fix(1/cfg.cutlength)+1;
-        if cfg.cutlength > 1, error('With cfg.normtime = ''yes'', cfg.cutlength must be <= 1.'); end
+    if strcmp(cfg.statstime.normtime, 'yes')
+        max_cuts = fix(1/cfg.statstime.cutlength)+1;
+        if cfg.statstime.cutlength > 1, error('With cfg.statstime.normtime = ''yes'', cfg.statstime.cutlength must be <= 1.'); end
     else
         triallength_max = max(spikedata.trialtime(:,2) - spikedata.trialtime(:,1));
-        max_cuts = fix(triallength_max/cfg.cutlength)+1; %+1 because last cut is an incmplete cut
-        if cfg.cutlength > triallength_max, error('cfg.cutlength is longer than the max trial length'); end
+        max_cuts = fix(triallength_max/cfg.statstime.cutlength)+1; %+1 because last cut is an incmplete cut
+        if cfg.statstime.cutlength > triallength_max, error('cfg.statstime.cutlength is longer than the max trial length'); end
     end
 end
 values = nan(size(spikedata.trialinfo,1),max_cuts);
 
 %compute values
-for itrial = cfg.trial_list
+for itrial = cfg.statstime.trial_list
     clear x freq cv2 cv fanofactor burstindex isi_smooth amplitude
     spike_index = [];
     spike_index = spikedata.trial{unit_idx} == spikedata.trialinfo(itrial,7);
     
-    if strcmp(cfg.removeempty, 'no') || sum(spike_index)>1 %if there is more than 1 spike in the trial (otherwise trial is ignored)
+    if strcmp(cfg.statstime.removeempty, 'no') || sum(spike_index)>1 %if there is more than 1 spike in the trial (otherwise trial is ignored)
         
         %find spike time and isi of the trial
         spike_isi_trial               = spikeisi.isi{unit_idx}(spike_index);
@@ -160,20 +160,20 @@ for itrial = cfg.trial_list
         trialbegin              = spikedata.trialtime(itrial,1);
         trialend                = spikedata.trialtime(itrial,2);
         triallength             = trialend - trialbegin;
-        if strcmp(cfg.plot, 'trialavg')  || strcmp(cfg.plot, 'scatter')
+        if strcmp(cfg.statstime.plot, 'trialavg')  || strcmp(cfg.statstime.plot, 'scatter')
             ncuts = 0;
             lastcutlength = triallength;
         else
-            ncuts                   = fix(triallength /cfg.cutlength);
-            lastcutlength           = (triallength /cfg.cutlength - ncuts) * cfg.cutlength; %last uncomplete cut
+            ncuts                   = fix(triallength /cfg.statstime.cutlength);
+            lastcutlength           = (triallength /cfg.statstime.cutlength - ncuts) * cfg.statstime.cutlength; %last uncomplete cut
         end
         
         %normalize time if required
-        if strcmp(cfg.normtime,'yes')
+        if strcmp(cfg.statstime.normtime,'yes')
             spike_time_trial        = (spike_time_trial - trialbegin) ./ triallength;
             triallength             = 1;
-            ncuts                   = fix(1/cfg.cutlength);
-            lastcutlength           = (1 /cfg.cutlength - ncuts) * cfg.cutlength; %last uncomplete cut
+            ncuts                   = fix(1/cfg.statstime.cutlength);
+            lastcutlength           = (1 /cfg.statstime.cutlength - ncuts) * cfg.statstime.cutlength; %last uncomplete cut
         end
                        
         %average values for each cut
@@ -181,18 +181,18 @@ for itrial = cfg.trial_list
             
             spike_cut_index                            = [];
             if icut == ncuts +1 %last cut
-                spike_cut_index                            = (spike_time_trial > cfg.cutlength*(icut-1) & spike_time_trial < cfg.cutlength*(icut-1)+lastcutlength);
+                spike_cut_index                            = (spike_time_trial > cfg.statstime.cutlength*(icut-1) & spike_time_trial < cfg.statstime.cutlength*(icut-1)+lastcutlength);
             else
-                spike_cut_index                            = (spike_time_trial > cfg.cutlength*(icut-1) & spike_time_trial < cfg.cutlength*(icut));
+                spike_cut_index                            = (spike_time_trial > cfg.statstime.cutlength*(icut-1) & spike_time_trial < cfg.statstime.cutlength*(icut));
             end
             
-            if strcmp(cfg.removeempty, 'no') || sum(spike_cut_index) > 1
+            if strcmp(cfg.statstime.removeempty, 'no') || sum(spike_cut_index) > 1
                 
                 isi_temp                = [];
                 isi_temp                = spike_isi_trial(spike_cut_index);
                 isi_smooth(icut)        = nanmean(isi_temp);
                 
-                if strcmp(cfg.removeempty, 'no') && ismember(sum(spike_cut_index), [0, 1])
+                if strcmp(cfg.statstime.removeempty, 'no') && ismember(sum(spike_cut_index), [0, 1])
                     isi_smooth(icut)    = Inf;
                 end
                 
@@ -234,7 +234,7 @@ for itrial = cfg.trial_list
         end %icut
         
         % select values according ton input method
-        switch cfg.method
+        switch cfg.statstime.method
             case 'isi'
                 values(itrial,1:ncuts+1) = isismooth; %+1 because of last uncomplete cut
             case 'freq'
@@ -250,20 +250,20 @@ for itrial = cfg.trial_list
             case 'amplitude'
                 values(itrial,1:ncuts+1) = amplitude;
             otherwise
-                error('cfg.method ''%s'' is not supported by this function', cfg.method);
+                error('cfg.statstime.method ''%s'' is not supported by this function', cfg.statstime.method);
         end
     end %sum(spike_index)>1
     
 end %itrial
 
 % remove outliers if required
-if strcmp(cfg.removeoutlier, 'yes')
+if strcmp(cfg.statstime.removeoutlier, 'yes')
     values(isoutlier(values)) = nan;
 end
 
 % normalize values if required. Other normalizations method may be usefull
 % to add later
-switch cfg.normvalues
+switch cfg.statstime.normvalues
     case 'no'
         %nothing is done
     case 'begin'
@@ -274,11 +274,11 @@ switch cfg.normvalues
             end
         end
     otherwise
-        error('cfg.normvalues %s is not supported by this function', cfg.normvalues);
+        error('cfg.statstime.normvalues %s is not supported by this function', cfg.statstime.normvalues);
 end
 
 % align values to the end if required
-if strcmp(cfg.timelock, 'end')
+if strcmp(cfg.statstime.timelock, 'end')
     for itrial = 1:size(values,1)
         if sum(~isnan(values(itrial,:))) > 1
             last_idx(itrial)                                                        = find(~isnan(values(itrial,:)),1,'last');
@@ -296,20 +296,20 @@ end
 %PLOT
 
 
-switch cfg.timelock
+switch cfg.statstime.timelock
     
     case 'no'
         %plot non-aligned values, abscisse is real time
         for itrial = 1:size(values,1)
             starttime = spikedata.trialinfo(itrial, 3) / spikedata.hdr.Fs;
-            x = (0 : max_cuts-1) * cfg.cutlength + starttime; %-1 because starts at zero
-            if strcmp(cfg.color, 'default')
+            x = (0 : max_cuts-1) * cfg.statstime.cutlength + starttime; %-1 because starts at zero
+            if strcmp(cfg.statstime.color, 'default')
                 color = 'k';
             else
-                color = cfg.color;
+                color = cfg.statstime.color;
             end
             
-            switch cfg.plot
+            switch cfg.statstime.plot
                 case 'raw'
                     legend_out = plot(x, values(itrial,:), 'Color',color, 'LineWidth',2);
                 case 'movmean'
@@ -320,29 +320,29 @@ switch cfg.timelock
                     endtime = spikedata.trialinfo(itrial, 4) / spikedata.hdr.Fs;
                     legend_out = plot([starttime endtime], [nanmean(values(itrial,:)) nanmean(values(itrial,:))], 'Color',color, 'LineWidth',2);
                 case {'raw+avg', 'movmean+avg'}
-                    error('with cfg.timelock = ''no'', the option cfg.plot = ''...+avg'' is not availabale');
+                    error('with cfg.statstime.timelock = ''no'', the option cfg.statstime.plot = ''...+avg'' is not availabale');
                 case 'avg'
-                    error('with cfg.timelock = ''no'', the option cfg.plot = ''avg'' is not availabale');
+                    error('with cfg.statstime.timelock = ''no'', the option cfg.statstime.plot = ''avg'' is not availabale');
                 otherwise
-                    error('cfg.plot = %s is not supported', cfg.plot);
+                    error('cfg.statstime.plot = %s is not supported', cfg.statstime.plot);
             end
         end
         
     case {'begin', 'end'}
         %plot aligned values, with darker grey for the last
-        x = (0 : max_cuts-1) * cfg.cutlength; %-1 because starts at zero
-        if strcmp(cfg.timelock, 'end'), x = x-x(end); end %end abscisse at zero if required
+        x = (0 : max_cuts-1) * cfg.statstime.cutlength; %-1 because starts at zero
+        if strcmp(cfg.statstime.timelock, 'end'), x = x-x(end); end %end abscisse at zero if required
         
         c_greys = 0.9 : -0.9/size(values,1) : 0; %Color darker for the last trials
         
         for itrial = 1:size(values,1)
-            if strcmp(cfg.color, 'default')
+            if strcmp(cfg.statstime.color, 'default')
                 color = [c_greys(itrial), c_greys(itrial), c_greys(itrial)];
             else
-                color = cfg.color;
+                color = cfg.statstime.color;
             end
             
-            switch cfg.plot
+            switch cfg.statstime.plot
                 case {'raw', 'raw+avg'}
                     legend_out = plot(x, values(itrial,:), 'Color', color);
                 case {'movmean', 'movmean+avg'}
@@ -357,24 +357,24 @@ switch cfg.timelock
                 case 'scatter'
                     legend_out = scatter(0, nanmean(values(itrial,:)), 7,'o','filled', 'MarkerEdgeColor',color, 'MarkerFaceColor', color);
                 otherwise
-                    error('cfg.plot = %s is not supported', cfg.plot);
+                    error('cfg.statstime.plot = %s is not supported', cfg.statstime.plot);
             end
         end
     otherwise
-        error('cfg.timelock = %s is not supported', cfg.timelock);
+        error('cfg.statstime.timelock = %s is not supported', cfg.statstime.timelock);
 end
 
 %plot avg, if required
 values_avg = nanmean(values,1);
 values_std = nanstd(values,0,1);%not plot, compute for output
-if strcmp(cfg.plot, 'raw+avg') || strcmp(cfg.plot, 'avg') || strcmp(cfg.plot, 'movmean+avg')
+if strcmp(cfg.statstime.plot, 'raw+avg') || strcmp(cfg.statstime.plot, 'avg') || strcmp(cfg.statstime.plot, 'movmean+avg')
     avg = plot(x,values_avg,'g','LineWidth',2);
-    if strcmp(cfg.plot, 'avg'), legend_out = avg; end
+    if strcmp(cfg.statstime.plot, 'avg'), legend_out = avg; end
 end
 
 %plot non-timelocked extremity if necessary
-if ~strcmp(cfg.normtime, 'yes') && ~strcmp(cfg.timelock, 'no') && (strcmp(cfg.plot, 'raw') || strcmp(cfg.plot, 'raw+avg'))
-    if strcmp(cfg.timelock, 'end')
+if ~strcmp(cfg.statstime.normtime, 'yes') && ~strcmp(cfg.statstime.timelock, 'no') && (strcmp(cfg.statstime.plot, 'raw') || strcmp(cfg.statstime.plot, 'raw+avg'))
+    if strcmp(cfg.statstime.timelock, 'end')
         for itrial = 1:size(values,1)
             if last_idx(itrial) > 0
                 first_idx = find(~isnan(values(itrial,:)),3);
@@ -391,7 +391,7 @@ if ~strcmp(cfg.normtime, 'yes') && ~strcmp(cfg.timelock, 'no') && (strcmp(cfg.pl
                 end
             end
         end
-    elseif strcmp(cfg.timelock, 'begin')
+    elseif strcmp(cfg.statstime.timelock, 'begin')
         for itrial = 1:size(values,1)
             clear idx
             idx = find(~isnan(values(itrial,:)));
@@ -404,15 +404,15 @@ end
 
 axis tight
 
-% if strcmp(cfg.normtime, 'yes'), norm = ' (normalized)'; else,norm = []; end
+% if strcmp(cfg.statstime.normtime, 'yes'), norm = ' (normalized)'; else,norm = []; end
 % xlabel(sprintf('Time from begining of trial%s (s)',norm));
-ylabel(cfg.method);
+ylabel(cfg.statstime.method);
 % title(sprintf('%s, %s : %d trials', cfg.name, spikedata.label{unit_idx},size(spikedata.trialinfo,1)), 'Fontsize',18, 'Interpreter','none');
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 
 %% Output stats
-stats.cfg       = cfg;
+stats.cfg       = cfg.statstime;
 stats.values    = values;
 stats.time      = x;
 stats.avg       = values_avg;
@@ -420,7 +420,7 @@ stats.std       = values_std;
 
 
 %% save plot
-if strcmp(cfg.saveplot, 'yes')
+if strcmp(cfg.statstime.saveplot, 'yes')
     set(gca,'Fontsize',15);
     
     if ~(exist (cfg.imagesavedir)==7)
@@ -432,9 +432,9 @@ if strcmp(cfg.saveplot, 'yes')
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
     
-    if strcmp(cfg.normtime, 'yes'), norm = '_timenorm'; else,norm = []; end
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'_',cfg.name,'_',spikedata.label{unit_idx},'_spikestatstrial_',cfg.method,norm,'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'_',cfg.name,'_',spikedata.label{unit_idx},'_spikestatstrial_',cfg.method,norm,'.png']),'-r600');
+    if strcmp(cfg.statstime.normtime, 'yes'), norm = '_timenorm'; else,norm = []; end
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'_',cfg.name,'_',spikedata.label{unit_idx},'_spikestatstrial_',cfg.statstime.method,norm,'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'_',cfg.name,'_',spikedata.label{unit_idx},'_spikestatstrial_',cfg.statstime.method,norm,'.png']),'-r600');
     close all
     
 end

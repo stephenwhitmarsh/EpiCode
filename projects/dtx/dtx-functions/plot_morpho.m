@@ -50,6 +50,7 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 
 
 %Get default cfg parameters
+cfg.morpho                             = ft_getopt(cfg, 'morpho', []);
 cfg.morpho.plotstd                     = ft_getopt(cfg.morpho, 'plotstd'          , 'no');
 cfg.morpho.removeoutliers              = ft_getopt(cfg.morpho, 'removeoutliers'  	, 'no');
 cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'	, 'no');
