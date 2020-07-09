@@ -1,4 +1,6 @@
-function dat_xcorr = dtx_xcorrLFP(cfg, data)
+function dat_xcorr = test_xcorr_LFP(cfg, data)
+
+%pour calculer la propagation trial par trial
 
 cfg.lfp.xcorr.suffix = '_csd';
 cfg.lfp.xcorr.xchan  = 'C4';

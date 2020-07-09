@@ -12,6 +12,7 @@ function [CEDStruct]  = readCEDmarkers(cfg, force)
 % cfg.prefix                    : name of the subject
 % cfg.rawdir                 : where are the Spike2 data
 % cfg.directorylist{part}    : list of all data files, for each part
+% cfg.datasavedir            : where to save output file
 % force                         : if force == true, force reading again the
 %                               events from the data file. If force == 
 %                               false, the results are loaded from saved 

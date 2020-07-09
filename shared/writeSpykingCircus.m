@@ -121,10 +121,12 @@ else
             % concatinate data over files
             if write
                 chandat = dirdat{1};
-                for idir = 2 : length(MuseStruct{ipart})
-                    fprintf('Concatinating directory %d, channel %d\n',idir, ichan);
-                    chandat.trial{1}        = [chandat.trial{1} dirdat{idir}.trial{1}];
-                    chandat.time{1}         = [chandat.time{1} (dirdat{idir}.time{1} + chandat.time{1}(end))];
+                if length(MuseStruct{ipart})>1 %if only one dir, then when executing 'idir = 2 : length(MuseStruct{ipart})', we get idir = []
+                    for idir = 2 : length(MuseStruct{ipart})
+                        fprintf('Concatinating directory %d, channel %d\n',idir, ichan);
+                        chandat.trial{1}        = [chandat.trial{1} dirdat{idir}.trial{1}];
+                        chandat.time{1}         = [chandat.time{1} (dirdat{idir}.time{1} + chandat.time{1}(end))];
+                    end
                 end
             end
 

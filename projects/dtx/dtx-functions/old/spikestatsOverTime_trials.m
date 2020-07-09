@@ -125,21 +125,21 @@ end
 %compute isi
 spikeisi = ft_spike_isi([], spikedata);
 
-% Initialize values array
-if strcmp(cfg.statstime.plot, 'trialavg')  || strcmp(cfg.statstime.plot, 'scatter')
-    max_cuts = 1;
-    cfg.statstime.cutlength = 0; %ignore cfg.statstime.cutlenght because no need to cut data
-else
-    if strcmp(cfg.statstime.normtime, 'yes')
-        max_cuts = fix(1/cfg.statstime.cutlength)+1;
-        if cfg.statstime.cutlength > 1, error('With cfg.statstime.normtime = ''yes'', cfg.statstime.cutlength must be <= 1.'); end
-    else
-        triallength_max = max(spikedata.trialtime(:,2) - spikedata.trialtime(:,1));
-        max_cuts = fix(triallength_max/cfg.statstime.cutlength)+1; %+1 because last cut is an incmplete cut
-        if cfg.statstime.cutlength > triallength_max, error('cfg.statstime.cutlength is longer than the max trial length'); end
-    end
-end
-values = nan(size(spikedata.trialinfo,1),max_cuts);
+% % Initialize values array
+% if strcmp(cfg.statstime.plot, 'trialavg')  || strcmp(cfg.statstime.plot, 'scatter')
+%     max_cuts = 1;
+%     cfg.statstime.cutlength = 0; %ignore cfg.statstime.cutlenght because no need to cut data
+% else
+%     if strcmp(cfg.statstime.normtime, 'yes')
+%         max_cuts = fix(1/cfg.statstime.cutlength)+1;
+%         if cfg.statstime.cutlength > 1, error('With cfg.statstime.normtime = ''yes'', cfg.statstime.cutlength must be <= 1.'); end
+%     else
+%         triallength_max = max(spikedata.trialtime(:,2) - spikedata.trialtime(:,1));
+%         max_cuts = fix(triallength_max/cfg.statstime.cutlength)+1; %+1 because last cut is an incmplete cut
+%         if cfg.statstime.cutlength > triallength_max, error('cfg.statstime.cutlength is longer than the max trial length'); end
+%     end
+% end
+% values = nan(size(spikedata.trialinfo,1),max_cuts);
 
 %compute values
 for itrial = cfg.statstime.trial_list

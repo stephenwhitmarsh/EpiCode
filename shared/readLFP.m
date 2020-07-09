@@ -54,12 +54,6 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'LFP.mat']);
 write     = ft_getopt(cfg.LFP, 'write', false);
 
-if write
-    fprintf('*** Will write LFP to: %s ***\n',fname_out);
-else
-    fprintf('*** Will NOT write LFP to disk ***\n');
-end
-
 if exist(fname_out,'file') && force == false
     fprintf('************************************\n');
     fprintf('*** Loading precomputed LFP data ***\n');
@@ -71,6 +65,12 @@ else
     fprintf('*** (re-) computing LFP data ***\n');
     fprintf('********************************\n\n');
 end
+
+    if write
+        fprintf('*** Will write LFP to: %s ***\n',fname_out);
+    else
+        fprintf('*** Will NOT write LFP to disk ***\n');
+    end
     
     % get file format 
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);

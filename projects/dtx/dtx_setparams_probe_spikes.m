@@ -35,21 +35,21 @@ configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise
 % list of onset timing with respect to start-marker (s)
 configdtx.epoch.toi{1}              = [-2, 2];
 configdtx.epoch.toi{2}              = [-2, 2];
-configdtx.epoch.toi{3}              = [2, -1];
+configdtx.epoch.toi{3}              = [5, -1];
 configdtx.epoch.toi{4}              = [-120, 30];
 configdtx.epoch.toi{5}              = [-10, -1];
 configdtx.epoch.toi{6}              = [-2, -1];
 configdtx.epoch.toi{7}              = [-1, 0];
 configdtx.epoch.toi{8}              = [-1, 1];
 
-configdtx.epoch.pad{1}              = 10; %for LFP
-configdtx.epoch.pad{2}              = 10;
-configdtx.epoch.pad{3}              = 10;
-configdtx.epoch.pad{4}              = 10;
-configdtx.epoch.pad{5}              = 10;
-configdtx.epoch.pad{6}              = 10;
-configdtx.epoch.pad{7}              = 10;
-configdtx.epoch.pad{8}              = 10;
+configdtx.epoch.pad{1}              = 0; %for LFP : no need for spike analysis. Sinon ça décale certaines analyses spike/LFP
+configdtx.epoch.pad{2}              = 0;
+configdtx.epoch.pad{3}              = 0;
+configdtx.epoch.pad{4}              = 0;
+configdtx.epoch.pad{5}              = 0;
+configdtx.epoch.pad{6}              = 0;
+configdtx.epoch.pad{7}              = 0;
+configdtx.epoch.pad{8}              = 0;
 
 
 configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
@@ -121,24 +121,25 @@ configdtx.stats.actoi{1}            = [-1, 1];
 configdtx.stats.actoi{2}            = [-1, Inf];
 configdtx.stats.actoi{3}            = [6, Inf];
 
+%get defaults cfg parameters
+configdtx.statstime.timewin             = 10;
+configdtx.statstime.slidestep           = 2;
+configdtx.statstime.removeempty         = 'yes';
+
 % to smooth spikerate. Not used for now. Maybe for correlation LFP-spike
-% configdtx.spike.toispikerate{1}     = [-0.01 0.01];            % for plotting spikerate
-% configdtx.spike.toispikerate{1}     = [-1 1];                  % for plotting spikerate
-% configdtx.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
-% configdtx.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
+configdtx.spike.toispikerate{1}     = [-0.1 0.1];            % for plotting spikerate
+configdtx.spike.toispikerate{2}     = [-0.5 0.5];            % for plotting spikerate
+configdtx.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
 configdtx.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
 configdtx.spike.baselinename        = 'Interictal';
-configdtx.spike.resamplefs{1}       = 50; %1/size of bar graph bins
-configdtx.spike.resamplefs{2}       = 50;
+configdtx.spike.resamplefs{1}       = 1000; %1/size of bar graph bins
+configdtx.spike.resamplefs{2}       = 100;
 configdtx.spike.resamplefs{3}       = 0.1;
 configdtx.spike.RPV                 = 0.003; %refractory period violation, in seconds
 configdtx.spike.ISIbins             = [0:0.003:0.150]; %in s
-configdtx.spike.sdflatency{1}   = 'maxperiod';
-configdtx.spike.sdflatency{2}   = 'maxperiod';
-configdtx.spike.sdflatency{3}   = 'maxperiod';
-configdtx.spike.sdftimewin{1}   = [-1/2 * 1/50 1/2 * 1/50]; %1/resamplef, so no effect of the convolution
-configdtx.spike.sdftimewin{2}   = [-1/2 * 1/50 1/2 * 1/50];
-configdtx.spike.sdftimewin{3}   = [-1/2 * 1/0.1 1/2 * 1/0.1];
+configdtx.spike.psthbin{1}             = 1/50; %in s
+configdtx.spike.psthbin{2}             = 1/50; %in s
+configdtx.spike.psthbin{3}             = 10; %in s
 
 configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
@@ -290,7 +291,7 @@ config{5}.imagesavedir              = fullfile(imagesavedir,'DTX6');       % whe
 config{5}.directorylist{1}          =  {'2019-03-21_18-12', '2019-03-21_20-12'};
 
 config{5}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-config{5}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+config{5}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
 config{5}.injectiontime             = datetime('21-Mar-2019 15:08:00');

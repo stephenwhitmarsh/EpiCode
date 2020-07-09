@@ -72,18 +72,18 @@ for irat = slurm_task_id
     end
        
     %read LFP data
-    dat_LFP                         = readLFP(config{irat}, MuseStruct, false);
+    dat_LFP                         = readLFP(config{irat}, MuseStruct, true);
     [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP); %correct an error in channel name during acquisition, for rat DTX2
     
     %read spike data
-    SpikeRaw                        = readSpikeRaw_Phy(config{irat},false);
+    SpikeRaw                        = readSpikeRaw_Phy(config{irat},true);
 
     if strcmp(config{irat}.type, 'dtx')
         %make trials based on Muse Markers
-        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
+        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
     elseif strcmp(config{irat}.type, 'ctrl')
         %make trials of continuous length on all the data
-        SpikeTrials                     = readSpikeTrials_continuous(config{irat},SpikeRaw, false);
+        SpikeTrials                     = readSpikeTrials_continuous(config{irat},SpikeRaw, true);
     end
 
     clear SpikeRaw
@@ -98,7 +98,7 @@ for irat = slurm_task_id
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
 
     %read spike waveforms
-    SpikeWaveforms                  = readSpikeWaveforms_trials(config{irat}, SpikeTrials, true);
+    SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
     cfgtemp                 = [];
@@ -298,8 +298,8 @@ ylim([0 2]);
 
 figure;hold;
 emax_list = nan;
-sdf_avg = nan(1,length(stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.avg));
-sdf_time = stats{1}{ipart}.(config{1}.spike.eventsname{1}).sdf.time;
+sdf_avg = nan(1,length(stats{2}{ipart}.(config{1}.spike.eventsname{1}).sdfavg.avg));
+sdf_time = stats{2}{ipart}.(config{1}.spike.eventsname{1}).sdfavg.time;
 celltype = nan;
 group = nan;
 for irat = 1:5
@@ -308,7 +308,7 @@ for irat = 1:5
     %for sua and mua
     idx = ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group, 'noise');
     emax_list   = [emax_list, stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{idx}];
-    sdf_avg     = vertcat(sdf_avg, stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).sdf.avg(idx,:));
+    sdf_avg     = vertcat(sdf_avg, stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).sdfavg.avg(idx,:));
     celltype    = [celltype, stats{irat}{ipart}.(config{1}.spike.baselinename).celltype(idx)];
     group       = [group, stats{irat}{ipart}.(config{1}.spike.baselinename).group(idx)];
 end
@@ -321,8 +321,9 @@ celltype            = celltype(deep_idx);
 group               = group(deep_idx);
 
 for i=1:size(sdf_avg,1)
-    sdf_avg_filt(i,:) = imgaussfilt(sdf_avg(i,:),1); %smooth the spike density function values
-    sdf_filt_blcorrect(i,:) = (sdf_avg_filt(i,:)) - nanmean((sdf_avg_filt(i,1:20))); %correct baseline
+%     sdf_avg_filt(i,:) = imgaussfilt(sdf_avg(i,:),1); %smooth the spike density function values
+    sdf_blcorrect(i,:) = (sdf_avg(i,:)) - nanmean((sdf_avg(i,sdf_time>-1.9 & sdf_time<-1.4))); %correct baseline
+    sdf_norm(i,:) = normalize(sdf_avg(i,:),'zscore');
 end
 
 % plot pn and in separately
@@ -330,21 +331,30 @@ figure;
 for i_celltype = ["pn", "in"]
     
     if strcmp(i_celltype, "pn"), subplot(2,1,1);hold; else, subplot(2,1,2);hold; end
-    imagesc(log10(abs(sdf_filt_blcorrect(strcmp(celltype,i_celltype),:))));
+    
+%     imagesc(log10(abs(sdf_norm(strcmp(celltype,i_celltype),:))));
+%     imagesc(log10(abs(sdf_avg(strcmp(celltype,i_celltype),:))));
+    imagesc(log10(abs(sdf_blcorrect(strcmp(celltype,i_celltype),:))));
+    
     c = caxis;
-    caxis([0 1.5]);
+    caxis([0 c(2)]);
     clb = colorbar;
     axis tight
     xticklabels(sdf_time(xticks+1));
     func_temp = @(v) sprintf('10\\^%s',v);
 %       func_temp = @(v) eval(sprintf('round(10^%s)',v));
-    clb.TickLabels = cellfun(func_temp,clb.TickLabels,'UniformOutput',false);
+%     clb.TickLabels = cellfun(func_temp,clb.TickLabels,'UniformOutput',false);
+   
     % plot baseline patch and zero line
-    x = [0 20 20 0];
+    x1 = find(sdf_time > -1.9, 1, 'first');
+    x2 = find(sdf_time < -1.4, 1, 'last');
+    x = [x1 x2 x2 x1];
     ax = axis;
     y = [ax(3) ax(3) ax(4) ax(4)];
     patch('XData',x,'YData',y,'facecolor',[1 1 1],'edgecolor','none','facealpha',0.2);
-    plot([100 100], [ax(3:4)], '--r');
+    x = find(sdf_time == 0);
+    plot([x x], [ax(3:4)], '--r');
+    
     %plot electrode infos
     C = linspecer(sum(~isnan(unique(emax_list_sorted(strcmp(celltype,i_celltype))))),'qualitative');
     emax_pn = emax_list_sorted(strcmp(celltype,i_celltype));
@@ -397,5 +407,57 @@ xlim([-60 0]);
 ylim([0.5 1.8]);
 ylim([0 3]);
 
+%% compter code SlowWave
+code_slowwave_mua = [];
+code_slowwave_sua = [];
+freq_slowwave_mua = [];
+freq_slowwave_sua = [];
+celltype_slowwave_sua = {};
+celltype_slowwave_mua = {};
+maxchan_slowwave_mua = [];
+maxchan_slowwave_sua = [];
+for irat = 1:5
+    for i_unit = 1:size(stats{irat}{ipart}.SlowWave.label,2)
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
+            continue
+        end
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua')
+            code_slowwave_mua(end+1) = stats{irat}{ipart}.SlowWave.code_slowwave{i_unit};
+            freq_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
+            celltype_slowwave_mua{end+1} = stats{irat}{ipart}.Interictal.celltype{i_unit};
+            maxchan_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.maxchan{i_unit};
+        elseif contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'sua')
+%             code_slowwave_mua(end+1) = stats{irat}{ipart}.SlowWave.code_slowwave{i_unit};
+%             freq_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
+            code_slowwave_sua(end+1) = stats{irat}{ipart}.SlowWave.code_slowwave{i_unit};
+            freq_slowwave_sua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
+            celltype_slowwave_sua{end+1} = stats{irat}{ipart}.Interictal.celltype{i_unit};
+            maxchan_slowwave_sua(end+1) = stats{irat}{ipart}.Interictal.maxchan{i_unit};
+        end
+    end
 end
-%
+bar(histcounts(code_slowwave_mua, 1:6));
+bar(histcounts(code_slowwave_sua, 1:6));
+
+%% groupe SW en fonction de la fréquence pré SW, du type cellulaire, de la localisation
+figure;hold;
+for i_unit = 1:size(code_slowwave_mua,2)
+    if strcmp(celltype_slowwave_mua{i_unit}, 'pn')
+        plottype = '^k';
+    else
+        plottype = 'ok';
+    end
+%     scatter(code_slowwave_mua(i_unit)+rand*0.3, freq_slowwave_mua(i_unit),plottype);
+%     scatter(code_slowwave_mua(i_unit)+rand*0.3, maxchan_slowwave_mua(i_unit),plottype);
+end
+for i_unit = 1:size(code_slowwave_sua,2)
+    if strcmp(celltype_slowwave_sua{i_unit}, 'pn')
+        plottype = '^k';
+    else
+        plottype = 'ok';
+    end
+%     scatter(code_slowwave_sua(i_unit)+rand*0.3, freq_slowwave_sua(i_unit), plottype,'filled');
+%     scatter(code_slowwave_sua(i_unit)+rand*0.3, maxchan_slowwave_sua(i_unit), plottype,'filled');
+end
+xlim([0.5 5.5]);
+setfig()

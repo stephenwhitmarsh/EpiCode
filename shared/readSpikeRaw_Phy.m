@@ -98,6 +98,8 @@ for ipart = cfg.circus.part_list
         ischecked                   = true;
         phydata.cluster_info        = tdfread(fullfile(phydir,'cluster_info.tsv'));%id, amp, ch, depth, fr, group, n_spikes, sh
         phydata.spike_clusters      = readNPY(fullfile(phydir,'spike_clusters.npy')); %for each timing, which (merged) cluster. Include garbage clusters
+        %correct difference in field names depending on the Spyking-Circus' version
+        try phydata.cluster_info.cluster_id = phydata.cluster_info.id; end
     else
         ischecked                    = false;
         warning('Data were not checked on Phy : loading of all templates');
