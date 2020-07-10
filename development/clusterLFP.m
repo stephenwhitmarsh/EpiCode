@@ -18,28 +18,33 @@ cfg.cluster.dbscan      = ft_getopt(cfg.cluster, 'dbscan', 'no');
 cfg.cluster.epsilon     = ft_getopt(cfg.cluster, 'epsilon', 1500);
 cfg.cluster.MinPts      = ft_getopt(cfg.cluster, 'MinPts', 10);
 cfg.cluster.resamplefs  = ft_getopt(cfg.cluster, 'resamplefs', []);
+cfg.cluster.channels    = ft_getopt(cfg.cluster, 'channels', 'all');
 
 % load data if requested, and return
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'clusterindx.mat']);
 if exist(fname,'file') && force_clustering == false
-    fprintf('*******************************\n');
-    fprintf('** Loading results alignment **\n');
-    fprintf('*******************************\n\n');
+    fprintf('********************************\n');
+    fprintf('** Loading results clustering **\n');
+    fprintf('********************************\n\n');
     load(fname,'clusterindx','LFP_cluster');
     return
 end
 
 % read LFP according to LFP settings in configuration
 cfg.LFP.write           = true;
-LFP                     = readLFP(cfg, MuseStruct, true);
+LFP                     = readLFP(cfg, MuseStruct, false);
 
 % preprocessing
-for ipart = 1 : size(cfg.directorylist,2)
-    for imarker = 1 : size(cfg.cluster.name,1)
+for ipart = 1 : size(LFP,2)
+    for imarker = 1 : size(LFP{ipart},2)
+             
+        if isempty(LFP{ipart}{imarker})
+            continue
+        end
         
         % select only those channels and time periods requested
         cfgtemp                 = [];
-        cfgtemp.channel         = ft_getopt(cfg.LFP, 'channel', 'all');
+        cfgtemp.channel         = cfg.cluster.channels;
         LFP{ipart}{imarker}     = ft_selectdata(cfgtemp, LFP{ipart}{imarker});
         
         % resample
@@ -90,8 +95,12 @@ end
 %%%%%%%%%%%%%%
 
 if strcmp(cfg.cluster.dbscan, 'yes')
-    for ipart = 1 : size(cfg.directorylist, 2)
-        for imarker = 1 : size(cfg.cluster.name, 1)
+    for ipart = 1 : size(LFP,2)
+        for imarker = 1 : size(LFP{ipart},2)
+            
+            if isempty(LFP{ipart}{imarker})
+                continue
+            end
             
             % put all in matrix with concatinated channels
             d = size(LFP{ipart}{imarker}.trial{1});
@@ -196,8 +205,8 @@ if strcmp(cfg.cluster.dbscan, 'yes')
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_kmediods_', cfg.name{imarker}, '.pdf']), '-r600');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_kmediods_', cfg.name{imarker}, '.png']), '-r600');
+            print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '.pdf']), '-r600');
+            print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '.png']), '-r600');
             close all
             
         end
@@ -209,10 +218,12 @@ end
 %%%%%%%%%%%%%%
 
 if strcmp(cfg.cluster.kmeans, 'yes')
-    for ipart = 1 : size(cfg.directorylist,2)
-        for imarker = 1 : size(cfg.cluster.name,1)
+    for ipart = 1 : size(LFP,2)
+        for imarker = 1 : size(LFP{ipart},2)
             
-            % put all in matrix with concatinated channels
+            if isempty(LFP{ipart}{imarker})
+                continue
+            end            % put all in matrix with concatinated channels
             d = size(LFP{ipart}{imarker}.trial{1});
             LFP_concatinated = nan(size(LFP{ipart}{imarker}.trial,2),d(1)*d(2));
             for itrial = 1 : size(LFP{ipart}{imarker}.trial,2)
@@ -309,8 +320,8 @@ if strcmp(cfg.cluster.kmeans, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_silhouette_', cfg.name{imarker}, '_N', num2str(N), '.pdf']));
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_silhouette_', cfg.name{imarker}, '_N', num2str(N), '.png']));
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '_silhouette.pdf']));
+                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '_silhouette.png']));
                 close all
             end
         end
@@ -322,8 +333,12 @@ end
 %%%%%%%%%%%%%%%%
 
 if strcmp(cfg.cluster.kmedoids, 'yes')
-    for ipart = 1 : size(cfg.directorylist,2)
-        for imarker = 1 : size(cfg.cluster.name,1)
+    for ipart = 1 : size(LFP,2)
+        for imarker = 1 : size(LFP{ipart},2)
+            
+            if isempty(LFP{ipart}{imarker})
+                continue
+            end
             
             % put all in matrix with concatinated channels
             d = size(LFP{ipart}{imarker}.trial{1});
@@ -363,23 +378,24 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                         LFP_shifted.time{itrial} = LFP_shifted.time{itrial} + nshift(itrial) / LFP{ipart}{imarker}.fsample;
                     end
                     
+%                     LFP_shifted     = rmfield(LFP_shifted,'cfg');
                     cfgtemp         = [];
                     avg_shifted     = ft_timelockanalysis(cfgtemp,LFP_shifted);
                     
-                    subplot(3,N,icluster); hold;
+                    subplot(3, N, icluster); hold;
                     title(['Cluster ', num2str(icluster)]);
                     imagesc(LFP_concatinated(indx_kmedoids==icluster, :));
                     set(gca,'xtick', []);
                     set(gca,'fontsize', 6)
                     axis tight
                     
-                    subplot(3,N,icluster+N*1); hold;
+                    subplot(3, N, icluster+N*1); hold;
                     imagesc(LFP_concatinated_realigned);
                     set(gca,'xtick', []);
                     set(gca,'fontsize', 6)
                     axis tight
                     
-                    subplot(3,N,icluster+N*2); hold;
+                    subplot(3, N, icluster+N*2); hold;
                     h = max(max(abs(avg_shifted.avg)));
                     n = 1;
                     ytick = [];
@@ -388,13 +404,13 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                         plot(avg_original.time,avg_original.avg(ichan,:) + n*h, 'r');
                         plot(avg_shifted.time,avg_shifted.avg(ichan,:) + n*h, 'k');
                         temp = strsplit(avg_shifted.label{ichan}, '-');
-                        avg_shifted.label{ichan} = temp{1};
+                        label{ichan} = temp{1};
                         n = n + 1;
                     end
                     yticks(ytick);
                     set(gca,'TickLabelInterpreter', 'none')
                     set(gca,'fontsize', 6)
-                    yticklabels(avg_shifted.label);
+                    yticklabels(label);
                     xlabel('Time (s)');
                     axis tight
                     xlim([-0.5 1]);
@@ -417,8 +433,8 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_silhouette_', cfg.name{imarker}, '_N', num2str(N), '.pdf']));
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_silhouette_', cfg.name{imarker}, '_N', num2str(N), '.png']));
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '_silhouette.pdf']));
+                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '_silhouette.png']));
                 close all
             end
         end

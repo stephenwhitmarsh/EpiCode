@@ -65,10 +65,25 @@ cfgtemp.LFP.channel     = cfg.align.channel;
 cfgtemp.LFP.write       = false;
 [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
 
+% select those markers to read, as you might not want to read all
+% markers defined in cfg.muse
+markerlist = [];
+for imuse = 1 : size(cfg.name,2)
+    for iname = 1 : size(cfg.align.name)
+        if ismember(cfg.name{imuse}, cfg.align.name)
+            markerlist = [markerlist, imuse];
+        end
+    end
+end
+    
 for ipart = 1:size(cfg.directorylist,2)
 
-    for imarker = 1 : size(cfg.align.name,1)
+    for imarker = markerlist
 
+        if isempty(LFP{ipart}{imarker})
+            continue
+        end
+        
         % baseline correct & bipolar rereferencing
         cfgtemp                 = [];
         cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'no');
@@ -118,7 +133,7 @@ for ipart = 1:size(cfg.directorylist,2)
 
         subplot(1,5,1);
         imagesc(LFP_concatinated(~rejected,:));
-        title(sprintf('Cleaned (%d removed)',sum(rejected)));
+        title(sprintf('Cleaned (%d-%d)',sum(~rejected),sum(rejected)));
         set(gca,'xtick',[]);
 
         subplot(1,5,2);
@@ -143,13 +158,16 @@ for ipart = 1:size(cfg.directorylist,2)
         subplot(2,5,[9 10]);
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
         xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
+        ax = axis;        
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
         title('Aligned');
-
+        
+        set(fig,'Renderer','Painters');
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'alignmentXcorr.png']));
+        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart), '_', cfg.name{imarker}, '_alignmentXcorr.png']));
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart), '_', cfg.name{imarker}, '_alignmentXcorr.pdf']));
 
         close all
         clear shifted shifted_clear shifted_clean_z
