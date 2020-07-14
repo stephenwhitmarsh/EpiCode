@@ -1,22 +1,22 @@
-function chantitle  = CEDrename_chan(chantitle,channr,otherchanstitles,doprint)
+function chantitle  = renamechan_CED(chantitle,channr,otherchanstitles,doprint)
 %DESCRIBE.
 % if has already the name : first chan keep the name
 % otherchanstitles can be []
 
 % cant make fieldnames with minusses
 if any(ismember('-',chantitle))
-    chantitle = strrep(chantitle,'-','_');
     if doprint
         fprintf('Channel %s is renamed %s (cant make fieldnames with minusses)\n', chantitle, strrep(chantitle,'-','_'));
     end
+    chantitle = strrep(chantitle,'-','_');
 end
 
 % cant make fieldnames with white spaces
 if any(ismember(' ',chantitle))
-    chantitle = strrep(chantitle,' ','_');
     if doprint
         fprintf('Channel %s is renamed %s (cant make fieldnames with white spaces)\n', chantitle, strrep(chantitle,' ','_'));
     end
+    chantitle = strrep(chantitle,' ','_');
 end
 
 %create name if is empty

@@ -23,11 +23,11 @@ imagesavedir =  fullfile(rootpath_analysis,'images');
 configcommon.name                  = {'Preictal'};
 configcommon.circus.deadfilesuffix = '_SeizuresNotRemoved';
 configcommon.muse.write            = true;
-configcommon.statstime.latency     = 'all';
 configcommon.statstime.timewin     = 10;
 configcommon.statstime.slidestep   = 1;
 configcommon.statstime.minbadtime  = 1;
-configcommon.spike.ISIbins = 0:0.001:0.05;
+configcommon.statstime.write       = true;
+configcommon.spike.ISIbins         = 0:0.001:0.05;
 
 
 %% patient 1

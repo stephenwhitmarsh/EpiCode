@@ -1,30 +1,4 @@
-function [CEDtrials] = readCEDcontinuous(cfg,CEDStruct,force,savedat)
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [dat_micro, dat_macro] = readLFP(cfg,MuseStruct_micro,MuseStruct_macro,force,savedat)
-%
-% Reads data from macro and micro electrodes, epoched according to markers extracted from Muse,
-% and downsampled to same samplerate.
-%
-% Necessary fields:
-
-
-
-
-
-% Note:
-% Names of markers that contain a space (' ') or minus ('-') will be
-% replaced by an underscore ('_').
-% ET PLUS
-%
-% Dependencies: writeMuseMarkers.m, dir2.m, recent FieldTrip version
-%
-% (c) Paul Baudin
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
+function [CEDtrials] = CED_maketrials(cfg,CEDStruct,force,savedat)
 
 
 fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'data_trials.mat']);
@@ -67,46 +41,46 @@ else
                                 
                                 
                                 %load data
-                                dat = CEDreadcontinous(cfg,cfg.LFP.channel{imarker}{ichannel}, ipart,idir);
+                                dat = readCEDcontinous(cfg,cfg.LFP.channel{imarker}{ichannel}, ipart,idir);
                                   
                                 % Different preprocessing steps according to cfg
                                 
                                 if isfield(cfg.LFP, 'reref')
-                                    if strcmp(cfg.LFP.reref, 'yes')
+                                    if strcmp(cfg.LFP.reref{imarker}, 'yes')
                                         cfgtemp                       = [];
-                                        cfgtemp.reref                 = cfg.LFP.reref;
-                                        cfgtemp.rerefmethod           = cfg.LFP.rerefmethod;
-                                        cfgtemp.refchannel            = cfg.LFP.refchannel;
+                                        cfgtemp.reref                 = cfg.LFP.reref{imarker};
+                                        cfgtemp.rerefmethod           = cfg.LFP.rerefmethod{imarker};
+                                        cfgtemp.refchannel            = cfg.LFP.refchannel{imarker};
                                         dat                           = ft_preprocessing(cfgtemp,dat);
                                     end
                                 end
                                 
                                 if isfield(cfg.LFP, 'bsfilter')
-                                    if strcmp(cfg.LFP.bsfilter, 'yes')
+                                    if strcmp(cfg.LFP.bsfilter{imarker}, 'yes')
                                         cfgtemp                       = [];
-                                        cfgtemp.bsfilter              = cfg.LFP.bsfilter;
-                                        cfgtemp.bsfreq                = cfg.LFP.bsfreq;
+                                        cfgtemp.bsfilter              = cfg.LFP.bsfilter{imarker};
+                                        cfgtemp.bsfreq                = cfg.LFP.bsfreq{imarker};
                                         dat                           = ft_preprocessing(cfgtemp,dat);
                                     end
                                 end
                                 
                                 if isfield(cfg.LFP, 'hpfilter')
-                                    if strcmp(cfg.LFP.hpfilter, 'yes')
+                                    if strcmp(cfg.LFP.hpfilter{imarker}, 'yes')
                                         cfgtemp                       = [];
-                                        cfgtemp.hpfilter              = cfg.LFP.hpfilter;
-                                        cfgtemp.hpfreq                = cfg.LFP.hpfreq;
-                                        cfgtemp.hpfiltord             = cfg.LFP.hpfiltord;
-                                        cfgtemp.hpfilttype            = cfg.LFP.hpfilttype;
+                                        cfgtemp.hpfilter              = cfg.LFP.hpfilter{imarker};
+                                        cfgtemp.hpfreq                = cfg.LFP.hpfreq{imarker};
+                                        cfgtemp.hpfiltord             = cfg.LFP.hpfiltord{imarker};
+                                        cfgtemp.hpfilttype            = cfg.LFP.hpfilttype{imarker};
                                         dat                           = ft_preprocessing(cfgtemp,dat);
                                     end
                                 end
                                 
                                 if isfield(cfg.LFP, 'lpfilter')
-                                    if strcmp(cfg.LFP.lpfilter, 'yes')
+                                    if strcmp(cfg.LFP.lpfilter{imarker}, 'yes')
                                         cfgtemp                       = [];
-                                        cfgtemp.lpfilter              = cfg.LFP.lpfilter;
-                                        cfgtemp.lpfreq                = cfg.LFP.lpfreq;
-                                        cfgtemp.lpfilttype            = cfg.LFP.lpfilttype;
+                                        cfgtemp.lpfilter              = cfg.LFP.lpfilter{imarker};
+                                        cfgtemp.lpfreq                = cfg.LFP.lpfreq{imarker};
+                                        cfgtemp.lpfilttype            = cfg.LFP.lpfilttype{imarker};
                                         dat                           = ft_preprocessing(cfgtemp,dat);
                                     end
                                 end
@@ -118,23 +92,14 @@ else
                                 % have the same sampling frequency
                                 if cfg.LFP.doresample{imarker}
                                     cfgtemp                         = [];
-                                    cfgtemp.resamplefs              = cfg.LFP.resamplefs;
+                                    cfgtemp.resamplefs              = cfg.LFP.resamplefs{imarker};
                                     dat                             = ft_resampledata(cfgtemp,dat);
-                                    trialsFs                     	= cfg.LFP.resamplefs;
+                                    trialsFs                     	= cfg.LFP.resamplefs{imarker};
                                 else
                                     trialsFs                        = dat.fsample;
                                 end
-                                
-                                % correct baseline
-                                if strcmp(cfg.LFP.baseline,'yes')
-                                    cfgtemp.demean              = 'yes';
-                                    cfgtemp.baselinewindow      = cfg.LFP.baselinewindow{imarker};
-                                    dat                         = ft_preprocessing(cfgtemp,dat);
-                                end
                        
                                 % create Fieldtrip trl
-                                
-                                
                                 Startsample             = [];
                                 Endsample               = [];
                                 Stage                   = [];

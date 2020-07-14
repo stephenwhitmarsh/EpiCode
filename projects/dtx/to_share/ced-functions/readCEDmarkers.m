@@ -1,6 +1,5 @@
 function [CEDStruct]  = readCEDmarkers(cfg, force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function readCEDevents
 %
 % Read all the event channels of CED data and return a structure similar to
@@ -27,10 +26,6 @@ function [CEDStruct]  = readCEDmarkers(cfg, force)
 % Spike2 software. Can only be ran on Windows (because of the library). To 
 % use the CEDStruct in Linux, load it with the 'force = false' argument.
 % 
-% Paul Baudin
-% paul.baudin@live.fr
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fname = fullfile(cfg.datasavedir,sprintf('%sCEDStruct.mat',cfg.prefix));
 
@@ -172,6 +167,11 @@ else
             end
         end%idir
     end%ipart
+    
+    if ~isfolder(cfg.datasavedir)
+        mkdir(cfg.datasavedir);
+        fprintf('Creating folder %s\n', cfg.datasavedir);
+    end
     
     save(fname,'CEDStruct');
 end %exist && force

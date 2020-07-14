@@ -1,4 +1,4 @@
-function [stats] = spikestatsOverTime(cfg, spikedata)
+function [stats] = spikestatsOverTime(cfg, spikedata,force)
 
 % spikedata = fieldtrip spike data, epoched into trials (can be only 1
 % trial)
@@ -14,9 +14,26 @@ cfg.statstime.timewin             = ft_getopt(cfg.statstime, 'timewin'      , 10
 cfg.statstime.slidestep           = ft_getopt(cfg.statstime, 'slidestep'    , 1);
 cfg.statstime.removebursts        = ft_getopt(cfg.statstime, 'removebursts' , 'no');
 cfg.statstime.removeempty         = ft_getopt(cfg.statstime, 'removeempty'  , 'no');
+cfg.statstime.suffix              = ft_getopt(cfg.statstime, 'suffix'       , []);
+cfg.statstime.label_list          = ft_getopt(cfg.statstime, 'label_list'   , 'all');
+cfg.statstime.write               = ft_getopt(cfg.statstime, 'write'        , false);
+
+% load precomputed stats if required
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikestatsOverTime', cfg.statstime.suffix, '.mat']);
+
+if exist(fname,'file') && force == false
+    fprintf('Load precomputed spike stats over time\n');
+    load(fname,'stats');
+    return
+end
 
 for ipart = size(spikedata, 2)
-    for ilabel = 1:size(spikedata{ipart},2)
+    
+    if strcmp(cfg.statstime.label_list, 'all')
+        cfg.statstime.label_list = 1:size(spikedata{ipart},2);
+    end
+    
+    for ilabel = cfg.statstime.label_list
         
         stats{ipart}{ilabel}.cfg = cfg;
         stats{ipart}{ilabel}.label = spikedata{ipart}{ilabel}.label;
@@ -150,6 +167,8 @@ for ipart = size(spikedata, 2)
         end %i_unit
     end %ilabel
 end %ipart
+
+save(fname, 'stats', '-v7.3');
 
 end
 

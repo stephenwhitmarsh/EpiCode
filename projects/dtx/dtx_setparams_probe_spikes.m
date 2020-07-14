@@ -141,6 +141,8 @@ configdtx.spike.psthbin{1}             = 1/50; %in s
 configdtx.spike.psthbin{2}             = 1/50; %in s
 configdtx.spike.psthbin{3}             = 10; %in s
 
+configdtx.spikequal.label_list = 3;
+
 configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
 configdtx.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load. Can be 'all'. 
@@ -176,8 +178,10 @@ configctrl.circus.postfix            = [];%'-final';
 configctrl.spike.triallength         = 600; %seconds
 configctrl.spike.baselinename        = 'Control';
 configctrl.spike.eventsname          = [];
-configctrl.spike.RPV                 = 0.001; %refractory period violation, in seconds
+configctrl.spike.RPV                 = 0.003; %refractory period violation, in seconds
 configctrl.spike.ISIbins             = [0:0.003:0.150]; %in s
+
+configctrl.spikequal.label_list = 1;
 
 configctrl.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configctrl.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data

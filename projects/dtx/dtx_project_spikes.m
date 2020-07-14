@@ -72,18 +72,18 @@ for irat = slurm_task_id
     end
        
     %read LFP data
-    dat_LFP                         = readLFP(config{irat}, MuseStruct, true);
+    dat_LFP                         = readLFP(config{irat}, MuseStruct, false);
     [config{irat},dat_LFP]          = dtx_correctDTX2name(config{irat},dat_LFP); %correct an error in channel name during acquisition, for rat DTX2
     
     %read spike data
-    SpikeRaw                        = readSpikeRaw_Phy(config{irat},true);
+    SpikeRaw                        = readSpikeRaw_Phy(config{irat},false);
 
     if strcmp(config{irat}.type, 'dtx')
         %make trials based on Muse Markers
-        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
+        SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, false);
     elseif strcmp(config{irat}.type, 'ctrl')
         %make trials of continuous length on all the data
-        SpikeTrials                     = readSpikeTrials_continuous(config{irat},SpikeRaw, true);
+        SpikeTrials                     = readSpikeTrials_continuous(config{irat},SpikeRaw, false);
     end
 
     clear SpikeRaw
@@ -101,21 +101,53 @@ for irat = slurm_task_id
     SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
-    cfgtemp                 = [];
-    cfgtemp                 = config{irat};
-    cfgtemp.dataLFP         = dat_LFP;          clear dat_LFP
-    cfgtemp.SpikeTrials     = SpikeTrials;      clear SpikeTrials
-    cfgtemp.SpikeWaveforms  = SpikeWaveforms;   clear SpikeWaveforms
-    spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
+%     cfgtemp                 = [];
+%     cfgtemp                 = config{irat};
+%     cfgtemp.dataLFP         = dat_LFP;          clear dat_LFP
+%     cfgtemp.SpikeTrials     = SpikeTrials;      clear SpikeTrials
+%     cfgtemp.SpikeWaveforms  = SpikeWaveforms;   clear SpikeWaveforms
+%     spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
     %FIXME voir les try/end dans plot_morpho
-              
-end %irat
-return
+    
+    %get group info (put by hand)
+    if ispc
+        unit_table = readtable('Z:\analyses\lgi1\DTX-PROBE\classification_units.xlsx');
+    elseif isunix
+        unit_table = readtable('/network/lustre/iss01/charpier/analyses/lgi1/DTX-PROBE/classification_units.xlsx');
+    end
+    unit_table = table2struct(unit_table);
+    rat_idx = strcmp({unit_table.ratID}, config{irat}.prefix(1:end-1))';
+    rat_table = unit_table(rat_idx,:);
+    for ipart = 1:size(SpikeTrials,2)
+        for ilabel = 1:size(SpikeTrials{ipart},2)
+            for i_unit = 1:size(SpikeTrials{ipart}{ilabel}.label, 2)
+                unit_idx = strcmp(split(sprintf('cluster_%d,', rat_table.clusterID), ','), SpikeTrials{ipart}{ilabel}.label{i_unit});
+                % find each element of the unit
+                if sum(unit_idx) == 1
+                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit}             = rat_table(unit_idx).group;
+                else
+                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit}             = 'noise';
+                end
+                if isempty(rat_table(unit_idx).group)
+                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit} = 'noise';
+                end
+            end
+        end
+    end
 
+    %plot a summary of all spike data
+    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms);
+    cfgtemp = config{irat};
+    cfgtemp.spikequal.suffix = '_nostd';
+    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms);
+    
+end
+return
 
 %% Load precomputed data
 ipart = 1;
-for irat = 1:7
+rat_list = 1:7;
+for irat = rat_list
 %      config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
     stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
 end
@@ -123,24 +155,24 @@ end
 %do it after filtering and keeping only sua
 unit_table = readtable('Z:\analyses\lgi1\DTX-PROBE\classification_units.xlsx');
 unit_table = table2struct(unit_table);
-for irat = 1:7
+for irat = rat_list
     rat_idx = strcmp({unit_table.ratID}, config{irat}.prefix(1:end-1))';
     rat_table = unit_table(rat_idx,:);
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
         unit_idx = strcmp(split(sprintf('cluster_%d,', rat_table.clusterID), ','), stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit});
         % find each element of the unit
         if sum(unit_idx) == 1
-            stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}              = rat_table(unit_idx).group;
+            stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}             = rat_table(unit_idx).group;
             if strcmp(config{irat}.type, 'dtx'), stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).code_slowwave{i_unit} = rat_table(unit_idx).code_slowwave_spikerate; end
             stats{irat}{ipart}.(config{irat}.spike.baselinename).code_spikerate{i_unit}    = rat_table(unit_idx).code_interictal_spikerate; 
             stats{irat}{ipart}.(config{irat}.spike.baselinename).code_cv2{i_unit}          = rat_table(unit_idx).code_interictal_cv2; 
-            stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{i_unit}            = rat_table(unit_idx).Emax;
+            stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{i_unit}           = rat_table(unit_idx).Emax;
         end
     end
 end
 
 %replace empty cells by nans
-for irat = 1:7
+for irat = rat_list
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{i_unit})
             stats{irat}{ipart}.(config{irat}.spike.baselinename).maxchan{i_unit} = NaN;
@@ -154,7 +186,7 @@ end
 %% IN PN classification
 figure;hold;
 check_empty = [];
-for irat = 1:7
+for irat = rat_list
     ipart = 1;
     stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype = cell(1,size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2));
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
@@ -206,7 +238,7 @@ ylabel('peak-trough (ms)');
 %% norm morpho selon type
 figure;hold;
 check_empty = [];
-for irat = 1:7
+for irat = rat_list
     ipart = 1;
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
@@ -237,28 +269,23 @@ end
 
 %% FREQ
 figure;hold;
-check_empty = [];
-for irat = 1:7
+for irat = rat_list
     ipart = 1;
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
-        if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
-            check_empty = [check_empty, [num2str(irat), ';',stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit},';']]
-        else
-            if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
-                if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
-                    plottype = 'ob';
-                elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
-                    plottype = 'or';
-                end
-                if strcmp(config{irat}.type, 'dtx'),   x = 1; 
-                elseif strcmp(config{irat}.type, 'ctrl'), x=2; 
-                end
-                
-                x = x+(rand-0.5)*0.2;
-                y = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meanfreq{i_unit}];
-                
-                scatter(x,y,plottype, 'filled');
+        if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
+            if strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
+                plottype = 'ob';
+            elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
+                plottype = 'or';
             end
+            if strcmp(config{irat}.type, 'dtx'),   x = 1;
+            elseif strcmp(config{irat}.type, 'ctrl'), x=2;
+            end
+            
+            x = x+(rand-0.5)*0.2;
+            y = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meanfreq{i_unit}];
+            
+            scatter(x,y,plottype, 'filled');
         end
     end
 end
@@ -267,7 +294,7 @@ xlim([0 3]);
 %% CV2
 figure;hold;
 check_empty = [];
-for irat = 1:7
+for irat = rat_list
     ipart = 1;
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
         if isempty(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit})
@@ -375,7 +402,7 @@ end
 %normalized at t=-60
 for method = ["cv2_withoutbursts","freq"]%"cv2";"cv2_withoutbursts";
     figure;hold;
-    for irat = 1:7
+    for irat = rat_list
         if strcmp(config{irat}.type, 'dtx')
             ipart = 1;
             for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
@@ -444,12 +471,38 @@ figure;hold;
 for i_unit = 1:size(code_slowwave_mua,2)
     if strcmp(celltype_slowwave_mua{i_unit}, 'pn')
         plottype = '^k';
+        code_celltype(i_unit) = 1;
     else
+        code_celltype(i_unit) = 2;
         plottype = 'ok';
     end
 %     scatter(code_slowwave_mua(i_unit)+rand*0.3, freq_slowwave_mua(i_unit),plottype);
 %     scatter(code_slowwave_mua(i_unit)+rand*0.3, maxchan_slowwave_mua(i_unit),plottype);
 end
+
+%count pn and in for each type of sw
+nb_pn = sum(code_celltype==1);
+nb_in = sum(code_celltype==2);
+y=[];
+for i_sw = 1:5
+    y(end+1:end+2) = histcounts(code_celltype(code_slowwave_mua==i_sw), 1:3); %une valeur sur 2 : pn, in, pn, in etc
+end
+%normalize pn and in compared to there proportion in the whole recorded cells
+for i = 1:2:length(y)
+    y(i) = y(i)/nb_pn;
+end
+for i=2:2:length(y)
+    y(i) = y(i)/nb_in;
+end
+bar(y);
+%plot the ratio in/pn
+ratio_in_pn = [];
+for i=1:2:length(y)
+    ratio_in_pn(end+1) = y(i+1)/y(i); %nb in divisé par nb pn
+end
+bar(ratio_in_pn);
+ratio_in_pn(end+1) = nb_in/nb_pn;
+
 for i_unit = 1:size(code_slowwave_sua,2)
     if strcmp(celltype_slowwave_sua{i_unit}, 'pn')
         plottype = '^k';
@@ -461,3 +514,6 @@ for i_unit = 1:size(code_slowwave_sua,2)
 end
 xlim([0.5 5.5]);
 setfig()
+
+%% stats over time
+% voir dtx_cluster_statsovertime

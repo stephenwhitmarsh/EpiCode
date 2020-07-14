@@ -50,12 +50,11 @@ for ipatient = slurm_task_id%1 %[2 4] %1:6
     %add 2 '0' colomn to be consistent with startsample and endsample in trialinfos of other analysis
     %add '{1}' to be consistent with the other spiketrials structures in
     %other projects
-    if strcmp(config{ipatient}.statstime.latency, 'all')
-        config{ipatient}.statstime.latency = [0-header.nSamplesPre header.nSamples] ./ header.Fs;
-    end
     for ipart = 1:size(SpikeRaw, 1)
+        filebegin                   = 0-header.nSamplesPre;
+        fileend                     = header.nSamples-header.nSamplesPre;
         cfgtemp                     = [];
-        cfgtemp.trl                 = [config{ipatient}.statstime.latency, 0, 0, 0, config{ipatient}.statstime.latency] .* header.Fs;
+        cfgtemp.trl                 = [filebegin, fileend, 0, 0, 0, filebegin, fileend];
         cfgtemp.trlunit             = 'samples';
         cfgtemp.hdr                 = header;
         cfgtemp.timestampspersecond = header.TimeStampPerSample * header.Fs;
@@ -68,12 +67,12 @@ for ipatient = slurm_task_id%1 %[2 4] %1:6
     SpikeWaveforms = readSpikeWaveforms(config{ipatient},SpikeTrials, false);
     
     %compute stats over time, for each unit
-    stats = spikestatsOverTime(config{ipatient}, SpikeTrials, header, true);
+    stats = spikestatsOverTime(config{ipatient}, SpikeTrials, false);
     
     %compute stats after removing bursts (for regularity)
     cfgtemp = config{ipatient};
     cfgtemp.statstime.removebursts        = 'yes';
-    stats_without_bursts = spikestatsOverTime(config{ipatient}, SpikeTrials, header);
+    stats_without_bursts = spikestatsOverTime(config{ipatient}, SpikeTrials, false);
     
     %find stats windows which intersect BAD Muse markers
     for ipart = 1:size(stats, 2)
@@ -118,10 +117,10 @@ for ipatient = slurm_task_id%1 %[2 4] %1:6
     end %ipart
     
     %get timing of seizure, and convert from cell to mat
-    [~, seizure_start] = concatenateMuseMarkers(MuseStruct,ipart,'CriseStart'); %cfg.preictal.crisestart
-    seizure_start = cell2mat(seizure_start);
-    bad_start_synctime = cell2mat(bad_start_synctime);
-    bad_end_synctime = cell2mat(bad_end_synctime);
+    [~, seizure_start]  = concatenateMuseMarkers(MuseStruct,ipart,'CriseStart'); %cfg.preictal.crisestart
+    seizure_start       = cell2mat(seizure_start);
+    bad_start_synctime  = cell2mat(bad_start_synctime);
+    bad_end_synctime    = cell2mat(bad_end_synctime);
     
     %plot results and compute stats on spike morpho ; and compute avg discharge values on all the data
     cfgtemp                             = config{ipatient};

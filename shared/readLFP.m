@@ -205,12 +205,12 @@ end
                     for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
 
                         ss = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) *  dat.fsample);
-                        if strcmp(cfg.muse.startend{imarker,1},cfg.muse.startend{imarker,2})
-                            es = ss;
-                        else
+%                         if strcmp(cfg.muse.startend{imarker,1},cfg.muse.startend{imarker,2})
+%                             es = ss;
+%                         else
                             idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime * dat.fsample) >= ss,1,'first');
                             es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,2}).synctime(idx) * dat.fsample);
-                        end
+%                         end
 
                         if isempty(es)
                             continue

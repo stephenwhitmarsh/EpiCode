@@ -53,11 +53,14 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 cfg.morpho                             = ft_getopt(cfg, 'morpho', []);
 cfg.morpho.channame                    = ft_getopt(cfg.morpho, 'channame', 1);
 cfg.morpho.plotstd                     = ft_getopt(cfg.morpho, 'plotstd'          , 'no');
+cfg.morpho.plotavg                     = ft_getopt(cfg.morpho, 'plotavg'          , 'yes');
+cfg.morpho.plotraw                     = ft_getopt(cfg.morpho, 'plotraw'          , 'yes');
 cfg.morpho.removeoutliers              = ft_getopt(cfg.morpho, 'removeoutliers'  	, 'no');
 cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'	, 'no');
 cfg.morpho.mesureamplitude             = ft_getopt(cfg.morpho, 'mesureamplitude'	, 'no');
 cfg.morpho.blmethod                    = ft_getopt(cfg.morpho, 'blmethod' 	, 'bl');
 cfg.morpho.mesurepeaktrough            = ft_getopt(cfg.morpho, 'mesurepeaktrough'	, 'no');
+cfg.morpho.mesuretroughpeak            = ft_getopt(cfg.morpho, 'mesuretroughpeak'	, 'no');
 cfg.morpho.toiplot                     = ft_getopt(cfg.morpho, 'toiplot'          , 'all');
 cfg.morpho.toiac                       = ft_getopt(cfg.morpho, 'toiac'            , 'all');
 cfg.morpho.saveplot                    = ft_getopt(cfg.morpho, 'saveplot'         , 'no');
@@ -108,9 +111,11 @@ end
 data.time = data.time(~isOutlierTrial);
 data.trial = data.trial(~isOutlierTrial);
 
-%plot trials. 
-for itrial = 1:size(data.time, 2)
-    plot(data.time{itrial},data.trial{itrial},'color',[0.6 0.6 0.6]);
+%plot trials.
+if strcmp(cfg.morpho.plotraw, 'yes')
+    for itrial = 1:size(data.time, 2)
+        plot(data.time{itrial},data.trial{itrial},'color',[0.6 0.6 0.6]);
+    end
 end
 
 
@@ -129,10 +134,12 @@ if strcmp(cfg.morpho.plotstd, 'yes')
 end
 
 %plot avg of all trials. If only One trial, avg is plotted with linewidth =1
-if size(data.time, 2) ==1
-    plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 1);
-else
-    plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+if strcmp(cfg.morpho.plotavg, 'yes')
+    if size(data.time, 2) ==1
+        plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 1);
+    else
+        plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+    end
 end
 
 %select active period
@@ -217,7 +224,7 @@ end
 peaktrough = NaN;
 troughpeak = NaN;
 
-if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
+if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughpeak, 'yes')
     try %REMOVEME FIXME
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
@@ -234,20 +241,22 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
         peaktrough = abs(Xpos-Xneg(1));
         troughpeak = abs(Xpos-Xneg(2));
         
-        %plot horizontal lines from peak to trough
-        plot([Xpos,Xneg(1)], [Yneg(1)*0.3, Yneg(1)*0.3],'-x','Color',[1 0 0],'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0]);
-        plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
+        if strcmp(cfg.morpho.mesuretroughpeak, 'yes')
+            %plot horizontal lines from peak to trough, and add text
+            plot([Xpos,Xneg(1)], [Yneg(1)*0.3, Yneg(1)*0.3],'-x','Color',[1 0 0],'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0]);
+            x = Xneg(1);
+            y = double(Yneg(1)*0.3);
+            [unit, peaktrough_corr] = setunit(peaktrough);
+            text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        end
         
-        %add text for each value
-        x = Xneg(1);
-        y = double(Yneg(1)*0.3);
-        [unit, peaktrough_corr] = setunit(peaktrough);
-        text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
-        
-        x = Xneg(2);
-        y = double(-Yneg(2)*0.3);
-        [unit, troughpeak_corr] = setunit(troughpeak);
-        text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
+            plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
+            x = Xneg(2);
+            y = double(-Yneg(2)*0.3);
+            [unit, troughpeak_corr] = setunit(troughpeak);
+            text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        end
     end
     end
 end

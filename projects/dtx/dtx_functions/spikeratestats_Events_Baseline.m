@@ -88,7 +88,7 @@ function [stats] = spikeratestats_Events_Baseline(cfg,force)
 %                                 troughpeak for each template, in seconds
 %    - LFP.channel /.halfwidth  = measured halfwidth on LFP events, for
 %                                 each analyzed channel.
-%    - discharge{i_unit}        = spike train descriptive stats : meanISI,
+%    - firing{i_unit}        = spike train descriptive stats : meanISI,
 %                                 stdISI, meanfreq, %RPV, meanCV2, stdCV2
 %    - spikewaveform{i_unit}    = measured halfwidth, peaktrough and
 %                                 troughpeak on waveforms for each unit
@@ -102,7 +102,7 @@ function [stats] = spikeratestats_Events_Baseline(cfg,force)
 %       > readSpikeTrials_MuseMarkers.m or readSpikeTrials_continuous
 %       > readLFP.m
 %       > readSpikeWaveforms.m
-% - Used in this script : plot_morpho.m, spikestatsOverTime_trials.m
+% - Used in this script : plot_morpho.m, spikestatsOverTime.m
 % 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,7 +124,6 @@ cfg.SpikeWaveforms          = ft_getopt(cfg         , 'SpikeWaveforms'    	, [])
 cfg.dataLFP                 = ft_getopt(cfg         , 'dataLFP'             , []);
 cfg.spike.eventsname        = ft_getopt(cfg.spike   , 'eventsname'          , 'no');
 cfg.spike.ISIbins           = ft_getopt(cfg.spike   , 'ISIbins'             , [0:0.003:0.150]);
-cfg.spike.RPV               = ft_getopt(cfg.spike   , 'RPV'                 , 0.003);
 cfg.stats.alpha             = ft_getopt(cfg.stats   , 'alpha'               , 0.025);
 cfg.stats.numrandomization  = ft_getopt(cfg.stats   , 'numrandomization'    , 1000);
 cfg.stats.part_list         = ft_getopt(cfg.stats   , 'part_list'           , 'all');
@@ -185,9 +184,11 @@ end
 if isempty(baseline_index)   , error('No baseline label found.\n')    ; end
 
 %% compute stats over time
-statsovertime = spikestatsOverTime(cfg, cfg.SpikeTrials);
-cfg.statstime.removebursts = 'yes';
-statsovertime_withoutbursts = spikestatsOverTime(cfg, cfg.SpikeTrials);
+cfg.statstime.label_list    = [event_indexes,  baseline_index];
+statsovertime               = spikestatsOverTime(cfg, cfg.SpikeTrials,true);
+cfg.statstime.removebursts  = 'yes';
+cfg.statstime.suffix        = '_withoutbursts';
+statsovertime_withoutbursts = spikestatsOverTime(cfg, cfg.SpikeTrials,true);
 
 %% go trhough each part and labels
 for ipart = cfg.stats.part_list
@@ -214,14 +215,7 @@ for ipart = cfg.stats.part_list
         cfgtemp.keeptrials                                  = 'yes';
         stats{ipart}.(cfg.name{baseline_index}).isi         = ft_spike_isi(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
         if hasevent, stats{ipart}.(cfg.name{ievent}).isi    = ft_spike_isi(cfgtemp,cfg.SpikeTrials{ipart}{ievent}); end
-    
-        %% output stats over time
-        stats{ipart}.(cfg.name{baseline_index}).statsovertime                = statsovertime{ipart}{baseline_index};
-        stats{ipart}.(cfg.name{baseline_index}).statsovertime_withoutbursts  = statsovertime_withoutbursts{ipart}{baseline_index};
-        if hasevent
-            stats{ipart}.(cfg.name{ievent}).statsovertime                = statsovertime{ipart}{ievent};
-            stats{ipart}.(cfg.name{ievent}).statsovertime_withoutbursts  = statsovertime_withoutbursts{ipart}{ievent};
-        end
+   
         
         %% Compute PSTH for events
         if hasevent
@@ -633,12 +627,12 @@ for ipart = cfg.stats.part_list
                 
                 setfig();
                 
-                stats{ipart}.(cfg.name{iplot}).discharge.meanISI{i_unit}   = meanISI;
-                stats{ipart}.(cfg.name{iplot}).discharge.stdISI{i_unit}    = stdISI;
-                stats{ipart}.(cfg.name{iplot}).discharge.meanfreq{i_unit}  = meanfreq;
-                stats{ipart}.(cfg.name{iplot}).discharge.RPV{i_unit}       = RPV;
-                stats{ipart}.(cfg.name{iplot}).discharge.meancv2{i_unit}   = meancv2;
-                stats{ipart}.(cfg.name{iplot}).discharge.stdcv2{i_unit}    = stdcv2;
+                stats{ipart}.(cfg.name{iplot}).firing.meanISI{i_unit}   = meanISI;
+                stats{ipart}.(cfg.name{iplot}).firing.stdISI{i_unit}    = stdISI;
+                stats{ipart}.(cfg.name{iplot}).firing.meanfreq{i_unit}  = meanfreq;
+                stats{ipart}.(cfg.name{iplot}).firing.RPV{i_unit}       = RPV;
+                stats{ipart}.(cfg.name{iplot}).firing.meancv2{i_unit}   = meancv2;
+                stats{ipart}.(cfg.name{iplot}).firing.stdcv2{i_unit}    = stdcv2;
             end
             
             if ~hasevent
@@ -724,7 +718,7 @@ for ipart = cfg.stats.part_list
                 
                 for itrial = 1:size(cfg.SpikeTrials{ipart}{baseline_index}.trialinfo, 1)
                     color = [c_greys(itrial), c_greys(itrial), c_greys(itrial)];
-                    x = statsovertime{ipart}{baseline_index}.time{i_unit}{itrial} - statsovertime{ipart}{baseline_index}.time{i_unit}{itrial}(end); %timelock to the end
+                    x = statsovertime_withoutbursts{ipart}{baseline_index}.time{i_unit}{itrial} - statsovertime_withoutbursts{ipart}{baseline_index}.time{i_unit}{itrial}(end); %timelock to the end
                     plot(x, statsovertime_withoutbursts{ipart}{baseline_index}.cv2{i_unit}{itrial}, 'Color', color)
                 end
                 
@@ -761,7 +755,7 @@ for ipart = cfg.stats.part_list
 end %ipart
 
 %save stats output
-save(fname, 'stats');
+save(fname, 'stats', '-v7.3');
 
 end
 
