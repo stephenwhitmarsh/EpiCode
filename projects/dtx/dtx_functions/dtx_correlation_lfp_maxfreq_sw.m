@@ -251,12 +251,12 @@ for irat = rat_list
         if isempty(alldata.maxfreq{irat}{i_unit}) || isempty(alldata.swamplitude{irat}{i_unit})
             continue
         end
-        i=i+1;
-        color=C(i,:);
+%         i=i+1;
+%         color=C(i,:);
 %         x = rand(size(alldata.maxfreq_loc{irat}{i_unit}));
-        x = rand;
+        y = rand;
 %         y = alldata.maxfreq_loc{irat}{i_unit} - alldata.swamplitude_loc{irat}{i_unit};
-        y = nanmean(alldata.maxfreq_loc{irat}{i_unit}) - nanmean(alldata.m1g_peak_loc{irat}{i_unit});
+        x = nanmean(alldata.maxfreq_loc{irat}{i_unit}) - nanmean(alldata.m1g_peak_loc{irat}{i_unit});
 %         if dofill
 %             scatter(x, y,plottype, 'filled');%,'MarkerEdgeColor',color,'MarkerFaceColor',color);
 %         else
@@ -271,4 +271,4 @@ for irat = rat_list
 end
 % xlabel('SW peak time (µV)');
 ylabel('Distribution of maxfreq and sw delays');
-
+plot([0 0], [0 1], '--r', 'LineWidth',1);

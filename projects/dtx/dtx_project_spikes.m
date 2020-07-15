@@ -93,6 +93,7 @@ for irat = slurm_task_id
     cfgtemp                         = [];
     cfgtemp                         = config{irat}; %info of where to save images
     cfgtemp.remove.plotdata         = 'yes';
+    cfgtemp.remove.write            = 'no';
     cfgtemp.remove.electrodetoplot  = ft_getopt(config{irat}.align,'channel', []);
     [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct);
     [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
@@ -136,10 +137,10 @@ for irat = slurm_task_id
     end
 
     %plot a summary of all spike data
-    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms);
+    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms,true);
     cfgtemp = config{irat};
     cfgtemp.spikequal.suffix = '_nostd';
-    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms);
+    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms,true);
     
 end
 return
@@ -152,7 +153,6 @@ for irat = rat_list
     stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
 end
 
-%do it after filtering and keeping only sua
 unit_table = readtable('Z:\analyses\lgi1\DTX-PROBE\classification_units.xlsx');
 unit_table = table2struct(unit_table);
 for irat = rat_list
@@ -228,7 +228,8 @@ leg4 = scatter(1,1,'^r', 'filled'); %in
 leg5 = scatter(1,1,'^k','filled'); %dtx
 leg6 = scatter(1,1,'ok','filled'); %ctrl
 legend([leg1 leg2 leg3 leg4 leg5 leg6],'MUA','SUA', 'PN','IN','DTX','CTRL');
-xlim([ax(1) ax(2)]); ylim([ax(3) ax(4)]);
+% xlim([ax(1) ax(2)]); ylim([ax(3) ax(4)]);
+xlim([0.1 0.6].*10^-3); ylim([0.25 1.55].*10^-3); %same as Bartho 2004
 xticklabels(xticks.*1000); %convert to ms
 yticklabels(yticks.*1000); %convert to ms
 set(gca, 'TickDir', 'out', 'FontWeight', 'bold', 'FontSize', 10);
@@ -517,3 +518,45 @@ setfig()
 
 %% stats over time
 % voir dtx_cluster_statsovertime
+
+%% distrib of rpv
+ilabel = 3; %interictal
+for irat = 1:5%length(config)
+    rpv{irat} = plot_spike_quality(config{irat},[], [],false);
+end
+
+figure;hold;setfig();
+for irat = 1:5%length(config)
+    for i_unit = 1:size(stats{irat}{ipart}.Interictal.label,2)
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
+            continue
+        end
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua')
+            dofill = false;
+        end
+        if ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua') %sua
+            dofill = true;
+        end
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'pn')
+            plottype = '^k';
+        end
+        if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
+            plottype = 'ok';
+        end
+        
+        x = rand;
+        y = rpv{irat}{ipart}{ilabel}(i_unit);
+        
+        if y>10
+            toremove{irat}.label{i_unit} = stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit};
+            continue
+        end
+        
+        if dofill
+            scatter(x,y,plottype,'filled');
+        else
+            scatter(x,y,plottype);
+        end
+    end
+end
+xlim([-0.5 1.5]);

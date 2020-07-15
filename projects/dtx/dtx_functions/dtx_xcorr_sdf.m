@@ -1,4 +1,4 @@
-function dat_xcorr = test_xcorr_sdf(cfg, sdf)
+function dat_xcorr = dtx_xcorr_sdf(cfg, sdf)
 
 %Input : sdf data with keeptrials = 'yes'
 

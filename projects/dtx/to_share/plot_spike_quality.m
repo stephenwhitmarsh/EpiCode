@@ -4,8 +4,8 @@ function rpv = plot_spike_quality(cfg,spikedata,spikewaveforms,force)
 %get default values
 cfg.spike.RPV               = ft_getopt(cfg.spike, 'RPV', 0.003);
 cfg.spikequal               = ft_getopt(cfg,'spikequal',[]);
-cfg.spikequal.plot_std      = ft_getopt(cfg,'spikequal','yes');
-cfg.spikequal.suffix        = ft_getopt(cfg,'spikequal',[]);
+cfg.spikequal.plot_std      = ft_getopt(cfg.spikequal,'plot_std','yes');
+cfg.spikequal.suffix        = ft_getopt(cfg.spikequal,'suffix',[]);
 cfg.spikequal.part_list     = ft_getopt(cfg.spikequal,'part_list','all');
 cfg.spikequal.label_list    = ft_getopt(cfg.spikequal,'label_list','all');
 
@@ -66,7 +66,7 @@ for ipart = cfg.spikequal.part_list
             bar(isi.time,isi.avg(i_unit,:), 'FaceColor', c, 'EdgeColor', c);
             xticklabels(xticks*1000); %convert in ms
             ax = axis;
-            titlepos = title(sprintf('%s (E%d), RPV : %.2f%%, %d spikes',spikedata{ipart}{ilabel}.label{i_unit}, spikedata{ipart}{ilabel}.template_maxchan(i_unit), rpv, length(isi.isi{i_unit})),'Interpreter', 'none','Fontsize', 4);
+            titlepos = title(sprintf('%s (E%d), RPV : %.2f%%, %d spikes',spikedata{ipart}{ilabel}.label{i_unit}, spikedata{ipart}{ilabel}.template_maxchan(i_unit), rpv{ipart}{ilabel}(i_unit), length(isi.isi{i_unit})),'Interpreter', 'none','Fontsize', 4);
             titlepos.Position(1) = ax(1);
             titlepos.HorizontalAlignment = 'left';
             setfig();

@@ -31,6 +31,7 @@ configdtx.datasavedir               = datasavedir;
 configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1'};
 configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
 
+configdtx.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
 
 % list of onset timing with respect to start-marker (s)
 configdtx.epoch.toi{1}              = [-2, 2];
@@ -154,6 +155,9 @@ configctrl.type                      = 'ctrl';
 configctrl.os                        = os;
 configctrl.datasavedir               = datasavedir;
 configctrl.name                      = {'Control'};
+
+configctrl.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
+
 
 configctrl.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
