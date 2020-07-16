@@ -52,7 +52,9 @@ for ipatient = 1 : 4
     [MuseStruct_aligned]                    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, false);
     
     %% deal with shifted average edges - remove nanmean to mean
-    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, false);
+    config{ipatient}.cluster.name           = sprintf('template%d', itemp);
+    
+    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, true);
     
     % loop over templates
     %% COMETHING WRONG WITH CUMSUM OF OFFSET IN TEMPLATE DETECTION
@@ -70,7 +72,7 @@ for ipatient = 1 : 4
     
     config{ipatient}.align.name             = sprintf('template%d', itemp);
     config{ipatient}.align.latency          = config{1}.template.latency;
-    config{ipatient}.align.write            = false;
+    config{ipatient}.align.write            = true;
     [MuseStruct_template_aligned]           = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_template, true);
     
 %     [PSGtable]                              = PSG2table(config{ipatient}, MuseStruct_template, false);

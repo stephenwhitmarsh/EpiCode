@@ -76,7 +76,7 @@ for imuse = 1 : size(cfg.name,2)
     end
 end
     
-for ipart = 1:size(cfg.directorylist,2)
+for ipart = 1 : size(cfg.directorylist,2)
 
     for imarker = markerlist
 
@@ -191,7 +191,7 @@ for ipart = 1:size(cfg.directorylist,2)
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
                 if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
                     timeshift = nshift(i) * 1/dat.fsample;
-                    fprintf('Timeshifting event %d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(ievent)      = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) + timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent) + seconds(timeshift);

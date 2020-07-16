@@ -5,7 +5,7 @@ cfg.template.reref       = ft_getopt(cfg.template,'reref','no');
 cfg.template.refmethod   = ft_getopt(cfg.template,'refmethod','none');
 cfg.template.latency     = ft_getopt(cfg.template,'latency','all');
 cfg.template.writemuse   = ft_getopt(cfg.template,'writemuse',true);
-cfg.template.threshold   = ft_getopt(cfg.template,'threshold',4);
+cfg.template.threshold   = ft_getopt(cfg.template,'threshold',3);
 cfg.template.name        = ft_getopt(cfg.template,'name','TemplateDetect');
 cfg.template.visible     = ft_getopt(cfg.template,'visible','on');
 
@@ -37,7 +37,7 @@ if isfield(cfg.template,'resamplefs')
 end
 
 % loop over parts
-for ipart = 1 : size(cfg.directorylist,2)
+for ipart = 1 :  size(cfg.directorylist,2)
     
     offset = 0; % in samples
     dirindx = []; % 
@@ -81,19 +81,21 @@ for ipart = 1 : size(cfg.directorylist,2)
         % bipolar rereferencing if requested
         % TODO: create template from scratch using indices from clusterLFP
         % then do same re-referencing as data
-        if strcmp(cfg.template.refmethod, 'bipolar')
-            labels_nonum    = regexprep(dirdat{idir}.label, '[0-9_]', '');
-            [~,~,indx]      = unique(labels_nonum);
-            clear group
-            for i = 1 : max(indx)
-                cfgtemp             = [];
-                cfgtemp.reref       = 'yes';
-                cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.channel     = dirdat{idir}.label(indx==i);
-                group{i}            = ft_preprocessing(cfgtemp,dirdat{idir});
+        if strcmp(cfg.template.reref, 'yes')
+            if strcmp(cfg.template.refmethod, 'bipolar')
+                labels_nonum    = regexprep(dirdat{idir}.label, '[0-9_]', '');
+                [~,~,indx]      = unique(labels_nonum);
+                clear group
+                for i = 1 : max(indx)
+                    cfgtemp             = [];
+                    cfgtemp.reref       = 'yes';
+                    cfgtemp.refmethod   = 'bipolar';
+                    cfgtemp.channel     = dirdat{idir}.label(indx==i);
+                    group{i}            = ft_preprocessing(cfgtemp,dirdat{idir});
+                end
+                dirdat{idir} = ft_appenddata([],group{:});
+                clear group
             end
-            dirdat{idir} = ft_appenddata([],group{:});
-            clear group
         end
         
         cfgtemp         = [];
@@ -115,8 +117,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             cfgtemp            = [];
             cfgtemp.offset     = offset;
             dirdat{idir}       = ft_redefinetrial(cfgtemp, dirdat{idir});
-        end
-        
+        end 
     end
     
     cumsumdatlength = cumsum(datlength);
@@ -159,39 +160,40 @@ for ipart = 1 : size(cfg.directorylist,2)
     print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_', cfg.template.name, '_detectTemplate_Xcorr.pdf']));    
     close all
     
-    % 
-    noYshift                = floor(size(C{ipart},2) / 2) + 1;
-    noYshift                = 1;
+    noYshift                = size(template.avg,1);
     C_norm{ipart}           = normalize(C{ipart}(:, noYshift));
     threshold               = nanstd(C_norm{ipart}) * cfg.template.threshold;
     [~,Tindx{ipart},~,~]    = findpeaks(C_norm{ipart}, 'MinPeakHeight', threshold, 'MinPeakDistance', dat.fsample*(-template.time(1)+template.time(end))/2);
-    
+        
+    % greate LFP averages
+    startsample             = Tindx{ipart} - size(template.avg,2);
+    endsample               = Tindx{ipart};
+    offset                  = zeros(size(Tindx{ipart})) + template.time(1) * dat.fsample;
     cfgtemp                 = [];
-    cfgtemp.trl             = [Tindx{ipart} - length(template.time) - template.time(1) * cfg.template.resamplefs, Tindx{ipart}, zeros(size(Tindx{ipart})) + template.time(1) * dat.fsample];
+    cfgtemp.trl             = [startsample, endsample, offset];
     cfgtemp.trl             = round(cfgtemp.trl);
     LFP_sel                 = ft_redefinetrial(cfgtemp, dat);
     LFP_avg{ipart}          = ft_timelockanalysis([],LFP_sel);
     
-    % plotting 
+    % plot LFPs vs. template
     fig = figure('visible',cfg.template.visible); 
+    
+    subplot(1, 3, 1); hold;
     maxabs = -inf;
     for itrial = 1 : size(LFP_sel.trial,2)
         if max(max(abs(LFP_sel.trial{itrial}))) > maxabs
             maxabs = max(max(abs(LFP_sel.trial{itrial})));
         end
-    end
-    
-    subplot(1, 3, 1);
-    hold;
+    end  
     ytick = [];
     for itrial = 1 : size(LFP_sel.trial,2)
         ytick = [ytick, itrial * maxabs];
         for ichan = 1 : size(LFP_sel.label,1)
-            plot(LFP_sel.time{itrial}, LFP_sel.trial{itrial}(ichan,:) + maxabs * ichan,'color',[0.6, 0.6, 0.6]);
+            plot(LFP_sel.time{itrial}, LFP_sel.trial{itrial}(ichan,:) + maxabs * ichan, 'color', [0.6, 0.6, 0.6]);
         end
     end
     for ichan = 1 : size(LFP_sel.label,1)
-        plot(LFP_avg{ipart}.time, LFP_avg{ipart}.avg(ichan,:) + maxabs * ichan,'color',[1, 0, 0]);
+        plot(LFP_avg{ipart}.time, LFP_avg{ipart}.avg(ichan,:) + maxabs * ichan, 'color', [0, 0, 0]);
     end
     title(sprintf('n = %d', size(LFP_sel.trial,2)));
     yticks(ytick);
@@ -207,12 +209,10 @@ for ipart = 1 : size(cfg.directorylist,2)
             maxabs = max(max(abs(LFP_avg{ipart}.avg)));
         end
     end
-        
     for ichan = 1 : size(LFP_avg{ipart}.label,1)
         plot(template.time, template.avg(ichan,:) + maxabs * ichan,'r');
         plot(LFP_avg{ipart}.time, LFP_avg{ipart}.avg(ichan,:) + maxabs * ichan,'k');
     end
-    yticks(ytick);
     set(gca,'TickLabelInterpreter', 'none')
     set(gca,'fontsize', 6)
     yticklabels(LFP_sel.label);
@@ -238,13 +238,12 @@ for ipart = 1 : size(cfg.directorylist,2)
     axis tight
     ax = axis;
     plot([ax(1),ax(2)],[threshold, threshold],':k');
-    scatter3(Tindx{ipart},C_norm{ipart}(Tindx{ipart}),ones(size(Tindx{ipart}))*10,'r.');
+    scatter3(Tindx{ipart}, C_norm{ipart}(Tindx{ipart}), ones(size(Tindx{ipart}))*10,'r.');
     axis tight
     box off
     
-%     q = cumsumoffset
-%     cumsumoffset = cumsumoffset(2:end)
     cumsumdatlength = [0 cumsumdatlength(1:end-1)];
+    
     % show separation in files and time
     for i = 1 : length(cumsumdatlength)
         plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [-1, -1],'color',[0.7, 0.7, 0.7]);
@@ -257,6 +256,9 @@ for ipart = 1 : size(cfg.directorylist,2)
     print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_', cfg.template.name, '_detectTemplate_threshold.png']));
     print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_', cfg.template.name, '_detectTemplate_threshold.pdf']));   
     close all
+
+    % indexes reflect end of template window
+%     Tindx{ipart} = Tindx{ipart} - size(template.avg, 2) - template.time(1) * cfg.template.resamplefs;
     
     % add to MuseStruct and write    
     for idir = unique(dirindx)
@@ -278,10 +280,13 @@ for ipart = 1 : size(cfg.directorylist,2)
         fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
         
         % remove offset of directory     
-        indx = Tindx{ipart}(dirindx(Tindx{ipart}) == idir) - cumsumdatlength(idir);
-
-        % remove offset of template
-        indx = indx + (template.time(1) * cfg.template.resamplefs);
+        indx = Tindx{ipart}(dirindx(Tindx{ipart}) == idir) - cumsumdatlength(idir) ;
+        
+        % remove offset of xcorr 
+        indx = indx - size(template.time,2);
+        
+        % shift to t=0 in template
+        indx = indx - template.time(1) * dat.fsample;
         
         % add to musestruct
         MuseStruct{ipart}{idir}.markers.(cfg.template.name).comment       = 'Added by detectTemplate (Stephen)';
@@ -290,18 +295,14 @@ for ipart = 1 : size(cfg.directorylist,2)
         MuseStruct{ipart}{idir}.markers.(cfg.template.name).classgroupid  = '+3';
         MuseStruct{ipart}{idir}.markers.(cfg.template.name).editable      = 'Yes';
         MuseStruct{ipart}{idir}.markers.(cfg.template.name).classid       = '+666'; % will be replaced by writeMuseMarkers.m
-        MuseStruct{ipart}{idir}.markers.(cfg.template.name).synctime      = (indx / cfg.template.resamplefs)';
-        MuseStruct{ipart}{idir}.markers.(cfg.template.name).clock         = (seconds(indx / cfg.template.resamplefs) + MuseStruct{ipart}{idir}.starttime)';
+        MuseStruct{ipart}{idir}.markers.(cfg.template.name).synctime      = (indx / dat.fsample)';
+        MuseStruct{ipart}{idir}.markers.(cfg.template.name).clock         = (seconds(indx / dat.fsample) + MuseStruct{ipart}{idir}.starttime)';
 
         if cfg.template.writemuse == true
             writeMuseMarkerfile(MuseStruct{ipart}{idir},name_mrk);
         end
     end
-    
- 
-    
     clear LFP_sel
-
 end
 
 save(fname_out,'MuseStruct', 'C_norm', 'Tindx', 'LFP_avg', '-v7.3');

@@ -111,11 +111,11 @@ config{2}.cluster.channel           = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','
 %% Patient 3
 
 config{3}                           = config{1};
-config{3}.name                      = {'Hspike','template1'};
+config{3}.name                      = {'Hspike','template4'};
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
 
-config{3}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'};   % start and end Muse marker
+config{3}.muse.startend             = {'Hspike','Hspike'; 'template4','template4'};   % start and end Muse marker
 
 config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.hyp.markers               = {'HSpike'};
@@ -128,6 +128,10 @@ config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','
 
 config{3}.cluster.name              = {'HSpike'};
 config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
+
+config{3}.template.reref            = 'no';
+config{3}.template.refmethod        = 'bipolar';
+config{1}.template.latency          = [-0.2, 0.5];
 
 %% Patient 4
 
@@ -296,6 +300,8 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-16_10-58'...
                                         '02680_2019-01-16_11-32'};
                             
+                                    
+                                    
 %%                                   
                                     
                                     

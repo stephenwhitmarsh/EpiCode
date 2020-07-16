@@ -300,7 +300,7 @@ end
                 clear dirdat*              
             else
                 LFP{ipart}{imarker} = [];
-                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});
+                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.name{imarker});
             end
 
         end % imarker
