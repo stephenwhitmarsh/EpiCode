@@ -43,6 +43,7 @@ figure;hold;
 plot(sdfavg.time, sdfavg.avg);
 %mesure des pics à la main sur la figure sdf :
 max_ol_intra = [17.51, 15.22, 40.71, 107.2, 91.79, 0,0,0,0];
+neuron_name = [3403, 3802, 3505, 2405, 2409];
 % scatter([loc_sdf_intra{:}], [peak_sdf_intra{:}], 'xr');
 
 %% compare intra extra : max décharge pendant SW

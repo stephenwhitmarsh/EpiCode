@@ -28,8 +28,8 @@ imagesavedir = fullfile(rootpath_analysis, 'image_spike');
 configdtx.type                      = 'dtx';
 configdtx.os                        = os;
 configdtx.datasavedir               = datasavedir;
-configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1'};
-configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1','Baseline'};
+configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'Baseline_Start','Injection'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
 
 configdtx.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
 
@@ -42,6 +42,7 @@ configdtx.epoch.toi{5}              = [-10, -1];
 configdtx.epoch.toi{6}              = [-2, -1];
 configdtx.epoch.toi{7}              = [-1, 0];
 configdtx.epoch.toi{8}              = [-1, 1];
+configdtx.epoch.toi{9}              = [0, 0];
 
 configdtx.epoch.pad{1}              = 0; %for LFP : no need for spike analysis. Sinon ça décale certaines analyses spike/LFP
 configdtx.epoch.pad{2}              = 0;
@@ -51,6 +52,7 @@ configdtx.epoch.pad{5}              = 0;
 configdtx.epoch.pad{6}              = 0;
 configdtx.epoch.pad{7}              = 0;
 configdtx.epoch.pad{8}              = 0;
+configdtx.epoch.pad{9}              = 0;
 
 
 configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...

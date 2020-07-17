@@ -95,8 +95,8 @@ for irat = slurm_task_id
     cfgtemp.remove.plotdata         = 'yes';
     cfgtemp.remove.write            = 'no';
     cfgtemp.remove.electrodetoplot  = ft_getopt(config{irat}.align,'channel', []);
-    [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct);
-    [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct);
+    [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct,true);
+    [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct,true);
 
     %read spike waveforms
     SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
@@ -138,9 +138,10 @@ for irat = slurm_task_id
 
     %plot a summary of all spike data
     plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms,true);
-    cfgtemp = config{irat};
-    cfgtemp.spikequal.suffix = '_nostd';
-    plot_spike_quality(config{irat},SpikeTrials, SpikeWaveforms,true);
+    cfgtemp                     = config{irat};
+    cfgtemp.spikequal.suffix    = '_nostd';
+    cfgtemp.spikequal.plot_std  = 'no';
+    plot_spike_quality(cfgtemp,SpikeTrials, SpikeWaveforms,true);
     
 end
 return
@@ -152,6 +153,12 @@ for irat = rat_list
 %      config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
     stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
 end
+
+%stats_concat : see dtx_cluster_statsovertime : stats des 60 dernières
+%secondes pré-crise, seulement pour les trials où la période interictale
+%est de plus de 60 secondes
+load(fullfile(config{1}.datasavedir, 'allrats-statsovertime_concat.mat'),'stats_concat');
+
 
 unit_table = readtable('Z:\analyses\lgi1\DTX-PROBE\classification_units.xlsx');
 unit_table = table2struct(unit_table);
@@ -269,7 +276,11 @@ for irat = rat_list
 end
 
 %% FREQ
+%comparer DTX toute la période intercritique, DTX les 10 dernières
+%secondes, et ctrl
 figure;hold;
+ilabel = 3; %interictal
+y = cell(1,3);
 for irat = rat_list
     ipart = 1;
     for i_unit = 1:size(stats{irat}{ipart}.(config{irat}.spike.baselinename).spikewaveform.halfwidth, 2)
@@ -279,21 +290,39 @@ for irat = rat_list
             elseif strcmp(stats{irat}{ipart}.(config{irat}.spike.baselinename).celltype{i_unit}, 'in')
                 plottype = 'or';
             end
-            if strcmp(config{irat}.type, 'dtx'),   x = 1;
-            elseif strcmp(config{irat}.type, 'ctrl'), x=2;
+            if strcmp(config{irat}.type, 'dtx'),   idx = 1;
+            elseif strcmp(config{irat}.type, 'ctrl'), idx=3;
             end
             
-            x = x+(rand-0.5)*0.2;
-            y = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meanfreq{i_unit}];
+            %plot data of all periods
+            y{idx}(end+1) = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meanfreq{i_unit}];
+            x = idx+(rand-0.5)*0.2;
             
-            scatter(x,y,plottype, 'filled');
+            scatter(x,y{idx}(end),plottype, 'filled');
+            
+%             plot data of the last 10 seconds before the seizure
+            if strcmp(config{irat}.type, 'dtx')
+                t = stats_concat.time;
+                idx = 2;
+                y{idx}(end+1) = nanmean(nanmean(stats_concat.freq{ipart}{irat}{i_unit}(:,t>=-1)));
+                x = idx+(rand-0.5)*0.2;
+                scatter(x,y{idx}(end),plottype, 'filled');
+            end
         end
     end
 end
-xlim([0 3]);
+xlim([0 4]);
+
+%stats
+pval_freq = ranksum(y{1}, y{3});
+
+sem = @(data) std(data)/sqrt(length(data));
+errorbar([1 2 3], cellfun(@nanmean,y),cellfun(@sem,y));
+
 
 %% CV2
 figure;hold;
+y = cell(1,2);
 check_empty = [];
 for irat = rat_list
     ipart = 1;
@@ -308,17 +337,20 @@ for irat = rat_list
                     plottype = 'or';
                 end
                 
-                if strcmp (config{irat}.type, 'dtx'),   x = 1; else, x=2; end
-                x = x+(rand-0.5)*0.2;
-                y = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meancv2{i_unit}];
+                if strcmp (config{irat}.type, 'dtx'),   idx = 1; else, idx=2; end
+                x = idx+(rand-0.5)*0.2;
+                y{idx}(end+1) = [stats{irat}{ipart}.(config{irat}.spike.baselinename).discharge.meancv2{i_unit}];
                 
-                scatter(x,y,plottype, 'filled');
+                scatter(x,y{idx}(end),plottype, 'filled');
             end
         end
     end
 end
 xlim([0 3]);
 ylim([0 2]);
+
+%stats
+pval_cv2 = ranksum(y{1}, y{2});
 
 %% plot sdf of each neuron during slow wave
 % imagesc(log10(stats{irat}{ipart}.(config{irat}.spike.eventsname{1}).sdf.avg));
@@ -399,7 +431,7 @@ for i_celltype = ["pn", "in"]
 end
 
 %% plot of cv2 with bursts, without bursts and freq over time : avg for each neuron
-
+%Over time. OLD.
 %normalized at t=-60
 for method = ["cv2_withoutbursts","freq"]%"cv2";"cv2_withoutbursts";
     figure;hold;
@@ -444,6 +476,8 @@ celltype_slowwave_sua = {};
 celltype_slowwave_mua = {};
 maxchan_slowwave_mua = [];
 maxchan_slowwave_sua = [];
+maxfreq_slowwave_mua = [];
+maxfreq_slowwave_sua = [];
 for irat = 1:5
     for i_unit = 1:size(stats{irat}{ipart}.SlowWave.label,2)
         if contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'noise')
@@ -454,11 +488,13 @@ for irat = 1:5
             freq_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
             celltype_slowwave_mua{end+1} = stats{irat}{ipart}.Interictal.celltype{i_unit};
             maxchan_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.maxchan{i_unit};
+            maxfreq_slowwave_mua(end+1) = stats{irat}{ipart}.SlowWave.maxfreq.max{i_unit};
         elseif contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'sua')
 %             code_slowwave_mua(end+1) = stats{irat}{ipart}.SlowWave.code_slowwave{i_unit};
 %             freq_slowwave_mua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
             code_slowwave_sua(end+1) = stats{irat}{ipart}.SlowWave.code_slowwave{i_unit};
             freq_slowwave_sua(end+1) = stats{irat}{ipart}.Interictal.discharge.meanfreq{i_unit};
+            maxfreq_slowwave_sua(end+1) = stats{irat}{ipart}.SlowWave.maxfreq.max{i_unit};
             celltype_slowwave_sua{end+1} = stats{irat}{ipart}.Interictal.celltype{i_unit};
             maxchan_slowwave_sua(end+1) = stats{irat}{ipart}.Interictal.maxchan{i_unit};
         end
@@ -467,7 +503,7 @@ end
 bar(histcounts(code_slowwave_mua, 1:6));
 bar(histcounts(code_slowwave_sua, 1:6));
 
-%% groupe SW en fonction de la fréquence pré SW, du type cellulaire, de la localisation
+%% groupe SW en fonction de la fréquence pré SW, du type cellulaire, de la localisation, du max de décharge pendant SW
 figure;hold;
 for i_unit = 1:size(code_slowwave_mua,2)
     if strcmp(celltype_slowwave_mua{i_unit}, 'pn')
@@ -478,7 +514,8 @@ for i_unit = 1:size(code_slowwave_mua,2)
         plottype = 'ok';
     end
 %     scatter(code_slowwave_mua(i_unit)+rand*0.3, freq_slowwave_mua(i_unit),plottype);
-%     scatter(code_slowwave_mua(i_unit)+rand*0.3, maxchan_slowwave_mua(i_unit),plottype);
+%     scatter(code_slowwave_mua(i_unit)+rand*0.3, freq_slowwave_mua(i_unit),plottype);
+    scatter(code_slowwave_mua(i_unit)+rand*0.3, maxfreq_slowwave_mua(i_unit),plottype);
 end
 
 %count pn and in for each type of sw
@@ -512,6 +549,7 @@ for i_unit = 1:size(code_slowwave_sua,2)
     end
 %     scatter(code_slowwave_sua(i_unit)+rand*0.3, freq_slowwave_sua(i_unit), plottype,'filled');
 %     scatter(code_slowwave_sua(i_unit)+rand*0.3, maxchan_slowwave_sua(i_unit), plottype,'filled');
+scatter(code_slowwave_mua(i_unit)+rand*0.3, maxfreq_slowwave_mua(i_unit),plottype, 'filled');
 end
 xlim([0.5 5.5]);
 setfig()
@@ -521,7 +559,7 @@ setfig()
 
 %% distrib of rpv
 ilabel = 3; %interictal
-for irat = 1:5%length(config)
+for irat = 1:length(config)
     rpv{irat} = plot_spike_quality(config{irat},[], [],false);
 end
 
@@ -547,10 +585,15 @@ for irat = 1:5%length(config)
         x = rand;
         y = rpv{irat}{ipart}{ilabel}(i_unit);
         
-        if y>10
-            toremove{irat}.label{i_unit} = stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit};
-            continue
-        end
+%         if y>10
+%             toremove{irat}.label{i_unit} = stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit};
+%             continue
+%         end
+%         
+%         if y>1 && ~contains(stats{irat}{ipart}.(config{irat}.spike.baselinename).group{i_unit}, 'mua')
+%             toremove{irat}.label{i_unit} = stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit};
+%             continue
+%         end
         
         if dofill
             scatter(x,y,plottype,'filled');

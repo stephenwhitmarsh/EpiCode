@@ -77,10 +77,10 @@ else
             end
             
             %get all marker timings
-            [~,markerstart_synctime]        = concatenateMuseMarkers(cfg, MuseStruct, ipart, cfg.spikestage{ispikestage}.markerstart);
-            [~,markerend_synctime]          = concatenateMuseMarkers(cfg, MuseStruct, ipart, cfg.spikestage{ispikestage}.markerend);
-            [~,BAD_Start_synctime]          = concatenateMuseMarkers(cfg, MuseStruct, ipart, 'BAD__START__');
-            [~,BAD_End_synctime]            = concatenateMuseMarkers(cfg, MuseStruct, ipart, 'BAD__END__');
+            [~,markerstart_synctime]        = concatenateMuseMarkers(MuseStruct, ipart, cfg.spikestage{ispikestage}.markerstart);
+            [~,markerend_synctime]          = concatenateMuseMarkers(MuseStruct, ipart, cfg.spikestage{ispikestage}.markerend);
+            [~,BAD_Start_synctime]          = concatenateMuseMarkers(MuseStruct, ipart, 'BAD__START__');
+            [~,BAD_End_synctime]            = concatenateMuseMarkers(MuseStruct, ipart, 'BAD__END__');
             
             %safety check
             if ~(size(markerstart_synctime,2) == size(markerend_synctime,2))
