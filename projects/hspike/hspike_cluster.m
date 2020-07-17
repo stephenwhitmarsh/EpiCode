@@ -39,12 +39,34 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 % load settings
 config = hspike_setparams;
 
-for ipatient = 1 : 4
+
+for ipatient = 2 : 4   
     
-    % read muse markers
-    [MuseStruct] = readMuseMarkers(config{ipatient}, true);
+    % load settings
+    config = hspike_setparams;
+        
+    [MuseStruct_orig]                       = readMuseMarkers(config{ipatient}, false);
+    [MuseStruct_aligned]                    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, false);
+    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, true);
     
-    % align muse markers
-    [MuseStruct] = alignMuseMarkersXcorr(config{ipatient}, MuseStruct, true);
+    
+    templates                               = LFP_cluster{1}{1}.kmedoids{6};
+    MuseStruct_template                     = MuseStruct_aligned;
+    
+    itemp = 1;
+    config{ipatient}.template.name          = sprintf('template%d', itemp);
+    [MuseStruct_template, indx, LFP_avg]    = detectTemplate(config{ipatient}, MuseStruct_template, templates{1}, true);
+    
+    config{ipatient}.align.name             = {'template1'};
+    config{ipatient}.align.latency          = config{ipatient}.template.latency;
+    config{ipatient}.align.write            = false;
+    [MuseStruct_template_aligned]           = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_template, true);
+    
+    fname = fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'MuseStruct_alignedXcorr.mat']);
+    save(fname, 'MuseStruct_template_aligned');
+    
+    [PSGtable]                              = PSG2table(config{ipatient}, MuseStruct_template_aligned, false);
+    [t]                                     = plotHypnogram(config{ipatient}, MuseStruct_template_aligned);
+    [marker, hypnogram]                     = hypnogramStats(config{ipatient}, MuseStruct_template_aligned, true);
     
 end

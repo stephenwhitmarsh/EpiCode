@@ -77,14 +77,25 @@ end
     
     % initialize LFP, to return empty cell in case there is no LFP to load
     LFP = {};
+    
+    % select those markers to read, as you might not want to read all
+    % markers defined in cfg.muse 
+    markerlist = [];
+    for imuse = 1 : size(cfg.name,2)
+        for iname = 1 : size(cfg.LFP.name)
+            if ismember(cfg.name{imuse}, cfg.LFP.name)
+                markerlist = [markerlist, imuse];
+            end
+        end
+    end
 
     % loop over parts within subject
     for ipart = 1:length(MuseStruct)
 
         % loop over markers
-        for imarker = 1 : size(cfg.LFP.name,2)
+        for imarker = markerlist
 
-            fprintf('For marker %s\n',cfg.LFP.name{imarker});
+            fprintf('For marker %s\n',cfg.name{imarker});
             hasmarker = false(length(MuseStruct{ipart}),1);
 
             % loop over directories
@@ -299,7 +310,7 @@ end
                 clear dirdat*              
             else
                 LFP{ipart}{imarker} = [];
-                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.LFP.name{imarker});
+                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.name{imarker});
             end
 
         end % imarker

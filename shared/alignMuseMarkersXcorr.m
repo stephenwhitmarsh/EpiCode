@@ -59,18 +59,32 @@ fprintf('**************\n');
 fprintf('** Aligning **\n');
 fprintf('**************\n\n');
 
-for ipart = 1:size(cfg.directorylist,2)
+cfgtemp                 = rmfield(cfg,'LFP');
+cfgtemp.LFP.name        = cfg.align.name;
+cfgtemp.LFP.channel     = cfg.align.channel;
+cfgtemp.LFP.write       = false;
+[LFP]                   = readLFP(cfgtemp, MuseStruct, true);
 
-    for imarker = 1 : size(cfg.align.name,2)
+% select those markers to read, as you might not want to read all
+% markers defined in cfg.muse
+markerlist = [];
+for imuse = 1 : size(cfg.name,2)
+    for iname = 1 : size(cfg.align.name)
+        if ismember(cfg.name{imuse}, cfg.align.name)
+            markerlist = [markerlist, imuse];
+        end
+    end
+end
+    
+for ipart = 1 : size(cfg.directorylist,2)
+
+    for imarker = markerlist
+
+        if isempty(LFP{ipart}{imarker})
+            continue
+        end
         
-        cfgtemp                 = cfg;%rmfield(cfg,'LFP');
-%         try cfgtemp             = rmfield(cfgtemp, 'EMG'); end %remove EMG field, if any, otherwise EMG data are loaded for alignment
-%         cfgtemp.LFP.name        = cfg.align.name(imarker);
-%         cfgtemp.LFP.channel     = cfg.align.channel(imarker);
-        cfgtemp.LFP.write       = false;
-        [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
-
-        % baseline correct & bipolar rereferencing & select align channel
+        % baseline correct & bipolar rereferencing
         cfgtemp                 = [];
         cfgtemp.channel         = cfg.align.channel{imarker};
         cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'no');
@@ -120,7 +134,7 @@ for ipart = 1:size(cfg.directorylist,2)
 
         subplot(1,5,1);
         imagesc(LFP_concatinated(~rejected,:));
-        title(sprintf('Cleaned (%d removed)',sum(rejected)));
+        title(sprintf('Cleaned (%d-%d)',sum(~rejected),sum(rejected)));
         set(gca,'xtick',[]);
 
         subplot(1,5,2);
@@ -159,6 +173,7 @@ for ipart = 1:size(cfg.directorylist,2)
         set(fig,'PaperPosition', [0 0 1 1]);
         print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_alignmentXcorr.png']));
 
+
         close all
         clear shifted shifted_clear shifted_clean_z
 
@@ -181,7 +196,7 @@ for ipart = 1:size(cfg.directorylist,2)
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
                 if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
                     timeshift = nshift(i) * 1/dat.fsample;
-                    fprintf('Timeshifting event %d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(ievent)      = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) + timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent) + seconds(timeshift);

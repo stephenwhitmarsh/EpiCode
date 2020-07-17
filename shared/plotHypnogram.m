@@ -214,7 +214,8 @@ for ipart = 1 : size(MuseStruct,2)
     set(h,'PaperUnits','normalized');
     set(h,'PaperPosition', [0 0 1 1]);
     set(h,'Renderer','Painters');
-    print(h, '-dpdf', fullfile(config.imagesavedir,[config.prefix,'part',num2str(ipart),'-hypnogram.pdf']),'-r600');
+    print(h, '-dpdf', fullfile(config.imagesavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.pdf']),'-r600');
+    print(h, '-dpng', fullfile(config.imagesavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.png']),'-r600');
 
     %     % print a 3 meter version for fun
     %     set(gcf,'PaperUnits','centimeters');
@@ -226,7 +227,7 @@ for ipart = 1 : size(MuseStruct,2)
     %     h.Units = 'centimeters';
     %     print(h, '-dpdf', fullfile(config.imagesavedir,[config.prefix,'part',num2str(ipart),'-hypnogram_3m.pdf']),'-r600');
 
-    writetable(t,fullfile(config.datasavedir,[config.prefix,'p',num2str(ipart),'-hypnogram.txt']));
+    writetable(t,fullfile(config.datasavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.txt']));
 
 end
 disp('Done');
