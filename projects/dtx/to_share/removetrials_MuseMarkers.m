@@ -1,8 +1,7 @@
-function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
+function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct, force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
-% 
+%
 % Search for time periods in data, defined by Muse markers. Then, search if
 % those periods overlap trials of data. Remove or keep only the trials
 % which intersect.
@@ -26,7 +25,7 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %   'remove'         : remove all trials which intersect with the period
 %   'keep'           : keep only trials which intersect with the period
 %   Default = 'remove'.
-% cfg.remove.markerstart    : name of the marker which define the beginnin of the
+% cfg.remove.markerstart    : name of the marker which define the beginning of the
 %                             period. Default = 'BAD__START__'.
 % cfg.remove.markerend      : name of the marker which define the the end of the
 %                             period. Default = 'BAD__END__'.
@@ -40,6 +39,9 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %                             define the period to search. Default = 0.
 % cfg.remove.timefromend    : relative time from cfg.remove.markerend in seconds, to
 %                             define the period to search. Default = 0.
+% cfg.remove.searchdirection : 'before', 'after', 'all'. Default = 'all'.
+% Where the begin of the searched trial has to be compared to the begin of
+% the data trial
 % cfg.remove.keepindexes    : 'yes' or 'no', whether to keep indexes of removed
 %                             trials in MuseStruct. This option use cfg.remove.muse.startend,
 %                             so the trials have to be defined by readLFP or
@@ -51,6 +53,8 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 %                             integers, or 'all'. Default = 'all'.
 % cfg.remove.label_list     : list of groups of trials to analyse. Can be an array
 %                             of integers, or 'all'. Default = 'all'.
+% cfg.remove.write          : 'yes' (default) or 'no', wheter to write
+%                             output data on disk or not.
 %
 % # cfg fields to plot data if required (necessary if cfg.remove.plotdata = 'yes') :
 % cfg.remove.electrodetoplot : name of the electrode used for the plot.
@@ -75,21 +79,31 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct)
 % - the alignment failed for this marker, so it is removed before loading
 %   and cutting data into trials.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_MuseMarkers_WithoutArtefacts.mat']);
+
+if exist(fname) && force == false
+    fprint('Loading precomputed removal of artefacts\n%s\n', fname);
+    data = load(fname);
+    return
+end
 
 % get the default cfg options
 cfg.remove                  = ft_getopt(cfg,'remove',[]);
-cfg.remove.method           = ft_getopt(cfg.remove, 'method'        , 'remove');
-cfg.remove.markerstart      = ft_getopt(cfg.remove, 'markerstart'   , 'BAD__START__');
-cfg.remove.markerend        = ft_getopt(cfg.remove, 'markerend'     , 'BAD__END__');
-cfg.remove.indexstart       = ft_getopt(cfg.remove, 'indexstart'    , 0);
-cfg.remove.indexend         = ft_getopt(cfg.remove, 'indexend'      , 0);
-cfg.remove.timefrombegin    = ft_getopt(cfg.remove, 'timefrombegin' , 0);
-cfg.remove.timefromend      = ft_getopt(cfg.remove, 'timefromend'   , 0);
-cfg.remove.keepindexes      = ft_getopt(cfg.remove, 'keepindexes'   , 'no');
-cfg.remove.plotdata         = ft_getopt(cfg.remove, 'plotdata'      , 'no');
-cfg.remove.part_list        = ft_getopt(cfg.remove, 'part_list'     , 'all');
-cfg.remove.label_list       = ft_getopt(cfg.remove, 'label_list'    , 'all');
+cfg.remove.method           = ft_getopt(cfg.remove, 'method'         , 'remove');
+cfg.remove.markerstart      = ft_getopt(cfg.remove, 'markerstart'    , 'BAD__START__');
+cfg.remove.markerend        = ft_getopt(cfg.remove, 'markerend'      , 'BAD__END__');
+cfg.remove.indexstart       = ft_getopt(cfg.remove, 'indexstart'     , 0);
+cfg.remove.indexend         = ft_getopt(cfg.remove, 'indexend'       , 0);
+cfg.remove.timefrombegin    = ft_getopt(cfg.remove, 'timefrombegin'  , 0);
+cfg.remove.timefromend      = ft_getopt(cfg.remove, 'timefromend'    , 0);
+cfg.remove.searchdirection  = ft_getopt(cfg.remove, 'searchdirection', 'all');
+cfg.remove.keepindexes      = ft_getopt(cfg.remove, 'keepindexes'    , 'no');
+cfg.remove.plotdata         = ft_getopt(cfg.remove, 'plotdata'       , 'no');
+cfg.remove.part_list        = ft_getopt(cfg.remove, 'part_list'      , 'all');
+cfg.remove.label_list       = ft_getopt(cfg.remove, 'label_list'     , 'all');
+cfg.remove.write            = ft_getopt(cfg.remove, 'write'          , 'yes');
 
 
 if isempty(data), fprintf('removetrials_MuseMarkers : Data is empty, nothing is done\n'); return, end
@@ -115,7 +129,7 @@ for ipart = cfg.remove.part_list
     
     for ilabel = cfg.remove.label_list
         
-        fprintf('*** %s ***\n', cfg.name{ilabel});
+        fprintf('*** For ilabel = %d ***\n', ilabel);
         
         if isempty(data{ipart}{ilabel})
             continue
@@ -140,7 +154,9 @@ for ipart = cfg.remove.part_list
         end
         
         if ~isempty(data{ipart}{ilabel})
-                       
+            
+            ft_progress('init','text');
+            
             for idir = 1:length(MuseStruct{ipart})
                 
                 trialremoved{idir}    = false(1,sum(data{ipart}{ilabel}.trialinfo(:,dircolumn)==idir));
@@ -188,45 +204,57 @@ for ipart = cfg.remove.part_list
                 i=0;
                 
                 for itrial = trials_idx
-                    i = i+1;
+                    i = i+1; %count the trials for waitbar
+                    
+                    %waitbar
+                    ft_progress(idir/length(MuseStruct{ipart}), 'dir %d/%d : trial %d/%d', idir, length(MuseStruct{ipart}),i, length(trials_idx));
                     
                     trialinterval_begin     = data{ipart}{ilabel}.trialinfo(itrial, startcolumn) - dir_onset;
                     trialinterval_end       = data{ipart}{ilabel}.trialinfo(itrial, endcolumn) - dir_onset;
-                    trialinterval           = round(trialinterval_begin : trialinterval_end);
                     
                     %Define markerstart and markerend periods
                     for isearchedinterval = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.remove.markerstart).synctime,2)
-                        %check that we don't exceed the index values
-                        if isearchedinterval + cfg.remove.indexstart <= length(MuseStruct{ipart}{idir}.markers.(cfg.remove.markerstart).synctime)
-                            if isearchedinterval + cfg.remove.indexend <= length(MuseStruct{ipart}{idir}.markers.(cfg.remove.markerend).synctime)
-                                
-                                searchedinterval_begin       = (MuseStruct{ipart}{idir}.markers.(cfg.remove.markerstart).synctime(isearchedinterval + cfg.remove.indexstart) + cfg.remove.timefrombegin) * Fs;
-                                searchedinterval_end         = (MuseStruct{ipart}{idir}.markers.(cfg.remove.markerend).synctime(isearchedinterval + cfg.remove.indexend) + cfg.remove.timefromend) * Fs;
-                                
-                            else %first marker exists but last marker exceeds file size
-                                searchedinterval_end = seconds(MuseStruct{ipart}{idir}.endtime - MuseStruct{ipart}{idir}.starttime) * Fs;
-                            end
-                            
-                            searchedinterval             = round(searchedinterval_begin : searchedinterval_end);
-                            
-                            if intersect(trialinterval,searchedinterval) %intervals are expressed in sample points
-                                %                                     fprintf('Found searched-trial in part %d trial %d (MuseStruct dir %d, marker %s n°%d)\n',ipart ,itrial,idir, cfg.remove.muse.startend{ilabel,1},itrialMuse);
-                                trialremoved{idir}(i) = true;
-                                if strcmp(cfg.remove.keepindexes, 'yes') %keep indexes of removed trials
-                                    itrialMuse = data{ipart}{ilabel}.trialinfo(itrial,trialnrcolumn);%trial of loaded data
-                                    MuseStruct{ipart}{idir}.markers.(cfg.remove.muse.startend{ilabel,1}).trialremoved(itrialMuse) = true;
-                                end
+                        %check that we don't exceed the index values for begin
+                        if isearchedinterval + cfg.remove.indexstart > length(MuseStruct{ipart}{idir}.markers.(cfg.remove.markerstart).synctime)
+                            continue
+                        end
+                        searchedinterval_begin       = (MuseStruct{ipart}{idir}.markers.(cfg.remove.markerstart).synctime(isearchedinterval + cfg.remove.indexstart) + cfg.remove.timefrombegin) * Fs;
+                        
+                        %check that we don't exceed the index values for end
+                        if isearchedinterval + cfg.remove.indexend <= length(MuseStruct{ipart}{idir}.markers.(cfg.remove.markerend).synctime)
+                            searchedinterval_end         = (MuseStruct{ipart}{idir}.markers.(cfg.remove.markerend).synctime(isearchedinterval + cfg.remove.indexend) + cfg.remove.timefromend) * Fs;
+                        else %first marker exists but last marker exceeds file size
+                            searchedinterval_end = seconds(MuseStruct{ipart}{idir}.endtime - MuseStruct{ipart}{idir}.starttime) * Fs;
+                        end
+                        
+                        if strcmp(cfg.remove.searchdirection, 'before') && searchedinterval_begin > trialinterval_begin
+                            continue
+                        elseif strcmp(cfg.remove.searchdirection, 'after') && searchedinterval_begin < trialinterval_begin
+                            continue
+                        end
+                        
+                        if searchedinterval_begin > trialinterval_begin && searchedinterval_begin > trialinterval_end
+                            continue
+                        elseif searchedinterval_end < trialinterval_begin && searchedinterval_end < trialinterval_end
+                            continue
+                        else
+                            trialremoved{idir}(i) = true;
+                            if strcmp(cfg.remove.keepindexes, 'yes') %keep indexes of removed trials
+                                itrialMuse = data{ipart}{ilabel}.trialinfo(itrial,trialnrcolumn);%trial of loaded data
+                                MuseStruct{ipart}{idir}.markers.(cfg.remove.muse.startend{ilabel,1}).trialremoved(itrialMuse) = true;
                             end
                         end
+                        
                     end %iserchedinterval
                     
                 end %itrial
+                
                 
                 if strcmp(cfg.remove.method,'keep')&&strcmp(cfg.remove.keepindexes, 'yes')
                     MuseStruct{ipart}{idir}.markers.(cfg.remove.muse.startend{ilabel,1}).trialremoved = ~MuseStruct{ipart}{idir}.markers.(cfg.remove.muse.startend{ilabel,1}).trialremoved;
                 end
             end %idir
-            
+            ft_progress('close');
             
             if strcmp(cfg.remove.method, 'keep')
                 for idir = 1:size(trialremoved,2)
@@ -235,7 +263,7 @@ for ipart = cfg.remove.part_list
             end
             
             if sum([trialremoved{:}]) > 0
-                fprintf('Remove %d trials\n', sum([trialremoved{:}]));
+                fprintf('\nRemove %d trials\n', sum([trialremoved{:}]));
             else
                 fprintf('No searched-trials found : all trials are kept\n');
             end
@@ -334,5 +362,10 @@ for ipart = cfg.remove.part_list
         end
     end %ilabel
 end %ipart
+
+%save data
+if strcmp(cfg.remove.write, 'yes')
+    save(fname, 'data', '-v7.3');
+end
 
 end
