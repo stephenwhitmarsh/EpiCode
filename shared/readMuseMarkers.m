@@ -172,7 +172,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
         end
-        
+
         % recover "real time"
         if isNeuralynx
             %from first Neurlynx .txt file
