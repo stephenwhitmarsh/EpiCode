@@ -172,7 +172,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
         end
-        
+
         % recover "real time"
         if isNeuralynx
             %from first Neurlynx .txt file
@@ -298,12 +298,13 @@ for ipart = 1 : size(cfg.directorylist, 2)
         end
     end
     
+
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
         ft_notice('creating directory %s', cfg.datasavedir);
         mkdir(cfg.datasavedir);
     end
-    
+
 end
 
 if write
