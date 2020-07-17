@@ -8,6 +8,6 @@
 #SBATCH --output=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/output-%j.txt
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/error-%j.txt
 
-module load MATLAB
+module load MATLAB/R2019b
 matlab -nodesktop -softwareopengl -nosplash -nodisplay < /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/hspike_cluster.m
 sleep 5;

@@ -21,14 +21,15 @@ function [shifted, nshift] = alignXcorr(input, maxiter)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-if size(input,1) == 1
-  fprintf('Cannot align only one trial!\n');
-    return
-end
-
 shifted = input;
 nshift  = zeros(1, size(input,1));
 toshift = zeros(1, size(input,1));
+
+if size(input,1) == 1
+  fprintf('Cannot align only one trial!\n');
+  return
+end
+
 
 for iter = 1 : maxiter
     avg = nanmean(shifted);

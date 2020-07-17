@@ -29,13 +29,13 @@ end
 
 %% Patient 1
 
-config{1}.name                      = {'Hspike'};
+config{1}.name                      = {'Hspike','template1'};
 config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
 config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');        
 config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');     
 
-config{1}.muse.startend             = {'Hspike','Hspike'}; 
+config{1}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'}; 
 config{1}.muse.backupdir            = fullfile(rootpath_analysis, 'markerbackup');
 
 config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hspike');
@@ -43,13 +43,15 @@ config{1}.hyp.backupdir             = fullfile(rootpath_analysis, 'markerbackup'
 config{1}.hyp.markerdir             = fullfile(rootpath_analysis, 'data',   'hspike');
 config{1}.hyp.micromedchannel       = 'F3p6';
 config{1}.hyp.contains              = {'NO_SCORE','AWAKE','PHASE_1','PHASE_2','PHASE_3','REM'}; 
-config{1}.hyp.markers               = {'Hspike','SpikeDetect'};
+config{1}.hyp.markers               = {'Hspike', 'template1', 'template2','template3','template4','template5','template6'};
 config{1}.hyp.overwrite             = 'append';
 config{1}.hyp.spikewindow           = 60;
 config{1}.hyp.spikewindowoverlap    = 0.5;
 
 config{1}.epoch.toi{1}              = [-0.5  1];
 config{1}.epoch.pad{1}              = 0.5;
+config{1}.epoch.toi{2}              = [-0.5  1];
+config{1}.epoch.pad{2}              = 0.5;
 
 config{1}.LFP.name                  = {'Hspike'};
 config{1}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -78,16 +80,21 @@ config{1}.cluster.kmeans            = 'no';
 config{1}.cluster.kmedoids          = 'yes';
 config{1}.cluster.N                 = [2, 6];
 
+config{1}.template.reref            = 'yes';
+config{1}.template.refmethod        = 'bipolar';
+config{1}.template.latency          = [-0.2, 0.5];
+config{1}.template.resamplefs       = 250;
+    
 %% Patient 2
 
 config{2}                           = config{1};
-config{2}.name                      = {'SpikeHaT1_1'};
+config{2}.name                      = {'SpikeHaT1_1','template1'};
 config{2}.prefix                    = '2718-'; % edit in code
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02718_1201', 'eeg');
 
-config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'};   % start and end Muse marker
+config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'; 'template1', 'template1'};   % start and end Muse marker
 config{2}.hyp.micromedchannel       = 'HaT11';
-config{2}.hyp.markers               = {'SpikeHaT1_1'};
+config{2}.hyp.markers               = {'SpikeHaT1_1','template1'};
 
 config{2}.LFP.name                  = {'SpikeHaT1_1'};
 config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HaT1_5'};
@@ -104,11 +111,11 @@ config{2}.cluster.channel           = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','
 %% Patient 3
 
 config{3}                           = config{1};
-config{3}.name                      = {'Hspike'};
+config{3}.name                      = {'Hspike','template4'};
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
 
-config{3}.muse.startend             = {'Hspike','Hspike'};   % start and end Muse marker
+config{3}.muse.startend             = {'Hspike','Hspike'; 'template4','template4'};   % start and end Muse marker
 
 config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.hyp.markers               = {'HSpike'};
@@ -120,16 +127,20 @@ config{3}.align.name                = {'Hspike'};
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
 
 config{3}.cluster.name              = {'HSpike'};
-config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4'};
+config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
+
+config{3}.template.reref            = 'no';
+config{3}.template.refmethod        = 'bipolar';
+config{1}.template.latency          = [-0.2, 0.5];
 
 %% Patient 4
 
 config{4}                           = config{1};
-config{4}.name                      = {'Hspike'};
+config{4}.name                      = {'Hspike','template1'};
 config{4}.prefix                    = '2680-'; % edit in code
 config{4}.rawdir                    = fullfile(rootpath_data,       'pat_02680_1158', 'eeg');
 
-config{4}.muse.startend             = {'Hspike','Hspike'};   % start and end Muse marker
+config{4}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'};   % start and end Muse marker
 
 config{4}.hyp.micromedchannel       = 'HaT21';
 config{4}.hyp.markers               = {'HSpike'};
@@ -241,7 +252,37 @@ config{3}.directorylist{1}          = { '02660_2018-11-13_16-08',...
                                         '02660_2018-11-14_11-51',...
                                         '02660_2018-11-14_13-51',...
                                         '02660_2018-11-14_15-51'};
+config{3}.directorylist{2}          = { '02660_2018-11-14_17-51',...
+                                        '02660_2018-11-14_19-51',...
+                                        '02660_2018-11-14_21-51',...
+                                        '02660_2018-11-14_23-51',...
+                                        '02660_2018-11-15_01-51',...
+                                        '02660_2018-11-15_03-51',...
+                                        '02660_2018-11-15_05-51',...
+                                        '02660_2018-11-15_07-51',...
+                                        '02660_2018-11-15_09-20',...
+                                        '02660_2018-11-15_10-26',...
+                                        '02660_2018-11-15_10-52',...
+                                        '02660_2018-11-15_11-35',...
+                                        '02660_2018-11-15_11-39',...
+                                        '02660_2018-11-15_13-41',...
+                                        '02660_2018-11-15_15-41'};
+config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',...
+                                        '02660_2018-11-15_19-41',...
+                                        '02660_2018-11-15_21-41',...
+                                        '02660_2018-11-15_23-41',...
+                                        '02660_2018-11-16_01-41',...
+                                        '02660_2018-11-16_03-41',...
+                                        '02660_2018-11-16_05-41',...
+                                        '02660_2018-11-16_07-41',...
+                                        '02660_2018-11-16_09-25',...
+                                        '02660_2018-11-16_11-25',...
+                                        '02660_2018-11-16_11-56',...
+                                        '02660_2018-11-16_13-56',...
+                                        '02660_2018-11-16_13-59',...
+                                        '02660_2018-11-16_15-59'}; 
                                     
+
 config{4}.directorylist             = [];                             
 config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-15_14-45'...
@@ -259,6 +300,8 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-16_10-58'...
                                         '02680_2019-01-16_11-32'};
                             
+                                    
+                                    
 %%                                   
                                     
                                     

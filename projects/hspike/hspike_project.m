@@ -35,7 +35,9 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 %% General analyses, looping over patients
 
-for ipatient = 1 : 3   
+for ipatient = 1 : 4   
+    
+    ipatient = 3
     % load settings
     config = hspike_setparams;
     
@@ -43,30 +45,49 @@ for ipatient = 1 : 3
     %% REDO AND CHECK 02718; 15_04-31
     %% 02680_2019-01-16_01-31
     
+    %% 
     %     exportHypnogram(config{ipatient});
     
-    % read muse markers
-    [MuseStruct_orig]       = readMuseMarkers(config{ipatient}, true);
-    [LFP_orig]              = readLFP(config{ipatient}, MuseStruct_orig, true);
+    [MuseStruct_orig]                       = readMuseMarkers(config{ipatient}, false);
+    [MuseStruct_aligned]                    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, false);
     
-    config{1}.align.write   = false;
-    [MuseStruct_aligned]    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, true);
-    [LFP_aligned]           = readLFP(config{ipatient}, MuseStruct_aligned, true);
-        
-figure; 
-subplot(2,1,1);
-plot(LFP_avg_orig.avg')
-subplot(2,1,2);
-plot(LFP_avg_aligned.avg')
-
-    [clusterindx, LFP_cluster] = clusterLFP(config{ipatient}, MuseStruct, false);
-
+    %% deal with shifted average edges - remove nanmean to mean
+    config{ipatient}.cluster.name           = sprintf('template%d', itemp);
+    
+    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, true);
+    
+    % loop over templates
+    %% COMETHING WRONG WITH CUMSUM OF OFFSET IN TEMPLATE DETECTION
+    
+    templates = LFP_cluster{1}{1}.kmedoids{6};
+    MuseStruct_template = MuseStruct_aligned;
+    
+    if ipatient == 3
+        itemp = 4;
+    else
+        itemp = 1;
+    end
+    config{ipatient}.template.name          = sprintf('template%d', itemp);
+    [MuseStruct_template, indx, LFP_avg]    = detectTemplate(config{ipatient}, MuseStruct_template, templates{itemp}, true);
+    
+    config{ipatient}.align.name             = sprintf('template%d', itemp);
+    config{ipatient}.align.latency          = config{1}.template.latency;
+    config{ipatient}.align.write            = true;
+    [MuseStruct_template_aligned]           = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_template, true);
+    
+%     [PSGtable]                              = PSG2table(config{ipatient}, MuseStruct_template, false);
+    [t]                                     = plotHypnogram(config{ipatient}, MuseStruct_template_aligned);
+    [marker, hypnogram]                     = hypnogramStats(config{ipatient}, MuseStruct_template_aligned, true);
+    
 end
+
+    
+    
 
 % read LFP data
 config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');
 
-[LFP] = readLFP(config{ipatient}, MuseStruct, true);
+[LFP] = readLFP(config{ipatient}, MuseStruct_orig, true);
      
      % average for 'template'
      cfg = [];
@@ -105,13 +126,11 @@ config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');
     detectSpikes(config{ipatient}, MuseStruct, true, true);
     
     % read hypnogram as table
-    [PSGtable] = PSG2table(config{ipatient}, MuseStruct, false);
     
     % plot hypnogram
     plotHypnogram(config{ipatient},MuseStruct);
     
     % events vs. hypnogram statistics and plots
-    [MuseStruct, marker, hypnogram] = hypnogramStats(config{ipatient}, MuseStruct, true);
      
     % calculate TFR over all files, per part
     TFR = doTFRcontinuous(config{ipatient}, MuseStruct, true);
