@@ -91,19 +91,22 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
         dat                     = ft_preprocessing(cfgtemp, LFP{ipart}{imarker});
-
+        LFP{ipart}{imarker}     = [];
+        
         % select data
-        if strcmp('latency','all')
+        if strcmp('latency', 'all')
             latency = [dat.time{1}(1), dat.time{1}(end)];
         end
 
         cfgtemp                 = [];
         cfgtemp.latency         = latency;
         dat_timesel             = ft_selectdata(cfgtemp, dat);
-        dat_avg_orig            = ft_timelockanalysis([], dat);
+        
+        cfgtemp                 = [];
+        dat_avg_orig            = ft_timelockanalysis(cfgtemp, dat);
 
         % put selected timeperiod in single matrix with concatinated channels
-        fprintf('Preparing alignment');
+        fprintf('Preparing alignment...\n');
         d = size(dat_timesel.trial{1});
         LFP_concatinated = nan(size(dat_timesel.trial,2),d(1)*d(2));
         for itrial = 1 : size(dat.trial,2)
@@ -131,35 +134,35 @@ for ipart = 1 : size(cfg.directorylist,2)
         fig = figure('visible','off');
         fig.Renderer = 'Painters';
 
-        subplot(1,5,1);
+        subplot(1, 5, 1);
         imagesc(LFP_concatinated(~rejected,:));
-        title(sprintf('Cleaned (%d-%d)',sum(~rejected),sum(rejected)));
-        set(gca,'xtick',[]);
+        title(sprintf('Cleaned (%d-%d)', sum(~rejected), sum(rejected)));
+        set(gca,'xtick', []);
 
-        subplot(1,5,2);
-        imagesc(shifted(~rejected,:));
+        subplot(1, 5, 2);
+        imagesc(shifted(~rejected, :));
         title('Aligned');
-        set(gca,'xtick',[]);
+        set(gca,'xtick', []);
 
-        subplot(1,5,3);
-        scatter(nshift(~rejected) / dat.fsample * 1000,sum(~rejected):-1:1,'k.');
-        set(gca,'ytick',[]);
+        subplot(1, 5, 3);
+        scatter(nshift(~rejected) / dat.fsample * 1000, sum(~rejected):-1:1,'k.');
+        set(gca,'ytick', []);
         xlabel('ms');
         title('Timeshift');
         axis tight;
 
-        subplot(2,5,[4 5]);
+        subplot(2, 5, [4 5]); hold
         plot(dat_avg_orig.time, dat_avg_orig.avg');
-        xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
+        xlim([dat.time{1}(1), dat.time{1}(end)]);
         ax = axis;
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
+        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Original');
 
-        subplot(2,5,[9 10]);
+        subplot(2,5,[9 10]); hold
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
-        xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
+        xlim([dat.time{1}(1), dat.time{1}(end)]);
         ax = axis;        
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
+        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Aligned');
         
         set(fig,'Renderer','Painters');
@@ -191,7 +194,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
                 if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
                     timeshift = nshift(i) * 1/dat.fsample;
-                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', cfg.name{imarker}, ievent, ipart, nshift(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(ievent)      = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) + timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent) + seconds(timeshift);

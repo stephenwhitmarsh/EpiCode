@@ -11,14 +11,17 @@ if ~any([strcmp(cfg.cluster.dbscan,'yes'), strcmp(cfg.cluster.kmeans,'yes'), str
     return
 end
 
-cfg.cluster.reref       = ft_getopt(cfg.cluster, 'reref', 'no');
-cfg.cluster.refmethod   = ft_getopt(cfg.cluster, 'refmethod', 'none');
-cfg.cluster.ztransform  = ft_getopt(cfg.cluster, 'ztransform', 'no');
-cfg.cluster.dbscan      = ft_getopt(cfg.cluster, 'dbscan', 'no');
-cfg.cluster.epsilon     = ft_getopt(cfg.cluster, 'epsilon', 1500);
-cfg.cluster.MinPts      = ft_getopt(cfg.cluster, 'MinPts', 10);
-cfg.cluster.resamplefs  = ft_getopt(cfg.cluster, 'resamplefs', []);
-cfg.cluster.channels    = ft_getopt(cfg.cluster, 'channels', 'all');
+cfg.cluster.reref           = ft_getopt(cfg.cluster, 'reref', 'no');
+cfg.cluster.refmethod       = ft_getopt(cfg.cluster, 'refmethod', 'none');
+cfg.cluster.ztransform      = ft_getopt(cfg.cluster, 'ztransform', 'no');
+cfg.cluster.dbscan          = ft_getopt(cfg.cluster, 'dbscan', 'no');
+cfg.cluster.epsilon         = ft_getopt(cfg.cluster, 'epsilon', 1500);
+cfg.cluster.MinPts          = ft_getopt(cfg.cluster, 'MinPts', 10);
+cfg.cluster.resamplefs      = ft_getopt(cfg.cluster, 'resamplefs', []);
+cfg.cluster.channels        = ft_getopt(cfg.cluster, 'channels', 'all');
+cfg.cluster.align           = ft_getopt(cfg.cluster, 'align', []);
+cfg.cluster.align.latency   = ft_getopt(cfg.cluster.align, 'latency', 'all');
+%% IF ALL THEN RETRIEVE MAX LATENCY FROM LFP
 
 % load data if requested, and return
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'clusterindx.mat']);
@@ -166,7 +169,7 @@ if strcmp(cfg.cluster.dbscan, 'yes')
                 
                 subplot(3,N,icluster); hold;
                 title(['Cluster ', num2str(icluster)]);
-                imagesc(LFP_concatinated(indx_kmeans==icluster, :));
+                imagesc(LFP_concatinated(indx_dbscan==icluster, :));
                 set(gca,'xtick', []);
                 set(gca,'fontsize', 6)
                 axis tight
@@ -198,15 +201,14 @@ if strcmp(cfg.cluster.dbscan, 'yes')
                 xlim([-0.5 1]);
                 box off
                 
-                
                 LFP_cluster{ipart}{imarker}.dbscan{icluster} = sel;
             end
             
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '.pdf']), '-r600');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '.png']), '-r600');
+            print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '_LFP.pdf']), '-r600');
+            print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', cfg.name{imarker}, '_LFP.png']), '-r600');
             close all
             
         end
@@ -310,11 +312,11 @@ if strcmp(cfg.cluster.kmeans, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '.pdf']), '-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '.png']), '-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '_LFP.pdf']), '-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '_LFP.png']), '-r600');
                 close all
                 
-                % plot siluette
+                % plot silhouette
                 fig = figure('visible', 'off'); hold;
                 [silh,h] = silhouette(LFP_concatinated, indx_kmeans, 'sqeuclidean');
                 set(fig,'PaperOrientation', 'landscape');
@@ -367,42 +369,59 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                     % realign data again per cluster
                     indx = indx_kmedoids == icluster;
                     
-                    [LFP_concatinated_realigned, nshift] = alignXcorr(LFP_concatinated(indx,:), 10);
+                    % select period for alignemnt
+                    cfgtemp         = [];
+                    cfgtemp.latency = cfg.cluster.align.latency;
+                    cfgtemp.trials  = indx;
+                    LFP_temp        = ft_selectdata(cfgtemp, LFP{ipart}{imarker});
                     
+                    % put all in matrix with concatinated channels
+                    d = size(LFP_temp.trial{1});
+                    LFP_sel_concatinated = nan(size(LFP_temp.trial,2),d(1)*d(2));
+                    for itrial = 1 : size(LFP_temp.trial,2)
+                        LFP_sel_concatinated(itrial,:) = reshape(LFP_temp.trial{itrial}', 1, d(1)*d(2));
+                    end
+                    
+                    % align
+                    [LFP_concatinated_realigned, nshift] = alignXcorr(LFP_sel_concatinated, 10);
+                    
+                    % create averages
                     cfgtemp         = [];
                     cfgtemp.trials  = find(indx)';
                     LFP_shifted     = ft_selectdata(cfgtemp, LFP{ipart}{imarker});
-                    avg_original    = ft_timelockanalysis(cfgtemp, LFP{ipart}{imarker});
+                    avg_original    = ft_timelockanalysis(cfgtemp, LFP{ipart}{imarker});    
                     
                     for itrial = 1 : size(LFP_shifted.trial,2)
                         LFP_shifted.time{itrial} = LFP_shifted.time{itrial} + nshift(itrial) / LFP{ipart}{imarker}.fsample;
                     end
                     
-%                     LFP_shifted     = rmfield(LFP_shifted,'cfg');
                     cfgtemp         = [];
                     avg_shifted     = ft_timelockanalysis(cfgtemp,LFP_shifted);
                     
+                    % plot matrix pre-alignment
                     subplot(3, N, icluster); hold;
                     title(['Cluster ', num2str(icluster)]);
-                    imagesc(LFP_concatinated(indx_kmedoids==icluster, :));
+                    imagesc(LFP_sel_concatinated);
                     set(gca,'xtick', []);
                     set(gca,'fontsize', 6)
                     axis tight
                     
+                    % plot matrix post-alignment
                     subplot(3, N, icluster+N*1); hold;
                     imagesc(LFP_concatinated_realigned);
                     set(gca,'xtick', []);
                     set(gca,'fontsize', 6)
                     axis tight
                     
+                    % plot LFP pre- and post-alignment
                     subplot(3, N, icluster+N*2); hold;
                     h = max(max(abs(avg_shifted.avg)));
                     n = 1;
                     ytick = [];
                     for ichan = 1 : size(avg_shifted.label,1)
                         ytick = [ytick, n*h];
-                        plot(avg_original.time,avg_original.avg(ichan,:) + n*h, 'r');
-                        plot(avg_shifted.time,avg_shifted.avg(ichan,:) + n*h, 'k');
+                        plot(avg_original.time, avg_original.avg(ichan,:) + n*h, 'r');
+                        plot(avg_shifted.time, avg_shifted.avg(ichan,:) + n*h, 'k');        
                         temp = strsplit(avg_shifted.label{ichan}, '-');
                         label{ichan} = temp{1};
                         n = n + 1;
@@ -413,7 +432,13 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                     yticklabels(label);
                     xlabel('Time (s)');
                     axis tight
-                    xlim([-0.5 1]);
+                    xlim([LFP{ipart}{imarker}.time{1}(1), LFP{ipart}{imarker}.time{1}(end)]);
+                    ax = axis;
+                    if ~isstring(cfg.cluster.align.latency)
+                        patch([cfg.cluster.align.latency(1), cfg.cluster.align.latency(2), ...
+                            cfg.cluster.align.latency(2), cfg.cluster.align.latency(1)], ...
+                            [ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
+                    end
                     box off
                     
                     % save for output
@@ -423,13 +448,13 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '.pdf']), '-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '.png']), '-r600');
+                print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '_LFP.pdf']), '-r600');
+                print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', cfg.name{imarker}, '_N', num2str(N), '_LFP.png']), '-r600');
                 close all
                 
-                % plot siluette
+                % plot silhouette
                 fig = figure('visible', 'off'); hold;
-                [silh,h] = silhouette(LFP_concatinated, indx_kmedoids, 'sqeuclidean');
+                [~, ~] = silhouette(LFP_concatinated, indx_kmedoids, 'sqeuclidean');
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
