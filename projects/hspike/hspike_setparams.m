@@ -29,13 +29,13 @@ end
 
 %% Patient 1
 
-config{1}.name                      = {'Hspike','template1'};
+config{1}.name                      = {'Hspike','template1','template2','template3','template4','template5','template6'};
 config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
 config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');        
 config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');     
 
-config{1}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'}; 
+config{1}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'; 'template2','template2'; 'template3','template3'; 'template4','template4'; 'template5','template5'; 'template6','template6'}; 
 config{1}.muse.backupdir            = fullfile(rootpath_analysis, 'markerbackup');
 
 config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hspike');
@@ -66,7 +66,7 @@ config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.align.reref               = 'yes';
 config{1}.align.refmethod           = 'bipolar';
-config{1}.align.latency             = [-0.05 0.05];
+config{1}.align.latency             = [-0.1 0.1];
 
 config{1}.cluster.name              = {'HSpike'};
 config{1}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -79,79 +79,44 @@ config{1}.cluster.dbscan            = 'no';
 config{1}.cluster.kmeans            = 'no';
 config{1}.cluster.kmedoids          = 'yes';
 config{1}.cluster.N                 = [2, 6];
+config{1}.cluster.align.latency     = [-0.2, 0.3];
 
-config{1}.template.reref            = 'yes';
+config{1}.template.reref            = 'no';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
-    
+config{1}.template.threshold        = 4;
+
 %% Patient 2
 
 config{2}                           = config{1};
-config{2}.name                      = {'SpikeHaT1_1','template1'};
 config{2}.prefix                    = '2718-'; % edit in code
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02718_1201', 'eeg');
-
-config{2}.muse.startend             = {'SpikeHaT1_1','SpikeHaT1_1'; 'template1', 'template1'};   % start and end Muse marker
 config{2}.hyp.micromedchannel       = 'HaT11';
-config{2}.hyp.markers               = {'SpikeHaT1_1','template1'};
-
-config{2}.LFP.name                  = {'SpikeHaT1_1'};
 config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HaT1_5'};
-
-config{2}.align.name                = {'SpikeHaT1_1'};
 config{2}.align.channel             = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HaT1_5'};
-config{2}.align.reref               = 'yes';
-config{2}.align.refmethod           = 'bipolar';
-
-config{2}.cluster.name              = {'SpikeHaT1_1'};
 config{2}.cluster.channel           = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HaT1_5'};
-
+config{2}.template.threshold        = 2.5;
 
 %% Patient 3
 
 config{3}                           = config{1};
-config{3}.name                      = {'Hspike','template4'};
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
-
-config{3}.muse.startend             = {'Hspike','Hspike'; 'template4','template4'};   % start and end Muse marker
-
-config{3}.hyp.micromedchannel       = 'Ha2g1';
-config{3}.hyp.markers               = {'HSpike'};
-                                    
-config{3}.LFP.name                  = {'Hspike'};
+config{3}.hyp.micromedchannel       = 'Ha2g1';                                    
 config{3}.LFP.channel               = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
-
-config{3}.align.name                = {'Hspike'};  
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
-
-config{3}.cluster.name              = {'HSpike'};
 config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Ha2g_6','_Ha2g_7','_Ha2g_8','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5','_Hm2g_6'};
-
-config{3}.template.reref            = 'no';
-config{3}.template.refmethod        = 'bipolar';
-config{1}.template.latency          = [-0.2, 0.5];
+config{3}.template.latency          = [-0.2, 0.5];
 
 %% Patient 4
 
 config{4}                           = config{1};
-config{4}.name                      = {'Hspike','template1'};
-config{4}.prefix                    = '2680-'; % edit in code
-config{4}.rawdir                    = fullfile(rootpath_data,       'pat_02680_1158', 'eeg');
-
-config{4}.muse.startend             = {'Hspike','Hspike'; 'template1','template1'};   % start and end Muse marker
-
-config{4}.hyp.micromedchannel       = 'HaT21';
-config{4}.hyp.markers               = {'HSpike'};
-                                    
-config{4}.LFP.name                  = {'Hspike'};
+config{4}.prefix                    = '2680-';
+config{4}.rawdir                    = fullfile(rootpath_data,'pat_02680_1158', 'eeg');
+config{4}.hyp.micromedchannel       = 'HaT21';                                    
 config{4}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3'};
-
-config{4}.align.name                = {'Hspike'};  
 config{4}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3'};
-
-config{4}.cluster.name              = {'HSpike'};
 config{4}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3'};
 
 %% DATA   
@@ -301,7 +266,41 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-16_11-32'};
                             
                                     
-                                    
+config{5}.directorylist             = [];                             
+config{5}.directorylist{1}          = { '02689_2019-02-12_13-23'...
+                                        '02689_2019-02-12_15-23'...
+                                        '02689_2019-02-12_17-23'...
+                                        '02689_2019-02-12_19-23'...
+                                        '02689_2019-02-12_21-23'...
+                                        '02689_2019-02-12_23-23'...
+                                        '02689_2019-02-13_01-23'...
+                                        '02689_2019-02-13_03-23'...
+                                        '02689_2019-02-13_05-23'...
+                                        '02689_2019-02-13_07-23'...
+                                        '02689_2019-02-13_09-23'...
+                                        '02689_2019-02-13_09-25'...
+                                        '02689_2019-02-13_10-37'...
+                                        '02689_2019-02-13_12-37'};                                       
+                                       % '02689_2019-02-13_10-32'... short
+                                       % and full of artefacts    
+                                       
+                                       
+config{6}.directorylist             = [];                             
+config{6}.directorylist{1}          = {'02651_2018-10-16_15-31'...
+                                       '02651_2018-10-16_17-31'... % fully artefacted
+                                       '02651_2018-10-16_19-31'...
+                                       '02651_2018-10-16_21-31'...
+                                       '02651_2018-10-16_23-31'...
+                                       '02651_2018-10-17_01-31'...
+                                       '02651_2018-10-17_03-31'...
+                                       '02651_2018-10-17_05-31'...
+                                       '02651_2018-10-17_07-31'...
+                                       '02651_2018-10-17_09-31'...
+                                       '02651_2018-10-17_11-22'... % short and fully artefacted
+                                       '02651_2018-10-17_11-46'...
+                                       '02651_2018-10-17_13-46'};
+
+                
 %%                                   
                                     
                                     
