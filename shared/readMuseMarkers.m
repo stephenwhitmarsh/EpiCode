@@ -28,7 +28,7 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct.mat', cfg.prefix));
+fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
 
 write = ft_getopt(cfg.muse, 'write', true);
 

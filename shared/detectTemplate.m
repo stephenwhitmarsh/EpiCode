@@ -1,11 +1,11 @@
-function [MuseStruct, C_norm, Tindx, LFP_avg] = detectTemplate(cfg, MuseStruct, template, force)
+function [MuseStruct, C_norm, Tindx_unique, LFP_avg] = detectTemplate(cfg, MuseStruct, template, force)
 
 % DETECTEMPLATE detect templates using normalized crosscorrelation.
 % Compares templates, and writes markers of most fitting template to Muse
 % event file.
 %
 % use as
-%    [MuseStruct, C_norm, Tindx, LFP_avg] = detectTemplate(cfg, MuseStruct, template, force)
+%    [MuseStruct, C_norm, Tindx_unique, LFP_avg] = detectTemplate(cfg, MuseStruct, template, force)
 %
 % Necessary fields (as defined in _setparams function):
 %
@@ -25,20 +25,21 @@ function [MuseStruct, C_norm, Tindx, LFP_avg] = detectTemplate(cfg, MuseStruct, 
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname_out = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
-cfg.template.reref       = ft_getopt(cfg.template, 'reref', 'no');
-cfg.template.refmethod   = ft_getopt(cfg.template, 'refmethod', 'none');
-cfg.template.latency     = ft_getopt(cfg.template, 'latency', 'all');
-cfg.template.writemuse   = ft_getopt(cfg.template, 'writemuse', true);
-cfg.template.threshold   = ft_getopt(cfg.template, 'threshold', 4);
-cfg.template.name        = ft_getopt(cfg.template, 'name', 'TemplateDetect');
-cfg.template.visible     = ft_getopt(cfg.template, 'visible', 'on');
+cfg.visible                 = ft_getopt(cfg, 'visible', 'on');
+cfg.template.reref          = ft_getopt(cfg.template, 'reref', 'no');
+cfg.template.refmethod      = ft_getopt(cfg.template, 'refmethod', 'none');
+cfg.template.latency        = ft_getopt(cfg.template, 'latency', 'all');
+cfg.template.writemuse      = ft_getopt(cfg.template, 'writemuse', true);
+cfg.template.threshold      = ft_getopt(cfg.template, 'threshold', 4);
+cfg.template.name           = ft_getopt(cfg.template, 'name', 'TemplateDetect');
+
+fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
 
 if exist(fname_out,'file') && force == false
     fprintf('************************************\n');
     fprintf('** Loading results spikedetection **\n');
     fprintf('************************************\n\n');
-    load(fname_out, 'MuseStruct', 'C_norm', 'Tindx', 'LFP_avg');
+    load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
     return
 end
 
@@ -85,7 +86,7 @@ for ipart = 1 :  size(cfg.directorylist,2)
         % concatinate channels
         for ifile = 1 : nfile
             if isNeuralynx
-                temp                = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*',cfg.cluster.channel{ifile},'.ncs']));
+                temp                = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.cluster.channel{ifile},'.ncs']));
                 fname{1}            = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
                 filedat{ifile}      = ft_read_neuralynx_interp(fname);
                 
@@ -161,29 +162,51 @@ for ipart = 1 :  size(cfg.directorylist,2)
     % sometimes data contains nan's probably at edges
     dat.trial{1}(isnan(dat.trial{1})) = 0;  
     
-    % loop over templates
+    % find templates
     for itemp = 1 : size(template, 2)
-        
-        C = normxcorr2(template{itemp}.avg', dat.trial{1}');
-        
-        % remove confounded edges
+        C                                           = normxcorr2(template{itemp}.avg', dat.trial{1}'); 
         C(1:size(template{itemp}.avg,2),:)          = nan;
         C(end-size(template{itemp}.avg,2):end,:)    = nan;
         noYshift                                    = size(template{itemp}.avg,1);
         C_norm{ipart}{itemp}                        = normalize(C(:, noYshift)); clear C
         threshold                                   = nanstd(C_norm{ipart}{itemp}) * cfg.template.threshold;
-        [~, Tindx{ipart}{itemp}, ~, ~]              = findpeaks(C_norm{ipart}{itemp}, 'MinPeakHeight', threshold, 'MinPeakDistance', dat.fsample*(-template{itemp}.time(1)+template{itemp}.time(end))/2);
-        
-        % plot correlation and threshold
-        fig = figure('visible',cfg.template.visible); hold;
-        
+        [~, Tindx{ipart}{itemp}, ~, ~]              = findpeaks(C_norm{ipart}{itemp}, 'MinPeakHeight', threshold, 'MinPeakDistance', dat.fsample*(-template{itemp}.time(1)+template{itemp}.time(end))/2);    
+    end
+    
+   % remove overlapping templates, selecting highest r
+    a = cell2mat(C_norm{ipart});
+    a = reshape(a, 1, numel(a));
+    a = normalize(a);
+    a = reshape(a, size(C_norm{ipart}{1}, 1), size(C_norm{ipart}, 2));
+    
+    C_norm2{ipart} = [];
+    for i = 1 : size(C_norm{ipart}, 2)
+        C_norm2{ipart}{i} = a(:, i);
+    end
+    
+    Tindx_unique{ipart} = Tindx{ipart};
+    for itemp = 1 : size(template, 2)   
+        others          = 1 : size(template, 2);
+        others(itemp)   = []; 
+        for iother = others
+            [indxA, indxB]  = CommonElemTol(Tindx_unique{ipart}{itemp}, Tindx_unique{ipart}{iother}, 25);
+            comp            = C_norm2{ipart}{itemp}(indxA) >= C_norm2{ipart}{iother}(indxB);
+            Tindx_unique{ipart}{itemp}(indxA(~comp)) = [];
+            Tindx_unique{ipart}{iother}(indxB(comp)) = [];
+        end
+    end
+    
+    % plot correlation, threshold and average LFG
+    for itemp = 1 : size(template, 2)
+
+        fig = figure('visible', cfg.visible); hold;  
         plot(C_norm{ipart}{itemp});
         axis tight
         ax = axis;
         plot([ax(1),ax(2)],[threshold, threshold],':k');
-        if ~isempty(Tindx{ipart}{itemp})
-            scatter3(Tindx{ipart}{itemp}, C_norm{ipart}{itemp}(Tindx{ipart}{itemp}), ones(size(Tindx{ipart}{itemp}))*10, 'r.');
-            n = size(Tindx{ipart}{itemp}, 1);
+        if ~isempty(Tindx_unique{ipart}{itemp})
+            scatter3(Tindx_unique{ipart}{itemp}, C_norm{ipart}{itemp}(Tindx_unique{ipart}{itemp}), ones(size(Tindx_unique{ipart}{itemp}))*10, 'r.');
+            n = size(Tindx_unique{ipart}{itemp}, 1);
         else
             n = 0;
         end
@@ -193,10 +216,15 @@ for ipart = 1 :  size(cfg.directorylist,2)
         
         % show separation in files and time
         ax = axis;
+        axisnames = [];
         for i = 1 : length(cumsumdatlength)
-            plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [-1, -1], 'color',[0.7, 0.7, 0.7]);
-            text(cumsumdatlength(i), ax(4), datestr(MuseStruct{ipart}{i}.starttime), 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', 'color', [0.7, 0.7, 0.7], 'fontsize', 8);
+            plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color',[0, 0, 0]);
+            axisnames{i} = datestr(MuseStruct{ipart}{i}.starttime);
         end
+        set(gca, 'TickDir', 'out');
+        xticks(cumsumdatlength);
+        xticklabels(axisnames);
+        xtickangle(90);
         
         % print to file
         set(fig,'PaperOrientation','landscape');
@@ -207,14 +235,15 @@ for ipart = 1 :  size(cfg.directorylist,2)
         close all
         
         % skip further plotting if no templates were detected
-        if isempty(Tindx{ipart}{itemp})
+        if isempty(Tindx_unique{ipart}{itemp})
+            LFP_avg{ipart}{itemp} = [];
             continue
         end
         
         % create LFP averages
-        startsample                     = Tindx{ipart}{itemp} - size(template{itemp}.avg,2);
-        endsample                       = Tindx{ipart}{itemp};
-        offset                          = zeros(size(Tindx{ipart}{itemp})) + template{itemp}.time(1) * dat.fsample;
+        startsample                     = Tindx_unique{ipart}{itemp} - size(template{itemp}.avg,2);
+        endsample                       = Tindx_unique{ipart}{itemp};
+        offset                          = zeros(size(Tindx_unique{ipart}{itemp})) + template{itemp}.time(1) * dat.fsample;
         cfgtemp                         = [];
         cfgtemp.trl                     = [startsample, endsample, offset];
         cfgtemp.trl                     = round(cfgtemp.trl);
@@ -222,7 +251,8 @@ for ipart = 1 :  size(cfg.directorylist,2)
         LFP_avg{ipart}{itemp}           = ft_timelockanalysis([],LFP_sel);
         
         % plot LFPs vs. template
-        fig = figure('visible', cfg.template.visible);
+        fig = figure('visible', cfg.visible);
+        
         subplot(1, 3, 1); hold;
         maxabs = -inf;
         for itrial = 1 : size(LFP_sel.trial,2)
@@ -246,6 +276,7 @@ for ipart = 1 :  size(cfg.directorylist,2)
         set(gca,'fontsize', 6)
         yticklabels(LFP_sel.label);
         axis tight
+        box off
         
         % plot overlapping trial LFPs
         subplot(1, 3, 2); hold;
@@ -256,22 +287,30 @@ for ipart = 1 :  size(cfg.directorylist,2)
             end
         end
         for ichan = 1 : size(LFP_avg{ipart}{itemp}.label,1)
-            plot(template{itemp}.time, template{itemp}.avg(ichan,:) + maxabs * ichan,'r');
-            plot(LFP_avg{ipart}{itemp}.time, LFP_avg{ipart}{itemp}.avg(ichan,:) + maxabs * ichan,'k');
+            plot(template{itemp}.time, template{itemp}.avg(ichan,:) + maxabs * ichan, 'r');
+            plot(LFP_avg{ipart}{itemp}.time, LFP_avg{ipart}{itemp}.avg(ichan,:) + maxabs * ichan, 'k');
         end
-        set(gca,'TickLabelInterpreter', 'none')
         set(gca,'fontsize', 6)
-        yticklabels(LFP_sel.label);
+        set(gca,'Yticklabels',[])
+        yticklabels([]);
         axis tight
         box off
         
-        % plot average LPFs
+        % plot average LPF template
         subplot(2, 3, 3);
         plot(template{itemp}.time, template{itemp}.avg', 'r');
         title('Template');
+        set(gca,'fontsize', 6)
+        axis tight
+        box off
+        
+        % plot average LPF matches
         subplot(2, 3, 6);
         plot(LFP_avg{ipart}{itemp}.time, LFP_avg{ipart}{itemp}.avg', 'k');
         title('Average');
+        set(gca,'fontsize', 6)
+        axis tight
+        box off
         
         % print to file
         set(fig,'PaperOrientation','landscape');
@@ -281,65 +320,49 @@ for ipart = 1 :  size(cfg.directorylist,2)
         print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template', num2str(itemp),'_LFP.pdf']));
         close all
     end
-  
-    % remove overlapping templates, selecting highest r
-    a = cell2mat(C_norm{ipart});
-    a = reshape(a, 1, numel(a));
-    a = normalize(a);
-    a = reshape(a,  size(C_norm{ipart}{1}, 1), size(C_norm{ipart}, 2));
-    C_norm2{ipart} = [];
-    for i = 1 : size(C_norm{ipart}, 2)
-        C_norm2{ipart}{i} = a(:,i);
-    end
-    
-    Tindx_unique{ipart} = Tindx{ipart};
-    for itemp = 1 : size(template, 2)   
-        others          = 1 : size(template, 2);
-        others(itemp)   = []; 
-        for iother = others
-            [indxA, indxB]  = CommonElemTol(Tindx_unique{ipart}{itemp}, Tindx_unique{ipart}{iother}, 25);
-            comp            = C_norm2{ipart}{itemp}(indxA) >= C_norm2{ipart}{iother}(indxB);
-            Tindx_unique{ipart}{itemp}(indxA(~comp)) = [];
-            Tindx_unique{ipart}{iother}(indxB(comp)) = [];
-        end
-    end
     
     % plot templates and thresholds for all templates
-    fig = figure('visible', cfg.template.visible);
+    fig = figure('visible', cfg.visible);
+    
     for itemp = 1 : size(C_norm2{ipart}, 2)
         subplot(size(C_norm2{ipart}, 2), 1, itemp); hold;
-        plot(C_norm2{ipart}{itemp}, 'color', [0.5, 0.5, 0.5]);
+        plot(C_norm2{ipart}{itemp}, 'color', [0.5, 0.5, 0.5]);    
         axis tight
         ax = axis;
         plot([ax(1),ax(2)],[threshold, threshold],':k');
         if ~isempty(Tindx_unique{ipart}{itemp})
-            scatter3(Tindx_unique{ipart}{itemp}, C_norm2{ipart}{itemp}(Tindx_unique{ipart}{itemp}), ones(size(Tindx_unique{ipart}{itemp}))*10, 'r.');
+            scatter3(Tindx{ipart}{itemp},           C_norm2{ipart}{itemp}(Tindx{ipart}{itemp}),         ones(size(Tindx{ipart}{itemp}))*10, 'k.');            
+            scatter3(Tindx_unique{ipart}{itemp},    C_norm2{ipart}{itemp}(Tindx_unique{ipart}{itemp}),  ones(size(Tindx_unique{ipart}{itemp}))*10, 'r.');
             n = size(Tindx_unique{ipart}{itemp}, 1);
         else
             n = 0;
         end
+        xticks('');
+        set(gca,'fontsize', 6)
         for i = 1 : length(cumsumdatlength)
-            plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [-1, -1], 'color',[0.7, 0.7, 0.7]);
-            text(cumsumdatlength(i), ax(4), datestr(MuseStruct{ipart}{i}.starttime), 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', 'color', [0.7, 0.7, 0.7], 'fontsize', 6);
+            plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color', [0, 0, 0]);
         end
         axis tight
         box off
-        title(sprintf('n = %d', n));
+        title(sprintf('template%d, n = %d', itemp, n));
     end
+    set(gca, 'TickDir', 'out');
+    xticks(cumsumdatlength);
+    set(gca, 'XTickLabel', [])
     
     % print to file
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template_all_threshold.png']));
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template_all_threshold.pdf']));
+    print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_templateX_threshold.png']));
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_templateX_threshold.pdf']));
     close all
     
     % add to MuseStruct and add to markerfile if requested
     for idir = unique(dirindx)
         
         %  read Muse events file
-        fname_mrk    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
+        fname_mrk = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
         
         % backup markerfile
         if ~exist(cfg.muse.backupdir,'DIR')
@@ -354,6 +377,17 @@ for ipart = 1 :  size(cfg.directorylist,2)
         eval(sprintf('!cp %s %s', fname_mrk, fullfile(cfg.muse.backupdir, d, fname_backup)));
         fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
         
+        % remove previous template markers        
+        names = fieldnames(MuseStruct{ipart}{idir}.markers);
+        for itemp = 1 : 100
+            for iname = 1 : size(names,1)
+                if strcmp(names(iname), sprintf('template%d', itemp))
+                    MuseStruct{ipart}{idir}.markers = rmfield(MuseStruct{ipart}{idir}.markers, sprintf('template%d', itemp));
+                end
+            end
+        end
+
+        % add new template markers
         for itemp = 1 : size(template, 2)
      
             % remove offset of directory
@@ -385,4 +419,4 @@ for ipart = 1 :  size(cfg.directorylist,2)
     clear LFP_sel
 end
 
-save(fname_out,'MuseStruct', 'C_norm', 'Tindx', 'LFP_avg', '-v7.3');
+save(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg', '-v7.3');
