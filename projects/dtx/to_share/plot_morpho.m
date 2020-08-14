@@ -1,4 +1,4 @@
-function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
+function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
@@ -24,7 +24,7 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 %                           mean). Average is not modified. Default = 'no'.
 % cfg.morpho.mesurehalfwidth= 'yes' or 'no', whether to compute halfwidth.
 %                           Default = 'no'.
-% cfg.morpho.halfwidthmethod= 'min' or 'bl' : reference for peak-amplitude
+% cfg.morpho.blmethod= 'min' or 'bl' : reference for peak-amplitude
 %                           measurement if mesurehalfwidth = 'yes'. 
 %                           Default = 'bl' (baseline)
 % cfg.morpho.mesurepeaktrough = 'yes' or 'no', whether to compute peak-trough
@@ -32,7 +32,7 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 % 
 % ### Necessary cfg fields if cfg.morpho.mesurehalfwidth = 'yes' or cfg.morpho.mesurepeaktrough = 'yes'
 % cfg.morpho.toiac        = active period for measurements. Can be 'all' (default)
-% cfg.morpho.toibl        = baseline period if cfg.morpho.halfwidthmethod = 'bl'
+% cfg.morpho.toibl        = baseline period if cfg.morpho.blmethod = 'bl'
 % 
 % ### Necessary cfg fields if cfg.morpho.saveplot = 'yes'
 % cfg.name         = name of the analysis (title of plot and of
@@ -50,11 +50,17 @@ function 	[halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 
 
 %Get default cfg parameters
+cfg.morpho                             = ft_getopt(cfg, 'morpho', []);
+cfg.morpho.channame                    = ft_getopt(cfg.morpho, 'channame', 1);
 cfg.morpho.plotstd                     = ft_getopt(cfg.morpho, 'plotstd'          , 'no');
+cfg.morpho.plotavg                     = ft_getopt(cfg.morpho, 'plotavg'          , 'yes');
+cfg.morpho.plotraw                     = ft_getopt(cfg.morpho, 'plotraw'          , 'yes');
 cfg.morpho.removeoutliers              = ft_getopt(cfg.morpho, 'removeoutliers'  	, 'no');
 cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'	, 'no');
-cfg.morpho.halfwidthmethod             = ft_getopt(cfg.morpho, 'halfwidthmethod' 	, 'bl');
+cfg.morpho.mesureamplitude             = ft_getopt(cfg.morpho, 'mesureamplitude'	, 'no');
+cfg.morpho.blmethod                    = ft_getopt(cfg.morpho, 'blmethod' 	, 'bl');
 cfg.morpho.mesurepeaktrough            = ft_getopt(cfg.morpho, 'mesurepeaktrough'	, 'no');
+cfg.morpho.mesuretroughpeak            = ft_getopt(cfg.morpho, 'mesuretroughpeak'	, 'no');
 cfg.morpho.toiplot                     = ft_getopt(cfg.morpho, 'toiplot'          , 'all');
 cfg.morpho.toiac                       = ft_getopt(cfg.morpho, 'toiac'            , 'all');
 cfg.morpho.saveplot                    = ft_getopt(cfg.morpho, 'saveplot'         , 'no');
@@ -93,7 +99,7 @@ cfgtemp = [];
 cfgtemp.trials = trial_list;
 data = ft_selectdata(cfgtemp, data);
 
-%search for outlier trials if asked
+%search and reject outlier trials if asked
 isOutlierTrial = false(1, size(data.trial,2));
 if strcmp(cfg.morpho.removeoutliers, 'yes')
     for itrial = 1:size(data.trial,2)
@@ -102,12 +108,14 @@ if strcmp(cfg.morpho.removeoutliers, 'yes')
         end
     end
 end
-
-%plot trials. Reject outlier trials if asked
 data.time = data.time(~isOutlierTrial);
 data.trial = data.trial(~isOutlierTrial);
-for itrial = 1:size(data.time, 2)
-    plot(data.time{itrial},data.trial{itrial},'color',[0.6 0.6 0.6]);
+
+%plot trials.
+if strcmp(cfg.morpho.plotraw, 'yes')
+    for itrial = 1:size(data.time, 2)
+        plot(data.time{itrial},data.trial{itrial},'color',[0.6 0.6 0.6]);
+    end
 end
 
 
@@ -125,9 +133,14 @@ if strcmp(cfg.morpho.plotstd, 'yes')
     filled_SD(1).ShowBaseLine = 'off';
 end
 
-%plot avg of all trials
-plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
-
+%plot avg of all trials. If only One trial, avg is plotted with linewidth =1
+if strcmp(cfg.morpho.plotavg, 'yes')
+    if size(data.time, 2) ==1
+        plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 1);
+    else
+        plot(data_avg.time, data_avg.avg, 'k', 'LineWidth', 2);
+    end
+end
 
 %select active period
 cfgtemp         = [];
@@ -138,16 +151,18 @@ data_avg_ac     = ft_selectdata(cfgtemp, data_avg);
 halfwidth = NaN;
 
 if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
+        try %REMOVEME FIXME
+
         %measure peak and half hamp
-        if strcmp(cfg.morpho.halfwidthmethod, 'bl')
+        if strcmp(cfg.morpho.blmethod, 'bl')
             cfgtemp         = [];
             cfgtemp.latency = cfg.morpho.toibl;
             data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
             bl          = mean(data_avg_bl.avg);
-        elseif strcmp(cfg.morpho.halfwidthmethod, 'min')
+        elseif strcmp(cfg.morpho.blmethod, 'min')
             bl          = min(data_avg_ac.avg);
         else
-            error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.morpho.halfwidthmethod);
+            error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.morpho.blmethod);
         end
         peak        = max(data_avg_ac.avg);
         halfamp     = double(bl+(peak-bl)/2);
@@ -176,19 +191,47 @@ if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
             
             text(x_precise(2),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
         end
+        end
 end
+
+
+%% Mesure and plot amplitude
+amplitude = NaN;
+
+if strcmp(cfg.morpho.mesureamplitude, 'yes')
+    if strcmp(cfg.morpho.blmethod, 'bl')
+        cfgtemp         = [];
+        cfgtemp.latency = cfg.morpho.toibl;
+        data_avg_bl     = ft_selectdata(cfgtemp, data_avg);
+        bl          = mean(data_avg_bl.avg);
+    elseif strcmp(cfg.morpho.blmethod, 'min')
+        bl          = min(data_avg_ac.avg);
+    else
+        error('%s is not a method for mesuring half width. Set ''bl'' or ''min''',cfg.morpho.blmethod);
+    end
+    [peak, peak_idx]        = max(data_avg_ac.avg);
+    amplitude               = peak-bl;
+    amplitude_loc           = data_avg_ac.time(peak_idx);
+
+    scatter(amplitude_loc, peak, 'xb', 'filled');
+    scatter(amplitude_loc, bl, 'xb', 'filled');
+    text(amplitude_loc,peak,sprintf('%.1fuV',amplitude),'Color','k','HorizontalAlignment','center','VerticalAlignment','bottom','FontSize',10,'FontWeight','bold');
+end
+
+
 
 %% Measure and plot pt and tp
 peaktrough = NaN;
 troughpeak = NaN;
 
-if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
+if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughpeak, 'yes')
+    try %REMOVEME FIXME
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
     % Find throughs
     [Yneg,Xneg_temp] = findpeaks(-data_avg_ac.avg,data_avg_ac.time);
     
-    if length(Xneg_temp) >= 2
+    if length(Xneg_temp) >= 2 && length(Xpos) == 1 
         % Search first through before and after XPos
         [Xneg(1),x_idx(1)] = max(Xneg_temp(Xneg_temp-Xpos < 0));
         [Xneg(2), x_idx(2)] = min(Xneg_temp(Xneg_temp-Xpos > 0));
@@ -198,20 +241,23 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
         peaktrough = abs(Xpos-Xneg(1));
         troughpeak = abs(Xpos-Xneg(2));
         
-        %plot horizontal lines from peak to trough
-        plot([Xpos,Xneg(1)], [Yneg(1)*0.3, Yneg(1)*0.3],'-x','Color',[1 0 0],'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0]);
-        plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
+        if strcmp(cfg.morpho.mesuretroughpeak, 'yes')
+            %plot horizontal lines from peak to trough, and add text
+            plot([Xpos,Xneg(1)], [Yneg(1)*0.3, Yneg(1)*0.3],'-x','Color',[1 0 0],'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0]);
+            x = Xneg(1);
+            y = double(Yneg(1)*0.3);
+            [unit, peaktrough_corr] = setunit(peaktrough);
+            text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        end
         
-        %add text for each value
-        x = Xneg(1);
-        y = double(Yneg(1)*0.3);
-        [unit, peaktrough_corr] = setunit(peaktrough);
-        text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
-        
-        x = Xneg(2);
-        y = double(-Yneg(2)*0.3);
-        [unit, troughpeak_corr] = setunit(troughpeak);
-        text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
+            plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
+            x = Xneg(2);
+            y = double(-Yneg(2)*0.3);
+            [unit, troughpeak_corr] = setunit(troughpeak);
+            text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
+        end
+    end
     end
 end
 

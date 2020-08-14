@@ -24,7 +24,7 @@ function [MuseStruct] = addMuseBAD(cfg,MuseStruct)
 %                     occurence of cfg.bad.markerEnd after the selected
 %                     cfg.bad.markerStart.Can be 'end', in this case the
 %                     BAD__END__ marker is put at the end of the dir.
-%
+% 
 % Optional cfg fields :
 % cfg.bad.part_list : list of parts to analyse. Can be 'all', 'last', or any
 %                     array of indexes. Default = 'all'.
