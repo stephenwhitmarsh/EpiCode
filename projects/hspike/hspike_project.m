@@ -33,54 +33,49 @@ ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
-%% General analyses, looping over patients
+config = hspike_setparams;
 
-for ipatient = 1 : 4   
+%% General analyses, looping over patients
+%      exportHypnogram(config{ipatient})
+
+for ipatient = 1:7
     
-    ipatient = 3
-    % load settings
-    config = hspike_setparams;
+    [MuseStruct_orig{ipatient}]                                                                     = readMuseMarkers(config{ipatient}, false);    
+    [MuseStruct_aligned{ipatient}]                                                                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                                                  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+    [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}{1}.kmedoids{6}, true);
     
-    % export hypnogram to muse
-    %% REDO AND CHECK 02718; 15_04-31
-    %% 02680_2019-01-16_01-31
+    for itemp = 1 : 6
+        markername = sprintf("template%d", itemp);
+        config{ipatient}.muse.startmarker.(markername)                                              = markername;
+        config{ipatient}.muse.endmarker.(markername)                                                = markername;
+        config{ipatient}.epoch.toi.(markername)                                                     = [-0.5  1];
+        config{ipatient}.epoch.pad.(markername)                                                     = 0.5;
+        config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+        config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+        config{ipatient}.LFP.name{itemp}                                                            = markername;
+        config{ipatient}.hyp.markers{itemp}                                                         = markername;   
+    end   
     
-    %% 
-    %     exportHypnogram(config{ipatient});
-    
-    [MuseStruct_orig]                       = readMuseMarkers(config{ipatient}, false);
-    [MuseStruct_aligned]                    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, false);
-    
-    %% deal with shifted average edges - remove nanmean to mean
-    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, false);
-    
-    % loop over templates
-    %% COMETHING WRONG WITH CUMSUM OF OFFSET IN TEMPLATE DETECTION
-    
-    templates = LFP_cluster{1}{1}.kmedoids{6};
-    MuseStruct_template = MuseStruct_aligned;
-    
-    if ipatient == 3
-        itemp = 4;
-    else
-        itemp = 1;
-    end
-    config{ipatient}.template.name          = sprintf('template%d', itemp);
-    [MuseStruct_template, indx, LFP_avg]    = detectTemplate(config{ipatient}, MuseStruct_template, templates{itemp}, true);
-    
-    config{ipatient}.align.name             = sprintf('template%d', itemp);
-    config{ipatient}.align.latency          = config{1}.template.latency;
-    config{ipatient}.align.write            = false;
-    [MuseStruct_template_aligned]           = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_template, true);
-    
-%     [PSGtable]                              = PSG2table(config{ipatient}, MuseStruct_template, false);
-    [t]                                     = plotHypnogram(config{ipatient}, MuseStruct_template_aligned);
-    [marker, hypnogram]                     = hypnogramStats(config{ipatient}, MuseStruct_template_aligned, true);
-    
+    [t{ipatient}]                                                                                   = plotHypnogram(config{ipatient}, MuseStruct_template{ipatient});
+    [marker{ipatient}, hypnogram{ipatient}]                                                         = hypnogramStats(config{ipatient}, MuseStruct_template{ipatient}, true);
+    [LFP{ipatient}]                                                                                 = readLFP(config{ipatient}, MuseStruct_template{ipatient}, true);
+    [LFP_stage{ipatient}]                                                                           = plotLFP_stages(config{ipatient}, LFP{ipatient}, marker{ipatient}, hypnogram{ipatient}, true);
 end
 
-    
-    
+%% TODO
+% Authomatically determine template matching threshold by
+% iteration/minimizing/maximizing sensitivity and selectivity compared to
+% manual annotation
+% redo patient 1; 2711, both EIDs cortical and subcortical as one marker
+% Add window of alignment in clustering overview Kmeans
+% demean before clustering
+% fix LFP detected template second subplot yticks
+% add non-selected templates in overview of threshold picture
+% use Amygdala as well? often micro + nice SWDs, e.g. in patient 7
+% REDO AND CHECK HYPNOGRAM 02718-15_04-31 and 02680_2019-01-16_01-31
+% extract spike-by-spike paramewters: EOC, amplitude, durations, etc. to
+% put in full model
 
 % read LFP data
 config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');

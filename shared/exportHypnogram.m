@@ -51,7 +51,7 @@ function exportHypnogram(cfg)
 feature('DefaultCharacterSet', 'UTF8') %# for all Character support, or 'CP1252'
 
 % list of all hypnogram files in MicroMed directory
-micromed_hypnfilelist                   = dir2(fullfile(cfg.patientdir,'eegmicromed','*.hypn'));
+micromed_hypnfilelist                   = dir2(fullfile(fileparts(cfg.rawdir),'eegmicromed','*.hypn'));
 
 % get some info about the 'real' time of recording the MicroMed data
 for ifile = 1 : size(micromed_hypnfilelist,1)

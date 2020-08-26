@@ -75,7 +75,7 @@ for ipart = 1 : cfg.circus.part_list
     % adjust parameters
     h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None',fname_prb,'','False','SpykingCircus'});
     h2 = ini.SetValues('noedits', {'filter_done','artefacts_done','ground_done','median_done'}, {'False','False','False','False'});
-    h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_ms.dead','ms','True'});
+    h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
     if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
 
     status = ini.WriteFile(fname_params);
