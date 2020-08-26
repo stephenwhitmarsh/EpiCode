@@ -34,6 +34,8 @@ else
     write = varargin{1};
 end
 
+cfg.circus.writedeadfile = ft_getopt(cfg.circus, 'writedeadfile', 'yes');
+
 fname_output = fullfile(cfg.datasavedir,[cfg.prefix,'SpykingCircus_trialinfo_parts.mat']);
 
 if exist(fname_output,'file') && force == false
@@ -45,7 +47,7 @@ if exist(fname_output,'file') && force == false
 else
 
     % loop through different parts
-    for ipart = 1 : size(MuseStruct,2)
+    for ipart = 1 : size(cfg.directorylist,2)
 
         % just define MuseStruct here for only one part to simplify code
         % and similarity with no-parts
@@ -57,7 +59,7 @@ else
             sampleinfo{ipart}{ichan} = [];
             clear dirdat
             % loop over all directories (time), concatinating channel
-            for idir = 1 : size(MuseStruct{ipart},2)
+            for idir = 1 : size(cfg.directorylist{ipart},2)
 
                 %
                 %                 % NEED SOMETHING LIKE THIS
@@ -121,7 +123,7 @@ else
             % concatinate data over files
             if write
                 chandat = dirdat{1};
-                for idir = 2 : length(MuseStruct{ipart})
+                for idir = 2 : length(cfg.directorylist{ipart})
                     fprintf('Concatinating directory %d, channel %d\n',idir, ichan);
                     chandat.trial{1}        = [chandat.trial{1} dirdat{idir}.trial{1}];
                     chandat.time{1}         = [chandat.time{1} (dirdat{idir}.time{1} + chandat.time{1}(end))];
@@ -199,6 +201,7 @@ else
         end % ichan
 
         if write
+            if strcmp(cfg.circus.writedeadfile, 'yes')
             %% write deadtime, i.e. artefact file for Spyking-Circus
 
             deadfile_ms         = [];
@@ -207,7 +210,7 @@ else
             last_samples        = 0;
             dirlist{ipart}      = [];
 
-            for idir = 1 : size(MuseStruct{ipart},2)
+            for idir = 1 : size(cfg.directorylist{ipart},2)
                 if isfield(MuseStruct{ipart}{idir},'markers')
                     if isfield(MuseStruct{ipart}{idir}.markers,'BAD__START__')
                         if isfield(MuseStruct{ipart}{idir}.markers.BAD__START__,'synctime')
@@ -279,6 +282,7 @@ else
             filename = 'SpykingCircus_dirlist.txt';
             fprintf('Writing list of directories for Spyking-Circus to: %s\n',filename);
             writematrix(dirlist{ipart},fullfile(cfg.datasavedir,subjdir,partdir,filename));
+            end
         end
 
     end % ipart
