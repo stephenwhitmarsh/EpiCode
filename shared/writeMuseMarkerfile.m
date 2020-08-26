@@ -1,8 +1,8 @@
 function writeMuseMarkerfile(MuseStruct, fname)
 
-% WRITEMUSEMARKERS writes markerfiles for Muse.
+% WRITEMUSEMARKERFILE writes markerfiles for Muse.
 % use as
-%   function writeMuseMarkers(MuseStruct)
+%   function writeMuseMarkers(MuseStructt, fname)
 %
 % The input structure can be read by readMuseMarkers.m, and edited before
 % writing it back into the Muse file.
@@ -25,13 +25,13 @@ function writeMuseMarkerfile(MuseStruct, fname)
 
 names           = fieldnames(MuseStruct.markers);
 mrk_number      = length(fieldnames(MuseStruct.markers));
-[fid, message]  = fopen(fname,'w+'); % open/create and discard content
+[fid, message]  = fopen(fname, 'w+'); % open/create and discard content
 
 if message ~= 0
     fprintf('ERROR, something went wrong with reading the markerfile %s\n',fname);
     return
 else
-    fprintf('Succesfully opened %s\n',fname);
+    fprintf('Successfully opened %s\n',fname);
 end
 
 % add header
@@ -56,7 +56,6 @@ for imarker = 1 : mrk_number
     fprintf(fid,'%s\n', MuseStruct.markers.(names{imarker}).editable);
     fprintf(fid,'%s\n', 'CLASSID:');
     fprintf(fid,sprintf('+%d\n',imarker));
-%     fprintf(fid,'%s\n', MuseStruct.markers.(names{imarker}).classid);
 
     if isfield(MuseStruct.markers.(names{imarker}),'synctime')
         nr_samples = length(MuseStruct.markers.(names{imarker}).synctime);
@@ -68,25 +67,23 @@ for imarker = 1 : mrk_number
     fprintf(fid,'%s\n', num2str(nr_samples));
     fprintf(fid,'%s\n', 'LIST OF SAMPLES:');
     fprintf(fid,'%s\n', 'TRIAL NUMBER		TIME FROM SYNC POINT (in seconds)');
-
-    if nr_samples > 0
-        % add samples
-        fprintf('Wrote %d events of: %s\n',length(MuseStruct.markers.(names{imarker}).synctime),names{imarker});
+    
+    if nr_samples == 0
+        fprintf(fid,'\n\n');
+        continue
+    else
         for itrial = 1 : length(MuseStruct.markers.(names{imarker}).synctime)
-            %             if ~isfield(MuseStruct.markers.(names{imarker}),'trialnum')
-            fprintf(fid,'                  +0\t\t\t\t+%.10f\n',MuseStruct.markers.(names{imarker}).synctime(itrial));
-            %             else
-            %                 fprintf(fid,'                  +%d\t\t\t\t+%.10f\n',MuseStruct.markers.(names{imarker}).trialnum(itrial),MuseStruct.markers.(names{imarker}).synctime(itrial))
-            %             end
+            fprintf(fid,'                  +0\t\t\t\t+%.10f\n', MuseStruct.markers.(names{imarker}).synctime(itrial));
         end
+        fprintf(fid,'\n\n');
     end
-    fprintf(fid,'\n\n');
-
+    fprintf('Wrote %d events of: %s\n', length(MuseStruct.markers.(names{imarker}).synctime), names{imarker});
+    
 end
 
 exitcode = fclose(fid);
 if exitcode ~= 0
     disp('ERROR, something went wrong with writing the markerfile. Is it open?\n');
 else
-    fprintf('Succesfully written markers to: %s\n',fname);
+    fprintf('Succesfully written markers to: %s\n', fname);
 end

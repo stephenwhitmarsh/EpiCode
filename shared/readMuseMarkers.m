@@ -28,7 +28,7 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct.mat', cfg.prefix));
+fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
 
 write = ft_getopt(cfg.muse, 'write', true);
 
@@ -172,7 +172,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
         end
-        
+
         % recover "real time"
         if isNeuralynx
             %from first Neurlynx .txt file
@@ -298,12 +298,13 @@ for ipart = 1 : size(cfg.directorylist, 2)
         end
     end
     
+
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
         ft_notice('creating directory %s', cfg.datasavedir);
         mkdir(cfg.datasavedir);
     end
-    
+
 end
 
 if write
