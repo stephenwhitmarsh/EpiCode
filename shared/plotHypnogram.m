@@ -1,9 +1,9 @@
-function [t] = plotHypnogram(config, MuseStruct)
+function [t] = plotHypnogram(cfg, MuseStruct)
 
 % PLOTHYPNOGRAM creates statistics based on hypnogram and markers in MuseStruct
 %
 % use as
-%   [t] = plotHypnogram(config, MuseStruct)
+%   [t] = plotHypnogram(cfg, MuseStruct)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -20,6 +20,8 @@ function [t] = plotHypnogram(config, MuseStruct)
 %
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+
+cfg.visible             = ft_getopt(cfg, 'visible', 'on');
 
 % loop over different parts, i.e. lists of directories
 for ipart = 1 : size(MuseStruct,2)
@@ -115,20 +117,25 @@ for ipart = 1 : size(MuseStruct,2)
             t.endtime(i)        = t.starttime(indx(endindx));
             t.duration(i)       = t.endtime(i) - t.starttime(indx(endindx));
             t(indx(endindx),:)  = [];
-
         end
         i = i + 1;
     end
 
     % select hypnogram labels to plot
-    hyp_tbl = t(contains(t.markerlabel,config.hyp.contains),:);
-    mrk_tbl = t(contains(t.markerlabel,config.hyp.markers),:);
+    hyp_tbl = t(contains(t.markerlabel, cfg.hyp.contains),:);
+    mrk_tbl = t(contains(t.markerlabel, string(cfg.hyp.markers)),:);
 
+    if isempty(hyp_tbl)
+        fprintf('No hypnogram found in part %d\n', ipart)
+        continue
+    end
+    
+    
     % alternative selection of start/end of hypnogram
     % startsindx = find(contains(t.markerlabel,'CriseStart'));
     % endsindx   = find(contains(t.markerlabel,'CriseEnd'));
-    % startsindx = find(contains(t.markerlabel,config.pattern.startmarker));
-    % endsindx   = find(contains(t.markerlabel,config.pattern.endmarker));
+    % startsindx = find(contains(t.markerlabel,cfg.pattern.startmarker));
+    % endsindx   = find(contains(t.markerlabel,cfg.pattern.endmarker));
     % fprintf('\n%d Patterns found\n',numel(startsindx));
 
     % segment into patterns/seizures/hypnograms,
@@ -143,11 +150,10 @@ for ipart = 1 : size(MuseStruct,2)
     maxlength       = max(hyp_endtime - hyp_starttime);
 
     %% plotting
-
-    h = figure;
+    fig = figure('visible', cfg.visible);
     subplot(numel(unique(mrk_tbl.markerlabel))+1,1,1); hold;
 
-    fill([hyp_starttime, hyp_starttime + maxlength, hyp_starttime + maxlength,hyp_starttime],[0 0 1 1],[1 1 1],'EdgeColor',[1 1 1]);
+    fill([hyp_starttime, hyp_starttime + maxlength, hyp_starttime + maxlength, hyp_starttime], [0 0 1 1], [1 1 1], 'EdgeColor',[1 1 1]);
     X = [];
     Y = [];
     for im = 1 : height(hyp_tbl)
@@ -160,7 +166,7 @@ for ipart = 1 : size(MuseStruct,2)
         end
         X = [X, hyp_tbl.starttime(im), hyp_tbl.endtime(im)];
 
-        % height in hypnogram is based on order of config.hyp.contains
+        % height in hypnogram is based on order of cfg.hyp.contains
         switch cell2mat(hyp_tbl.markerlabel(im))
             case 'NO_SCORE'
                 y = 5;
@@ -188,34 +194,33 @@ for ipart = 1 : size(MuseStruct,2)
         end
     end
     set(gca,'Layer','top');
-    set(gca,'Ytick', 1 : 5,'Yticklabels',{'STAGE 3','STAGE 2','STAGE 1','REM','WAKE'},'TickDir','out');
+    set(gca,'Ytick', 1 : 5, 'Yticklabels',{'STAGE 3','STAGE 2','STAGE 1','REM','WAKE'},'TickDir','out');
     axis tight;
     xl = xlim;
 
     % plot markers
     iplot = 2;
     for markername = unique(mrk_tbl.markerlabel)'
-
-        subplot(numel(unique(mrk_tbl.markerlabel))+1,1,iplot); hold;
-
+        subplot(numel(unique(mrk_tbl.markerlabel))+1, 1, iplot); hold;
         title(markername);
-        sel = find(mrk_tbl.markerlabel == markername);
-        for im = sel'
-            fill([mrk_tbl.starttime(im), mrk_tbl.endtime(im), mrk_tbl.endtime(im), mrk_tbl.starttime(im)],[0 0 1 1],[0 0 0]);
-
-        end
+        sel = mrk_tbl.markerlabel == markername;
+        histogram(mrk_tbl.starttime(sel), 'BinWidth', seconds(60), 'EdgeColor', 'none', 'FaceColor', [0, 0, 0])
+%         for im = sel'
+%             fill([mrk_tbl.starttime(im), mrk_tbl.endtime(im), mrk_tbl.endtime(im), mrk_tbl.starttime(im)], [0 0 1 1], [0 0 0]);
+%         end
         xlim(xl);
         iplot = iplot + 1;
-
+        set(gca,'Xticklabels', []);
+        ylabel('IEDs per minute');
     end
 
     % print to file
-    set(h,'PaperOrientation','landscape');
-    set(h,'PaperUnits','normalized');
-    set(h,'PaperPosition', [0 0 1 1]);
-    set(h,'Renderer','Painters');
-    print(h, '-dpdf', fullfile(config.imagesavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.pdf']),'-r600');
-    print(h, '-dpng', fullfile(config.imagesavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.png']),'-r600');
+    set(fig,'PaperOrientation', 'landscape');
+    set(fig,'PaperUnits', 'normalized');
+    set(fig,'PaperPosition', [0 0 1 1]);
+    set(fig,'Renderer', 'Painters');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix, 'p', num2str(ipart), '_hypnogram.pdf']), '-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix, 'p', num2str(ipart), '_hypnogram.png']), '-r600');
 
     %     % print a 3 meter version for fun
     %     set(gcf,'PaperUnits','centimeters');
@@ -225,9 +230,9 @@ for ipart = 1 : size(MuseStruct,2)
     %     h.Units = 'centimeters';
     %     h.PaperSize=[300 10];
     %     h.Units = 'centimeters';
-    %     print(h, '-dpdf', fullfile(config.imagesavedir,[config.prefix,'part',num2str(ipart),'-hypnogram_3m.pdf']),'-r600');
+    %     print(h, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'part',num2str(ipart),'-hypnogram_3m.pdf']),'-r600');
 
-    writetable(t,fullfile(config.datasavedir,[config.prefix,'p',num2str(ipart),'_hypnogram.txt']));
+    writetable(t,fullfile(cfg.datasavedir,[cfg.prefix, 'p', num2str(ipart), '_hypnogram.txt']));
 
 end
 disp('Done');

@@ -69,14 +69,16 @@ for imarker = 1 : mrk_number
     fprintf(fid,'%s\n', 'TRIAL NUMBER		TIME FROM SYNC POINT (in seconds)');
     
     if nr_samples == 0
+        fprintf(fid,'\n\n');
         continue
+    else
+        for itrial = 1 : length(MuseStruct.markers.(names{imarker}).synctime)
+            fprintf(fid,'                  +0\t\t\t\t+%.10f\n', MuseStruct.markers.(names{imarker}).synctime(itrial));
+        end
+        fprintf(fid,'\n\n');
     end
+    fprintf('Wrote %d events of: %s\n', length(MuseStruct.markers.(names{imarker}).synctime), names{imarker});
     
-    fprintf('Writing %d events of: %s\n',length(MuseStruct.markers.(names{imarker}).synctime),names{imarker});
-    for itrial = 1 : length(MuseStruct.markers.(names{imarker}).synctime)
-        fprintf(fid,'                  +0\t\t\t\t+%.10f\n',MuseStruct.markers.(names{imarker}).synctime(itrial));
-    end
-    fprintf(fid,'\n\n');
 end
 
 exitcode = fclose(fid);
