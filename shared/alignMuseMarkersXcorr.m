@@ -41,6 +41,8 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+cfg.visible = ft_getopt(cfg, 'visible', 'on');
+
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
 
@@ -132,7 +134,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         dat_avg_shifted     = ft_timelockanalysis([], dat_shifted);
 
         % draw figure
-        fig = figure('visible','off');
+        fig = figure('visible', cfg.visible);
         fig.Renderer = 'Painters';
 
         subplot(1, 5, 1);
@@ -167,22 +169,22 @@ for ipart = 1 : size(cfg.directorylist,2)
 % %         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
         subplot(2, 5, [4 5]); hold
         plot(dat_avg_orig.time, dat_avg_orig.avg');
-        xlim([dat.time{1}(1), dat.time{1}(end)]);
         ax = axis;
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Original');
-
+        axis tight
+        xlim([dat.time{1}(1), dat.time{1}(end)]); 
+ 
         subplot(2,5,[9 10]); hold
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
-        xlim([dat.time{1}(1), dat.time{1}(end)]);
         ax = axis;        
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Aligned');
-        
-        if ~(exist(cfg.imagesavedir)==7)
-            mkdir(cfg.imagesavedir);
-            fprintf('Create forlder %s\n',cfg.imagesavedir);
-        end
+
+        axis tight
+        xlim([dat.time{1}(1), dat.time{1}(end)]); 
+       
+        set(fig,'Renderer','Painters');
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);

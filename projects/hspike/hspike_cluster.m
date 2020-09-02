@@ -1,3 +1,5 @@
+function hspike_cluster(ipatient)
+
 %% Analysis script for SLURM cluster
 %
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
@@ -8,7 +10,7 @@
 
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/    
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
@@ -20,11 +22,11 @@ end
 
 if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development    
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\  
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\DBSCAN\      
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\DBSCAN\
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
@@ -36,37 +38,25 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 %% General analyses
 
-% load settings
-config = hspike_setparams;
+config                                          = hspike_setparams;
+[MuseStruct_orig{ipatient}]                     = readMuseMarkers(config{ipatient}, false);
+[MuseStruct_aligned{ipatient}]                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
+[clusterindx{ipatient}, LFP_cluster{ipatient}]  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
+[MuseStruct_template{ipatient}, ~,~, ~]         = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
 
-
-for ipatient = 2 : 4   
-    
-    % load settings
-    config = hspike_setparams;
-        
-    [MuseStruct_orig]                       = readMuseMarkers(config{ipatient}, false);
-    [MuseStruct_aligned]                    = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig, false);
-    [clusterindx, LFP_cluster]              = clusterLFP(config{ipatient}, MuseStruct_aligned, true);
-    
-    
-    templates                               = LFP_cluster{1}{1}.kmedoids{6};
-    MuseStruct_template                     = MuseStruct_aligned;
-    
-    itemp = 1;
-    config{ipatient}.template.name          = sprintf('template%d', itemp);
-    [MuseStruct_template, indx, LFP_avg]    = detectTemplate(config{ipatient}, MuseStruct_template, templates{1}, true);
-    
-    config{ipatient}.align.name             = {'template1'};
-    config{ipatient}.align.latency          = config{ipatient}.template.latency;
-    config{ipatient}.align.write            = false;
-    [MuseStruct_template_aligned]           = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_template, true);
-    
-    fname = fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'MuseStruct_alignedXcorr.mat']);
-    save(fname, 'MuseStruct_template_aligned');
-    
-    [PSGtable]                              = PSG2table(config{ipatient}, MuseStruct_template_aligned, false);
-    [t]                                     = plotHypnogram(config{ipatient}, MuseStruct_template_aligned);
-    [marker, hypnogram]                     = hypnogramStats(config{ipatient}, MuseStruct_template_aligned, true);
-    
+for itemp = 1 : 6
+    markername = sprintf("template%d", itemp);
+    config{ipatient}.muse.startmarker.(markername)                                              = markername;
+    config{ipatient}.muse.endmarker.(markername)                                                = markername;
+    config{ipatient}.epoch.toi.(markername)                                                     = [-0.5  1];
+    config{ipatient}.epoch.pad.(markername)                                                     = 0.5;
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.name{itemp}                                                            = markername;
+    config{ipatient}.hyp.markers{itemp}                                                         = markername;
 end
+
+[t{ipatient}]                                   = plotHypnogram(config{ipatient}, MuseStruct_template{ipatient});
+[markers{ipatient}, hypnogram{ipatient}]        = hypnogramStats(config{ipatient}, MuseStruct_template{ipatient}, true);
+[LFP{ipatient}]                                 = readLFP(config{ipatient}, MuseStruct_template{ipatient}, true);
+[LFP_stage{ipatient}]                           = plotLFP_stages(config{ipatient}, LFP{ipatient}, true);
