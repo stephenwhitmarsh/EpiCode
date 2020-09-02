@@ -75,12 +75,13 @@ for ipatient = 1:length(config)
     %
     %% Get LFP data
     
-    [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct]                    = readMuseMarkers(config{ipatient}, false);
+    %check_nr_crises_startend(config{ipatient},MuseStruct,1);
     MuseStruct_origin               = MuseStruct; %for counting seizures, it does not have to with the seizures removed by miss alignment
     [MuseStruct]                    = alignMuseMarkers_peak(config{ipatient},MuseStruct, true);
     [MuseStruct]                    = alignMuseMarkers_begin(config{ipatient},MuseStruct,true);
     [MuseStruct]                    = alignMuseMarkers_EMG(config{ipatient},MuseStruct,true);
-    [dat_LFP]                       = readLFP(config{ipatient}, MuseStruct, true, true); %dat_LFP{ipart}{imarker}
+    [dat_LFP]                       = readLFP(config{ipatient}, MuseStruct, false);%, true); %dat_LFP{ipart}{imarker}
     [config{ipatient},dat_LFP]      = dtx_correctDTX2name(config{ipatient},dat_LFP); %correct name of DTX2 (error during acquisition)
     
     

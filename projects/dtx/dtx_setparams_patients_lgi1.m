@@ -42,6 +42,7 @@ configcommon.LFP.channel               = {'Fp2','F4','C4','P4','O2','F8','T4','T
     'C3','P3','O1','F7','T3','T5'};
 % configcommon.merge                     = true; %if "true" : the last "ipart" is a merge of all the previous parts.Usefull for good naming of the analysis files
 
+configcommon.muse.backupdir                   = fullfile(rootpath_analysis, 'Musemarkers_backup');
 configcommon.muse.startend(1,1:2)             = {'SlowWave_R','SlowWave_R'};   % start and end Muse marker. For defining trials
 configcommon.muse.startend(2,1:2)             = {'SlowWave_L','SlowWave_L'};   % start and end Muse marker. For defining trials
 % configcommon.muse.startend(3,1:2)             = {'SlowWave_R_EMG','SlowWave_R_EMG'};   % start and end Muse marker. For defining trials

@@ -122,16 +122,18 @@ for method = ["cv2_withoutbursts","freq"]%,"cv2","burstindex"]%"cv2";"cv2_withou
             end
             
             y = nanmean(stats_concat.(method){ipart}{irat}{i_unit},1);
+%             y = nanmedian(stats_concat.(method){ipart}{irat}{i_unit},1);
             x = stats_concat.time;
             
-            y = y./y(x==-60); %normalize
-            if max(y(x>-60)) <12 %remove one big outlier
-                last_norm_value.(method){irat}{i_unit} = y(end);
-                non_norm_extr.(method){irat}{i_unit} = [nanmean(stats_concat.(method){ipart}{irat}{i_unit}(:,1)), nanmean(stats_concat.(method){ipart}{irat}{i_unit}(:,end))];
-%                 plot(x,y,'Color', color);
-                plot(x,nanmean(stats_concat.(method){ipart}{irat}{i_unit}),'Color', color);
+            
+%             if max(y(x>-60)) <12 %remove one big outlier
+                
+                non_norm_extr.(method){irat}{i_unit} = [y(1), y(end)];
+%                 y = y./y(x==-60); %normalize
+%                 last_norm_value.(method){irat}{i_unit} = y(end);
+                plot(x,y,'Color', color);
                 %             end
-            end
+%             end
         end
         %print to file
         ylabel(method, 'Interpreter','none');

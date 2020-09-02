@@ -150,15 +150,15 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 2 AMPLI DC
+%% Rodent 2 
 config{2}                           = configcommon;
-config{2}.prefix                    = 'DTX-EEGEMG-22-';
-config{2}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-22');
-config{2}.rawlabels.oldnames        = {'1-S1L','1-S1R','1-M1L','1-NTS'}; %for conversion deltamed to brainvision
+config{2}.prefix                    = 'DTX-EEGEMG-14-';
+config{2}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-14');
+config{2}.rawlabels.oldnames        = {'57','55','56','59'}; %for conversion deltamed to brainvision
 config{2}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{2}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-22');       % where to print images
+config{2}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-14');       % where to print images
 
-config{2}.injectiontime             = datetime('29-Jun-2020 11:15:00');
+config{2}.injectiontime             = datetime('19-Feb-2020 15:20:00');
 
 %config{irat}.directorylist
 filelist = dir(config{2}.rawdir);
@@ -172,15 +172,15 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 3 AMPLI DC
+%% Rodent 3
 config{3}                           = configcommon;
-config{3}.prefix                    = 'DTX-EEGEMG-23-';
-config{3}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-23');
-config{3}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'}; %for conversion deltamed to brainvision
+config{3}.prefix                    = 'DTX-EEGEMG-16-';
+config{3}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-16');
+config{3}.rawlabels.oldnames        = {'52','50','51','54'}; %for conversion deltamed to brainvision
 config{3}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{3}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-23');       % where to print images
+config{3}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-16');       % where to print images
 
-config{3}.injectiontime             = datetime('29-Jun-2020 14:55:00');
+config{3}.injectiontime             = datetime('03-Jun-2020 16:15:00');
 
 %config{irat}.directorylist
 filelist = dir(config{3}.rawdir);
@@ -194,15 +194,17 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 4 AMPLI DC
+%% Rodent 4 - DC après 24h
+% début à 17h00, 6h post injection, car changement de position à ce moment
+% là. Pas enregistré en DC
 config{4}                           = configcommon;
-config{4}.prefix                    = 'DTX-EEGEMG-24-';
-config{4}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-24');
-config{4}.rawlabels.oldnames        = {'3-S1L','3-S1R','3-M1L','3-NTS'}; %for conversion deltamed to brainvision
+config{4}.prefix                    = 'DTX-EEGEMG-18-';
+config{4}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-18');
+config{4}.rawlabels.oldnames        = {'52','50','51','54'}; %for conversion deltamed to brainvision
 config{4}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{4}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-24');       % where to print images
+config{4}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-18');       % where to print images
 
-config{4}.injectiontime             = datetime('29-Jun-2020 16:45:00');
+config{4}.injectiontime             = datetime('09-Jun-2020 11:30:00');
 
 %config{irat}.directorylist
 filelist = dir(config{4}.rawdir);
@@ -216,13 +218,16 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 5 : Début Deltamed, fin sur ampli
+%% FUSIONNER DC ET DELTAMED
+
+%% Rodent 5 : Début Deltamed, fin sur ampli DC après 24h
+%seulement la fin (DC) est convertie. voir la conversion de la première partie plus tard.
 config{5}                           = configcommon;
-config{5}.prefix                    = 'DTX-EEGEMG-19-';
-config{5}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-19');
-config{5}.rawlabels.oldnames        = {'1-S1L','1-S1R','1-M1L','1-NTS'}; %for conversion deltamed to brainvision
+config{5}.prefix                    = 'DTX-EEGEMG-19-Deltamed-';
+config{5}.rawdir                    = 'W:\teamcharpier\Projet_P_Baudin\DTX\Rat\20200609-EEG-EMG-18-19-20-21';%fullfile(rootpath_data,'DTX-EEGEMG-19-Deltamed-');
+config{5}.rawlabels.oldnames        = {'52','50','51','54'}; %for conversion deltamed to brainvision
 config{5}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{5}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-24');       % where to print images
+config{5}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-19');       % where to print images
 
 config{5}.injectiontime             = datetime('09-Jun-2020 14:45:00');
 
@@ -238,15 +243,16 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 6 AMPLI DC
+%% Rodent 5 : Début Deltamed, fin sur ampli DC après 24h
+%seulement la fin (DC) est convertie. voir la conversion de la première partie plus tard.
 config{6}                           = configcommon;
-config{6}.prefix                    = 'DTX-EEGEMG-21-';
-config{6}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-21');
-config{6}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'}; %for conversion deltamed to brainvision
+config{6}.prefix                    = 'DTX-EEGEMG-19-DC-';
+config{6}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-19-DC-');
+config{6}.rawlabels.oldnames        = {'1-S1L','1-S1R','1-M1L','1-NTS'}; %for conversion deltamed to brainvision
 config{6}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{6}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-24');       % where to print images
+config{6}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-19');       % where to print images
 
-config{6}.injectiontime             = datetime('10-Jun-2020 15:00:00');
+config{6}.injectiontime             = datetime('09-Jun-2020 14:45:00');
 
 %config{irat}.directorylist
 filelist = dir(config{6}.rawdir);
@@ -260,13 +266,13 @@ for ifile = 1:length(filelist)
 end
 clear filelist
 
-%% Rodent 7 TEST, A SUPPR AMPLI DC
+%% Rodent 7 
 config{7}                           = configcommon;
-config{7}.prefix                    = 'DTX-EEGEMG-CHECK_ASUPPR_20-';
+config{7}.prefix                    = 'DTX-EEGEMG-20-DC-';
 config{7}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-CHECK_ASUPPR_20');
 config{7}.rawlabels.oldnames        = {'3-S1L','3-S1R','3-M1L','3-NTS'}; %for conversion deltamed to brainvision
 config{7}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{7}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-CHECK_ASUPPR_20');       % where to print images
+config{7}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-20');       % where to print images
 
 config{7}.injectiontime             = datetime('09-Jun-2020 16:15:00');
 
@@ -281,6 +287,143 @@ for ifile = 1:length(filelist)
     end
 end
 clear filelist
+
+
+%% Rodent 7 
+config{8}                           = configcommon;
+config{8}.prefix                    = 'DTX-EEGEMG-20-Deltamed-';
+config{8}.rawdir                    = 'W:\teamcharpier\Projet_P_Baudin\DTX\Rat\20200609-EEG-EMG-18-19-20-21';%fullfile(rootpath_data,'DTX-EEGEMG-CHECK_ASUPPR_20');
+config{8}.rawlabels.oldnames        = {'57','55','56','59'}; %for conversion deltamed to brainvision
+config{8}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+config{8}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-CHECK_ASUPPR_20');       % where to print images
+
+config{8}.injectiontime             = datetime('09-Jun-2020 16:15:00');
+
+%config{irat}.directorylist
+filelist = dir(config{8}.rawdir);
+i=0;
+for ifile = 1:length(filelist)
+    [~,~,file_extension] = fileparts(filelist(ifile).name);
+    if strncmp(file_extension,'.eeg',4)
+        i=i+1;
+        config{8}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+    end
 end
+clear filelist
+% A REMETTRE
+% %% Rodent 6 AMPLI DC
+% config{6}                           = configcommon;
+% config{6}.prefix                    = 'DTX-EEGEMG-21-';
+% config{6}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-21');
+% config{6}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'}; %for conversion deltamed to brainvision
+% config{6}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+% config{6}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-24');       % where to print images
+% 
+% config{6}.injectiontime             = datetime('10-Jun-2020 15:00:00');
+% 
+% %config{irat}.directorylist
+% filelist = dir(config{6}.rawdir);
+% i=0;
+% for ifile = 1:length(filelist)
+%     [~,~,file_extension] = fileparts(filelist(ifile).name);
+%     if strncmp(file_extension,'.eeg',4)
+%         i=i+1;
+%         config{6}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+%     end
+% end
+% clear filelist
+% 
+% 
+% %% Rodent 7 AMPLI DC
+% %commencé à marqué plus tard (pb d'enregistrement)
+% config{7}                           = configcommon;
+% config{7}.prefix                    = 'DTX-EEGEMG-22-';
+% config{7}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-22');
+% config{7}.rawlabels.oldnames        = {'1-S1L','1-S1R','1-M1L','1-NTS'}; %for conversion deltamed to brainvision
+% config{7}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+% config{7}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-22');       % where to print images
+% 
+% config{7}.injectiontime             = datetime('29-Jun-2020 11:15:00');
+% 
+% %config{irat}.directorylist
+% filelist = dir(config{7}.rawdir);
+% i=0;
+% for ifile = 1:length(filelist)
+%     [~,~,file_extension] = fileparts(filelist(ifile).name);
+%     if strncmp(file_extension,'.eeg',4)
+%         i=i+1;
+%         config{7}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+%     end
+% end
+% clear filelist
+% 
+% %% Rodent 8 AMPLI DC
+% config{8}                           = configcommon;
+% config{8}.prefix                    = 'DTX-EEGEMG-23-';
+% config{8}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-23');
+% config{8}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'}; %for conversion deltamed to brainvision
+% config{8}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+% config{8}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-23');       % where to print images
+% 
+% config{8}.injectiontime             = datetime('29-Jun-2020 14:55:00');
+% 
+% %config{irat}.directorylist
+% filelist = dir(config{8}.rawdir);
+% i=0;
+% for ifile = 1:length(filelist)
+%     [~,~,file_extension] = fileparts(filelist(ifile).name);
+%     if strncmp(file_extension,'.eeg',4)
+%         i=i+1;
+%         config{8}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+%     end
+% end
+% clear filelist
+
+
+% %% Rodent 7 TEST, A SUPPR AMPLI DC
+% config{7}                           = configcommon;
+% config{7}.prefix                    = 'DTX-EEGEMG-CHECK_ASUPPR_20-';
+% config{7}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-CHECK_ASUPPR_20');
+% config{7}.rawlabels.oldnames        = {'3-S1L','3-S1R','3-M1L','3-NTS'}; %for conversion deltamed to brainvision
+% config{7}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+% config{7}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-CHECK_ASUPPR_20');       % where to print images
+% 
+% config{7}.injectiontime             = datetime('09-Jun-2020 16:15:00');
+% 
+% %config{irat}.directorylist
+% filelist = dir(config{7}.rawdir);
+% i=0;
+% for ifile = 1:length(filelist)
+%     [~,~,file_extension] = fileparts(filelist(ifile).name);
+%     if strncmp(file_extension,'.eeg',4)
+%         i=i+1;
+%         config{7}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+%     end
+% end
+% clear filelist
+
+
+% %% Rodent 4 AMPLI DC
+% config{4}                           = configcommon;
+% config{4}.prefix                    = 'DTX-EEGEMG-24-';
+% config{4}.rawdir                    = fullfile(rootpath_data,'DTX-EEGEMG-24');
+% config{4}.rawlabels.oldnames        = {'3-S1L','3-S1R','3-M1L','3-NTS'}; %for conversion deltamed to brainvision
+% config{4}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
+% config{4}.imagesavedir              = fullfile(imagesavedir,'DTX-EEGEMG-24');       % where to print images
+% 
+% config{4}.injectiontime             = datetime('29-Jun-2020 16:45:00');
+% 
+% %config{irat}.directorylist
+% filelist = dir(config{4}.rawdir);
+% i=0;
+% for ifile = 1:length(filelist)
+%     [~,~,file_extension] = fileparts(filelist(ifile).name);
+%     if strncmp(file_extension,'.eeg',4)
+%         i=i+1;
+%         config{4}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+%     end
+% end
+% clear filelist
+% end
 
 

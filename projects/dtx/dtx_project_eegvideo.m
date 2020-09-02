@@ -19,16 +19,59 @@ ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
-config = dtx_setparams_patients_lgi1;
+config = dtx_setparams_eegvideo;
 % config_origin = config;
 
-
-for ipatient = slurm_task_id
+for ipatient = [1 3]
     
-%     config{ipatient}.imagesavedir = fullfile(config{ipatient}.imagesavedir, 'alignpeak');
-    
-    % read and align data
     [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
+    %take the last part
+    ipart = size(MuseStruct,2); 
+    
+    %% compute eeg-emg delays and emg duration
+    slowwave_begin      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_begin');
+    emg_begin           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_EMG__START__');
+    emg_end             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_EMG__END__');
+    
+    if isempty(slowwave_begin.synctime)
+        delays{ipatient} = NaN;
+        emg_duration{ipatient} = NaN;
+        continue
+    end
+    
+    delays{ipatient}        = emg_begin.synctime - slowwave_begin.synctime;
+    emg_duration{ipatient}  = emg_end.synctime - emg_begin.synctime;
+    %     [bins, edges]       = histcounts(delays{ipatient},'BinWidth',0.01);
+    %     bins_centers        = (edges(1:end-1)+edges(2:end))/2; %limiteinf + limitesup / 2
+    %     bar(bins_centers,bins);
+    %
+end
+
+%eeg emg delay
+figure;hold
+for ipatient = [1 3]
+    scatter(rand(size(delays{ipatient}))*0.2+ipatient-0.1, delays{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
+    errorbar(ipatient, mean(delays{ipatient}), std(delays{ipatient}),'--rx');
+    %     errorbar(ipatient, mean(delays{ipatient}), mean(delays{ipatient})/sqrt(size(delays{ipatient},2)),'--rx'); %errbar : sem
+end
+xlim([0 4]);
+setfig();
+ylabel('eeg-emg delay (s)');
+
+%emg duration
+figure;hold
+for ipatient = [1 3]
+    scatter(rand(size(emg_duration{ipatient}))*0.2+ipatient-0.1, emg_duration{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
+    errorbar(ipatient, mean(emg_duration{ipatient}), std(emg_duration{ipatient}),'--rx');
+    %     errorbar(ipatient, mean(emg_duration{ipatient}), mean(emg_duration{ipatient})/sqrt(size(emg_duration{ipatient},2)),'--rx'); %errbar : sem
+end
+xlim([0 4]);
+setfig();
+ylabel('emg duration (s)');
+
+
+    
+    %% STOP ICI
     [MuseStruct]                    = alignMuseMarkers(config{ipatient},MuseStruct, false);
 %     [MuseStruct]                    = alignMuseMarkersXcorr(config{ipatient},MuseStruct, true);
     [dat_LFP]                       = readLFP(config{ipatient}, MuseStruct, false); %dat_LFP{ipart}{imarker}
@@ -78,9 +121,6 @@ for ipatient = slurm_task_id
             end
         end
     end
-    
-   
-    
     
     %% Topography
     % Pas de stats pour le moment
@@ -145,7 +185,7 @@ for ipatient = slurm_task_id
     fname = fullfile(config{ipatient}.datasavedir, [config{ipatient}.prefix, 'stats_EEG.mat']);
     save(fname, stats, '-v7.3');
     return %STOP HERE FOR NOW
-    %% count markers : time between seizures, eeg/emg delay, emg duration
+    %% count markers : time between seizures, eeg/emg delays, emg duration
     
     %% Propagation : plot canaux positifs, ou tous les canaux, normaliser, et compter délai à la main.
     
@@ -211,60 +251,7 @@ for ipatient = slurm_task_id
     
 end
 
-%% eeg emg delay, and emg duration
-
-for ipatient = 1:size(config,2)
-    
-    [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
-    %take the last part
-    ipart = size(MuseStruct,2); 
-    
-    %% compute eeg-emg delays and emg duration
-    slowwave_begin      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_begin');
-    emg_begin           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__START__');
-    emg_end             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__END__');
-    
-    if isempty(slowwave_begin.synctime)
-        delays{ipatient} = NaN;
-        emg_duration{ipatient} = NaN;
-        continue
-    end
-    
-    delays{ipatient}        = emg_begin.synctime - slowwave_begin.synctime;
-    emg_duration{ipatient}  = emg_end.synctime - emg_begin.synctime;
-    %     [bins, edges]       = histcounts(delays{ipatient},'BinWidth',0.01);
-    %     bins_centers        = (edges(1:end-1)+edges(2:end))/2; %limiteinf + limitesup / 2
-    %     bar(bins_centers,bins);
-    %
-end
-
-%eeg emg delay
-figure;hold
-for ipatient = 1:size(config,2)
-    scatter(rand(size(delays{ipatient}))*0.2+ipatient-0.1, delays{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
-    errorbar(ipatient, mean(delays{ipatient}), std(delays{ipatient}),'--rx');
-    %     errorbar(ipatient, mean(delays{ipatient}), mean(delays{ipatient})/sqrt(size(delays{ipatient},2)),'--rx'); %errbar : sem
-end
-xlim([0 size(config,2)+1]);
-setfig();
-ylabel('eeg-emg delay (s)');
-
-%emg duration
-figure;hold
-for ipatient = 1:size(config,2)
-    scatter(rand(size(emg_duration{ipatient}))*0.2+ipatient-0.1, emg_duration{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
-    errorbar(ipatient, mean(emg_duration{ipatient}), std(emg_duration{ipatient}),'--rx');
-    %     errorbar(ipatient, mean(emg_duration{ipatient}), mean(emg_duration{ipatient})/sqrt(size(emg_duration{ipatient},2)),'--rx'); %errbar : sem
-end
-xlim([0 size(config,2)+1]);
-setfig();
-ylabel('emg duration (s)');
-
-
-
 %svg stats en output
-
-
 
 end
 

@@ -30,6 +30,7 @@ configdtx.os                        = os;
 configdtx.datasavedir               = datasavedir;
 configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1','Baseline'};
 configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'Baseline_Start','Injection'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configdtx.muse.backupdir            = fullfile(rootpath_analysis,'Musemarkers_backup');
 
 configdtx.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
 
@@ -157,6 +158,7 @@ configctrl.type                      = 'ctrl';
 configctrl.os                        = os;
 configctrl.datasavedir               = datasavedir;
 configctrl.name                      = {'Control'};
+configctrl.muse.backupdir            = fullfile(rootpath_analysis,'Musemarkers_backup');
 
 configctrl.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
 
