@@ -14,26 +14,136 @@ elseif ispc
     os                  = 'windows';
 else
     error('Platform not supported')
-end
+end 
 
 datasavedir  =  fullfile(rootpath_analysis,'data');
 imagesavedir =  fullfile(rootpath_analysis,'images');
 
 %% config common for all patients
-configcommon.name                  = {'WoD'};
-configcommon.circus.writedeadfile  = 'no';
+configcommon.muse.templatemarker   = fullfile(datasavedir,'TemplateEventsWOD.mrk');%find the template file to create muse marker file
 
-%% patient 1
-config{1}                     = configcommon;
-config{1}.datasavedir         = datasavedir;       %path where to save MuseStruct data
-config{1}.imagesavedir        = imagesavedir;
-config{1}.prefix              = 'Rat-27_05_2020-';                                                        %patient name. Must end by "-". namepatient-
-config{1}.rawdir              = fullfile(rootpath_data,'2020_05_27_WOD');                       %path to patient data
-config{1}.directorylist{1}    = {'2020-05-27_14-19','2020-05-27_15-40','2020-05-27_16-19'};                                               %list of folders to analyse
-config{1}.circus.channel      = {'E10','E08','E06','E03','E02'};       %name of the first electrode
-config{1}.circus.reref        = 'no';
-config{1}.circus.refchan      = [];
-config{1}.circus.outputdir    = fullfile(rootpath_analysis, 'data', 'SpykingCircus');
-config{1}.circus.hpfilter     = 'no'; % hp before writing data for SC, does not change the hp of SC
-config{1}.circus.hpfreq       = 0; % even when not using
-config{1}.circus.postfix      = []; % after using circus-gui-matlab's SAVE number
+configcommon.name                  = {'WoD'};
+configcommon.LFP.name              = configcommon.name;
+
+configcommon.muse.startmarker.WoD      = 'Vent_Off';   % start and end Muse marker. For defining trials
+configcommon.muse.endmarker.WoD        = 'Vent_On';   % start and end Muse marker. For defining trials
+configcommon.epoch.toi.WoD             = [-900, 3400];
+configcommon.epoch.pad.WoD             = 5;
+configcommon.LFP.resamplefs                     = 320;%Hz, si possible un diviseur entier de la Fs (sampling frequency) d'origine
+configcommon.LFP.write                          = true; %save computed data to disk
+
+configcommon.LFP.lpfilter_wod_detection         = 10;%Hz
+configcommon.LFP.wod_toisearch                  = [0 40]; %s, were to find wod negative peak relative to the muse marker
+configcommon.LFP.wor_toisearch                  = [0 30]; %s, were to find wor positive peak relative to the muse marker
+
+configcommon.timefreq.foi          = {[0.5:0.25:4.5],[4.5:0.25:10],[10:0.25:25],[25:0.25:50]};%Hz
+configcommon.timefreq.t_ftimwin    = 5;% in second, length of the time window
+configcommon.timefreq.timestep     = 2.5;% in second, time between 2 sliding time windows. can be 'all'
+
+configcommon.circus.writedeadfile  = 'no';
+configcommon.circus.reref        = 'no';
+configcommon.circus.refchan      = [];
+configcommon.circus.outputdir    = fullfile(rootpath_analysis, 'data', 'SpykingCircus');
+configcommon.circus.hpfilter     = 'no'; % hp before writing data for SC, does not change the hp of SC
+configcommon.circus.hpfreq       = 0; % even when not using
+configcommon.circus.postfix      = []; % after using circus-gui-matlab's SAVE number
+
+
+%% rat 4
+config{4}                     = configcommon;
+config{4}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{4}.imagesavedir        = imagesavedir;
+config{4}.prefix              = 'Rat-19_05_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{4}.rawdir              = fullfile(rootpath_data,'2020_05_19_WOD');                       %path to patient data
+
+config{4}.directorylist{1}    = {'2020-05-19_14-25', '2020-05-19_15-44', '2020-05-19_16-25'}; %liste de tous les fichiers, tous les protocoles
+config{4}.LFP.channel         = {[], [], 'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP','Puff'};
+
+config{4}.circus.channel      = {'E11', 'E04', 'E02'};       %name of the first electrode
+
+%% rat 5
+config{5}                     = configcommon;
+config{5}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{5}.imagesavedir        = imagesavedir;
+config{5}.prefix              = 'Rat-25_05_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{5}.rawdir              = fullfile(rootpath_data,'2020_05_25_WOD');                       %path to patient data
+
+config{5}.directorylist{1}    = {'2020-05-25_15-05'}; %liste de tous les fichiers, tous les protocoles
+config{5}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+
+config{5}.circus.channel      = {'E13', 'E11','E10', 'E06', 'E05', 'E04'};       %name of the first electrode
+
+%% rat 6
+config{6}                     = configcommon;
+config{6}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{6}.imagesavedir        = imagesavedir;
+config{6}.prefix              = 'Rat-27_05_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{6}.rawdir              = fullfile(rootpath_data,'2020_05_27_WOD');                       %path to patient data
+
+config{6}.directorylist{1}    = {'2020-05-27_14-19', '2020-05-27_15-40', '2020-05-27_16-19'}; %liste de tous les fichiers, tous les protocoles
+config{6}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+
+config{6}.circus.channel      = {'E11','E10', 'E08', 'E06', 'E03', 'E02'};       %name of the first electrode
+
+%% rat 7
+config{7}                     = configcommon;
+config{7}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{7}.imagesavedir        = imagesavedir;
+config{7}.prefix              = 'Rat-16_06_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{7}.rawdir              = fullfile(rootpath_data,'2020_06_16_WOD');                       %path to patient data
+
+config{7}.directorylist{1}    = {'2020-06-16_14-35', '2020-06-16_15-57', '2020-06-16_16-35'}; %liste de tous les fichiers, tous les protocoles
+config{7}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+
+config{7}.circus.channel      = {'E14','E12', 'E11', 'E05', 'E03'};       %name of the first electrode
+
+%% rat 8
+config{8}                     = configcommon;
+config{8}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{8}.imagesavedir        = imagesavedir;
+config{8}.prefix              = 'Rat-22_07_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{8}.rawdir              = fullfile(rootpath_data,'2020_07_22_WOD');                       %path to patient data
+
+config{8}.directorylist{1}    = {'2020-07-22_13-28'}; %liste de tous les fichiers, tous les protocoles
+config{8}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+
+config{8}.circus.channel      = {'E12', 'E11', 'E06', 'E05', 'E02'};       %name of the first electrode
+
+%% rat 9
+config{9}                     = configcommon;
+config{9}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{9}.imagesavedir        = imagesavedir;
+config{9}.prefix              = 'Rat-28_07_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{9}.rawdir              = fullfile(rootpath_data,'2020_07_28_WOD');                       %path to patient data
+
+config{9}.directorylist{1}    = {'2020-07-28_13-54', '2020-07-28_15-35', '2020-07-28_16-48', '2020-07-28_17-35'}; %liste de tous les fichiers, tous les protocoles
+config{9}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+
+config{9}.circus.channel      = {'E15', 'E12', 'E11', 'E10', 'E08', 'E07'};       %name of the first electrode
+
+%% rat 10
+config{10}                     = configcommon;
+config{10}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{10}.imagesavedir        = imagesavedir;
+config{10}.prefix              = 'Rat-31_07_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{10}.rawdir              = fullfile(rootpath_data,'2020_07_31_WOD');                       %path to patient data
+
+config{10}.directorylist{1}    = {'2020-07-31_13-19', '2020-07-31_14-50', '2020-07-31_15-19'}; %liste de tous les fichiers, tous les protocoles
+config{10}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+
+config{10}.circus.channel      = {'E15', 'E14', 'E12', 'E11'};       %name of the first electrode
+
+%% rat 11
+config{11}                     = configcommon;
+config{11}.datasavedir         = datasavedir;       %path where to save MuseStruct data
+config{11}.imagesavedir        = imagesavedir;
+config{11}.prefix              = 'Rat-14_08_2020-';                                                        %patient name. Must end by "-". namepatient-
+config{11}.rawdir              = fullfile(rootpath_data,'2020_08_14_WOD');                       %path to patient data
+
+config{11}.directorylist{1}    = {'2020-08-14_13-26', '2020-08-14_14-57', '2020-08-14_15-26'}; %liste de tous les fichiers, tous les protocoles
+config{11}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+
+config{11}.circus.channel      = {'E14', 'E11', 'E10', 'E09', 'E05', 'E03', 'E02'};       %name of the first electrode
+
+
+

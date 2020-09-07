@@ -76,7 +76,7 @@ LFP = {};
 % loop over markers
 for markername = string(cfg.LFP.name)'
    
-    fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername));
+    fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername, '.mat'));
     
     if write
         fprintf('*** Will write LFP to: %s ***\n', fname_out);
@@ -89,7 +89,7 @@ for markername = string(cfg.LFP.name)'
         
         temp = load(fname_out, 'LFP');
         for ipart = 1 : size(MuseStruct, 2)
-            LFP{ipart}.(markername) = temp{ipart}.(markername);
+            LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
         end
         return
         
@@ -109,13 +109,13 @@ for markername = string(cfg.LFP.name)'
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
-                continue
-            end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(markername),'synctime')
+%             if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
+%                 continue
+%             end
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
                 continue
             end 
-            if isempty(MuseStruct{ipart}{idir}.markers.(markername).synctime)
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
                 continue
             end
             
@@ -131,6 +131,10 @@ for markername = string(cfg.LFP.name)'
             
             % loop over files
             for ifile = 1 : nfile
+                
+                if isempty(cfg.LFP.channel{ifile})
+                    continue
+                end
                 
                 %load data
                 if isNeuralynx
@@ -191,7 +195,7 @@ for markername = string(cfg.LFP.name)'
                     
                     cfgtemp                         = [];
                     cfgtemp.resamplefs              = ft_getopt(cfg.LFP, 'resamplefs', []);
-                    if strcmp(cfg.LFP.baseline, 'no')
+                    if strcmp(ft_getopt(cfg.LFP, 'baseline', 'no'), 'no')
                         cfgtemp.demean              = 'no';
                     else
                         cfgtemp.demean              = 'yes';
@@ -216,7 +220,7 @@ for markername = string(cfg.LFP.name)'
                     if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
                         es = ss;
                     else
-                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime * dat.fsample) >= ss,1,'first');
+                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss,1,'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * dat.fsample);
                     end
                     
@@ -290,9 +294,10 @@ for markername = string(cfg.LFP.name)'
             end
             
             % concatinate channels
+            hasdata                             = ~cellfun(@isempty,filedat);%some empty filedat if cfg.LFP.channel{ifile} = []
             cfgtemp                             = [];
             cfgtemp.keepsampleinfo              = 'no';
-            dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
+            dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{hasdata});
             clear filedat*
             
         end % idir

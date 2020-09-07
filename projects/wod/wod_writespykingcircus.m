@@ -21,7 +21,7 @@ ft_defaults
 config = wod_setparams;
 
 
-for irat = 1%slurm_task_id
+for irat = slurm_task_id
 
     %create multifile (concatenated nlx file) and dead file
     writeSpykingCircus(config{irat}, [], true, true);
