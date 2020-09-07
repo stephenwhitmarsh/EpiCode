@@ -1,10 +1,14 @@
-function [marker_clock, marker_synctime] = concatenateMuseMarkers(MuseStruct, ipart, markerName)
+function marker = concatenateMuseMarkers(MuseStruct, ipart, markerName)
 % Concatenate markers over all the dirs of one MuseStruct part.
 % First line of the output array : clock or synctime
 % Second line of the output array : nr of the dir
+% clock time : real time, in datetime format
+% synctime : time in seconds since the begining of the first file
+% dir : integer number of the data directiry (see cfg.directorylist)
 
-marker_clock = [];
-marker_synctime = [];
+marker.clock    = datetime.empty;
+marker.synctime = [];
+marker.dir      = [];
 length_previous = 0;
 
 %concatenate clock times
@@ -15,8 +19,8 @@ for idir = 1:size(MuseStruct{ipart},2)
             marker_temp = MuseStruct{ipart}{idir}.markers.(markerName).clock;
             
             for isample = 1:size(marker_temp,2)
-                marker_clock{1,isample+length_previous} = marker_temp(isample); 
-                marker_clock{2,isample+length_previous} = idir;
+                marker.clock(isample+length_previous) = marker_temp(isample); 
+                marker.dir(isample+length_previous) = idir;
             end
             
             length_previous = length_previous + size(marker_temp,2); 
@@ -33,14 +37,11 @@ for idir = 1:size(MuseStruct{ipart},2)
     
 end
 
-fprintf('%d times found for %s\n',size(marker_clock,2),markerName);
+fprintf('%d times found for %s\n',size(marker.clock,2),markerName);
 
 % convert clock time to synctime
-for isample = 1:size(marker_clock,2) 
-    
-    marker_synctime{1, isample} = seconds(marker_clock{1, isample} - MuseStruct{ipart}{1}.starttime);
-    marker_synctime{2, isample} = marker_clock{2, isample};
-    
+for isample = 1:size(marker.clock,2) 
+    marker.synctime(isample) = seconds(marker.clock(isample) - MuseStruct{ipart}{1}.starttime);    
 end
 
 end

@@ -1,18 +1,30 @@
-function chandata = readCEDcontinous(cfg,channame,ipart,idir)
+function chandata = readCEDcontinous(cfg)
 
 % Need of CEDS64ML interface library (loaded with CEDS64LoadLib.m), and of
 % Spike2 software. Can only be ran on Windows (because of the library).
 % FORCE
-%
 
+% cfg.channame = name of the channel to load
 
+% cfg.datapath : optional field to find the data path. If it is not
+% specified, this scripts uses the 'EpiCode' way of finding files : 
+% cfg.rawdir and cfg.directorylist
+
+% cfg.ipart : part number (only one part), used only if cfg.datapath is not specified
+% cfg.idir  : dir number (only one dir), used if cfg.datapath is not specified
 
 chandata = [];
 n_loaded_chan = 0;
 
-temp = dir(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir}, '.smr*']));%.smr* because some data are .smr and other .smrx
-datapath = fullfile(cfg.rawdir, temp.name);
-fprintf('Loading data from %s \nPart %d, dir %d, channel %s\n', datapath, ipart, idir, channame);
+if ~isfield(cfg, 'datapath')
+    temp = dir(fullfile(cfg.rawdir, [cfg.directorylist{cfg.ipart}{cfg.idir}, '.smr*']));%.smr* because some data are .smr and other .smrx
+    datapath = fullfile(cfg.rawdir, temp.name);
+    fprintf('Loading data from %s \nPart %d, dir %d, channel %s\n', datapath, cfg.ipart, cfg.idir, cfg.channame);
+else
+    datapath = cfg.datapath;
+    fprintf('Loading data from %s\n', datapath);
+end
+
 
 %open the file in Spike2.
 fid = CEDS64Open(datapath);
@@ -30,7 +42,7 @@ for ichan = 1:CEDS64MaxChan(fid)
     [~, chantitle] = CEDS64ChanTitle(fid, ichan);
 %     chantitle  = renamechan_CED(chantitle,ichan,[],false);
 % test{ichan}=chantitle;
-    if strcmp(chantitle, channame)
+    if strcmp(chantitle, cfg.channame)
         %check channel type
         [iType] = CEDS64ChanType(fid, ichan);
         if ismember(iType, [1, 9]) %Waveform or RealWave
@@ -55,13 +67,15 @@ for ichan = 1:CEDS64MaxChan(fid)
             
         end
                 
-    end %strcmp channame chantitle
+    end %strcmp cfg.channame chantitle
     
 end %ichan
 
 if n_loaded_chan == 0
-    warning('Data of channel %s was not found in %s', channame, datapath);
+    warning('Data of channel %s was not found in %s', cfg.channame, datapath);
 %     warning('Be aware that some channel names are modified by the function CEDrename_chan.m');
 elseif n_loaded_chan > 1
-    warning('%d channels have the name %s. Only the last one (with the higher Spike2 chan nr) was loaded', n_loaded_chan, channame);
+    warning('%d channels have the name %s. Only the last one (with the higher Spike2 chan nr) was loaded', n_loaded_chan, cfg.channame);
 end
+
+CEDS64Close(fid);
