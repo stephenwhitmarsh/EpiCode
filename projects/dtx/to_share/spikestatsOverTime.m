@@ -2,7 +2,7 @@ function [stats] = spikestatsOverTime(cfg, spikedata,force)
 
 % spikedata = fieldtrip spike data, epoched into trials (can be only 1
 % trial)
-% outpout : stats{ipart}{ilabel}.(param){i_unit}{i_trial} : one value per window
+% outpout : stats{ipart}.(markername).(param){i_unit}{i_trial} : one value per window
 % time = time of the end of the window
 
 % note : if time window is too big compared to trial length, return average
@@ -16,7 +16,7 @@ cfg.statstime.removebursts        = ft_getopt(cfg.statstime, 'removebursts' , 'n
 cfg.statstime.removeempty         = ft_getopt(cfg.statstime, 'removeempty'  , 'no');
 cfg.statstime.suffix              = ft_getopt(cfg.statstime, 'suffix'       , []);
 cfg.statstime.label_list          = ft_getopt(cfg.statstime, 'label_list'   , 'all');
-cfg.statstime.write               = ft_getopt(cfg.statstime, 'write'        , false);
+cfg.statstime.write               = ft_getopt(cfg.statstime, 'write'        , 'no');
 
 % load precomputed stats if required
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'spikestatsOverTime', cfg.statstime.suffix, '.mat']);
@@ -29,21 +29,25 @@ end
 
 for ipart = size(spikedata, 2)
     
-    if strcmp(cfg.statstime.label_list, 'all')
-        cfg.statstime.label_list = 1:size(spikedata{ipart},2);
+    %find marker to analyse
+    marker_list = fieldnames(spikedata{ipart})';
+    if ~strcmp(cfg.statstime.label_list , 'all')
+        for ilabel = 1:size(cfg.statstime.label_list,2)
+            temp{ilabel} = marker_list{strcmp(marker_list,cfg.statstime.label_list{ilabel})};
+        end
+        marker_list = temp;
     end
-    
-    for ilabel = cfg.statstime.label_list
         
-        stats{ipart}{ilabel}.cfg = cfg;
-        stats{ipart}{ilabel}.label = spikedata{ipart}{ilabel}.label;
-        stats{ipart}{ilabel}.analysis_name = cfg.name{ilabel};
+    for markername = string(marker_list)
+        
+        stats{ipart}.(markername).cfg = cfg.statstime;
+        stats{ipart}.(markername).label = spikedata{ipart}.(markername).label;
         
         %remove bursts if required
         if strcmp(cfg.statstime.removebursts, 'yes')
-            for i_unit = 1:size(spikedata{ipart}{ilabel}.label, 2)
+            for i_unit = 1:size(spikedata{ipart}.(markername).label, 2)
                 % get timings and ISIs
-                t               = spikedata{ipart}{ilabel}.time{i_unit};
+                t               = spikedata{ipart}.(markername).time{i_unit};
                 isi_all         = diff(t);            % counting bursts as in Colder et al. 1996, & Staba et al. 2002
                 timeburst       = 0.01; %time in seconds below which isi is considered as burst
                 indx            = isi_all < timeburst;
@@ -65,34 +69,33 @@ for ipart = size(spikedata, 2)
                             isi_intraburst = [isi_intraburst, isi_all(bindx(ii)+1:bindx(ii)+burstlength)];
                         end
                     end
-                    stats{ipart}{ilabel}.burstsum{i_unit}(burstlength) = sum(length(bindx));
+                    stats{ipart}.(markername).burstsum{i_unit}(burstlength) = sum(length(bindx));
                 end
                 % remove subsequenct APs after first AP of a burst
-                spikedata{ipart}{ilabel}.time{i_unit}(toremove)      = [];
-                spikedata{ipart}{ilabel}.trial{i_unit}(toremove)     = [];
-                spikedata{ipart}{ilabel}.timestamp{i_unit}(toremove) = [];
-                spikedata{ipart}{ilabel}.samples{i_unit}(toremove)   = [];
-                spikedata{ipart}{ilabel}.amplitude{i_unit}(toremove) = [];
+                spikedata{ipart}.(markername).time{i_unit}(toremove)      = [];
+                spikedata{ipart}.(markername).trial{i_unit}(toremove)     = [];
+                spikedata{ipart}.(markername).timestamp{i_unit}(toremove) = [];
+                spikedata{ipart}.(markername).samples{i_unit}(toremove)   = [];
+                spikedata{ipart}.(markername).amplitude{i_unit}(toremove) = [];
             end
         end
         
         %compute isi
-        spikeisi = ft_spike_isi([], spikedata{ipart}{ilabel});
+        spikeisi = ft_spike_isi([], spikedata{ipart}.(markername));
         
         % Compute stats on sliding time window along all data.
-        for i_unit = 1:size(spikedata{ipart}{ilabel}.label, 2)
-            ft_progress('init', 'text',     sprintf('Part %d/%d, Label %d/%d, Unit %d/%d (%d trials):', ipart,size(spikedata, 2),ilabel, size(spikedata{ipart}, 2), i_unit, size(spikedata{ipart}{ilabel}.label, 2), size(spikedata{ipart}{ilabel}.trialinfo, 1)));
+        for i_unit = 1:size(spikedata{ipart}.(markername).label, 2)
+            ft_progress('init', 'text',     sprintf('Part %d/%d, %s, Unit %d/%d (%d trials):', ipart,size(spikedata, 2),convertStringsToChars(markername), i_unit, size(spikedata{ipart}.(markername).label, 2), size(spikedata{ipart}.(markername).trialinfo, 1)));
             trials_win_count = 0;
             
-            for itrial = 1:size(spikedata{ipart}{ilabel}.trialinfo, 1)
+            for itrial = 1:size(spikedata{ipart}.(markername).trialinfo, 1)
                 %initialize values for each unit and each trial
-                %Startsample and EndSample in trialinfo : columns 3 and 4.
-                starttrial      = spikedata{ipart}{ilabel}.trialinfo(itrial, 3) / spikedata{ipart}{ilabel}.hdr.Fs;
-                endtrial        = spikedata{ipart}{ilabel}.trialinfo(itrial, 4) / spikedata{ipart}{ilabel}.hdr.Fs;
+                starttrial      = spikedata{ipart}.(markername).trialinfo.begsample(itrial) / spikedata{ipart}.(markername).hdr.Fs;
+                endtrial        = spikedata{ipart}.(markername).trialinfo.endsample(itrial) / spikedata{ipart}.(markername).hdr.Fs;
                 trial_length    = endtrial - starttrial;
                 i_window        = 0;
                 nr_windows      = length(cfg.statstime.timewin : cfg.statstime.slidestep : trial_length);
-                nr_win_all_trials = trials_win_count + nr_windows * (size(spikedata{ipart}{ilabel}.trialinfo, 1) - itrial);
+                nr_win_all_trials = trials_win_count + nr_windows * (size(spikedata{ipart}.(markername).trialinfo, 1) - itrial);
                     
                 %if time window is too big compared to trial length, return
                 %average value for the whole trial
@@ -105,29 +108,29 @@ for ipart = size(spikedata, 2)
                     
                     % compute window time and display wait bar
                     t_start = t_end - cfg.statstime.timewin;
-                    ts = t_start + spikedata{ipart}{ilabel}.trialtime(itrial, 1);
-                    te = t_end + spikedata{ipart}{ilabel}.trialtime(itrial, 1);
+                    ts = t_start + spikedata{ipart}.(markername).trialtime(itrial, 1);
+                    te = t_end + spikedata{ipart}.(markername).trialtime(itrial, 1);
                     i_window = i_window+1;
                     trials_win_count = trials_win_count + 1;
                     ft_progress(trials_win_count/(nr_win_all_trials+i_window));
                     
                     %find spikes in this window
-                    spike_index = (spikedata{ipart}{ilabel}.trial{i_unit}==itrial) & (spikedata{ipart}{ilabel}.time{i_unit} > ts) & (spikedata{ipart}{ilabel}.time{i_unit} <=  te);
+                    spike_index = (spikedata{ipart}.(markername).trial{i_unit}==itrial) & (spikedata{ipart}.(markername).time{i_unit} > ts) & (spikedata{ipart}.(markername).time{i_unit} <=  te);
                     
                     %store time for later analysis
-                    stats{ipart}{ilabel}.window_times{i_unit}{itrial}(i_window,1) = t_start+starttrial;
-                    stats{ipart}{ilabel}.window_times{i_unit}{itrial}(i_window,2) = t_end+starttrial;
-                    stats{ipart}{ilabel}.time{i_unit}{itrial}(i_window) = t_end + starttrial; %recover original time
+                    stats{ipart}.(markername).window_times{i_unit}{itrial}(i_window,1) = t_start+starttrial;
+                    stats{ipart}.(markername).window_times{i_unit}{itrial}(i_window,2) = t_end+starttrial;
+                    stats{ipart}.(markername).time{i_unit}{itrial}(i_window) = t_end + starttrial; %recover original time
                     
                     % if no or one spike in this window, set all to NaN (except freq and ISI if removempty == 'no')
                     if strcmp(cfg.statstime.removeempty, 'yes') && sum(spike_index)<=1
-                        stats{ipart}{ilabel}.isismooth{i_unit}{itrial}(i_window)     = NaN;
-                        stats{ipart}{ilabel}.freq{i_unit}{itrial}(i_window)          = NaN;
-                        stats{ipart}{ilabel}.cv2{i_unit}{itrial}(i_window)           = NaN;
-                        stats{ipart}{ilabel}.cv{i_unit}{itrial}(i_window)            = NaN;
-                        stats{ipart}{ilabel}.fanofactor{i_unit}{itrial}(i_window)    = NaN;
-                        stats{ipart}{ilabel}.burstindex{i_unit}{itrial}(i_window)    = NaN;
-                        stats{ipart}{ilabel}.amplitude{i_unit}{itrial}(i_window)     = NaN;
+                        stats{ipart}.(markername).isismooth{i_unit}{itrial}(i_window)     = NaN;
+                        stats{ipart}.(markername).freq{i_unit}{itrial}(i_window)          = NaN;
+                        stats{ipart}.(markername).cv2{i_unit}{itrial}(i_window)           = NaN;
+                        stats{ipart}.(markername).cv{i_unit}{itrial}(i_window)            = NaN;
+                        stats{ipart}.(markername).fanofactor{i_unit}{itrial}(i_window)    = NaN;
+                        stats{ipart}.(markername).burstindex{i_unit}{itrial}(i_window)    = NaN;
+                        stats{ipart}.(markername).amplitude{i_unit}{itrial}(i_window)     = NaN;
                         continue
                     end
                     
@@ -138,28 +141,28 @@ for ipart = size(spikedata, 2)
                     end
                     
                     %compute average value for each window
-                    stats{ipart}{ilabel}.isi_smooth{i_unit}{itrial}(i_window)        = nanmean(spike_isi_win);
-                    stats{ipart}{ilabel}.freq{i_unit}{itrial}(i_window)              = 1 / nanmean(spike_isi_win);
-                    stats{ipart}{ilabel}.amplitude{i_unit}{itrial}(i_window)         = nanmean(spikedata{ipart}{ilabel}.amplitude{i_unit}(spike_index));
+                    stats{ipart}.(markername).isi_smooth{i_unit}{itrial}(i_window)        = nanmean(spike_isi_win);
+                    stats{ipart}.(markername).freq{i_unit}{itrial}(i_window)              = 1 / nanmean(spike_isi_win);
+                    stats{ipart}.(markername).amplitude{i_unit}{itrial}(i_window)         = nanmean(spikedata{ipart}.(markername).amplitude{i_unit}(spike_index));
                     
                     %CV2, CV, fanofactor, burstindex : do not compute value if less than 3 spikes
                     if sum(spike_index)<=3
-                        stats{ipart}{ilabel}.cv2{i_unit}{itrial}(i_window)           = NaN;
-                        stats{ipart}{ilabel}.cv{i_unit}{itrial}(i_window)            = NaN;
-                        stats{ipart}{ilabel}.fanofactor{i_unit}{itrial}(i_window)    = NaN;
-                        stats{ipart}{ilabel}.burstindex{i_unit}{itrial}(i_window)    = NaN;
+                        stats{ipart}.(markername).cv2{i_unit}{itrial}(i_window)           = NaN;
+                        stats{ipart}.(markername).cv{i_unit}{itrial}(i_window)            = NaN;
+                        stats{ipart}.(markername).fanofactor{i_unit}{itrial}(i_window)    = NaN;
+                        stats{ipart}.(markername).burstindex{i_unit}{itrial}(i_window)    = NaN;
                         continue
                     end
                     
-                    stats{ipart}{ilabel}.cv{i_unit}{itrial}(i_window)            = nanstd(spike_isi_win) / nanmean(spike_isi_win);
-                    stats{ipart}{ilabel}.fanofactor{i_unit}{itrial}(i_window)    = nanstd(spike_isi_win)^2 / nanmean(spike_isi_win);
-                    stats{ipart}{ilabel}.burstindex{i_unit}{itrial}(i_window)    = sum(spike_isi_win<0.010)/sum(spike_isi_win<0.100);
+                    stats{ipart}.(markername).cv{i_unit}{itrial}(i_window)            = nanstd(spike_isi_win) / nanmean(spike_isi_win);
+                    stats{ipart}.(markername).fanofactor{i_unit}{itrial}(i_window)    = nanstd(spike_isi_win)^2 / nanmean(spike_isi_win);
+                    stats{ipart}.(markername).burstindex{i_unit}{itrial}(i_window)    = sum(spike_isi_win<0.010)/sum(spike_isi_win<0.100);
                     
                     cv2_temp = [];
                     for i = 1:length(spike_isi_win)-1
                         cv2_temp(i) = 2*abs(spike_isi_win(i)-spike_isi_win(i+1))/(spike_isi_win(i)+spike_isi_win(i+1));
                     end
-                    stats{ipart}{ilabel}.cv2{i_unit}{itrial}(i_window)          = nanmean(cv2_temp);
+                    stats{ipart}.(markername).cv2{i_unit}{itrial}(i_window)          = nanmean(cv2_temp);
                     
                 end %t_end
             end %itrial
@@ -168,7 +171,9 @@ for ipart = size(spikedata, 2)
     end %ilabel
 end %ipart
 
-save(fname, 'stats', '-v7.3');
+if strcmp(cfg.statstime.write, 'yes')
+    save(fname, 'stats', '-v7.3');
+end
 
 end
 
