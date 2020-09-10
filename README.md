@@ -23,7 +23,7 @@ _ICM, Paris_
  * Reduce repetition/duplication of code (and work)
  * Backup and version control, and a way to update between computers/servers.
  * Single solution for interfacing with in-house (MUSE) and external software ([Spyking-Circus](https://github.com/spyking-circus)).
- * Synchronization between different recording systems and their annotation systems (NeuraLynx, MicroMed and DeltaMed)
+ * Synchronization between different recording systems and their annotation systems (NeuraLynx, MicroMed and Brainvision)
  * Facilitate use of [FieldTrip](https://github.com/fieldtrip/fieldtrip).
  * Facilitate documentation and publication of methodology.
 

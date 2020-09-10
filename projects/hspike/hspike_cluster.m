@@ -1,68 +1,62 @@
-%% Analysis script
+function hspike_cluster(ipatient)
+
+%% Analysis script for SLURM cluster
 %
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
-% requires bandpassFilter.m from Mario
-% requires releaseDec2015 from Neuralynx website
 
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/hspike/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip/
+
+%% Add path
+
+if isunix
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/DBSCAN/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
+end
+
+if ispc
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\DBSCAN\
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
+    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
+end
+
 ft_defaults
 
-% addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\hspike\
-% addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared\
-% addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip\
-% ft_defaults
-
-% addpath /network/lustre/iss01/charpier/stephen.whitmarsh/WhitmarshEpilepsy/mlib6/
-% addpath /network/lustre/iss01/charpier/stephen.whitmarsh/WhitmarshEpilepsy/subaxis/
-
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
-% maxNumCompThreads(4)
-
 
 %% General analyses
 
+config                                          = hspike_setparams;
+[MuseStruct_orig{ipatient}]                     = readMuseMarkers(config{ipatient}, false);
+[MuseStruct_aligned{ipatient}]                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
+[clusterindx{ipatient}, LFP_cluster{ipatient}]  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
+[MuseStruct_template{ipatient}, ~,~, ~]         = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
 
-for ipatient = 1
-    
-    config = hspike_setparams([]);
-    
-    % export hypnogram to muse
-%     export_hypnogram(config{ipatient});
-
-    % read muse markers
-    [MuseStruct_micro, MuseStruct_macro] = readMuseMarkers_parts(config{ipatient}, false);
-    
-    % update paths for different OS
-    [MuseStruct_micro, MuseStruct_macro] = MuseMarkers_update_filepath_parts(config{ipatient},MuseStruct_micro, MuseStruct_macro);
-
-    % plot hypnogram
-%     plotHypnogram(config{ipatient},MuseStruct_micro)
-
-    
-    % align data
-    
-    % read LFP data
-%     [dat_micro, dat_macro] = readLFP_parts(config{ipatient}, MuseStruct_micro, MuseStruct_macro, false, false);
-    
-    % write data concatinated for SC, and update config with sampleinfo
-    config{ipatient} = writeSpykingCircus_parts(config{ipatient}, MuseStruct_micro, true, false); 
-    
-    % write parameters for spyking circus   
-%     writeSpykingCircusParameters_parts(config{ipatient})
-    
-    % read spyking circus results
-    [SpikeRaw, SpikeTrials] = readSpykingCircusSleepStage(config{ipatient}, MuseStruct_micro, true, 'all');
-
-    % read and plot spikerate overview, and get the stats
-%     [SpikeRateStats{ipatient}, stats_bar{ipatient}, sdf_orig_out{ipatient}, sdf_bar_out] = spikeratestats(config{ipatient}, SpikeRaw, SpikeTrials, true, 1);
-    
-    % read and plot LFP of spike events
-%     [spike_LFP]  = spikeLFP(config{ipatient},SpikeRaw, false);
-    
-    
+for itemp = 1 : 6
+    markername = sprintf("template%d", itemp);
+    config{ipatient}.muse.startmarker.(markername)                                              = markername;
+    config{ipatient}.muse.endmarker.(markername)                                                = markername;
+    config{ipatient}.epoch.toi.(markername)                                                     = [-0.5  1];
+    config{ipatient}.epoch.pad.(markername)                                                     = 0.5;
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.name{itemp}                                                            = markername;
+    config{ipatient}.hyp.markers{itemp}                                                         = markername;
 end
 
-    
+[t{ipatient}]                                   = plotHypnogram(config{ipatient}, MuseStruct_template{ipatient});
+[markers{ipatient}, hypnogram{ipatient}]        = hypnogramStats(config{ipatient}, MuseStruct_template{ipatient}, true);
+[LFP{ipatient}]                                 = readLFP(config{ipatient}, MuseStruct_template{ipatient}, true);
+[LFP_stage{ipatient}]                           = plotLFP_stages(config{ipatient}, LFP{ipatient}, true);

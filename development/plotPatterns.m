@@ -1,4 +1,4 @@
-function plotPatterns(config,MuseStruct)
+function plotPatterns(config, MuseStruct)
 
 % remove empty structs
 MuseStruct = MuseStruct(~cellfun('isempty',MuseStruct));
@@ -22,7 +22,7 @@ for idir = 1 : size(MuseStruct,2)
                     [MuseStruct_append.markers.(mrknames{imarker}).clock, ...
                     MuseStruct{idir}.markers.(mrknames{imarker}).clock];
             end
-            
+
             if ~isfield(MuseStruct_append.markers.(mrknames{imarker}),'samples')
                 MuseStruct_append.markers.(mrknames{imarker}).samples = [];
             end
@@ -72,7 +72,7 @@ t = sortrows(t,2);
 
 i = 1;
 while i < height(t)
-    if contains(t.markerlabel(i),'__START__')     
+    if contains(t.markerlabel(i),'__START__')
         t.markerlabel(i) = t.markerlabel{i}(1:end-9);
         endsindx = find(contains(t.markerlabel,strcat(t.markerlabel(i),'__END__')));
         endsindx = endsindx(endsindx > i);
@@ -86,10 +86,10 @@ end
 % t(contains(t.markerlabel,config.hyp.notcontains),:) = [];
 t = t(contains(t.markerlabel,config.hyp.contains),:);
 
-% 
+%
 % startsindx = find(contains(t.markerlabel,'CriseStart'));
 % endsindx   = find(contains(t.markerlabel,'CriseEnd'));
-% 
+%
 % startsindx = find(contains(t.markerlabel,config.pattern.startmarker));
 % endsindx   = find(contains(t.markerlabel,config.pattern.endmarker));
 % fprintf('\n%d Patterns found\n',numel(startsindx));
@@ -136,7 +136,7 @@ for is = 1 : size(s,2)
     for i = 1 : length(X)-1
         if Y(i) ~= 0 && Y(i+1) ~= 0
             if strcmp(config.hyp.contains(Y(i)),'REM') && strcmp(config.hyp.contains(Y(i+1)),'REM')
-                
+
                 plot([X(i) X(i+1)],[Y(i) Y(i+1)],'k','LineWidth',3);
             else
                 plot([X(i) X(i+1)],[Y(i) Y(i+1)],'k');
@@ -147,7 +147,7 @@ for is = 1 : size(s,2)
     set(gca,'Ytick', 1 : length(config.hyp.contains),'Yticklabels',strrep(config.hyp.contains,'_',' '),'TickDir','out');
     axis tight;
 end
-% 
+%
 % subplot(size(s,2)+1,1,size(s,2)+1); hold;
 % for marker = 1 : numel(colortable.label)
 %     c = colortable.color(marker,:);
