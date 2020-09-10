@@ -26,37 +26,48 @@ end
 for ipart = cfg.spikequal.part_list
     
     if strcmp(cfg.spikequal.label_list, 'all')
-        cfg.spikequal.label_list = 1:size(spikedata{ipart},2);
+        cfg.spikequal.label_list = string(fieldnames(spikedata{ipart}))';
+    else
+        cfg.spikequal.label_list = string(cfg.spikequal.label_list);
     end
     
-    for ilabel = cfg.spikequal.label_list
+    %find marker to analyse
+    marker_list = fieldnames(spikedata{ipart})';
+    if ~strcmp(cfg.spikequal.label_list , 'all')
+        for ilabel = 1:size(cfg.spikequal.label_list,2)
+            temp{ilabel} = marker_list{strcmp(marker_list,cfg.spikequal.label_list(ilabel))};
+        end
+        marker_list = temp;
+    end
+    
+    for markername = string(marker_list)
         
         fig=figure;
         i=1;
         
-        if size(spikedata{ipart}{ilabel}.label,2) > 36
+        if size(spikedata{ipart}.(markername).label,2) > 36
             error('More then 36 units in part %d label %d. Adapt the nr of subplots', ipart, ilabel);
         end
         
         %compute isi
         cfgtemp         = [];
         cfgtemp.bins    = [0:0.001:0.025];
-        isi             =  ft_spike_isi(cfgtemp,spikedata{ipart}{ilabel});
+        isi             =  ft_spike_isi(cfgtemp,spikedata{ipart}.(markername));
         
-        for i_unit=1:size(spikedata{ipart}{ilabel}.label,2)
-            if contains(spikedata{ipart}{ilabel}.cluster_group{i_unit}, 'noise')
-                rpv{ipart}{ilabel}(i_unit) = NaN;
+        for i_unit=1:size(spikedata{ipart}.(markername).label,2)
+            if contains(spikedata{ipart}.(markername).cluster_group{i_unit}, 'noise')
+                rpv{ipart}.(markername)(i_unit) = NaN;
                 continue
             end
             
             % compute rpv
-            rpv{ipart}{ilabel}(i_unit) = ( sum(isi.isi{i_unit} < cfg.spike.RPV) / length(isi.isi{i_unit}) ) * 100;
+            rpv{ipart}.(markername)(i_unit) = ( sum(isi.isi{i_unit} < cfg.spike.RPV) / length(isi.isi{i_unit}) ) * 100;
                         
             %plot isi
             subplot(12,6,i)
 
             %color for mua
-            if contains(spikedata{ipart}{ilabel}.cluster_group{i_unit}, 'mua')
+            if contains(spikedata{ipart}.(markername).cluster_group{i_unit}, 'mua')
                 c = 'k';
             else
                 %color for sua
@@ -66,7 +77,7 @@ for ipart = cfg.spikequal.part_list
             bar(isi.time,isi.avg(i_unit,:), 'FaceColor', c, 'EdgeColor', c);
             xticklabels(xticks*1000); %convert in ms
             ax = axis;
-            titlepos = title(sprintf('%s (E%d), RPV : %.2f%%, %d spikes',spikedata{ipart}{ilabel}.label{i_unit}, spikedata{ipart}{ilabel}.template_maxchan(i_unit), rpv{ipart}{ilabel}(i_unit), length(isi.isi{i_unit})),'Interpreter', 'none','Fontsize', 4);
+            titlepos = title(sprintf('%s (E%d), RPV : %.2f%%, %d spikes',spikedata{ipart}.(markername).label{i_unit}, spikedata{ipart}.(markername).template_maxchan(i_unit), rpv{ipart}.(markername)(i_unit), length(isi.isi{i_unit})),'Interpreter', 'none','Fontsize', 4);
             titlepos.Position(1) = ax(1);
             titlepos.HorizontalAlignment = 'left';
             setfig();
@@ -77,11 +88,11 @@ for ipart = cfg.spikequal.part_list
             cfgtemp.morpho.mesuretroughpeak    = 'no';
             cfgtemp.morpho.mesurehalfwidth     = 'yes';
             cfgtemp.morpho.blmethod            = 'min';
-            cfgtemp.morpho.channame            = spikewaveforms{ipart}{ilabel}{i_unit}.label{1};
+            cfgtemp.morpho.channame            = spikewaveforms{ipart}.(markername){i_unit}.label{1};
             cfgtemp.morpho.plotstd             = cfg.spikequal.plot_std;
             cfgtemp.morpho.plotraw             = 'no';
-            cfgtemp.morpho.name                = cfg.name{ilabel};
-            plot_morpho(cfgtemp,spikewaveforms{ipart}{ilabel}{i_unit});
+            cfgtemp.morpho.name                = markername;
+            plot_morpho(cfgtemp,spikewaveforms{ipart}.(markername){i_unit});
             delete(findall(gca,'type','text'));
             
             xticklabels(xticks*1000); %convert in ms
@@ -102,8 +113,8 @@ for ipart = cfg.spikequal.part_list
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',cfg.name{ilabel},'_spike_quality',cfg.spikequal.suffix,'.pdf']),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',cfg.name{ilabel},'_spike_quality',cfg.spikequal.suffix,'.png']),'-r600');
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',convertStringsToChars(markername),'_spike_quality',cfg.spikequal.suffix,'.pdf']),'-r600');
+        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',convertStringsToChars(markername),'_spike_quality',cfg.spikequal.suffix,'.png']),'-r600');
         
         close all
         

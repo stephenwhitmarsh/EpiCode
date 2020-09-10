@@ -1,7 +1,5 @@
-function [SpikeWaveforms] = readSpikeWaveforms_trials(cfg,spikedata,force)
+function [SpikeWaveforms] = readSpikeWaveforms(cfg,spikedata,force)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
 % [SpikeWaveforms] = readSpikeWaveforms(cfg,SpikeTrials,force,parts_to_read)
 % Cut continuous data into trials for each spike sample.
 %
@@ -35,8 +33,7 @@ function [SpikeWaveforms] = readSpikeWaveforms_trials(cfg,spikedata,force)
 %                                 (corresponding to cfg.name), there is one
 %                                 cell per unit, one trial per spike.
 %
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %get defaults cfg parameters
 cfg.spikewaveform               = ft_getopt(cfg, 'spikewaveform', []);
@@ -76,43 +73,50 @@ end
 
 for ipart = cfg.spikewaveform.part_list
     
-    for ilabel = 1:size(spikedata{ipart},2)
+    
+    
+    for ichan = 1:size(cfg.circus.channel,2)
         
-        for ichan = 1:size(cfg.circus.channel,2)
-            
-            % find concatenated channel used by Spyking Circus
-            temp = dir(fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{ichan},'.ncs']));
-            if isempty(temp)
-                continue
-            end
-            
-            datafile = fullfile(temp.folder,temp.name);
-            fprintf('Found datafile: %s\n',datafile);
-            
-            hdr = ft_read_header(datafile);
+        % find concatenated channel used by Spyking Circus
+        datafile = fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{ichan},'.ncs']);
+        
+        hdr = ft_read_header(datafile);
+        
+        %load all data for this chan (it is much faster to load all data and cut
+        %it, compared to load a lot of cutted pieces of data)
+        clear chandata
+        fprintf('Load spike waveforms for channel %s\n', datafile);
+        cfgtemp                         = [];
+        cfgtemp.dataset                 = datafile;
+        cfgtemp.hpfilter                = 'yes';
+        cfgtemp.hpfilttype              = cfg.spikewaveform.hpfilttype;
+        cfgtemp.hpfiltord               = cfg.spikewaveform.hpfiltord;
+        cfgtemp.hpfreq                  = cfg.spikewaveform.hpfreq;
+        chandata                        = ft_preprocessing(cfgtemp);
+        
+        for markername = string(fieldnames(spikedata{ipart}))'
             
             clusters_idx = [];
-            clusters_idx = find(spikedata{ipart}{ilabel}.template_maxchan == ichan - 1); %-1 because Phy starts counting at zero
+            clusters_idx = find(spikedata{ipart}.(markername).template_maxchan == ichan - 1); %-1 because Phy starts counting at zero
             
             if isempty(clusters_idx)
                 continue
             end
             
             for icluster = clusters_idx
-                
                 %Select random spike if required
                 if strcmp(cfg.spikewaveform.nspikes, 'all')
-                    spikes_idx_sel = 1:size(spikedata{ipart}{ilabel}.trial{icluster},2);
+                    spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster},2);
                 else
-                    if size(spikedata{ipart}{ilabel}.trial{icluster},2) > cfg.spikewaveform.nspikes
-                        spikes_idx_sel = randperm(size(spikedata{ipart}{ilabel}.trial{icluster},2), cfg.spikewaveform.nspikes);
+                    if size(spikedata{ipart}.(markername).trial{icluster},2) > cfg.spikewaveform.nspikes
+                        spikes_idx_sel = randperm(size(spikedata{ipart}.(markername).trial{icluster},2), cfg.spikewaveform.nspikes);
                     else
-                        spikes_idx_sel = 1:size(spikedata{ipart}{ilabel}.trial{icluster},2);
+                        spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster},2);
                     end
                 end
                 
                 if isempty(spikes_idx_sel)
-                    SpikeWaveforms{ipart}{ilabel}{icluster} = [];
+                    SpikeWaveforms{ipart}.(markername){icluster} = [];
                     continue
                 end
                 
@@ -125,39 +129,46 @@ for ipart = cfg.spikewaveform.part_list
                 
                 for ispike = spikes_idx_sel
                     trialcount   = trialcount + 1;
-                    Startsample  = [Startsample; round(spikedata{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(1) * hdr.Fs)];
-                    Endsample    = [Endsample;   round(spikedata{ipart}{ilabel}.timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(2) * hdr.Fs)];
+                    Startsample  = [Startsample; round(spikedata{ipart}.(markername).timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(1) * hdr.Fs)];
+                    Endsample    = [Endsample;   round(spikedata{ipart}.(markername).timestamp{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(2) * hdr.Fs)];
                     Offset       = [Offset; round(cfg.spikewaveform.toi(1) * hdr.Fs)];
                     Trialnr      = [Trialnr; trialcount];
                 end
                 
+                full_trial = Startsample > 0 & Endsample < length(chandata.trial{1});% don't read before BOF or after EOF
+                if sum(full_trial) == 0
+                    SpikeWaveforms{ipart}.(markername){icluster} = [];
+                    continue
+                end
+                
                 cfgtemp                         = [];
                 cfgtemp.trl                     = [Startsample, Endsample, Offset];
-                cfgtemp.trl(:,4)                = Startsample;                          % startsample
-                cfgtemp.trl(:,5)                = Endsample;                            % endsample
-                cfgtemp.trl(:,6)                = Offset;                               % offset
-                cfgtemp.trl(:,7)                = Endsample-Startsample+1;              % duration in samples
-                cfgtemp.trl(:,8)                = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
-                
-                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < hdr.nSamples,:); % so not to read before BOF or after EOFs
+                %                 cfgtemp.trl(:,4)                = Startsample;                          % startsample
+                %                 cfgtemp.trl(:,5)                = Endsample;                            % endsample
+                %                 cfgtemp.trl(:,6)                = Offset;                               % offset
+                %                 cfgtemp.trl(:,7)                = Endsample-Startsample+1;              % duration in samples
+                %                 cfgtemp.trl(:,8)                = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
+                cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % so not to read before BOF or after EOFs
                 cfgtemp.trlunit                 = 'samples';
+                SpikeWaveforms{ipart}.(markername){icluster}                     = ft_redefinetrial(cfgtemp,chandata);
                 
-                %filter data
-                cfgtemp.hpfilter                = 'yes';
-                cfgtemp.hpfilttype              = cfg.spikewaveform.hpfilttype;
-                cfgtemp.hpfiltord               = cfg.spikewaveform.hpfiltord;
-                cfgtemp.hpfreq                  = cfg.spikewaveform.hpfreq;
-                cfgtemp.padding                 = 1 / cfgtemp.hpfreq * 5; %5 cycles for filtering
+                SpikeWaveforms{ipart}.(markername){icluster}.label               = [];
+                SpikeWaveforms{ipart}.(markername){icluster}.label{1}            = spikedata{ipart}.(markername).label{icluster};
+                SpikeWaveforms{ipart}.(markername){icluster}.template_maxchan    = spikedata{ipart}.(markername).template_maxchan(icluster);
                 
-                cfgtemp.dataset = datafile;
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo            = table;
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo.begsample  = Startsample(full_trial);
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo.endsample  = Endsample(full_trial);
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo.offset     = Offset(full_trial);
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo.trialduration    = Endsample(full_trial)-Startsample(full_trial)+1;
+                SpikeWaveforms{ipart}.(markername){icluster}.trialinfo.trialnr    = Trialnr(full_trial);
                 
-                SpikeWaveforms{ipart}{ilabel}{icluster}                     = ft_preprocessing(cfgtemp);
-                SpikeWaveforms{ipart}{ilabel}{icluster}.label               = [];
-                SpikeWaveforms{ipart}{ilabel}{icluster}.label{1}            = spikedata{ipart}{ilabel}.label{icluster};
-                SpikeWaveforms{ipart}{ilabel}{icluster}.template_maxchan    = spikedata{ipart}{ilabel}.template_maxchan(icluster);
+                %remove cfg field which takes looooot of space on disk
+                %(several Go per patient)
+                SpikeWaveforms{ipart}.(markername){icluster} = rmfield(SpikeWaveforms{ipart}.(markername){icluster}, {'cfg'});
                 
             end %icluster
-        end %ichan
+        end %markername
     end % ilabel
 end %ipart
 
