@@ -41,8 +41,8 @@ config = hspike_setparams;
 for ipatient = 1:7
     
     [MuseStruct_orig{ipatient}]                                                                     = readMuseMarkers(config{ipatient}, false);    
-    [MuseStruct_aligned{ipatient}]                                                                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                                                  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+    [MuseStruct_aligned{ipatient}]                                                                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, true);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                                                  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
     [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}{1}.kmedoids{6}, true);
     
     for itemp = 1 : 6
@@ -147,7 +147,7 @@ config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');
     [SpikeRawPSG, SpikeTrialsPSG] = readSpykingCircusPSG(config{ipatient}, MuseStruct, true, 'all');
     
     % stratify according to nr. of windows
-    SpikeTrialsPSG = rectifywindownr(config{ipatient},SpikeTrialsPSG);
+    SpikeTrialsPSG = rectifywindownr(config{ipatient}, SpikeTrialsPSG);
 
     % computer spike stats, and label according to polysomnography
     [SpikeStatsPSG] = spikeratestatsPSG(config{ipatient}, SpikeRawPSG, SpikeTrialsPSG, hypnogram, true);
