@@ -298,9 +298,9 @@ config{9}.prefix                    = 'pat_LGI1_015-';
 %% Patient 10
 config{10}                           = configcommon;
 config{10}.prefix                    = 'pat_LGI1_016-';
-% config{6}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
-% config{6}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
-% config{6}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
+config{10}.rawdir                     = fullfile(rootpath_data,'pat_LGI1_016');
+config{10}.imagesavedir               = fullfile(imagesavedir,'pat_LGI1_016');       % where to print images
+config{10}.directorylist{1}           = {'EEG_1786'}; %dir = eeg file with all the electrodess
 % config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % % config{6}.alignEMG.channel          = {'no','no'}; 
 % config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
@@ -337,9 +337,7 @@ config{13}.prefix                    = 'pat_LGI1_019-';
 config{13}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_019');
 config{13}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_019');       % where to print images
 config{13}.directorylist{1}          = {'2009.03.26_0937','2009.11.03_0936','2009.12.08_1114','2009.12.08_1114_2','2009.12.14_1337',...
-    '2009.12.17_1458','2009.12.17_1503','2009.12.17_1511','2009.12.17_1514','2009.12.17_1514_2',...
-    '2009.12.17_1514_3','2009.12.17_1522','2009.12.17_1536','2010.01.04_1426','2010.01.06_1335',...
-    '2010.01.06_1403','2010.03.18_1431','2010.06.17_1501','2011.04.29_1354','2011.11.02_1455','2012.03.21_1023'}; %dir = eeg file with all the electrodess
+    '2009.12.17_1458','2010.01.04_1426','2010.01.06_1335','2010.03.18_1431','2010.06.17_1501','2011.04.29_1354','2011.11.02_1455','2012.03.21_1023'}; %dir = eeg file with all the electrodess
 % config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % % config{6}.alignEMG.channel          = {'no','no'}; 
 % config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};

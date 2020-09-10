@@ -80,9 +80,9 @@ end
     
 for ipart = 1 : size(cfg.directorylist,2)
 
-    for imarker = markerlist
+    for markername = string(cfg.LFP.name)'
 
-        if isempty(LFP{ipart}{imarker})
+        if isempty(LFP{ipart}.(markername))
             continue
         end
         
@@ -93,8 +93,8 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp.baselinewindow  = ft_getopt(cfg.align, 'baselinewindow', 'no');
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
-        dat                     = ft_preprocessing(cfgtemp, LFP{ipart}{imarker});
-        LFP{ipart}{imarker}     = [];
+        dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
+        LFP{ipart}.(markername) = [];
         
         % select data
         if strcmp('latency', 'all')
@@ -188,8 +188,8 @@ for ipart = 1 : size(cfg.directorylist,2)
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'_',cfg.name{imarker},'_alignmentXcorr.png']));
-
+        print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png')));
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.pdf')));
 
         close all
         clear shifted shifted_clear shifted_clean_z
@@ -200,31 +200,32 @@ for ipart = 1 : size(cfg.directorylist,2)
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
                 continue
             end
-            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime)
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
                 continue
             end
             todelete = [];
-            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
+            
+            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime,2)
                 if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
                     timeshift = nshift(i) * 1/dat.fsample;
-                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', cfg.name{imarker}, ievent, ipart, nshift(i),timeshift);
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(ievent)      = timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) + timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent) + seconds(timeshift);
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(i),timeshift);
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent)      = timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(timeshift);
                     i = i + 1;
                 else
                     fprintf('Removing event %d in part %d\n',ievent,ipart);
                     todelete = [todelete, ievent];
                 end
             end
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(todelete)       = [];
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(todelete)          = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(todelete)       = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(todelete)          = [];
         end % idir
     end % imarker
 end % ipart
