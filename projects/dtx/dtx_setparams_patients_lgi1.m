@@ -259,6 +259,94 @@ config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
 config{6}.EMG.channel               = {[],[]};
 config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
 
+%% Patient 7
+config{7}                           = configcommon;
+config{7}.prefix                    = 'pat_LGI1_013-';
+% config{6}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
+% config{6}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
+% config{6}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 8
+config{8}                           = configcommon;
+config{8}.prefix                    = 'pat_LGI1_014-';
+% config{6}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
+% config{6}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
+% config{6}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 9
+config{9}                           = configcommon;
+config{9}.prefix                    = 'pat_LGI1_015-';
+% config{6}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
+% config{6}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
+% config{6}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 10
+config{10}                           = configcommon;
+config{10}.prefix                    = 'pat_LGI1_016-';
+% config{6}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_012');
+% config{6}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_012');       % where to print images
+% config{6}.directorylist{1}          = {'EEG_228'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 11
+config{11}                           = configcommon;
+config{11}.prefix                    = 'pat_LGI1_017-';
+config{11}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_017');
+config{11}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_017');       % where to print images
+config{11}.directorylist{1}          = {'2010.12.15_1019','2010.12.30_1107','2010.12.30_1107_2','2010.12.31_1324','2011.05.27_1328'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 12
+config{12}                           = configcommon;
+config{12}.prefix                    = 'pat_LGI1_018-';
+config{12}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_018');
+config{12}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_018');       % where to print images
+config{12}.directorylist{1}          = {'2007.12.12_1127','2007.12.13_1128','2007.12.20_1150','2007.12.28_1107','2007.12.31_1023','2008.01.29_0940'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+%% Patient 13
+config{13}                           = configcommon;
+config{13}.prefix                    = 'pat_LGI1_019-';
+config{13}.rawdir                    = fullfile(rootpath_data,'pat_LGI1_019');
+config{13}.imagesavedir              = fullfile(imagesavedir,'pat_LGI1_019');       % where to print images
+config{13}.directorylist{1}          = {'2009.03.26_0937','2009.11.03_0936','2009.12.08_1114','2009.12.08_1114_2','2009.12.14_1337',...
+    '2009.12.17_1458','2009.12.17_1503','2009.12.17_1511','2009.12.17_1514','2009.12.17_1514_2',...
+    '2009.12.17_1514_3','2009.12.17_1522','2009.12.17_1536','2010.01.04_1426','2010.01.06_1335',...
+    '2010.01.06_1403','2010.03.18_1431','2010.06.17_1501','2011.04.29_1354','2011.11.02_1455','2012.03.21_1023'}; %dir = eeg file with all the electrodess
+% config{6}.align.channel             = {'F4','F3','F4','F3'};%{'C4','C3');       % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+% % config{6}.alignEMG.channel          = {'no','no'}; 
+% config{6}.morpho.channame           = {'F4','F3','F4','F3','F4','F3','F4','F3'};
+% % config{6}.LFP.emg                   = {'no','no','no','no','no','no'};%same index as associated EEG. 'no' if no EMG associated to this seizure side 
+% config{6}.EMG.channel               = {[],[]};
+% config{6}.continous                 = true; %sometimes EEG data are cut and clinicians onlys keep seizures
+
 end
 
 

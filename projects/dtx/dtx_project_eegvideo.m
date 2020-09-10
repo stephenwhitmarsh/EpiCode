@@ -1,4 +1,4 @@
-function dtx_project_patientslgi1(slurm_task_id)
+function dtx_project_eegvideo(slurm_task_id)
 
 
 %% Set parameters
@@ -22,9 +22,12 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 config = dtx_setparams_eegvideo;
 % config_origin = config;
 
-for ipatient = [1 3]
+rat_list = 1:3;
+
+for ipatient = rat_list
     
     [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
+    %check_nr_crises_startend(config{irat}, MuseStruct, 1);
     %take the last part
     ipart = size(MuseStruct,2); 
     
@@ -49,24 +52,24 @@ end
 
 %eeg emg delay
 figure;hold
-for ipatient = [1 3]
+for ipatient = rat_list
     scatter(rand(size(delays{ipatient}))*0.2+ipatient-0.1, delays{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
     errorbar(ipatient, mean(delays{ipatient}), std(delays{ipatient}),'--rx');
     %     errorbar(ipatient, mean(delays{ipatient}), mean(delays{ipatient})/sqrt(size(delays{ipatient},2)),'--rx'); %errbar : sem
 end
 xlim([0 4]);
-setfig();
+set(gca,'FontWeight','bold','TickDir','out')
 ylabel('eeg-emg delay (s)');
 
 %emg duration
 figure;hold
-for ipatient = [1 3]
+for ipatient = rat_list
     scatter(rand(size(emg_duration{ipatient}))*0.2+ipatient-0.1, emg_duration{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
     errorbar(ipatient, mean(emg_duration{ipatient}), std(emg_duration{ipatient}),'--rx');
     %     errorbar(ipatient, mean(emg_duration{ipatient}), mean(emg_duration{ipatient})/sqrt(size(emg_duration{ipatient},2)),'--rx'); %errbar : sem
 end
 xlim([0 4]);
-setfig();
+set(gca,'FontWeight','bold','TickDir','out')
 ylabel('emg duration (s)');
 
 

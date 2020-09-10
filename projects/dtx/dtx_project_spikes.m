@@ -1,5 +1,9 @@
 function dtx_project_spikes(slurm_task_id)
 
+%vérifier rejet artefacts
+%vérifier autant de trials que de trials non retirés
+%vérifier que es images sont identiques
+
 if ispc
     addpath \\lexport\iss01.charpier\analyses\lgi1\Git-Paul\fieldtrip;
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx'));
@@ -52,21 +56,19 @@ config = dtx_setparams_probe_spikes([]);
 % analysis. Done by filtering with cfg.type
 
 for irat = slurm_task_id
-%     %%%%%%%%%%%%%%%% REMOVE
-%     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
-%     SpikeRaw                        = readSpikeRaw_Phy(config{irat},false);
-%     SpikeTrials                     = readSpikeTrials_MuseMarkers(config{irat}, MuseStruct,SpikeRaw, true);
-%     return
-%     %%%%%%%%%%%%%%%%%%%%%%%%
-   
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %TEMPORARY_REMOVEME
-%     config{irat}.imagesavedir = fullfile(config{irat}.imagesavedir, 'test_alignXCorr');
-%     if ~isfolder(config{irat}.imagesavedir), mkdir (config{irat}.imagesavedir); end 
-
+    %config{irat}.imagesavedir = fullfile(config{irat}.imagesavedir, 'larger_statstime_window');
+    %config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_new_orga');
+    if ~isfolder(config{irat}.imagesavedir), mkdir (config{irat}.imagesavedir); end 
+    if ~isfolder(config{irat}.datasavedir), mkdir (config{irat}.datasavedir); end 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     %align markers and remove wrong seizures
     [MuseStruct]                    = readMuseMarkers(config{irat}, false);
-    [MuseStruct]                    = alignMuseMarkers(config{irat},MuseStruct, false);
-%     MuseStruct = alignMuseMarkersXcorr(config{irat}, MuseStruct, true);
+    [MuseStruct]                    = alignMuseMarkers(config{irat},MuseStruct, false); %align to the begin of the bigger channel
+
     if strcmp(config{irat}.type, 'dtx') 
         MuseStruct = dtx_remove_wrong_seizure(config{irat}, MuseStruct,true); 
     end
@@ -90,24 +92,18 @@ for irat = slurm_task_id
     
     % remove artefacted trials    
     % Plot the trials to see the artefacted Slow Waves (no LFP loaded for ctrl experiments)
-    cfgtemp                         = [];
-    cfgtemp                         = config{irat}; %info of where to save images
-    cfgtemp.remove.plotdata         = 'yes';
-    cfgtemp.remove.write            = 'no';
-    cfgtemp.remove.electrodetoplot  = ft_getopt(config{irat}.align,'channel', []);
-    [dat_LFP, ~]                    = removetrials_MuseMarkers(cfgtemp, dat_LFP, MuseStruct,true);
-    [SpikeTrials, ~]                = removetrials_MuseMarkers(cfgtemp, SpikeTrials, MuseStruct,true);
+    [dat_LFP, ~]                      = removetrials_MuseMarkers(config{irat}, dat_LFP, MuseStruct,true);
+    [SpikeTrials, ~]                  = removetrials_MuseMarkers(config{irat}, SpikeTrials, MuseStruct,true);
 
     %read spike waveforms
     SpikeWaveforms                  = readSpikeWaveforms(config{irat}, SpikeTrials, false);
     
     %create a separated config to avoid useless increase of memory use, if loop over patients
-%     cfgtemp                 = [];
-%     cfgtemp                 = config{irat};
-%     cfgtemp.dataLFP         = dat_LFP;          clear dat_LFP
-%     cfgtemp.SpikeTrials     = SpikeTrials;      clear SpikeTrials
-%     cfgtemp.SpikeWaveforms  = SpikeWaveforms;   clear SpikeWaveforms
-%     spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
+    cfgtemp                 = config{irat};
+    cfgtemp.dataLFP         = dat_LFP;          %clear dat_LFP
+    cfgtemp.SpikeTrials     = SpikeTrials;      %clear SpikeTrials
+    cfgtemp.SpikeWaveforms  = SpikeWaveforms;   %clear SpikeWaveforms
+    spikeratestats_Events_Baseline(cfgtemp,true); %no output. Load later for analysis over rats.
     %FIXME voir les try/end dans plot_morpho
     
     %get group info (put by hand)
@@ -120,17 +116,17 @@ for irat = slurm_task_id
     rat_idx = strcmp({unit_table.ratID}, config{irat}.prefix(1:end-1))';
     rat_table = unit_table(rat_idx,:);
     for ipart = 1:size(SpikeTrials,2)
-        for ilabel = 1:size(SpikeTrials{ipart},2)
-            for i_unit = 1:size(SpikeTrials{ipart}{ilabel}.label, 2)
-                unit_idx = strcmp(split(sprintf('cluster_%d,', rat_table.clusterID), ','), SpikeTrials{ipart}{ilabel}.label{i_unit});
+        for markername = string(fieldnames(SpikeTrials{ipart}))'
+            for i_unit = 1:size(SpikeTrials{ipart}.(markername).label, 2)
+                unit_idx = strcmp(split(sprintf('cluster_%d,', rat_table.clusterID), ','), SpikeTrials{ipart}.(markername).label{i_unit});
                 % find each element of the unit
                 if sum(unit_idx) == 1
-                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit}             = rat_table(unit_idx).group;
+                    SpikeTrials{ipart}.(markername).cluster_group{i_unit}             = rat_table(unit_idx).group;
                 else
-                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit}             = 'noise';
+                    SpikeTrials{ipart}.(markername).cluster_group{i_unit}             = 'noise';
                 end
                 if isempty(rat_table(unit_idx).group)
-                    SpikeTrials{ipart}{ilabel}.cluster_group{i_unit} = 'noise';
+                    SpikeTrials{ipart}.(markername).cluster_group{i_unit} = 'noise';
                 end
             end
         end
@@ -147,11 +143,12 @@ end
 return
 
 %% Load precomputed data
+%FIXME : à corriger avec la nouvelle organisation
 ipart = 1;
 rat_list = 1:7;
 for irat = rat_list
 %      config{irat}.datasavedir = fullfile(config{irat}.datasavedir, 'test_alignXCorr');
-    stats{irat} = spikeratestats_Events_Baseline(config{irat},false);
+    stats{irat} = spikeratestats_Events_Baseline(config{irat},true);
 end
 
 %stats_concat : see dtx_cluster_statsovertime : stats des 60 dernières
@@ -279,7 +276,8 @@ end
 %comparer DTX toute la période intercritique, DTX les 10 dernières
 %secondes, et ctrl
 figure;hold;
-ilabel = 3; %interictal
+% ilabel = 3; %interictal
+markername = 'Interictal';
 y = cell(1,3);
 for irat = rat_list
     ipart = 1;
@@ -558,7 +556,8 @@ setfig()
 % voir dtx_cluster_statsovertime
 
 %% distrib of rpv
-ilabel = 3; %interictal
+% ilabel = 3; %interictal
+markername = 'Interictal';
 for irat = 1:length(config)
     rpv{irat} = plot_spike_quality(config{irat},[], [],false);
 end
@@ -583,7 +582,7 @@ for irat = 1:5%length(config)
         end
         
         x = rand;
-        y = rpv{irat}{ipart}{ilabel}(i_unit);
+        y = rpv{irat}{ipart}.(markername)(i_unit);
         
 %         if y>10
 %             toremove{irat}.label{i_unit} = stats{irat}{ipart}.(config{irat}.spike.baselinename).label{i_unit};

@@ -53,6 +53,7 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 
 write     = ft_getopt(cfg.LFP, 'write', false);
 
+
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
 
@@ -73,9 +74,9 @@ LFP = {};
 
 
 % loop over markers
-for markername = string(cfg.LFP.name)'
+for markername = string(cfg.LFP.name)
    
-    fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername));
+    fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername, '.mat'));
     
     if write
         fprintf('*** Will write LFP to: %s ***\n', fname_out);
@@ -88,7 +89,7 @@ for markername = string(cfg.LFP.name)'
         
         temp = load(fname_out, 'LFP');
         for ipart = 1 : size(MuseStruct, 2)
-            LFP{ipart}.(markername) = temp{ipart}.(markername);
+            LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
         end
         return
         
@@ -108,13 +109,22 @@ for markername = string(cfg.LFP.name)'
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(markername),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
                 continue
             end 
-            if isempty(MuseStruct{ipart}{idir}.markers.(markername).synctime)
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
+                continue
+            end
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.endmarker.(markername))
+                continue
+            end
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)),'synctime')
+                continue
+            end 
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
                 continue
             end
             
@@ -160,7 +170,7 @@ for markername = string(cfg.LFP.name)'
                     cfg.EMG = ft_getopt(cfg, 'EMG', []);
                     
                     cfgtemp                   = [];
-                    cfgtemp.channel           = {cfg.LFP.emg.(markername), ft_getopt(cfg.EMG, 'refchannel', [])}; % load the emg associated with eeg marker, and the ref if any
+                    cfgtemp.channel           = [ft_getopt(cfg.EMG, sprintf('%s',markername), {});ft_getopt(cfg.EMG, 'refchannel',{})]; % load the emg associated with eeg marker, and the ref if any
                     cfgtemp.dataset           = fname;
                     cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
                     cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
@@ -177,6 +187,10 @@ for markername = string(cfg.LFP.name)'
                     cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
                     cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
                     cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
+                    cfgtemp.lpfiltord       = ft_getopt(cfg.EMG, 'lpfiltord', []);
+                    cfgtemp.hpfiltord       = ft_getopt(cfg.EMG, 'hpfiltord', []);
+                    cfgtemp.bpfiltord       = ft_getopt(cfg.EMG, 'bpfiltord', []);
+                    cfgtemp.bsfiltord       = ft_getopt(cfg.EMG, 'bsfiltord', []);
                     data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
                     
                     % append EMG to EEG data
@@ -190,7 +204,7 @@ for markername = string(cfg.LFP.name)'
                     
                     cfgtemp                         = [];
                     cfgtemp.resamplefs              = ft_getopt(cfg.LFP, 'resamplefs', []);
-                    if strcmp(cfg.LFP.baseline, 'no')
+                    if strcmp(ft_getopt(cfg.LFP, 'baseline', 'no'), 'no')
                         cfgtemp.demean              = 'no';
                     else
                         cfgtemp.demean              = 'yes';
@@ -215,7 +229,7 @@ for markername = string(cfg.LFP.name)'
                     if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
                         es = ss;
                     else
-                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime * dat.fsample) >= ss,1,'first');
+                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss,1,'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * dat.fsample);
                     end
                     
@@ -265,27 +279,36 @@ for markername = string(cfg.LFP.name)'
                         end
                     end
                 end
-
-                % concatinate channels
-                cfgtemp                             = [];
-                cfgtemp.keepsampleinfo              = 'no';
-                dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
-                clear filedat*
-
-            end % idir
-
-            if exist('dirdat','var') % in case there is no marker in the data
-
-                % concatinate data of different datasets (over trials)
-                LFP{ipart}{imarker}                 = ft_appenddata([],dirdat{find(hasmarker)});
-                LFP{ipart}{imarker}.fsample         = fsample;
-                LFP{ipart}{imarker}.analysis_name   = cfg.name{imarker};
-
-                clear dirdat*              
-            else
-                LFP{ipart}{imarker} = [];
-                fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, cfg.name{imarker});
-
+                
+                % create Fieldtrip trl
+                full_trial = Startsample > 0 & Endsample < length(dat.trial{1});% don't read before BOF or after EOF
+                cfgtemp                         = [];
+                cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
+%                 cfgtemp.trl(:,4)                = trialnr;
+%                 cfgtemp.trl(:,6)                = idir;
+%                 cfgtemp.trl(:,7)                = Stage;
+%                 cfgtemp.trl(:,8)                = Startsample;
+%                 cfgtemp.trl(:,9)                = Endsample;
+%                 cfgtemp.trl(:,10)               = Offset;
+                cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % don't read before BOF or after EOF
+                filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
+                
+                filedat{ifile}.trialinfo            = table;
+                filedat{ifile}.trialinfo.begsample  = Startsample(full_trial)';
+                filedat{ifile}.trialinfo.endsample  = Endsample(full_trial)';
+                filedat{ifile}.trialinfo.offset     = Offset(full_trial)';
+                filedat{ifile}.trialinfo.trialnr    = trialnr(full_trial)';
+                filedat{ifile}.trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
+                filedat{ifile}.trialinfo.stage      = Stage(full_trial)';
+                clear dat
+                
+                if isNeuralynx
+                    % same label over files
+                    filedat{ifile}.label{1}     = cfg.LFP.channel{ifile};
+                end
+                
+                % flag for averaging
+                hasmarker(idir)                 = true;
             end
             
             % concatinate channels
@@ -312,3 +335,6 @@ for markername = string(cfg.LFP.name)'
     saveMarker(LFP, markername, fname_out)
 end % markername
 
+if isempty(markername)
+    fprintf('cfg.LFP.name is empty, no LFP is read\n');
+end

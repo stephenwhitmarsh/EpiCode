@@ -31,21 +31,51 @@ imagesavedir = fullfile(rootpath_analysis);
 configcommon.os                        = os;
 % SlowWave_begin
 % SlowWave_peak
-configcommon.name                      = {'SlowWave_begin','SlowWave_EMGalign','SlowWavealign_EMG'};
+configcommon.name                      = {'SlowWave'};
 configcommon.datasavedir               = datasavedir;         % where to write data
 configcommon.continous                 = true;
 
-configcommon.muse.startend             = {'SlowWave','SlowWave';'SlowWave_EMG','SlowWave_EMG'; 'SlowWave','SlowWave'};   % start and end Muse marker. For defining trials
-configcommon.labels.macro              = {'M1G','M1D','PtA'};%do not put the emg channels here
-%1, 2 and 3 associated with config.muse.startend
-configcommon.epoch.toi{1}              = [-5, 25];
-configcommon.epoch.toi{2}              = [-5, 25];
-configcommon.epoch.toi{3}              = [-5, 25];
-configcommon.epoch.toi{4}              = [-5, 25];
-configcommon.epoch.pad{1}              = 10;
-configcommon.epoch.pad{2}              = 10;
-configcommon.epoch.pad{3}              = 10;
-configcommon.epoch.pad{4}              = 10;
+configcommon.muse.startmarker.SlowWave      = 'SlowWave';   % start and end Muse marker. For defining trials
+configcommon.muse.endmarker.SlowWave        = 'SlowWave';   % start and end Muse marker. For defining trials
+configcommon.epoch.toi.SlowWave             = [-5, 25];
+configcommon.epoch.pad.SlowWave             = 10;
+
+configcommon.LFP.name                  = {'SlowWave'};
+configcommon.labels.macro               = {'M1G','M1D','PtA'};%do not put the emg channels here
+configcommon.LFP.channel               = {'M1G','M1D','PtA'};%do not put the emg channels here
+configcommon.LFP.electrodetoplot       = {'M1G'};
+configcommon.LFP.motorcortex           = {'M1G'};
+
+configcommon.LFP.flip                  = true;
+configcommon.LFP.hpfilter              = 'no';
+configcommon.LFP.hpfreq                = 1;
+configcommon.LFP.hpfiltord             = 4;
+configcommon.LFP.hpfilttype            = 'but';
+configcommon.LFP.resamplefs            = 1024;
+configcommon.LFP.baseline              = 'no';
+configcommon.LFP.baselinewindow        = {[-2, -1]};
+configcommon.LFP.slidestep             = 0.01;
+configcommon.LFP.reref                 = 'no';
+configcommon.LFP.rerefmethod           = 'avg';
+configcommon.LFP.refchannel            = 'all';
+configcommon.LFP.bsfilter              = 'no';
+configcommon.LFP.bsfreq                = [1 30];
+configcommon.LFP.lpfilter              = 'yes';
+configcommon.LFP.lpfreq                = 30;
+configcommon.LFP.lpfilttype            = 'fir';
+
+configcommon.EMG.SlowWave              = {'EMG1'};%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
+configcommon.EMG.reref                 = 'yes';
+configcommon.EMG.rerefmethod           = 'bipolar';
+configcommon.EMG.refchannel            = 'EMG2';
+configcommon.EMG.hpfilter              = 'yes';
+configcommon.EMG.hpfreq                = 100;
+configcommon.EMG.bsfilter              = 'yes';
+configcommon.EMG.bsfreq                = [49 51];
+configcommon.EMG.bsfiltord             = 3;
+configcommon.EMG.envmethod             = 'rms';
+configcommon.EMG.envparam              = 30;
+configcommon.EMG.toi                   = [-5 5];
 
 configcommon.align.name                = {'SlowWave_peak'};%{'SlowWave_R','SlowWave_R'};
 configcommon.align.channel             = {'M1G','M1G'};      % pattern to identify channel on which to based peak detection % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
@@ -79,41 +109,7 @@ configcommon.alignEMG.maxtimeshift     = 0.25; %if abs(timeshift) is superior, t
 configcommon.alignEMG.hpfreq           = 100;
 
 
-configcommon.LFP.name                  = configcommon.name;
-configcommon.LFP.emg                   = {'no','EMG1','EMG1'};%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.LFP.emgmarker             = {'no','no','SlowWave_EMG','SlowWave_EMG','SlowWave_EMG','SlowWave_EMG'};
-configcommon.LFP.electrodetoplot       = {'M1G', 'M1G', 'M1G', 'M1G'};
-configcommon.LFP.motorcortex           = {'M1G', 'M1G', 'M1G', 'M1G'};
 
-configcommon.LFP.flip                  = true;
-configcommon.LFP.hpfilter              = 'no';
-configcommon.LFP.hpfreq                = 1;
-configcommon.LFP.hpfiltord             = 4;
-configcommon.LFP.hpfilttype            = 'but';
-configcommon.LFP.resamplefs            = 1024;
-configcommon.LFP.baseline              = 'no';
-configcommon.LFP.baselinewindow        = {[-2, -1], [-2, -1], [-2, -1], [-2, -1]};
-configcommon.LFP.slidestep             = 0.01;
-configcommon.LFP.reref                 = 'no';
-configcommon.LFP.rerefmethod           = 'avg';
-configcommon.LFP.refchannel            = 'all';
-configcommon.LFP.bsfilter              = 'no';
-configcommon.LFP.bsfreq                = [1 30];
-configcommon.LFP.lpfilter              = 'yes';
-configcommon.LFP.lpfreq                = 30;
-configcommon.LFP.lpfilttype            = 'fir';
-
-configcommon.EMG.reref                 = 'yes';
-configcommon.EMG.rerefmethod           = 'bipolar';
-configcommon.EMG.refchannel            = 'EMG2';
-configcommon.EMG.hpfilter              = 'yes';
-configcommon.EMG.hpfreq                = 100;
-configcommon.EMG.bsfilter              = 'yes';
-configcommon.EMG.bsfreq                = [49 51];
-configcommon.EMG.bsfiltord             = 3;
-configcommon.EMG.envmethod             = 'rms';
-configcommon.EMG.envparam              = 30;
-configcommon.EMG.toi                   = [-5 5];
 
 configcommon.LFP.TFR.doTFR                    = true;
 configcommon.LFP.TFR.toi                      = [-15:0.01:35];

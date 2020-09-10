@@ -130,7 +130,7 @@ else
     %Modify trialtime and trialinfo to really remove the trials (Paul)
     % Because trials with zero spike can induce a biais in further analysis.
     try, spike.sampleinfo = spike.sampleinfo(cfg.trials,:); end
-    try, spike.trialinfo = spike.trialinfo(cfg.trials,:); end
+    try, spike.trialinfo = spike.trialinfo(cfg.trials,:); end %works also for tables
     try, spike.clocktimes = spike.clocktimes(cfg.trials); end
     try, spike.trialtime = spike.trialtime(cfg.trials,:); end
    
