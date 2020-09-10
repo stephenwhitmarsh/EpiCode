@@ -194,16 +194,14 @@ for ipart = cfg.circus.part_list
     cfgtemp.hdr                 = hdr;
     cfgtemp.timestampspersecond = hdr.TimeStampPerSample * hdr.Fs;
     SpikeRaw{ipart}             = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
+
     SpikeRaw{ipart}.hdr         = hdr; 
     
     SpikeRaw{ipart}.trialinfo           = table;
     SpikeRaw{ipart}.trialinfo.begsample = filebegin;
     SpikeRaw{ipart}.trialinfo.endsample = fileend;
     SpikeRaw{ipart}.trialinfo.offset    = 0;
-    
-    
-    
-
+ 
 end % ipart
 
 save(fname,'SpikeRaw');
