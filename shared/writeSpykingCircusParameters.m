@@ -39,14 +39,19 @@ function writeSpykingCircusParameters(cfg)
 
 % get the default options
 cfg.circus.part_list                = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.paramfile                = ft_getopt(cfg.circus, 'paramfile', []);
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist,2);
 end
 
-[p, ~, ~]               = fileparts(mfilename('fullpath'));
-[p, ~, ~]               = fileparts(p);
-fname_params_default    = fullfile(p,'templates','SpykingCircus.params');
+if isempty(cfg.circus.paramfile)
+    [p, ~, ~]               = fileparts(mfilename('fullpath'));
+    [p, ~, ~]               = fileparts(p);
+    fname_params_default    = fullfile(p,'templates','SpykingCircus.params');
+else
+    fname_params_default    = cfg.circus.paramfile;
+end
 
 for ipart = 1 : cfg.circus.part_list
 

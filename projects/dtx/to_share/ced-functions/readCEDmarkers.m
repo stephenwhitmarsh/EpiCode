@@ -144,11 +144,13 @@ else
             CEDStruct{ipart}{idir}.directory = cfg.directorylist{ipart}{idir};
             CEDStruct{ipart}{idir}.endtime   = starttime + seconds(maxtime);
 
+            ft_progress('init', 'text', 'Reading events data from Spike2');
             for imarker = 1:length(chanindex)
+                ft_progress(imarker/length(chanindex), 'Reading marker %d from %d', imarker, length(chanindex));
                 CEDStruct{ipart}{idir}.markers.(name{imarker}).comment        = sprintf('Spike2 chan nr %d', chanindex(imarker));
                 if ismember(chanindex(imarker), textmarkindex)
-                    [iread, marksinfos] = CEDS64ReadExtMarks(fid, chanindex(imarker),1000000,0);
-                    if iread > 1000000
+                    [iread, marksinfos] = CEDS64ReadExtMarks(fid, chanindex(imarker),100000,0);
+                    if iread > 100000
                         error('Too many events in channel %d of file %s. \nIncrease the corresponding argument in CEDS64ReadEvents just above this line', ichan, datapath);
                     end
                     %get code from marks info
@@ -165,6 +167,7 @@ else
                     CEDStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent)) + CEDStruct{ipart}{idir}.starttime;
                 end
             end
+            ft_progress('close');
         end%idir
     end%ipart
     
