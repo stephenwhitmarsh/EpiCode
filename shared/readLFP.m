@@ -74,7 +74,7 @@ LFP = {};
 
 
 % loop over markers
-for markername = string(cfg.LFP.name)'
+for markername = string(cfg.LFP.name)
    
     fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername, '.mat'));
     
@@ -334,3 +334,7 @@ for markername = string(cfg.LFP.name)'
     fprintf('*** Saving LFP data for %s ***\n', markername);
     saveMarker(LFP, markername, fname_out)
 end % markername
+
+if isempty(markername)
+    fprintf('cfg.LFP.name is empty, no LFP is read\n');
+end
