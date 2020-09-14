@@ -1,12 +1,10 @@
-function wod_launch_SpykingCircus(slurm_task_id)
+function dtx_launch_SpykingCircus(slurm_task_id)
 
 
-addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/shared'))
-addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/external'))
-addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/templates'))
-addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/projects/wod'))
-addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
-
+addpath \\lexport\iss01.charpier\analyses\lgi1\Git-Paul\fieldtrip;
+addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx'));
+addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\external'));
+addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\shared'));
 
 ft_defaults
 config = wod_setparams;
@@ -19,6 +17,7 @@ for irat = slurm_task_id
     filename    = [config{irat}.prefix,'p',num2str(ipart),'-multifile-',config{irat}.circus.channel{1},'.ncs'];
     dirname     = fullfile(config{irat}.datasavedir,subjdir,partdir);
     
+    eval('!module load spyking-circus/0.9.9');
     eval(sprintf('!cd %s', dirname));
     eval(sprintf('!spyking-circus %s -c 28', filename));
     eval(sprintf('!spyking-circus %s -m converting', filename));
