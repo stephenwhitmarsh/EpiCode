@@ -60,16 +60,15 @@ if slurm_task_id(1) > 0
         
         %rename chans according to their real deepness. Create nan channel if
         %not channel at this deepness. 16 is surface, 1 is the deepest. 0 is the respi.
-        n_chans = size(config{irat}.LFP.channel,2);
+        n_chans = size(config{irat}.LFP.allchannel,2);
         for ichan = 1:n_chans
-            if isempty(config{irat}.LFP.channel{ichan})
-                continue
-            else
-                %rename the channel to have a standard name between each rat, to allow averaging
-                new_name = ['E', num2str(n_chans-ichan)];
-                %find idx of this chan :
-                chan_idx = strcmp(LFP.label, config{irat}.LFP.channel{ichan});
-                LFP.label{chan_idx} = new_name;
+            if any(strcmp(config{irat}.LFP.channel,config{irat}.LFP.allchannel{ichan}))
+                %search channel into config
+                chan_idx = strcmp(config{irat}.LFP.channel,config{irat}.LFP.allchannel{ichan});
+                new_name = config{irat}.LFP.rename{chan_idx};
+                %search channel into LFP data to remane it
+                chan_idx = strcmp(LFP.label, config{irat}.LFP.allchannel{ichan});
+                LFP.label{chan_idx} = new_name;                
             end
         end
         
@@ -177,6 +176,7 @@ if slurm_task_id(1) > 0
                 cfgtemp                     = [];
                 cfgtemp.frequency           = 'all';
                 cfgtemp.avgoverfreq         = 'yes';
+                cfgtemp.nanmean             = 'yes';
                 timefreq_alldata{ifreq}{itrial} = ft_selectdata(cfgtemp, timefreq_alldata{ifreq}{itrial});
                 %plot(timefreq_alldata{ifreq}{itrial}.time, squeeze(timefreq_alldata{ifreq}{itrial}.powspctrm(:,1,:))); ylim([0 10]); xlim([-900 0])
                 
@@ -255,7 +255,7 @@ if slurm_task_id(1) > 0
             end
         end
         
-        % add empty missing channels as nan channels to have the same channels between rats
+        % add empty missing channels channels to have the same channels between rats
         for ifreq = 1 : size(timefreq_recovery,2)
             for itrial = 1:size(timefreq_recovery{ifreq},2)
                 chan_list = fieldnames(timefreq_recovery{ifreq}{itrial});
@@ -397,7 +397,7 @@ if slurm_task_id(1) == 0
                 y = nanmean(squeeze(data{idata}{ifreq}.(chan_label{ichan}).powspctrm(:,1,1,:)));
                 
                 if idata == 3 %only for recovery
-                    y = movmean(y,10,'omitnan');
+                    y = movmean(y,100,'omitnan');
                 end
                 
                 %plot std
@@ -436,6 +436,7 @@ if slurm_task_id(1) == 0
         set(fig,'PaperPosition', [0 0 1 1]);
         print(fig, '-dpdf', fullfile(cfgcommon.imagesavedir,['AllRats_',analysis_names{idata},'.pdf']),'-r600');
         print(fig, '-dpng', fullfile(cfgcommon.imagesavedir,['AllRats_',analysis_names{idata},'.png']),'-r600');
+        savefig(fig,fullfile(cfgcommon.imagesavedir,['AllRats_',analysis_names{idata}]));
         
     end
     
@@ -466,7 +467,7 @@ if slurm_task_id(1) == 0
                     y = squeeze(data{idata}{ifreq}.(chan_label{ichan}).powspctrm(iwod,1,1,:));
                     
                     if idata == 3 %only for recovery
-                        y = movmean(y,10,'omitnan');
+                        y = movmean(y,100,'omitnan');
                     end
                     
                     %plot std
@@ -500,14 +501,14 @@ if slurm_task_id(1) == 0
             end
             handle_plot(1)= fig
             %save figure :
-            set(fig,'PaperOrientation','landscape');
-            set(fig,'PaperUnits','normalized');
-            set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g.pdf',analysis_names{idata},iwod)),'-r600');
-            print(fig, '-dpng', fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g.png',analysis_names{idata},iwod)),'-r600');
-            savefig(fig,fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g',analysis_names{idata},iwod)));
+%             set(fig,'PaperOrientation','landscape');
+%             set(fig,'PaperUnits','normalized');
+%             set(fig,'PaperPosition', [0 0 1 1]);
+%             print(fig, '-dpdf', fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g.pdf',analysis_names{idata},iwod)),'-r600');
+%             print(fig, '-dpng', fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g.png',analysis_names{idata},iwod)),'-r600');
+%             savefig(fig,fullfile(cfgcommon.imagesavedir,sprintf('%s_WOD%g',analysis_names{idata},iwod)));
             
-            close all
+%             close all
         end
     end
     

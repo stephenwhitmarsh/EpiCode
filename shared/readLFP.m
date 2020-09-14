@@ -109,10 +109,19 @@ for markername = string(cfg.LFP.name)'
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
-%             if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
-%                 continue
-%             end
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
+                continue
+            end
             if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
+                continue
+            end 
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
+                continue
+            end
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.endmarker.(markername))
+                continue
+            end
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)),'synctime')
                 continue
             end 
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
@@ -131,10 +140,6 @@ for markername = string(cfg.LFP.name)'
             
             % loop over files
             for ifile = 1 : nfile
-                
-                if isempty(cfg.LFP.channel{ifile})
-                    continue
-                end
                 
                 %load data
                 if isNeuralynx
@@ -165,7 +170,7 @@ for markername = string(cfg.LFP.name)'
                     cfg.EMG = ft_getopt(cfg, 'EMG', []);
                     
                     cfgtemp                   = [];
-                    cfgtemp.channel           = {cfg.LFP.emg.(markername), ft_getopt(cfg.EMG, 'refchannel', [])}; % load the emg associated with eeg marker, and the ref if any
+                    cfgtemp.channel           = [ft_getopt(cfg.EMG, sprintf('%s',markername), {});ft_getopt(cfg.EMG, 'refchannel',{})]; % load the emg associated with eeg marker, and the ref if any
                     cfgtemp.dataset           = fname;
                     cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
                     cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
@@ -182,6 +187,10 @@ for markername = string(cfg.LFP.name)'
                     cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
                     cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
                     cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
+                    cfgtemp.lpfiltord       = ft_getopt(cfg.EMG, 'lpfiltord', []);
+                    cfgtemp.hpfiltord       = ft_getopt(cfg.EMG, 'hpfiltord', []);
+                    cfgtemp.bpfiltord       = ft_getopt(cfg.EMG, 'bpfiltord', []);
+                    cfgtemp.bsfiltord       = ft_getopt(cfg.EMG, 'bsfiltord', []);
                     data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
                     
                     % append EMG to EEG data
@@ -272,16 +281,25 @@ for markername = string(cfg.LFP.name)'
                 end
                 
                 % create Fieldtrip trl
+                full_trial = Startsample > 0 & Endsample < length(dat.trial{1});% don't read before BOF or after EOF
                 cfgtemp                         = [];
                 cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
-                cfgtemp.trl(:,4)                = trialnr;
-                cfgtemp.trl(:,6)                = idir;
-                cfgtemp.trl(:,7)                = Stage;
-                cfgtemp.trl(:,8)                = Startsample;
-                cfgtemp.trl(:,9)                = Endsample;
-                cfgtemp.trl(:,10)               = Offset;
-                cfgtemp.trl                     = cfgtemp.trl(Startsample > 0 & Endsample < length(dat.trial{1}),:); % don't read before BOF or after EOF
+%                 cfgtemp.trl(:,4)                = trialnr;
+%                 cfgtemp.trl(:,6)                = idir;
+%                 cfgtemp.trl(:,7)                = Stage;
+%                 cfgtemp.trl(:,8)                = Startsample;
+%                 cfgtemp.trl(:,9)                = Endsample;
+%                 cfgtemp.trl(:,10)               = Offset;
+                cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % don't read before BOF or after EOF
                 filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
+                
+                filedat{ifile}.trialinfo            = table;
+                filedat{ifile}.trialinfo.begsample  = Startsample(full_trial)';
+                filedat{ifile}.trialinfo.endsample  = Endsample(full_trial)';
+                filedat{ifile}.trialinfo.offset     = Offset(full_trial)';
+                filedat{ifile}.trialinfo.trialnr    = trialnr(full_trial)';
+                filedat{ifile}.trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
+                filedat{ifile}.trialinfo.stage      = Stage(full_trial)';
                 clear dat
                 
                 if isNeuralynx
@@ -294,10 +312,9 @@ for markername = string(cfg.LFP.name)'
             end
             
             % concatinate channels
-            hasdata                             = ~cellfun(@isempty,filedat);%some empty filedat if cfg.LFP.channel{ifile} = []
             cfgtemp                             = [];
             cfgtemp.keepsampleinfo              = 'no';
-            dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{hasdata});
+            dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
             clear filedat*
             
         end % idir
@@ -317,4 +334,3 @@ for markername = string(cfg.LFP.name)'
     fprintf('*** Saving LFP data for %s ***\n', markername);
     saveMarker(LFP, markername, fname_out)
 end % markername
-

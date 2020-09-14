@@ -18,11 +18,14 @@ end
 
 datasavedir  =  fullfile(rootpath_analysis,'data');
 imagesavedir =  fullfile(rootpath_analysis,'images');
+script_path  = mfilename('fullpath');
+script_path  = fileparts(script_path);
 
 %% config common for all patients
 configcommon.muse.templatemarker   = fullfile(datasavedir,'TemplateEventsWOD.mrk');%find the template file to create muse marker file
 
 configcommon.name                  = {'WoD'};
+configcommon.LFP.allchannel        = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP','Puff'};
 configcommon.LFP.name              = configcommon.name;
 
 configcommon.muse.startmarker.WoD      = 'Vent_Off';   % start and end Muse marker. For defining trials
@@ -39,7 +42,9 @@ configcommon.LFP.wor_toisearch                  = [0 30]; %s, were to find wor p
 configcommon.timefreq.foi          = {[0.5:0.25:4.5],[4.5:0.25:10],[10:0.25:25],[25:0.25:50]};%Hz
 configcommon.timefreq.t_ftimwin    = 5;% in second, length of the time window
 configcommon.timefreq.timestep     = 2.5;% in second, time between 2 sliding time windows. can be 'all'
+configcommon.recovery.movmeanwin   = 100;%in sample points
 
+configcommon.circus.paramfile    = fullfile(script_path,'SpykingCircus_Antoine.params');
 configcommon.circus.writedeadfile  = 'no';
 configcommon.circus.reref        = 'no';
 configcommon.circus.refchan      = [];
@@ -57,9 +62,12 @@ config{4}.prefix              = 'Rat-19_05_2020-';                              
 config{4}.rawdir              = fullfile(rootpath_data,'2020_05_19_WOD');                       %path to patient data
 
 config{4}.directorylist{1}    = {'2020-05-19_14-25', '2020-05-19_15-44', '2020-05-19_16-25'}; %liste de tous les fichiers, tous les protocoles
-config{4}.LFP.channel         = {[], [], 'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP','Puff'};
+% config{4}.LFP.channel         = {[], [], 'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP','Puff'};
+config{4}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP','Puff'};
+config{4}.LFP.rename          = {'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3','E2', 'E1', 'E0'};
 
-config{4}.circus.channel      = {'E11', 'E04', 'E02'};       %name of the first electrode
+config{4}.circus.channel      = {'E02', 'E04', 'E11'};       %name of the first electrode
+config{4}.circus.rename       = {'E2', 'E4', 'E11'};       %name of the first electrode
 
 %% rat 5
 config{5}                     = configcommon;
@@ -70,8 +78,12 @@ config{5}.rawdir              = fullfile(rootpath_data,'2020_05_25_WOD');       
 
 config{5}.directorylist{1}    = {'2020-05-25_15-05'}; %liste de tous les fichiers, tous les protocoles
 config{5}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+config{5}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{5}.circus.channel      = {'E13', 'E11','E10', 'E06', 'E05', 'E04'};       %name of the first electrode
+
+config{5}.circus.channel      = {'E04', 'E05','E06', 'E10', 'E11', 'E13'};       %name of the first electrode
+config{5}.circus.rename      = {'E4', 'E5','E6', 'E10', 'E11', 'E13'};       %name of the first electrode
+
 
 %% rat 6
 config{6}                     = configcommon;
@@ -82,8 +94,10 @@ config{6}.rawdir              = fullfile(rootpath_data,'2020_05_27_WOD');       
 
 config{6}.directorylist{1}    = {'2020-05-27_14-19', '2020-05-27_15-40', '2020-05-27_16-19'}; %liste de tous les fichiers, tous les protocoles
 config{6}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+config{6}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{6}.circus.channel      = {'E11','E10', 'E08', 'E06', 'E03', 'E02'};       %name of the first electrode
+config{6}.circus.channel      = {'E02','E03', 'E06', 'E08', 'E10', 'E11'};       %name of the first electrode
+config{6}.circus.rename      = {'E2','E3', 'E6', 'E8', 'E10', 'E11'};       %name of the first electrode
 
 %% rat 7
 config{7}                     = configcommon;
@@ -94,20 +108,24 @@ config{7}.rawdir              = fullfile(rootpath_data,'2020_06_16_WOD');       
 
 config{7}.directorylist{1}    = {'2020-06-16_14-35', '2020-06-16_15-57', '2020-06-16_16-35'}; %liste de tous les fichiers, tous les protocoles
 config{7}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Puff'};
+config{7}.LFP.rename          = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{7}.circus.channel      = {'E14','E12', 'E11', 'E05', 'E03'};       %name of the first electrode
+config{7}.circus.channel      = {'E03','E05', 'E11', 'E12', 'E14'};       %name of the first electrode
+config{7}.circus.rename     = {'E3','E5', 'E11', 'E12', 'E14'};       %name of the first electrode
 
 %% rat 8
 config{8}                     = configcommon;
 config{8}.datasavedir         = datasavedir;       %path where to save MuseStruct data
 config{8}.imagesavedir        = imagesavedir;
 config{8}.prefix              = 'Rat-22_07_2020-';                                                        %patient name. Must end by "-". namepatient-
-config{8}.rawdir              = fullfile(rootpath_data,'2020_07_22_WOD');                       %path to patient data
+config{8}.rawdir              = fullfile(rootpath_data,'2020_07_22_WOD2');                       %path to patient data
 
 config{8}.directorylist{1}    = {'2020-07-22_13-28'}; %liste de tous les fichiers, tous les protocoles
 config{8}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+config{8}.LFP.rename          = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{8}.circus.channel      = {'E12', 'E11', 'E06', 'E05', 'E02'};       %name of the first electrode
+config{8}.circus.channel      = {'E02', 'E05', 'E06', 'E11', 'E12'};       %name of the first electrode
+config{8}.circus.rename    = {'E2', 'E5', 'E6', 'E11', 'E12'};       %name of the first electrode
 
 %% rat 9
 config{9}                     = configcommon;
@@ -118,8 +136,10 @@ config{9}.rawdir              = fullfile(rootpath_data,'2020_07_28_WOD');       
 
 config{9}.directorylist{1}    = {'2020-07-28_13-54', '2020-07-28_15-35', '2020-07-28_16-48', '2020-07-28_17-35'}; %liste de tous les fichiers, tous les protocoles
 config{9}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+config{9}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{9}.circus.channel      = {'E15', 'E12', 'E11', 'E10', 'E08', 'E07'};       %name of the first electrode
+config{9}.circus.channel      = {'E07', 'E08', 'E09', 'E10', 'E11', 'E15'};       %name of the first electrode
+config{9}.circus.rename      = {'E7', 'E8', 'E9', 'E10', 'E11', 'E15'};       %name of the first electrode
 
 %% rat 10
 config{10}                     = configcommon;
@@ -130,8 +150,10 @@ config{10}.rawdir              = fullfile(rootpath_data,'2020_07_31_WOD');      
 
 config{10}.directorylist{1}    = {'2020-07-31_13-19', '2020-07-31_14-50', '2020-07-31_15-19'}; %liste de tous les fichiers, tous les protocoles
 config{10}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+config{10}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{10}.circus.channel      = {'E15', 'E14', 'E12', 'E11'};       %name of the first electrode
+config{10}.circus.channel      = {'E11', 'E12', 'E14', 'E15'};       %name of the first electrode
+config{10}.circus.rename      = {'E11', 'E12', 'E14', 'E15'};       %name of the first electrode
 
 %% rat 11
 config{11}                     = configcommon;
@@ -142,8 +164,10 @@ config{11}.rawdir              = fullfile(rootpath_data,'2020_08_14_WOD');      
 
 config{11}.directorylist{1}    = {'2020-08-14_13-26', '2020-08-14_14-57', '2020-08-14_15-26'}; %liste de tous les fichiers, tous les protocoles
 config{11}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP', 'E02LFP', 'E01LFP', 'Respi'};
+config{11}.LFP.rename        = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E7', 'E6', 'E5', 'E4', 'E3', 'E2', 'E1', 'E0'};
 
-config{11}.circus.channel      = {'E14', 'E11', 'E10', 'E09', 'E05', 'E03', 'E02'};       %name of the first electrode
+config{11}.circus.channel      = {'E02', 'E03', 'E05', 'E09', 'E10', 'E11', 'E14'};       %name of the first electrode
+config{11}.circus.rename      = {'E2', 'E3', 'E5', 'E9', 'E10', 'E11', 'E14'};       %name of the first electrode
 
 
 
