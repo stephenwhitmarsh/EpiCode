@@ -19,7 +19,6 @@ function edit_Markerfiles(cfg)
 % Dependencies on other EpiCode functions :
 % - readMuseMarkers.m
 % - writeMuseMarkerfile.m
-% - your setparams.m script to find data location and backup dir for Muse's marker file
 
 %get default parameters : 
 cfg.editmarkerfile              = ft_getopt(cfg, 'editmarkerfile', []);
