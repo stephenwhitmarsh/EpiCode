@@ -37,13 +37,13 @@ ft_defaults
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
 %% General analyses
-
 config                                          = hspike_setparams;
-[MuseStruct_orig{ipatient}]                     = readMuseMarkers(config{ipatient}, false);
-[MuseStruct_aligned{ipatient}]                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
+[MuseStruct_orig{ipatient}]                     = readMuseMarkers(config{ipatient}, true);
+[MuseStruct_aligned{ipatient}]                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, true);
 [clusterindx{ipatient}, LFP_cluster{ipatient}]  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
 [MuseStruct_template{ipatient}, ~,~, ~]         = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
 
+% add templates to config
 for itemp = 1 : 6
     markername = sprintf("template%d", itemp);
     config{ipatient}.muse.startmarker.(markername)                                              = markername;

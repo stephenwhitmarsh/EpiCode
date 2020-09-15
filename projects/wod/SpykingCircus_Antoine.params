@@ -5,7 +5,7 @@
 [data]
 file_format    = neuralynx       # Can be raw_binary, openephys, hdf5, ... See >> spyking-circus help -i for more info
 stream_mode    = None            # None by default. Can be multi-files, or anything depending to the file format
-mapping        = 		    #  Mapping of the electrode (see http://spyking-circus.rtfd.ord)
+mapping        =     #  Mapping of the electrode (see http://spyking-circus.rtfd.ord)
 suffix         =                 # Suffix to add to generated files, if needed
 overwrite      = False          # Filter or remove artefacts on site (if write access is possible). Data are duplicated otherwise
 parallel_hdf5  = True       # Use the parallel HDF5 feature (if available)
@@ -19,18 +19,18 @@ peaks          = negative   # Can be negative (default), positive or both
 dead_channels  =            # If not empty or specified in the probe, a dictionary {channel_group : [list_of_valid_ids]}
 
 [filtering]
-cut_off        = 300, auto  # Min and Max (auto=nyquist) cut off frequencies for the band pass butterworth filter [Hz]
+cut_off        = 500, auto  # Min and Max (auto=nyquist) cut off frequencies for the band pass butterworth filter [Hz]
 filter         = True       # If True, then a low-pass filtering is performed
-remove_median  = False      # If True, median over all channels is substracted to each channels (movement artifacts)
+remove_median  = True      # If True, median over all channels is substracted to each channels (movement artifacts)
 common_ground  =            # If you want to use a particular channel as a reference ground: should be a channel number
 
 [triggers]
 trig_file      =            # External stimuli to be considered as putative artefacts [in trig units] (see documentation)
 trig_windows   =            # The time windows of those external stimuli [in trig units]
-trig_unit      = ms         # The unit in which times are expressed: can be ms or timestep
+trig_unit      = timestep         # The unit in which times are expressed: can be ms or timestep
 clean_artefact = False      # If True, external artefacts induced by triggers will be suppressed from data
 dead_file      =            # Portion of the signals that should be excluded from the analysis [in dead units]
-dead_unit      = ms         # The unit in which times for dead regions are expressed: can be ms or timestep
+dead_unit      = timestep         # The unit in which times for dead regions are expressed: can be ms or timestep
 ignore_times   = False      # If True, any spike in the dead regions will be ignored by the analysis
 make_plots     =            # Generate sanity plots of the averaged artefacts [Nothing or None if no plots]
 
@@ -57,7 +57,7 @@ make_plots     = png        # Generate sanity plots of the clustering [Nothing o
 [fitting]
 amp_limits     = (0.3, 5)   # Amplitudes for the templates during spike detection [if not auto]
 amp_auto       = True       # True if amplitudes are adjusted automatically for every templates
-collect_all    = False      # If True, one garbage template per electrode is created, to store unfitted spikes
+collect_all    = True       # If True, one garbage template per electrode is created, to store unfitted spikes
 ratio_thresh   = 0.9        # Ratio of the spike_threshold used while fitting [0-1]. The lower the slower
 
 [merging]
@@ -76,8 +76,8 @@ drift_limit    = 0.1        # Distance for drifts. The higher, the more non-over
 
 [converting]
 erase_all      = True       # If False, a prompt will ask you to export if export has already been done
-export_pcs     = prompt     # Can be prompt [default] or in none, all, some
-export_all     = True      # If True, unfitted spikes will be exported as the last Ne templates
+export_pcs     = some       # Can be prompt [default] or in none, all, some
+export_all     = True       # If True, unfitted spikes will be exported as the last Ne templates
 sparse_export  = True       # For recent versions of phy, and large number of templates/channels
 prelabelling   = False      # If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
 

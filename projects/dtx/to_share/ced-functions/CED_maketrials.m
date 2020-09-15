@@ -41,7 +41,11 @@ else
                                 
                                 
                                 %load data
-                                dat = readCEDcontinous(cfg,cfg.LFP.channel{imarker}{ichannel}, ipart,idir);
+                                cfgtemp             = cfg;
+                                cfgtemp.channame    = cfg.LFP.channel{imarker}{ichannel};
+                                cfgtemp.ipart       = ipart;
+                                cfgtemp.idir        = idir;
+                                dat                 = readCEDcontinous(cfgtemp);
                                   
                                 % Different preprocessing steps according to cfg
                                 
