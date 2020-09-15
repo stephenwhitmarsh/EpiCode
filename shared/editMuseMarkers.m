@@ -3,7 +3,7 @@ function [MuseStruct_new] = editMuseMarkers(cfg, MuseStruct_orig)
 % EDITMUSEMARKERS adds, removes or renames markers in each MuseMarker structure
 % 
 % Usage: Use readMuseMarkers to obtain MuseStruct, and writeMuseMarkers to 
-% write % new MuseStruct to Muse event files.
+% write new MuseStruct to Muse event files.
 % 
 % Optional fields:
 % 
@@ -81,4 +81,4 @@ for ipart = 1 : size(MuseStruct_orig, 2)
     end
 end
 
-fprintf('Renamed %d markeres\nRemoved %d markers\nAdded %d markers\n', nr_renamed, nr_removed, nr_added);
+fprintf('Renamed %d markers\nRemoved %d markers\nAdded   %d markers\n', nr_renamed, nr_removed, nr_added);

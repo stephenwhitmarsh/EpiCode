@@ -17,3 +17,6 @@ Besides, I changed a bit the selection of trials. Before, the trials to remove w
 
 ft_spike_xcorrs, line commented with '%paul'
 Correct one error in one specific case due to histc output if first argument is of length 1
+
+ft_read_event : 2 lines commented with %Paul
+while reading nev files, the low-function read_neuralynx_nev outputs a string associated to each event. In order to keep this information, I added it to the event structure outputed by ft_read_event

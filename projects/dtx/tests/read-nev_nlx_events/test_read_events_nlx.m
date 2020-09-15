@@ -8,9 +8,7 @@ ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
-%read_neuralynx_nev was modified to add eventstrings. 2 lines are modified,
-%I put 'Paul' in comment for each.
-% read_neuralynx_nev is in fieldtrip/fileio/private
-filename = 'Z:\analyses\lgi1\Git-Paul\EpiCode\projects\dtx\read-nev_nlx_events\test_read_events_nlx.nev';
+% ft_read_event modifié : commenté avec %Paul
+filename = '\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx\tests\read-nev_nlx_events\test_read_events_nlx.nev';
 events = ft_read_event(filename);
 
