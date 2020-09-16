@@ -78,12 +78,6 @@ for markername = string(cfg.LFP.name)
    
     fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername, '.mat'));
     
-    if write
-        fprintf('*** Will write LFP to: %s ***\n', fname_out);
-    else
-        fprintf('*** Will NOT write LFP to disk ***\n');
-    end
-    
     if exist(fname_out, 'file') && force == false
         fprintf('*** Loading precomputed LFP data for %s ***\n', markername);
         
@@ -331,8 +325,10 @@ for markername = string(cfg.LFP.name)
         end
         
     end % ipart
+    
     fprintf('*** Saving LFP data for %s ***\n', markername);
     saveMarker(LFP, markername, fname_out)
+    
 end % markername
 
 if isempty(markername)

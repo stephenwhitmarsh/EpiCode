@@ -47,24 +47,27 @@ for ipart = 1 : size(MuseStruct_orig, 2)
         
         % rename marker
         for imarker = 1 : size(cfg.editmarkerfile.torename,1)
-            if isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.torename{imarker,1})
+            if isfield(MuseStruct_orig{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1})
+                nr_renamed = nr_renamed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime, 2);
+                
                 MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}) = MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1});
                 MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers,cfg.editmarkerfile.torename{imarker,1});
-                nr_renamed = nr_renamed + 1;
             end
         end
         
         % remove marker
         for imarker = 1 : size(cfg.editmarkerfile.toremove,2)
             if isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker})
+                nr_removed = nr_removed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.toremove{imarker,1}).synctime, 2);    
+                
                 MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker});
-                nr_removed = nr_removed + 1;    
             end
         end
         
         % add marker
         for imarker = 1 : size(cfg.editmarkerfile.toadd,2)
             if ~isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.toadd{imarker})
+                nr_added = nr_added + 1;
                 MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.toadd{imarker}).events          = 0;
                 MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.toadd{imarker}).comment         = 'created with editMuseMarkers.m';
                 MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.toadd{imarker}).editable        = 'Yes';
@@ -75,10 +78,9 @@ for ipart = 1 : size(MuseStruct_orig, 2)
                 else
                     MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.toadd{imarker}).color       = cfg.editmarkerfile.toadd_color{imarker};
                 end
-                nr_added = nr_added + 1;
             end
         end
     end
 end
 
-fprintf('Renamed %d markeres\nRemoved %d markers\nAdded %d markers\n', nr_renamed, nr_removed, nr_added);
+fprintf('Renamed %d markers\nRemoved %d markers\nAdded %d (empty) markers\n', nr_renamed, nr_removed, nr_added);

@@ -44,7 +44,6 @@ config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hsp
 config{1}.hyp.backupdir             = fullfile(rootpath_analysis, 'markerbackup');
 config{1}.hyp.markerdir             = fullfile(rootpath_analysis, 'data',   'hspike');
 config{1}.hyp.micromedchannel       = 'F3p6';
-config{1}.hyp.contains              = {'NO_SCORE', 'AWAKE', 'PHASE_1', 'PHASE_2', 'PHASE_3', 'REM'}; 
 config{1}.hyp.markers               = [];
 config{1}.hyp.overwrite             = 'append';
 config{1}.hyp.spikewindow           = 60;
@@ -85,7 +84,7 @@ config{1}.template.reref            = 'yes';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
-config{1}.template.threshold        = 2.5;
+config{1}.template.threshold        = 2.7;
 
 %% Patient 2 
 % Patterns more clear in bipolar reference. Consider this for template
@@ -151,7 +150,7 @@ config{5}.cluster.channel           = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','
 config{5}.cluster.align.latency     = [-0.2 0.5];
 config{5}.cluster.reref             = 'yes';
 config{5}.cluster.refmethod         = 'bipolar';
-config{5}.template.threshold        = 3.5;
+config{5}.template.threshold        = 3;
 config{5}.template.reref            = 'yes';
 config{5}.template.refmethod        = 'bipolar';
 
