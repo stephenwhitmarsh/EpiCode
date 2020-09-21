@@ -1,5 +1,34 @@
 function MuseStruct = read_nev_Muse(cfg,MuseStruct)
 
+% READ_NEV_MUSE crawls and searches through patient directories to
+% extracts event timings created in the .nev file during the data 
+% acquisition.
+% It adds each event in MuseStruct so it can be used the same way as the 
+% events created in Muse. The name of the event is the same as the name
+% defined during the acquisition. Note that minuses and spaces are replaced
+% by '_'.
+% It can then be written with writeMuseMarkerfile.m into a Muse marker file 
+% .mrk, so the events can be visualized in the data with Muse.
+%
+% use as
+%   [MuseStruct]  = read_nev_Muse(cfg, MuseStruct)
+
+% This file is part of EpiCode, see
+% http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
+%
+%   EpiCode is free software: you can redistribute it and/or modify
+%   it under the terms of the GNU General Public License as published by
+%   the Free Software Foundation, either version 3 of the License, or
+%   (at your option) any later version.
+%
+%   EpiCode is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%   GNU General Public License for more details.
+%
+%   You should have received a copy of the GNU General Public License
+%   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+
 for ipart = 1:size(MuseStruct,2)
     for idir = 1:size(MuseStruct{ipart},2)
         
@@ -19,7 +48,7 @@ for ipart = 1:size(MuseStruct,2)
         end
         
         %read header to convert TimeStamp to seconds
-        temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{1}, '.ncs']));
+        temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}, '.ncs']));
         fname 	 = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);        
         hdr      = ft_read_header(fname);
         
