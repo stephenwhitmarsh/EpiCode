@@ -45,7 +45,6 @@ for ipatient = 1:7
     [clusterindx{ipatient}, LFP_cluster{ipatient}]                                                  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
     [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
     
-    
     switch ipatient
         case 1
             markernames = {'combined1', 'combined2'};
@@ -79,7 +78,7 @@ for ipatient = 1:7
     config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
     
     % from now on work on manual and combined templates
-    itemp = 2;
+    itemp = 1;
     for markername = string(markernames)
         config{ipatient}.muse.startmarker.(markername)    = markername;
         config{ipatient}.muse.endmarker.(markername)      = markername;   
@@ -96,8 +95,32 @@ for ipatient = 1:7
 
     [t{ipatient}]                                                                                   = plotHypnogram(config{ipatient}, MuseStruct_combined{ipatient});
     [marker{ipatient}, hypnogram{ipatient}]                                                         = hypnogramStats(config{ipatient}, MuseStruct_combined{ipatient}, true);
-    [LFP{ipatient}]                                                                                 = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, true);
+    [LFP{ipatient}]                                                                                 = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
     [LFP_stage{ipatient}]                                                                           = plotLFP_stages(config{ipatient}, LFP{ipatient}, marker{ipatient}, hypnogram{ipatient}, true);
+    
+    % write data concatinated for SC, artefacts, and output sampleinfo per file
+    writeSpykingCircus(config{ipatient}, MuseStruct_combined{ipatient}, true, true);
+end
+
+
+%% General analyses
+config                                          = hspike_setparams;
+[MuseStruct_orig{ipatient}]                     = readMuseMarkers(config{ipatient}, false);
+[MuseStruct_aligned{ipatient}]                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, true);
+[clusterindx{ipatient}, LFP_cluster{ipatient}]  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
+[MuseStruct_template{ipatient}, ~,~, ~]         = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
+
+% add templates to config
+for itemp = 1 : 6
+    markername = sprintf("template%d", itemp);
+    config{ipatient}.muse.startmarker.(markername)                                              = markername;
+    config{ipatient}.muse.endmarker.(markername)                                                = markername;
+    config{ipatient}.epoch.toi.(markername)                                                     = [-0.5  1];
+    config{ipatient}.epoch.pad.(markername)                                                     = 0.5;
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.baselinewindow.(markername)                                            = [-0.5  1];
+    config{ipatient}.LFP.name{itemp}                                                            = markername;
+    config{ipatient}.hyp.markers{itemp}                                                         = markername;
 end
 
 
@@ -125,11 +148,7 @@ end
 % Authomatically determine template matching threshold by
 % iteration/minimizing/maximizing sensitivity and selectivity compared to
 % manual annotation
-% redo patient 1; 2711, both EIDs cortical and subcortical as one marker
-% Add window of alignment in clustering overview Kmeans
 % demean before clustering
-% fix LFP detected template second subplot yticks
-% add non-selected templates in overview of threshold picture
 % use Amygdala as well? often micro + nice SWDs, e.g. in patient 7
 % REDO AND CHECK HYPNOGRAM 02718-15_04-31 and 02680_2019-01-16_01-31
 % extract spike-by-spike paramewters: EOC, amplitude, durations, etc. to
@@ -187,7 +206,7 @@ config{ipatient}.LFP = rmfield(config{ipatient}.LFP, 'resamplefs');
     TFR = doTFRcontinuous(config{ipatient}, MuseStruct, true);
     
     % plot TFR 
-    plotTFRcontinuous(config{ipatient},TFR);
+    plotTFRcontinuous(config{ipatient}, TFR);
     
     % write data concatinated for SC, artefacts, and output sampleinfo per file
     writeSpykingCircus(config{ipatient}, MuseStruct, true, true);

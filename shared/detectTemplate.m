@@ -36,16 +36,12 @@ cfg.template.name           = ft_getopt(cfg.template, 'name', 'TemplateDetect');
 fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
 
 if exist(fname_out,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('** Loading results spikedetection **\n');
-    fprintf('************************************\n\n');
+    fprintf('** Loading results template detection **\n');
     load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
     return
 end
 
-fprintf('**********************\n');
 fprintf('** Detecting spikes **\n');
-fprintf('**********************\n\n');
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);

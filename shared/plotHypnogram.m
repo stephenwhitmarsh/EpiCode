@@ -21,7 +21,8 @@ function [t] = plotHypnogram(cfg, MuseStruct)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-cfg.visible             = ft_getopt(cfg, 'visible', 'on');
+cfg.visible = ft_getopt(cfg, 'visible', 'on');
+hyplabels = {'NO_SCORE__START__', 'AWAKE__START__', 'PHASE_1__START__', 'PHASE_2__START__', 'PHASE_3__START__', 'REM__START__', 'NO_SCORE__END__', 'AWAKE__END__', 'PHASE_1__END__', 'PHASE_2__END__', 'PHASE_3__END__', 'REM__END__'}; 
 
 hyplabels              = {'NO_SCORE__START__', 'AWAKE__START__', 'PHASE_1__START__', 'PHASE_2__START__', 'PHASE_3__START__', 'REM__START__', 'NO_SCORE__END__', 'AWAKE__END__', 'PHASE_1__END__', 'PHASE_2__END__', 'PHASE_3__END__', 'REM__END__'}; 
 
@@ -123,7 +124,7 @@ for ipart = 1 : size(MuseStruct,2)
     end
     
     % select hypnogram labels to plot
-    hyp_tbl = t(contains(t.markerlabel, cfg.hyp.contains),:);
+    hyp_tbl = t(contains(t.markerlabel, {'NO_SCORE', 'AWAKE', 'PHASE_1', 'PHASE_2', 'PHASE_3', 'REM'}),:);
     
     % select markers to plot
     mrk_tbl = t(any(t.markerlabel == string(cfg.hyp.markers), 2),:);

@@ -9,58 +9,56 @@ if exist(fname,'file') && force == false
     fprintf('** loading %s  stats *****\n', fname);
     fprintf('**********************************\n\n');
     load(fname, 'LFP_avg');
-    return
-end
-
-for markername = string(cfg.LFP.name)
+else
     
-    for istage = 0 : 4
+    for markername = string(cfg.LFP.name)
         
-        hasdata = [];
-        for ipart = 1 : 3
-            if ipart > numel(LFP)
-                continue
-            end
-            if ~isfield(LFP{ipart}, markername)
-                continue
-            end
-            if isempty(LFP{ipart}.(markername))
-                continue
-            end
+        for istage = 0 : 4
             
-            cfgtemp = [];
-            cfgtemp.trials = find(LFP{ipart}.(markername).trialinfo.stage == istage);
-            if ~isempty(cfgtemp.trials)
-                LFP_sel{ipart} = ft_selectdata(cfgtemp, LFP{ipart}.(markername));
-                hasdata = [hasdata, ipart];
+            hasdata = [];
+            for ipart = 1 : 3
+                if ipart > numel(LFP)
+                    continue
+                end
+                if ~isfield(LFP{ipart}, markername)
+                    continue
+                end
+                if isempty(LFP{ipart}.(markername))
+                    continue
+                end
+                
+                cfgtemp = [];
+                cfgtemp.trials = find(LFP{ipart}.(markername).trialinfo.stage == istage);
+                if ~isempty(cfgtemp.trials)
+                    LFP_sel{ipart} = ft_selectdata(cfgtemp, LFP{ipart}.(markername));
+                    hasdata = [hasdata, ipart];
+                end
             end
+            if isempty(hasdata)
+                continue
+            end
+            LFP_app = ft_appenddata([], LFP_sel{hasdata});
+            clear LFP_sel
+            
+            % baseline correction
+            cfgtemp = [];
+            cfgtemp.baseline = 'yes';
+            cfgtemp.baseline = cfg.LFP.baselinewindow.(markername);
+            LFP_avg.(markername){istage+1} = ft_timelockbaseline(cfgtemp, LFP_app);
+            
+            % average, only of selected timeperiod
+            cfgtemp = [];
+            cfgtemp.latency = cfg.epoch.toi.(markername);
+            LFP_avg.(markername){istage+1} = ft_timelockanalysis([], LFP_avg.(markername){istage+1});
+            
+            % add number of trials for future reference
+            LFP_avg.(markername){istage+1}.nr = size(LFP_app.trial, 2);
         end
-        if isempty(hasdata)
-            continue
-        end
-        LFP_app = ft_appenddata([], LFP_sel{hasdata});
-        clear LFP_sel
-        
-        % baseline correction
-        cfgtemp = [];
-        cfgtemp.baseline = 'yes';
-        cfgtemp.baseline = cfg.LFP.baselinewindow.(markername);
-        LFP_avg.(markername){istage+1} = ft_timelockbaseline(cfgtemp, LFP_app);
-
-        % average, only of selected timeperiod
-        cfgtemp = [];
-        cfgtemp.latency = cfg.epoch.toi.(markername);
-        LFP_avg.(markername){istage+1} = ft_timelockanalysis([], LFP_avg.(markername){istage+1});        
-        
-        % add number of trials for future reference
-        LFP_avg.(markername){istage+1}.nr = size(LFP_app.trial, 2); 
     end
+    clear LFP
 end
 
-clear LFP
-
-% fig = figure('visible', cfg.visible);
-fig = figure;
+fig = figure('visible', cfg.visible);
 fig.Renderer = 'Painters';
 set(gca,'fontsize', 6)
 
@@ -100,7 +98,7 @@ for markername = string(fieldnames(LFP_avg))'
     cm  = cool(5);
     x   = [2 3 4 5 1];
     
-    subplot(2, nrtemplates, iplot); hold;
+    subplot(2, max([3, nrtemplates]), iplot); hold;
     title(sprintf('%s', markername));
 
     % IED rate normalized to wake
@@ -164,11 +162,10 @@ for markername = string(fieldnames(LFP_avg))'
     for ii = 1:size(cm,1)
         p(ii) = patch(NaN, NaN, cm(ii,:));
     end
-    legend(p, l, 'location','northoutside');
-    
-    
+    legend(p, l, 'location', 'eastoutside');
+
     % plot LFP
-    subplot(2, nrtemplates, nrtemplates + iplot); hold;
+    subplot(2, max([3, nrtemplates]), max([3, nrtemplates]) + iplot); hold;
     title(sprintf('%s', markername));
     
     n = 1;
@@ -196,7 +193,7 @@ for markername = string(fieldnames(LFP_avg))'
                 x = LFP_avg.(markername){istage+1}.time;
                 y = LFP_avg.(markername){istage+1}.avg(ichan,:);
                 ystd = sqrt(LFP_avg.(markername){istage+1}.var(ichan,:));
-                plot(x,y + n*h, 'color', cm(icolor,:),'linewidth', 1);
+                plot(x,y + n*h, 'color', cm(icolor,:),'linewidth', 0.5);
             catch
             end
             icolor = icolor + 1;
@@ -211,7 +208,7 @@ for markername = string(fieldnames(LFP_avg))'
     yticklabels(label);
     xlabel('Time (s)');
     axis tight;
-    xlim([LFP_avg.(markername){1}.time(1), LFP_avg.(markername){1}.time(end)]);
+    xlim([cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2)]);
     
     % legend  
     l = {'W n=0','S1 n=0','S2 n=0','S3 n=0',' n=0','W n=0'};
@@ -255,7 +252,7 @@ for markername = string(fieldnames(LFP_avg))'
     for ii = 1:size(cm,1)
         p(ii) = patch(NaN, NaN, cm(ii,:));
     end
-    legend(p, l, 'location','northoutside');
+    legend(p, l, 'location','eastoutside');
     
     iplot = iplot + 1;
 end

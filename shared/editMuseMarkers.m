@@ -50,8 +50,14 @@ for ipart = 1 : size(MuseStruct_orig, 2)
             if isfield(MuseStruct_orig{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1})
                 nr_renamed = nr_renamed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime, 2);
                 
-                MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}) = MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1});
-                MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers,cfg.editmarkerfile.torename{imarker,1});
+                % add to existing markers if already exists
+                if isfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,2})   
+                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).synctime = [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).synctime, MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime];
+                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).clock    = [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).clock,    MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).clock];                    
+                else
+                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}) = MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1});
+                end
+                MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1});
             end
         end
         
@@ -83,4 +89,4 @@ for ipart = 1 : size(MuseStruct_orig, 2)
     end
 end
 
-fprintf('Renamed %d markers\nRemoved %d markers\nAdded   %d (empty) markers\n', nr_renamed, nr_removed, nr_added);
+fprintf('Renamed %d markers\nRemoved %d markers\nAdded %d (empty) markers\n', nr_renamed, nr_removed, nr_added);
