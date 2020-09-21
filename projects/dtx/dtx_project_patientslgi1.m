@@ -22,6 +22,124 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 config = dtx_setparams_patients_lgi1;
 % config_origin = config;
 
+% -	EMG contraction : duration of contraction : OK
+% -	EEG-EMG delay : OK
+% - frequency and regularity of seizures : 
+%   * convertir temps des données coupées, grace au fichier bni
+%   * distrib des inter-seizure interval et des cv2
+% - plot de chaque crise non artefactée raw EEG + topoplot : avec dir et temps pour la
+% retrouver. Pour choisir les mieux pour les mesures. Plots flipped et
+% non-flipped. Voir sur quel channel, et quels features, extraire
+% -	Slow wave : 
+%   * morphology (half width C4, half width better channel, autre ?) 
+%   * topography : 1 topoplot par patient et par side (L, R)
+%   * propagation : xcorr
+% - traces brutes représentatives : 1 crise pat 008, + toutes les crises
+% superposées. Vidéo peccoud avec le même eeg
+% - prévoir une vidéo de l'événement
+
+
+
+%% eeg emg delay, and emg duration
+pat_list = 1:size(config,2);
+for ipatient = pat_list
+    
+    [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
+    %take the last part
+    ipart = size(MuseStruct,2); 
+    
+    %% compute eeg-emg delays and emg duration
+    slowwave_begin_R      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_begin');
+    emg_begin_R           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__START__');
+    emg_end_R             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__END__');
+    slowwave_begin_L      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_begin');
+    emg_begin_L           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_EMG__START__');
+    emg_end_L             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_EMG__END__');
+    
+    %put right and left seizures together
+    slowwave_begin  = [slowwave_begin_R.synctime,slowwave_begin_L.synctime];
+    emg_begin       = [emg_begin_R.synctime,emg_begin_L.synctime];
+    emg_end         = [emg_end_R.synctime,emg_end_L.synctime];
+    
+    if isempty(slowwave_begin)
+        delays{ipatient} = NaN;
+        emg_duration{ipatient} = NaN;
+        continue
+    end
+    
+    delays{ipatient}        = emg_begin - slowwave_begin;
+    emg_duration{ipatient}  = emg_end - emg_begin;
+    eeg_dir{ipatient}           = [slowwave_begin_R.dir,slowwave_begin_L.dir];
+    %     [bins, edges]       = histcounts(delays{ipatient},'BinWidth',0.01);
+    %     bins_centers        = (edges(1:end-1)+edges(2:end))/2; %limiteinf + limitesup / 2
+    %     bar(bins_centers,bins);
+    %
+end
+
+%eeg emg delay
+figure;hold
+for ipatient = pat_list
+    scatter(rand(size(delays{ipatient}))*0.2+ipatient-0.1, delays{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
+    errorbar(ipatient, mean(delays{ipatient}), std(delays{ipatient}),'--rx');
+    %     errorbar(ipatient, mean(delays{ipatient}), mean(delays{ipatient})/sqrt(size(delays{ipatient},2)),'--rx'); %errbar : sem
+end
+xlim([0 pat_list(end)+1]);
+set(gca,'TickDir','out','FontWeight','bold');
+ylabel('eeg-emg delay (s)');
+
+%emg duration
+figure;hold
+for ipatient = pat_list
+    scatter(rand(size(emg_duration{ipatient}))*0.2+ipatient-0.1, emg_duration{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
+    errorbar(ipatient, mean(emg_duration{ipatient}), std(emg_duration{ipatient}),'--rx');
+    %     errorbar(ipatient, mean(emg_duration{ipatient}), mean(emg_duration{ipatient})/sqrt(size(emg_duration{ipatient},2)),'--rx'); %errbar : sem
+end
+xlim([0 pat_list(end)+1]);
+set(gca,'TickDir','out','FontWeight','bold');
+ylabel('emg duration (s)');
+
+% %check dir data
+% figure;
+% subplot(2,1,1);hold;
+% scatter(eeg_dir{ipatient},emg_duration{ipatient});
+% title(sprintf('emg duration patient %d',ipatient));
+% subplot(2,1,2);hold;
+% scatter(eeg_dir{ipatient},delays{ipatient});
+% title(sprintf('eeg-emg delays patient %d',ipatient));
+%svg stats en output
+
+
+%% plot each FBDS
+%recover real time in segmented data
+%correct concatenateMuseMarkers : clocktime non changé, synctime en
+%fonction du nb de samples. A ne pas utiliser si les fichiers ne sont pas
+%continus.
+MuseStruct1      = readMuseMarkers(config{ipatient},true);
+MuseStruct2 = readMuseMarkers_discontinuousMicromed(config{ipatient},true);
+test1 = concatenateMuseMarker(config{ipatient},MuseStruct1,1,'SlowWave_L');
+test2 = concatenateMuseMarkers_old(MuseStruct1,1,'SlowWave_L');
+test3 = concatenateMuseMarker(config{ipatient},MuseStruct2,1,'SlowWave_L');
+test4 = concatenateMuseMarkers_old(MuseStruct2,1,'SlowWave_L');
+
+
+testdiff.clock = test2.clock-test1.clock;
+test1.synctimediff = diff(test1.synctime);
+test2.synctimediff = diff(test2.synctime);
+max(test1.synctimediff - test2.synctimediff)
+testdiff.synctime = test1.synctime-test2.synctime;
+max(testdiff.synctime)
+testdiff.dir = test2.dir-test1.dir;
+
+figure;hold
+plot(test1.clock,1:size(test1.clock,2))
+figure
+plot(test2.clock,1:size(test1.clock,2))
+figure
+plot(test2.synctime,1:size(test2.synctime,2))
+figure
+plot(test1.synctime,1:size(test1.synctime,2))
+
+% 1367 minutes
 
 for ipatient = slurm_task_id
     
@@ -210,68 +328,6 @@ for ipatient = slurm_task_id
     dtx_stats_seizures_infos(config{1},Seizure_Infos);
     
 end
-
-%% eeg emg delay, and emg duration
-pat_list = [1 2 3 4 5 10 13];
-for ipatient = pat_list
-    
-    [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
-    %take the last part
-    ipart = size(MuseStruct,2); 
-    
-    %% compute eeg-emg delays and emg duration
-    slowwave_begin_R      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_begin');
-    emg_begin_R           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__START__');
-    emg_end_R             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_R_EMG__END__');
-    slowwave_begin_L      = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_begin');
-    emg_begin_L           = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_EMG__START__');
-    emg_end_L             = concatenateMuseMarkers(MuseStruct,ipart,'SlowWave_L_EMG__END__');
-    
-    %put right and left seizures together
-    slowwave_begin  = [slowwave_begin_R.synctime,slowwave_begin_L.synctime];
-    emg_begin       = [emg_begin_R.synctime,emg_begin_L.synctime];
-    emg_end         = [emg_end_R.synctime,emg_end_L.synctime];
-    
-    if isempty(slowwave_begin)
-        delays{ipatient} = NaN;
-        emg_duration{ipatient} = NaN;
-        continue
-    end
-    
-    delays{ipatient}        = emg_begin - slowwave_begin;
-    emg_duration{ipatient}  = emg_end - emg_begin;
-    %     [bins, edges]       = histcounts(delays{ipatient},'BinWidth',0.01);
-    %     bins_centers        = (edges(1:end-1)+edges(2:end))/2; %limiteinf + limitesup / 2
-    %     bar(bins_centers,bins);
-    %
-end
-
-%eeg emg delay
-figure;hold
-for ipatient = pat_list
-    scatter(rand(size(delays{ipatient}))*0.2+ipatient-0.1, delays{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
-    errorbar(ipatient, mean(delays{ipatient}), std(delays{ipatient}),'--rx');
-    %     errorbar(ipatient, mean(delays{ipatient}), mean(delays{ipatient})/sqrt(size(delays{ipatient},2)),'--rx'); %errbar : sem
-end
-xlim([0 pat_list(end)+1]);
-set(gca,'TickDir','out','FontWeight','bold');
-ylabel('eeg-emg delay (s)');
-
-%emg duration
-figure;hold
-for ipatient = pat_list
-    scatter(rand(size(emg_duration{ipatient}))*0.2+ipatient-0.1, emg_duration{ipatient}, '.', 'MarkerEdgeColor', [0.6 0.6 0.6]);
-    errorbar(ipatient, mean(emg_duration{ipatient}), std(emg_duration{ipatient}),'--rx');
-    %     errorbar(ipatient, mean(emg_duration{ipatient}), mean(emg_duration{ipatient})/sqrt(size(emg_duration{ipatient},2)),'--rx'); %errbar : sem
-end
-xlim([0 pat_list(end)+1+1]);
-set(gca,'TickDir','out','FontWeight','bold');
-ylabel('emg duration (s)');
-
-
-
-%svg stats en output
-
 
 
 end

@@ -77,7 +77,6 @@ for ipart = 1 : size(cfg.directorylist,2)
         
         % baseline correct & bipolar rereferencing
         cfgtemp                 = [];
-        cfgtemp.channel         = cfg.align.channel{imarker};
         cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'no');
         cfgtemp.baselinewindow  = ft_getopt(cfg.align, 'baselinewindow', 'no');
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
@@ -143,19 +142,6 @@ for ipart = 1 : size(cfg.directorylist,2)
         title('Timeshift');
         axis tight;
 
-%         subplot(2,5,[4 5]);
-%         plot_morpho([],dat);
-% %         xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
-%         xlim(latency);
-%         ax = axis;
-% %         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
-%         title('Original');
-% 
-%         subplot(2,5,[9 10]);
-%         plot_morpho([],dat_shifted);
-% %         xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
-%         xlim(latency);
-% %         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
         subplot(2, 5, [4 5]); hold
         plot(dat_avg_orig.time, dat_avg_orig.avg');
         ax = axis;
@@ -169,7 +155,6 @@ for ipart = 1 : size(cfg.directorylist,2)
         ax = axis;        
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Aligned');
-
         axis tight
         xlim([dat.time{1}(1), dat.time{1}(end)]); 
        

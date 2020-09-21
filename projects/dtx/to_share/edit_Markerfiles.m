@@ -16,20 +16,21 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %setting parameters : 
-config   = dtx_setparams_eegvideo;% patients_lgi1;
+config   = dtx_setparams_patients_lgi1;
 pat_list = 1:length(config);
 torename = {'Baseline_Start', 'Analysis_Start'}; %{old1, new1; old2, new2; old3, new3};
 toremove = {}; %{remove1, remove2, remove3};
-toadd    = {'SlowWave_begin','SlowWave_R_begin','SlowWave_L_begin'}; %{add1, add2, add3};
+toadd    = {'SlowWave_R_EMG','SlowWave_L_EMG'};%{'SlowWave_begin','SlowWave_R_begin','SlowWave_L_begin'}; %{add1, add2, add3};
 toadd_color = {'#00ff00','#00ff00','#00ff00'};%color of the new marker on muse
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-for ipatient = pat_list
+for ipatient = 12%1:size(config,2)
     
     [isNeuralynx, isMicromed, isBrainvision] = get_data_format(config{ipatient});
     
     if isBrainvision
+        continue
         error(sprintf('This script does not support Brainvision''s Muse marker file format. \nTo use it with this format, you need to adapt ''writeMuseMarkerfile.m'' for the ''.vmrk'' format and remove this error message.'));
     end
     

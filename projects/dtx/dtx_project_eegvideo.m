@@ -26,7 +26,7 @@ rat_list = 1:3;
 
 for ipatient = rat_list
     
-    [MuseStruct]                    = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct]                    = readMuseMarkers(config{ipatient}, false);
     %check_nr_crises_startend(config{irat}, MuseStruct, 1);
     %take the last part
     ipart = size(MuseStruct,2); 
@@ -44,6 +44,8 @@ for ipatient = rat_list
     
     delays{ipatient}        = emg_begin.synctime - slowwave_begin.synctime;
     emg_duration{ipatient}  = emg_end.synctime - emg_begin.synctime;
+    eeg_dir{ipatient}           = slowwave_begin.dir;
+
     %     [bins, edges]       = histcounts(delays{ipatient},'BinWidth',0.01);
     %     bins_centers        = (edges(1:end-1)+edges(2:end))/2; %limiteinf + limitesup / 2
     %     bar(bins_centers,bins);
@@ -72,7 +74,16 @@ xlim([0 4]);
 set(gca,'FontWeight','bold','TickDir','out')
 ylabel('emg duration (s)');
 
-
+for ipatient = rat_list
+    %check dir data
+    figure;
+    subplot(2,1,1);hold;
+    scatter(eeg_dir{ipatient},emg_duration{ipatient});
+    title(sprintf('emg duration patient %d',ipatient));
+    subplot(2,1,2);hold;
+    scatter(eeg_dir{ipatient},delays{ipatient});
+    title(sprintf('eeg-emg delays patient %d',ipatient));
+end
     
     %% STOP ICI
     [MuseStruct]                    = alignMuseMarkers(config{ipatient},MuseStruct, false);

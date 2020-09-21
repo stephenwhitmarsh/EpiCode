@@ -1,3 +1,0 @@
-ft_spike_maketrials
-ft_spike_select
-ft_spike_xcorrs
