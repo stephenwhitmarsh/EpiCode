@@ -232,7 +232,7 @@ for ipart = cfg.rmtrials.part_list
                             continue
                         else
                             trialremoved{idir}(i) = true;
-                            if strcmp(cfg.rmtrials.keepindexes, 'yes') %keep indexes of rmtrialsd trials
+                            if strcmp(cfg.rmtrials.keepindexes, 'yes') %keep indexes of removed trials
                                 itrialMuse = data{ipart}.(markername).trialinfo.trialnr_dir(itrial);%trial of loaded data
                                 MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialremoved(itrialMuse) = true;
                             end
