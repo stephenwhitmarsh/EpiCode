@@ -83,4 +83,4 @@ for ipart = 1 : size(MuseStruct_orig, 2)
     end
 end
 
-fprintf('Renamed %d markers\nRemoved %d markers\nAdded   %d markers\n', nr_renamed, nr_removed, nr_added);
+fprintf('Renamed %d markers\nRemoved %d markers\nAdded   %d (empty) markers\n', nr_renamed, nr_removed, nr_added);
