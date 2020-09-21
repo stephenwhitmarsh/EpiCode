@@ -21,7 +21,7 @@ length_previous = 0;
 for idir = 1:size(MuseStruct{ipart},2)
     fprintf('reading header for dir %d from %d\n',idir, size(MuseStruct{ipart},2));
     if isNeuralynx
-        temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{1}, '.ncs']));
+        temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}, '.ncs']));
         fname 	 = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
     elseif isMicromed
         fname = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
