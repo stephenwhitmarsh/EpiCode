@@ -39,14 +39,6 @@ fprintf('***********************\n');
 fprintf('** creating stats *****\n');
 fprintf('***********************\n\n');
 
-% elect those markers to load
-% markerlist = [];
-% for i = 1 : size(cfg.name,2)
-%     if ismember(cfg.name{i},cfg.hyp.markers)
-%         markerlist = [markerlist, i];
-%     end
-% end
-
 % eventnr will increased over all marker events and all files
 eventnr = 0;
 marker  = table;
@@ -74,17 +66,18 @@ for markername = string(cfg.hyp.markers)
             if isempty(MuseStruct{ipart}{idir}.markers.(markername).synctime)
                 continue
             end
+            
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(markername).synctime,2)
                 
                 eventnr = eventnr + 1;
                 marker.stage(eventnr)  = -2;
                 marker.clock(eventnr)  = MuseStruct{ipart}{idir}.markers.(markername).clock(ievent);
-                marker.name{eventnr}   = markername;
+                marker.name(eventnr)   = markername;
                 marker.ipart(eventnr)  = ipart;
                 marker.idir(eventnr)   = idir;
                 
                 % find overlap with hypnogram markers
-                for hyplabel = {'PHASE_1','PHASE_2','PHASE_3','REM','AWAKE','NO_SCORE'}
+                for hyplabel = {'PHASE_1', 'PHASE_2', 'PHASE_3', 'REM', 'AWAKE', 'NO_SCORE'}
                     if ~isfield(MuseStruct{ipart}{idir}.markers,[cell2mat(hyplabel),'__START__'])
                         continue
                     end

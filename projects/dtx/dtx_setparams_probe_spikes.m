@@ -1,5 +1,6 @@
 
 %% Setting parameters DTX project Paul Baudin
+% convertStringsToChars
 
 function [config] = dtx_setparams_probe_spikes(config)
 
@@ -28,108 +29,127 @@ imagesavedir = fullfile(rootpath_analysis, 'image_spike');
 configdtx.type                      = 'dtx';
 configdtx.os                        = os;
 configdtx.datasavedir               = datasavedir;
-configdtx.name                      = {'SlowWave','Seizure','Interictal','SlowWave_Larger'};
-configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+configdtx.muse.backupdir            = fullfile(rootpath_analysis,'Musemarkers_backup');
 
-% list of onset timing with respect to start-marker (s)
-configdtx.epoch.toi{1}              = [-2, 2];
-configdtx.epoch.toi{2}              = [-2, 2];
-configdtx.epoch.toi{3}              = [2, -1];
-configdtx.epoch.toi{4}              = [-80, 20];
-configdtx.epoch.pad{1}              = 10; %for LFP
-configdtx.epoch.pad{2}              = 10;
-configdtx.epoch.pad{3}              = 10;
-configdtx.epoch.pad{4}              = 10;
+configdtx.name                      = {'SlowWave','Seizure','Interictal'};%,'SlowWave_Larger','xcorr_10_1', 'xorr_2_1', 'xcorr_1_0', 'xcorr_1_1','Baseline'};
+configdtx.spike.events_name         = {'SlowWave','Seizure'};%, 'Seizure'};
+configdtx.spike.baseline_name       = 'Interictal';
+% configdtx.muse.startend             = {'SlowWave','SlowWave'; 'SlowWave', 'Crise_End';'Crise_End','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'SlowWave','SlowWave';'Baseline_Start','Injection'};   % 'SlowWave','SlowWave'; for readLFP function : cut data ...s before SlowWave, and ...s after SlowWave
+
+configdtx.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
 
 configdtx.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-configdtx.bad.markerStart              = 'SlowWave';
-configdtx.bad.markerEnd                = 'Crise_End';
-configdtx.bad.time_from_begin          = -2;
-configdtx.bad.time_from_end            = 2;
-
-% OLD ALIGN
-configdtx.align.name                = {'SlowWave'};
-configdtx.align.flip                = {'no'};
-configdtx.align.abs                 = {'no'};
-configdtx.align.method              = {'max'};                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-configdtx.align.filter              = {'lp'};
-configdtx.align.freq                = {10};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-configdtx.align.hilbert             = {'no'};
-configdtx.align.thresh.value        = [1, 1];
-configdtx.align.thresh.method       = {'trial'};%,'trial','trial'};%'medianbl','both';
-configdtx.align.toiplot             = {[-1,  1], [-1, 1]};                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-configdtx.align.toiactive           = {[-0.5, 0.5], [-0.5, 0.5]};                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-configdtx.align.toibaseline         = {[-1, -0.5], [-1, -0.5]};
-configdtx.align.maxtimeshift        = {0.3};
-configdtx.align.demean              = {'yes'};
-%for detection of begin of event
-configdtx.align.begin.doalign       = {'yes'};
-configdtx.align.begin.thresh        = {0.3}; % percent of peak
-% ALIGN XCORR : 
-% configdtx.align.name                = {'SlowWave'};                               % Name of markers/patterns to align
-% configdtx.align.channel             = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP'};    % Channels to use for alignment
-% configdtx.align.demean              = 'yes';
-% configdtx.align.baselinewindow      = [-2 -1.5];
-% configdtx.align.reref               = 'no';
-% configdtx.align.refmethod           = 'bipolar';
-% configdtx.align.latency             = [-1, 1];  
-
+%read LFP
 configdtx.LFP.flip                  = 'false';
 configdtx.LFP.name                  = {'SlowWave'};%_EEG', 'SLowWave_Intra'};
 configdtx.LFP.hpfilter              = 'no';
 configdtx.LFP.resamplefs            = 320; %because sampling rate is 3200Hz
-configdtx.LFP.baseline              = 'yes';
-configdtx.LFP.baselinewindow{1}     = [-2, -1];
-configdtx.LFP.baselinewindow{2}     = [-2, -1];
-configdtx.LFP.baselinewindow{3}     = [0, 1];
-configdtx.LFP.write                 = true;
+configdtx.LFP.baseline              = 'no';
+configdtx.LFP.write              	= true;
 
+%add bad markers for spiking cricus
 configdtx.bad.markerStart           = 'Crise_Start';
 configdtx.bad.markerEnd             = 'Crise_End';
 configdtx.bad.time_from_begin       = -2;
 configdtx.bad.time_from_end         = 2;    
 
+%write spyking circus
 configdtx.circus.reref              = 'no';
 configdtx.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configdtx.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
 configdtx.circus.postfix            = [];%'-final';
 configdtx.circus.deadfilesuffix     = 'withseizures';
 
-configdtx.stats.numrandomization     = 1000; %Essayer à 1000
-% configdtx.stats.dostat              = {true, true, false}; %not used
-configdtx.stats.bltoi{1}            = [-2, -1];
-configdtx.stats.bltoi{2}            = [-2, -1];
-configdtx.stats.bltoi{3}            = [2, 6];
-configdtx.stats.alpha               = 0.025;
-%not used for now (but maybe to better select ISI or waveforms of interest) :
-configdtx.stats.actoi{1}            = [-1, 1];
-configdtx.stats.actoi{2}            = [-1, Inf];
-configdtx.stats.actoi{3}            = [6, Inf];
+%remove trials which intersect BAD markers
+configdtx.rmtrials.plotdata         = 'yes';
+configdtx.rmtrials.write            = 'no';
+configdtx.rmtrials.electrodetoplot  = [];%set separately for each rat. Only for dtx rats
 
-% to smooth spikerate. Not used for now. Maybe for correlation LFP-spike
-% configdtx.spike.toispikerate{1}     = [-0.01 0.01];            % for plotting spikerate
-% configdtx.spike.toispikerate{1}     = [-1 1];                  % for plotting spikerate
-% configdtx.spike.toispikerate{2}     = [-0.05 0.05];            % for plotting spikerate
-% configdtx.spike.toispikerate{3}     = [-10 10];                % for plotting spikerate
-configdtx.spike.eventsname          = {'SlowWave','Seizure'};%, 'Seizure'};
-configdtx.spike.baselinename        = 'Interictal';
-configdtx.spike.resamplefs{1}       = 50; %1/size of bar graph bins
-configdtx.spike.resamplefs{2}       = 50;
-configdtx.spike.resamplefs{3}       = 0.1;
+%compute spike stats
 configdtx.spike.RPV                 = 0.003; %refractory period violation, in seconds
 configdtx.spike.ISIbins             = [0:0.003:0.150]; %in s
-configdtx.spike.sdflatency{1}   = 'maxperiod';
-configdtx.spike.sdflatency{2}   = 'maxperiod';
-configdtx.spike.sdflatency{3}   = 'maxperiod';
-configdtx.spike.sdftimewin{1}   = [-1/2 * 1/50 1/2 * 1/50]; %1/resamplef, so no effect of the convolution
-configdtx.spike.sdftimewin{2}   = [-1/2 * 1/50 1/2 * 1/50];
-configdtx.spike.sdftimewin{3}   = [-1/2 * 1/0.1 1/2 * 1/0.1];
+configdtx.stats.numrandomization    = 1000; %Essayer à 1000
+configdtx.stats.alpha               = 0.025;
 
+%stats over time
+configdtx.statstime.timewin          = 10;
+configdtx.statstime.slidestep        = 2;
+configdtx.statstime.removeempty      = 'yes';
+
+%plot spike quality only on interictal data
+configdtx.spikequal.label_list = 'Interictal';
+
+%spike waveform
 configdtx.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configdtx.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
 configdtx.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load. Can be 'all'. 
+
+
+%SlowWave
+configdtx.muse.startmarker.SlowWave      = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.muse.endmarker.SlowWave        = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.epoch.toi.SlowWave             = [-2, 2];
+configdtx.epoch.pad.SlowWave             = 0;
+
+% ALIGN PEAK OR BEGIN
+configdtx.align.name                = {'SlowWave'};
+configdtx.align.method.SlowWave     = 'max';                                                              % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
+configdtx.align.filter.SlowWave              = 'lp';
+configdtx.align.freq.SlowWave                = 10;                                                                                  % lowpass filter freq to smooth peak detection (Hz)
+configdtx.align.thresh.value.SlowWave        = 1;
+configdtx.align.thresh.method.SlowWave       = 'trial';%,'trial','trial'};%'medianbl','both';
+configdtx.align.toiplot.SlowWave             = [-1,  1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
+configdtx.align.toiactive.SlowWave           = [-0.5, 0.5];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
+configdtx.align.toibaseline.SlowWave         = [-1, -0.5];
+configdtx.align.maxtimeshift.SlowWave        = 0.3;
+configdtx.align.demean.SlowWave              = 'yes';
+%for detection of begin of event
+configdtx.align.findbegin.SlowWave       = 'yes';
+configdtx.align.beginthresh.SlowWave        = 0.3; % percent of peak
+
+configdtx.LFP.baselinewindow.SlowWave       = [-2, -1];
+configdtx.stats.bltoi.SlowWave            = [-2, -1];
+configdtx.stats.actoi.SlowWave            = [-1, 1];
+configdtx.spike.resamplefs.SlowWave       = 1000; %1/size of bar graph bins
+configdtx.spike.psthbin.SlowWave             = 1/50; %in s
+
+%Seizure
+configdtx.muse.startmarker.Seizure      = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.muse.endmarker.Seizure        = 'Crise_End';   % start and end Muse marker. For defining trials
+configdtx.epoch.toi.Seizure             = [-2, 2];
+configdtx.epoch.pad.Seizure             = 0;
+configdtx.LFP.baselinewindow.Seizure        = [-2, -1];
+configdtx.stats.bltoi.Seizure           = [-2, -1];
+configdtx.stats.actoi.Seizure            = [-1, Inf];
+configdtx.spike.resamplefs.Seizure       = 100;%1/size of bar graph bins
+
+%Interictal
+configdtx.muse.startmarker.Interictal      = 'Crise_End';   % start and end Muse marker. For defining trials
+configdtx.muse.endmarker.Interictal        = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.epoch.toi.Interictal             = [5, 1];
+configdtx.epoch.pad.Interictal             = 0;
+configdtx.LFP.baselinewindow.Interictal     = [0, 1];
+configdtx.stats.bltoi.Interictal            = [2, 6];
+configdtx.stats.actoi.Interictal            = [6, Inf];
+configdtx.spike.resamplefs.Interictal       = 0.1;%1/size of bar graph bins
+configdtx.spike.psthbin.Seizure             = 1/50; %in s
+configdtx.spike.psthbin.Interictal             = 10; %in s
+
+% ALIGN XCORR : 
+% configdtx.align.name                = {'SlowWave'};                               % Name of markers/patterns to align
+% configdtx.align.channel.SlowWave             = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP'};    % Channels to use for alignment
+% configdtx.align.demean              = 'yes';
+% configdtx.align.baselinewindow      = [-2 -1.5];
+% configdtx.align.reref               = 'no';
+% configdtx.align.refmethod           = 'bipolar';
+% configdtx.align.latency             = [-1, 1];  
+
+% to smooth spikerate. Not used for now. Maybe for correlation LFP-spike
+% configdtx.spike.toispikerate.SlowWave     = [-0.1 0.1];            % for plotting spikerate
+% configdtx.spike.toispikerate.Seizure     = [-0.5 0.5];            % for plotting spikerate
+% configdtx.spike.toispikerate.Interictal     = [-10 10];                % for plotting spikerate
 
 %% config for control experiments
 % no seizure-time-locked trials
@@ -138,34 +158,47 @@ configctrl.type                      = 'ctrl';
 configctrl.os                        = os;
 configctrl.datasavedir               = datasavedir;
 configctrl.name                      = {'Control'};
+configctrl.muse.backupdir            = fullfile(rootpath_analysis,'Musemarkers_backup');
+configctrl.spike.baseline_name        = 'Control';
+configctrl.spike.events_name          = {};
+
+configctrl.unit_table = fullfile(rootpath_analysis,'classification_units.xlsx');
+
 
 configctrl.commonchans               = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
-% configctrl.muse.startend             = {'Injection','Analysis_End'};  
+% configctrl.muse.startend           = {'Injection','Analysis_End'};  
 
 configctrl.LFP.name                  = []; %do not load LFP
+configctrl.LFP.channel               = []; %do not load LFP
 configctrl.align.name                = []; %do not align muse markers
+configctrl.align.channel             = []; %do not align muse markers
 
+configctrl.muse.write                = true;
 % list of onset timing with respect to start-marker (s)
-configctrl.epoch.toi{1}              = [0, 0];
-configctrl.epoch.pad{1}              = 10; %for LFP
+configctrl.epoch.toi.Control              = [0, 0];
+configctrl.epoch.pad.Control              = 10; %for LFP
 
 configctrl.circus.reref              = 'no';
 configctrl.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
 configctrl.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
-configctrl.circus.postfix             = [];%'-final';
+configctrl.circus.postfix            = [];%'-final';
 
 configctrl.spike.triallength         = 600; %seconds
-configctrl.spike.baselinename        = 'Control';
-configctrl.spike.eventsname          = [];
-configctrl.spike.RPV                 = 0.001; %refractory period violation, in seconds
+
+configctrl.spike.RPV                 = 0.003; %refractory period violation, in seconds
 configctrl.spike.ISIbins             = [0:0.003:0.150]; %in s
+
+configctrl.spikequal.label_list = {'Control'};
 
 configctrl.spikewaveform.toi         = [-0.0015 0.0015]; %in s
 configctrl.spikewaveform.cutoff      = 300; %high pass filter frequency to apply to raw data
 configctrl.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load per unit. Can be 'all'. 
 
+%remove trials which intersect BAD markers
+configctrl.rmtrials.plotdata         = 'no';
+configctrl.rmtrials.write            = 'no';
 
 %% Rodent 1
 config{1}                           = configdtx;
@@ -186,11 +219,11 @@ config{1}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11L
 
 config{1}.injectiontime             = datetime('19-Mar-2019 13:55:00');
 
-config{1}.align.channel             = {'E12LFP'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
+config{1}.align.channel.SlowWave    = 'E12LFP';                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 config{1}.LFP.channel               = config{1}.labels.macro;
-config{1}.LFP.electrodetoplot       = {'ECoGM1G', 'E12LFP'};
+config{1}.LFP.electrodetoplot.SlowWave = 'E12LFP';
 config{1}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-
+config{1}.rmtrials.electrodetoplot.SlowWave  = 'E12LFP';
 
 %% Rodent 2
 %ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS? CORRIGES AVEC
@@ -212,11 +245,12 @@ config{2}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12L
 
 config{2}.injectiontime             = datetime('01-Mar-2019 12:33:00');
 
-config{2}.align.channel             = {'E13LFP'};%{'ECoGS1'};% %ATTENTION erreur nom eeg pendant acquisition
+config{2}.align.channel.SlowWave             = 'E13LFP';%{'ECoGS1'};% %ATTENTION erreur nom eeg pendant acquisition
 config{2}.LFP.channel               = config{2}.labels.macro;%ECoG S1 et ECoGM1 renommés respectivement ECoGM1G et ECoGM1D, après l'étape de readLFP
-config{2}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'}; %ATTENTION ECoGS1 est renommé ECoGM1G pendant le script LFP
+config{2}.LFP.electrodetoplot.SlowWave       = 'E13LFP'; %ATTENTION ECoGS1 est renommé ECoGM1G pendant le script LFP
 
 config{2}.circus.channel            = {'E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{2}.rmtrials.electrodetoplot.SlowWave  = 'E13LFP';
 
 
 %% Rodent 3
@@ -236,10 +270,11 @@ config{3}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11L
 
 config{3}.injectiontime             = datetime('08-Mar-2019 13:21:00');
 
-config{3}.align.channel             = {'E13LFP'};%{'ECoGM1G'};%
+config{3}.align.channel.SlowWave             = 'E13LFP';%{'ECoGM1G'};%
 config{3}.LFP.channel               = config{3}.labels.macro;
-config{3}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
+config{3}.LFP.electrodetoplot.SlowWave       = 'E13LFP';
 config{3}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{3}.rmtrials.electrodetoplot.SlowWave  = 'E13LFP';
 
 
 %% Rodent 4
@@ -258,10 +293,11 @@ config{4}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10L
 
 config{4}.injectiontime             = datetime('22-Mar-2019 13:40:07');
 
-config{4}.align.channel             = {'E13LFP'};
+config{4}.align.channel.SlowWave             = 'E13LFP';
 config{4}.LFP.channel               = config{4}.labels.macro;
-config{4}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
+config{4}.LFP.electrodetoplot.SlowWave       = 'E13LFP';
 config{4}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{4}.rmtrials.electrodetoplot.SlowWave  = 'E13LFP';
 
 
 %% Rodent 5
@@ -274,15 +310,16 @@ config{5}.imagesavedir              = fullfile(imagesavedir,'DTX6');       % whe
 config{5}.directorylist{1}          =  {'2019-03-21_18-12', '2019-03-21_20-12'};
 
 config{5}.labels.micro              = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
-config{5}.labels.macro              = {'E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+config{5}.labels.macro              = {'E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
     'ECoGM1G','ECoGM1D','ECoGPtA'};
 
 config{5}.injectiontime             = datetime('21-Mar-2019 15:08:00');
 
-config{5}.align.channel             = {'E13LFP'};
+config{5}.align.channel.SlowWave             = 'E13LFP';
 config{5}.LFP.channel               = config{5}.labels.macro;
-config{5}.LFP.electrodetoplot       = {'ECoGM1G', 'E13LFP'};
+config{5}.LFP.electrodetoplot.SlowWave       = 'E13LFP';
 config{5}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{5}.rmtrials.electrodetoplot.SlowWave  = 'E13LFP';
 
 
 %% Rodent 6

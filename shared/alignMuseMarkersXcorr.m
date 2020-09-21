@@ -67,20 +67,9 @@ cfgtemp.LFP.channel     = cfg.align.channel;
 cfgtemp.LFP.write       = false;
 [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
 
-% select those markers to read, as you might not want to read all
-% markers defined in cfg.muse
-markerlist = [];
-for imuse = 1 : size(cfg.name,2)
-    for iname = 1 : size(cfg.align.name)
-        if ismember(cfg.name{imuse}, cfg.align.name)
-            markerlist = [markerlist, imuse];
-        end
-    end
-end
-    
 for ipart = 1 : size(cfg.directorylist,2)
 
-    for markername = string(cfg.LFP.name)'
+    for markername = string(cfg.LFP.name)
 
         if isempty(LFP{ipart}.(markername))
             continue
@@ -181,14 +170,14 @@ for ipart = 1 : size(cfg.directorylist,2)
 
         % correct MuseStruct
         i = 1;
-        for idir = 1:length(MuseStruct{ipart})
+        for idir = 1 : length(MuseStruct{ipart})
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
             if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)), 'synctime')
                 continue
             end
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
@@ -196,21 +185,21 @@ for ipart = 1 : size(cfg.directorylist,2)
             end
             todelete = [];
             
-            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime,2)
-                if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
-                    timeshift = nshift(i) * 1/dat.fsample;
+            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
+                if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
+                    timeshift = nshift(i) * 1 / dat.fsample;
                     fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(i),timeshift);
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent)      = timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(timeshift);
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(timeshift);
                     i = i + 1;
                 else
-                    fprintf('Removing event %d in part %d\n',ievent,ipart);
+                    fprintf('Removing event %d in part %d\n', ievent, ipart);
                     todelete = [todelete, ievent];
                 end
             end
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(todelete)       = [];
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(todelete)          = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(todelete) = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(todelete)    = [];
         end % idir
     end % imarker
 end % ipart
