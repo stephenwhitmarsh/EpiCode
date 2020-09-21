@@ -29,6 +29,7 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 %                           Default = 'bl' (baseline)
 % cfg.morpho.mesurepeaktrough = 'yes' or 'no', whether to compute peak-trough
 %                           and trough-peak. Default = 'no'.
+% cfg.morpho.mesuretroughpeak
 % 
 % ### Necessary cfg fields if cfg.morpho.mesurehalfwidth = 'yes' or cfg.morpho.mesurepeaktrough = 'yes'
 % cfg.morpho.toiac        = active period for measurements. Can be 'all' (default)
@@ -259,6 +260,7 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughp
         end
 %     end
     end
+%     end
 end
 
 axis tight;

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Hspike
+#SBATCH --job-name=Xcorr
 #SBATCH --partition=normal
 #SBATCH --time=99:00:00
 #SBATCH --mem=64G

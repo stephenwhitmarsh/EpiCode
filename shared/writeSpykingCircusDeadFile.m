@@ -117,6 +117,12 @@ for ipart = cfg.bad.part_list
     % write artefacts to txt file for spyking circus
     subjdir     = cfg.prefix(1:end-1);
     partdir     = ['p',num2str(ipart)];
+    
+    if ~isfolder(fullfile(cfg.datasavedir,subjdir,partdir))
+        mkdir(fullfile(cfg.datasavedir,subjdir,partdir));
+        fprintf('Creating directory : %s', fullfile(cfg.datasavedir,subjdir,partdir));
+    end
+        
 
     filename    = sprintf('SpykingCircus_artefacts_ms%s.dead', cfg.circus.deadfilesuffix);
     fprintf('Writing artefacts for Spyking-Circus to: %s\n',filename);

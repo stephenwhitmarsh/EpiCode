@@ -1,4 +1,4 @@
-function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
+function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force, varargin)
 
 % ALIGNMUSEMARKERSXCORR determines timing shift of MUSE markers according
 % to crosscorrelation with average
@@ -43,10 +43,20 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 
+if nargin == 0
+    postfix = '';
+elseif nargin == 1
+    postfix = varargin{1};
+else
+    error('Not the right amount of input argments');
+end
+    
+    
 % check if results exist
-fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr', postfix, '.mat']);
 
-write   = ft_getopt(cfg.align, 'write', true);
+% default settings
+write   = ft_getopt(cfg.align, 'write', false);
 latency = ft_getopt(cfg.align, 'latency', 'all');
 
 if exist(fname,'file') && force == false
@@ -61,7 +71,7 @@ fprintf('**************\n');
 fprintf('** Aligning **\n');
 fprintf('**************\n\n');
 
-cfgtemp                 = rmfield(cfg,'LFP');
+cfgtemp                 = rmfield(cfg, 'LFP');
 cfgtemp.LFP.name        = cfg.align.name;
 cfgtemp.LFP.channel     = cfg.align.channel;
 cfgtemp.LFP.write       = false;
@@ -190,7 +200,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                     timeshift = nshift(i) * 1 / dat.fsample;
                     fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) - timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(timeshift);
                     i = i + 1;
                 else
