@@ -85,7 +85,7 @@ for markername = string(cfg.LFP.name)
         for ipart = 1 : size(MuseStruct, 2)
             LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
         end
-        return
+        continue
         
     else
         fprintf('*** (re-) computing LFP data for %s ***\n', markername);

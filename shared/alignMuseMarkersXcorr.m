@@ -69,7 +69,7 @@ cfgtemp.LFP.write       = false;
 
 for ipart = 1 : size(cfg.directorylist,2)
 
-    for markername = string(cfg.LFP.name)'
+    for markername = string(cfg.LFP.name)
 
         if isempty(LFP{ipart}.(markername))
             continue
