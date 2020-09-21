@@ -29,15 +29,11 @@ MuseStruct = readMuseMarkers(config{ipatient}, true);
 
 %remove the end of the file, after the seizure to analyse (because we do
 %not use the post-ictal data, so better to remove it of the spike sorting)
-cfgtemp                     = [];
-cfgtemp.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
-cfgtemp.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
-cfgtemp.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
-cfgtemp.bad.sample_list     = ft_getopt(config{ipatient},'seizure_index', 'last'); %index of the seizure to analyze, on the LAST dir. can be 'last' (default)
-cfgtemp.bad.time_from_begin = 60; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-MuseStruct                  = addMuseBAD(cfgtemp,MuseStruct);
+% Paramètres indiqués dans preictal_setparams
+MuseStruct                  = addMuseBAD(config{ipatient},MuseStruct);
 
 %save deadfile without removing seizures
+config{ipatient}.circus.deadfilesuffix = '_SeizuresNotRemoved';
 writeSpykingCircusDeadFile(config{ipatient},MuseStruct);
 
 %remove seizures for the Spyking-Circus clustering
@@ -47,6 +43,7 @@ cfgtemp.bad.markerEnd         = 'CriseEnd';
 MuseStruct                    = addMuseBAD(cfgtemp,MuseStruct);
  
 %create multifile and dead file :
+config{ipatient}.circus.deadfilesuffix = '_SeizuresRemoved';
 writeSpykingCircus(config{ipatient},MuseStruct,true, true);
 
 %create params file and prb file :

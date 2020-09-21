@@ -5,7 +5,7 @@
 [data]
 file_format    = neuralynx       # Can be raw_binary, openephys, hdf5, ... See >> spyking-circus help -i for more info
 stream_mode    = None            # None by default. Can be multi-files, or anything depending to the file format
-mapping        = 		    #  Mapping of the electrode (see http://spyking-circus.rtfd.ord)
+mapping        = Adtech_3chan.prb    #  Mapping of the electrode (see http://spyking-circus.rtfd.ord)
 suffix         =                 # Suffix to add to generated files, if needed
 overwrite      = False          # Filter or remove artefacts on site (if write access is possible). Data are duplicated otherwise
 parallel_hdf5  = True       # Use the parallel HDF5 feature (if available)
@@ -15,7 +15,7 @@ output_dir     =            # By default, generated data are in the same folder 
 radius         = auto       # Radius [in um] (if auto, read from the prb file)
 N_t            = 3          # Width of the templates [in ms]
 spike_thresh   = 6          # Threshold for spike detection
-peaks          = negative   # Can be negative (default), positive or both
+peaks          = positive   # Can be negative (default), positive or both
 dead_channels  =            # If not empty or specified in the probe, a dictionary {channel_group : [list_of_valid_ids]}
 
 [filtering]
@@ -52,12 +52,13 @@ merging_param  = default    # Merging parameter (see docs) (3 if distance, 0.5 i
 sensitivity    = 3          # Single parameter for clustering sensitivity. The lower the more sensitive
 cc_merge       = 0.95       # If CC between two templates is higher, they are merged
 dispersion     = (5, 5)     # Min and Max dispersion allowed for amplitudes [in MAD]
+fine_amplitude = True       # Optimize the amplitudes and compute a purity index for each template
 make_plots     = png        # Generate sanity plots of the clustering [Nothing or None if no plots]
 
 [fitting]
 amp_limits     = (0.3, 5)   # Amplitudes for the templates during spike detection [if not auto]
 amp_auto       = True       # True if amplitudes are adjusted automatically for every templates
-collect_all    = False      # If True, one garbage template per electrode is created, to store unfitted spikes
+collect_all    = True       # If True, one garbage template per electrode is created, to store unfitted spikes
 ratio_thresh   = 0.9        # Ratio of the spike_threshold used while fitting [0-1]. The lower the slower
 
 [merging]
@@ -76,10 +77,11 @@ drift_limit    = 0.1        # Distance for drifts. The higher, the more non-over
 
 [converting]
 erase_all      = True       # If False, a prompt will ask you to export if export has already been done
-export_pcs     = prompt     # Can be prompt [default] or in none, all, some
-export_all     = True      # If True, unfitted spikes will be exported as the last Ne templates
+export_pcs     = all        # Can be prompt [default] or in none, all, some
+export_all     = True       # If True, unfitted spikes will be exported as the last Ne templates
 sparse_export  = True       # For recent versions of phy, and large number of templates/channels
-prelabelling   = False      # If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
+prelabelling   = True       # If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
+rpv_threshold  = 0.05       # Percentage of RPV allowed while labelling neurons as good neurons
 
 [validating]
 nearest_elec   = auto       # Validation channel (e.g. electrode closest to the ground truth cell)
@@ -103,7 +105,7 @@ cc_merge       = 0.975      # If CC between two templates is higher, they are me
 noise_thr      = 0.8        # Minimal amplitudes are such than amp*min(templates) < noise_thr*threshold
 
 [noedits]
-filter_done    = False      # Will become True automatically after removing artefacts
+filter_done    = True              #!! AUTOMATICALLY EDITED: DO NOT MODIFY !!
 artefacts_done = False      # Will become True automatically after removing artefacts
 median_done    = False      # Will become True automatically after removing common median
 ground_done    = False      # Will become True automatically after removing common ground
