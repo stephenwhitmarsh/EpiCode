@@ -29,23 +29,19 @@ cfg.visible                 = ft_getopt(cfg, 'visible', 'on');
 cfg.template.reref          = ft_getopt(cfg.template, 'reref', 'no');
 cfg.template.refmethod      = ft_getopt(cfg.template, 'refmethod', 'none');
 cfg.template.latency        = ft_getopt(cfg.template, 'latency', 'all');
-cfg.template.writemuse      = ft_getopt(cfg.template, 'writemuse', true);
+cfg.template.writemuse      = ft_getopt(cfg.template, 'writemuse', false);
 cfg.template.threshold      = ft_getopt(cfg.template, 'threshold', 4);
 cfg.template.name           = ft_getopt(cfg.template, 'name', 'TemplateDetect');
 
 fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
 
 if exist(fname_out,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('** Loading results spikedetection **\n');
-    fprintf('************************************\n\n');
+    fprintf('** Loading results template detection **\n');
     load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
     return
 end
 
-fprintf('**********************\n');
 fprintf('** Detecting spikes **\n');
-fprintf('**********************\n\n');
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -199,40 +195,41 @@ for ipart = 1 :  size(cfg.directorylist,2)
     % plot correlation, threshold and average LFG
     for itemp = 1 : size(template, 2)
 
-        fig = figure('visible', cfg.visible); hold;  
-        plot(C_norm{ipart}{itemp});
-        axis tight
-        ax = axis;
-        plot([ax(1),ax(2)],[threshold, threshold],':k');
-        if ~isempty(Tindx_unique{ipart}{itemp})
-            scatter3(Tindx_unique{ipart}{itemp}, C_norm{ipart}{itemp}(Tindx_unique{ipart}{itemp}), ones(size(Tindx_unique{ipart}{itemp}))*10, 'r.');
-            n = size(Tindx_unique{ipart}{itemp}, 1);
-        else
-            n = 0;
-        end
-        axis tight
-        box off
-        title(sprintf('n = %d', n));
-        
-        % show separation in files and time
-        ax = axis;
-        axisnames = [];
-        for i = 1 : length(cumsumdatlength)
-            plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color',[0, 0, 0]);
-            axisnames{i} = datestr(MuseStruct{ipart}{i}.starttime);
-        end
-        set(gca, 'TickDir', 'out');
-        xticks(cumsumdatlength);
-        xticklabels(axisnames);
-        xtickangle(90);
-        
-        % print to file
-        set(fig,'PaperOrientation','landscape');
-        set(fig,'PaperUnits','normalized');
-        set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template', num2str(itemp),'_threshold.png']));
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template', num2str(itemp),'_threshold.pdf']));
-        close all
+%         % plot threshold per template
+%         fig = figure('visible', cfg.visible); hold;  
+%         plot(C_norm{ipart}{itemp});
+%         axis tight
+%         ax = axis;
+%         plot([ax(1),ax(2)],[threshold, threshold],':k');
+%         if ~isempty(Tindx_unique{ipart}{itemp})
+%             scatter3(Tindx_unique{ipart}{itemp}, C_norm{ipart}{itemp}(Tindx_unique{ipart}{itemp}), ones(size(Tindx_unique{ipart}{itemp}))*10, 'r.');
+%             n = size(Tindx_unique{ipart}{itemp}, 1);
+%         else
+%             n = 0;
+%         end
+%         axis tight
+%         box off
+%         title(sprintf('n = %d', n));
+%         
+%         % show separation in files and time
+%         ax = axis;
+%         axisnames = [];
+%         for i = 1 : length(cumsumdatlength)
+%             plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color',[0, 0, 0]);
+%             axisnames{i} = datestr(MuseStruct{ipart}{i}.starttime);
+%         end
+%         set(gca, 'TickDir', 'out');
+%         xticks(cumsumdatlength);
+%         xticklabels(axisnames);
+%         xtickangle(90);
+%         
+%         % print to file
+%         set(fig,'PaperOrientation','landscape');
+%         set(fig,'PaperUnits','normalized');
+%         set(fig,'PaperPosition', [0 0 1 1]);
+%         print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template', num2str(itemp),'_threshold.png']));
+%         print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_template', num2str(itemp),'_threshold.pdf']));
+%         close all
         
         % skip further plotting if no templates were detected
         if isempty(Tindx_unique{ipart}{itemp})
@@ -325,7 +322,9 @@ for ipart = 1 :  size(cfg.directorylist,2)
     fig = figure('visible', cfg.visible);
     
     for itemp = 1 : size(C_norm2{ipart}, 2)
-        subplot(size(C_norm2{ipart}, 2), 1, itemp); hold;
+        
+        subplot(size(C_norm2{ipart}, 2) + 1, 1, itemp); hold;
+        
         plot(C_norm2{ipart}{itemp}, 'color', [0.5, 0.5, 0.5]);    
         axis tight
         ax = axis;
@@ -337,46 +336,45 @@ for ipart = 1 :  size(cfg.directorylist,2)
         else
             n = 0;
         end
+        title(sprintf('template%d, n = %d', itemp, n));
+        set(gca, 'Layer', 'top');
+        
         xticks('');
         set(gca,'fontsize', 6)
         for i = 1 : length(cumsumdatlength)
             plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color', [0, 0, 0]);
+            axisnames{i} = datestr(MuseStruct{ipart}{i}.starttime);           
         end
         axis tight
+        ax = axis;
         box off
-        title(sprintf('template%d, n = %d', itemp, n));
     end
+    
+    % add filenames to extra subplot
+    subplot(size(C_norm2{ipart}, 2) + 1, 1, size(C_norm2{ipart}, 2) + 1); hold;
+    set(gca,'fontsize', 6)
+    
+    for i = 1 : length(cumsumdatlength)
+        plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color', [0, 0, 0]);
+    end
+    axis tight
+    xlim([ax(1), ax(2)]);
     set(gca, 'TickDir', 'out');
     xticks(cumsumdatlength);
-    set(gca, 'XTickLabel', [])
+    set(gca, 'xticklabels', axisnames);    
+    xtickangle(90);
     
     % print to file
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_templateX_threshold.png']));
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_templateX_threshold.pdf']));
+    print(fig, '-dpng', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_all_templates_threshold.png']));
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_all_templates_threshold.pdf']));
     close all
     
     % add to MuseStruct and add to markerfile if requested
     for idir = unique(dirindx)
-        
-        %  read Muse events file
-        fname_mrk = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
-        
-        % backup markerfile
-        if ~exist(cfg.muse.backupdir,'DIR')
-            error('Backup directory does not exist');
-        end
-        [~, d] = fileparts(cfg.directorylist{ipart}{idir});
-        if ~exist(fullfile(cfg.muse.backupdir, d), 'DIR')
-            fprintf('Creating directory: %s\n', fullfile(cfg.muse.backupdir, d));
-            eval(sprintf('!mkdir %s', fullfile(cfg.muse.backupdir, d)));
-        end
-        fname_backup = sprintf('Events_%s.mrk', datestr(now, 'mm-dd-yyyy_HH-MM-SS'));
-        eval(sprintf('!cp %s %s', fname_mrk, fullfile(cfg.muse.backupdir, d, fname_backup)));
-        fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
-        
+         
         % remove previous template markers        
         names = fieldnames(MuseStruct{ipart}{idir}.markers);
         for itemp = 1 : 100
@@ -411,8 +409,24 @@ for ipart = 1 :  size(cfg.directorylist,2)
             MuseStruct{ipart}{idir}.markers.(name).clock         = (seconds(indx / dat.fsample) + MuseStruct{ipart}{idir}.starttime)';
         end
         
-        % write to muse marker file
         if cfg.template.writemuse == true
+            
+            fname_mrk = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
+
+            % backup markerfile
+            if ~exist(cfg.muse.backupdir,'DIR')
+                error('Backup directory does not exist');
+            end
+            [~, d] = fileparts(cfg.directorylist{ipart}{idir});
+            if ~exist(fullfile(cfg.muse.backupdir, d), 'DIR')
+                fprintf('Creating directory: %s\n', fullfile(cfg.muse.backupdir, d));
+                eval(sprintf('!mkdir %s', fullfile(cfg.muse.backupdir, d)));
+            end
+            fname_backup = sprintf('Events_%s.mrk', datestr(now, 'mm-dd-yyyy_HH-MM-SS'));
+            eval(sprintf('!cp %s %s', fname_mrk, fullfile(cfg.muse.backupdir, d, fname_backup)));
+            fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
+            
+            % write to muse marker file
             writeMuseMarkerfile(MuseStruct{ipart}{idir}, fname_mrk);
         end
     end
