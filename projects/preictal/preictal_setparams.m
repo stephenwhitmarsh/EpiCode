@@ -30,10 +30,9 @@ configcommon.statstime.slidestep   = 1;
 configcommon.statstime.minbadtime  = 1; %temps minimum entre 2 marqueurs bad pour qu'il soit utilisé pour supprimer les données mesurées (s)
 configcommon.statstime.write       = true; %whether to save output stats on disk or recompute it each time
 configcommon.statstime.plot.toi_seizure = [-600 60]; %temps pour plot autour des crises
-configcommon.spike.ISIbins         = 0:0.001:0.150;
-configcommon.spike.RPV             = 0.003;
+configcommon.spike.ISIbins         = 0:0.001:0.150;%in seconds
+configcommon.spike.RPV             = 0.001;
 
-configcommon.compute_spikewaveforms = 'yes';
 configcommon.spikewaveform.nspikes  = 'all'; %100000; %1000;
 
 %% patient 1

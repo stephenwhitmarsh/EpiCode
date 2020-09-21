@@ -1,4 +1,4 @@
-function preictal_project(irat)
+function preictal_project(ipatient)
 
 if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
@@ -33,25 +33,29 @@ MuseStruct                  = addMuseBAD(config{ipatient},MuseStruct);
 
 %read spike data
 SpikeRaw = readSpikeRaw_Phy(config{ipatient},true);
-SpikeRaw{1}.(config{ipatient}.name{1}) = SpikeRaw{1}; %adapt spike structure to be consistent with spike trial structure in other projects
+%adapt spike structure to be consistent with spike trial structure in other projects
+SpikeRaw{1}.(config{ipatient}.name{1}) = SpikeRaw{1}; 
+SpikeRaw{1} = keepfields(SpikeRaw{1}, (config{ipatient}.name{1}));
 
 %read spike waveforms
 SpikeWaveforms = readSpikeWaveforms(config{ipatient},SpikeRaw.(config{ipatient}.name{1}), false);
 
 %compute stats over time, for each unit
-stats = spikestatsOverTime(config{ipatient}, SpikeRaw, false);
+stats = spikestatsOverTime(config{ipatient}, SpikeRaw, true);
 
 %compute stats after removing bursts (for regularity)
 cfgtemp = config{ipatient};
 cfgtemp.statstime.removebursts        = 'yes';
 cfgtemp.statstime.suffix              = '_withoutbursts';
-stats_without_bursts                  = spikestatsOverTime(cfgtemp, SpikeRaw, false);
+stats_without_bursts                  = spikestatsOverTime(cfgtemp, SpikeRaw, true);
 
 %find stats windows which intersect BAD Muse markers
+% it would be normal to have lot of windows removed if the seizure occurs
+% early and you added BAD with addMuseBAD in all data after this seizure
 for ipart = 1:size(stats, 2)
-    for ilabel = 1:size(stats{ipart},2)
-        bad_start = concatenateMuseMarker(config{iaptient},MuseStruct, ipart, 'BAD__START__');
-        bad_end   = concatenateMuseMarker(config{iaptient},MuseStruct, ipart, 'BAD__END__');
+    for markername = string(fieldnames(stats{ipart})')
+        bad_start = concatenateMuseMarker(config{ipatient},MuseStruct, ipart, 'BAD__START__');
+        bad_end   = concatenateMuseMarker(config{ipatient},MuseStruct, ipart, 'BAD__END__');
         if length(bad_start.synctime) ~= length(bad_end.synctime)
             error('Not the same amount of BAD start and end markers');
         end

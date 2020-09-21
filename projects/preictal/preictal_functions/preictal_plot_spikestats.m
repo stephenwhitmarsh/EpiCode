@@ -5,6 +5,9 @@ function [stats] = preictal_plot_spikestats(cfg, stats, spikedata)
 % need plot_morpho.m to plot spike morphologie and compute halfwidth,
 % peak-trough and trough-peak
 
+% the field cfg.plot.toi do not interact with the coputing of statistics. I
+% is only used to zoom on some periods of time for vizualisation only
+
 % Mandatory input :
 
 % Optional inputs
