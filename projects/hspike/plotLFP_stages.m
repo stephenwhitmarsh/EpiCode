@@ -29,7 +29,7 @@ for markername = string(cfg.LFP.name)
             end
             
             cfgtemp = [];
-            cfgtemp.trials = find(LFP{ipart}.(markername).trialinfo(:,4) == istage);
+            cfgtemp.trials = find(LFP{ipart}.(markername).trialinfo.stage == istage);
             if ~isempty(cfgtemp.trials)
                 LFP_sel{ipart} = ft_selectdata(cfgtemp, LFP{ipart}.(markername));
                 hasdata = [hasdata, ipart];
@@ -41,27 +41,31 @@ for markername = string(cfg.LFP.name)
         LFP_app = ft_appenddata([], LFP_sel{hasdata});
         clear LFP_sel
         
+        % baseline correction
         cfgtemp = [];
         cfgtemp.baseline = 'yes';
         cfgtemp.baseline = cfg.LFP.baselinewindow.(markername);
         LFP_avg.(markername){istage+1} = ft_timelockbaseline(cfgtemp, LFP_app);
-        LFP_avg.(markername){istage+1} = ft_timelockanalysis([], LFP_avg.(markername){istage+1});
-        LFP_avg.(markername){istage+1}.nr = size(LFP_app.trial, 2);
+
+        % average, only of selected timeperiod
+        cfgtemp = [];
+        cfgtemp.latency = cfg.epoch.toi.(markername);
+        LFP_avg.(markername){istage+1} = ft_timelockanalysis([], LFP_avg.(markername){istage+1});        
         
+        % add number of trials for future reference
+        LFP_avg.(markername){istage+1}.nr = size(LFP_app.trial, 2); 
     end
 end
 
 clear LFP
 
-
 % fig = figure('visible', cfg.visible);
 fig = figure;
 fig.Renderer = 'Painters';
-cm = cool(5);
+set(gca,'fontsize', 6)
 
 % max height for scaling
 h = 0;
-
 for markername = string(fieldnames(LFP_avg))'
     if isempty(LFP_avg.(markername){1})
         continue
@@ -169,7 +173,9 @@ for markername = string(fieldnames(LFP_avg))'
     
     n = 1;
     ytick = [];
-    
+    if isempty(LFP_avg.(markername){1})
+        fprintf('Not enough observations\n');
+    end
     for ichan = 1 : size(LFP_avg.(markername){1}.label,1)
         ytick = [ytick, n*h];
         icolor = 1;

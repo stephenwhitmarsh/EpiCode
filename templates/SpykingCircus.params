@@ -3,11 +3,11 @@
 ### file format. Otherwise, launch the code and a message will tell you what is needed
 
 [data]
-file_format    = neuralynx       # Can be raw_binary, openephys, hdf5, ... See >> spyking-circus help -i for more info
-stream_mode    = None            # None by default. Can be multi-files, or anything depending to the file format
+file_format    = neuralynx  # Can be raw_binary, openephys, hdf5, ... See >> spyking-circus help -i for more info
+stream_mode    = None       # None by default. Can be multi-files, or anything depending to the file format
 mapping        = 		    #  Mapping of the electrode (see http://spyking-circus.rtfd.ord)
-suffix         =                 # Suffix to add to generated files, if needed
-overwrite      = False          # Filter or remove artefacts on site (if write access is possible). Data are duplicated otherwise
+suffix         =            # Suffix to add to generated files, if needed
+overwrite      = False      # Filter or remove artefacts on site (if write access is possible). Data are duplicated otherwise
 parallel_hdf5  = True       # Use the parallel HDF5 feature (if available)
 output_dir     =            # By default, generated data are in the same folder as the data.
 
@@ -77,7 +77,7 @@ drift_limit    = 0.1        # Distance for drifts. The higher, the more non-over
 [converting]
 erase_all      = True       # If False, a prompt will ask you to export if export has already been done
 export_pcs     = prompt     # Can be prompt [default] or in none, all, some
-export_all     = True      # If True, unfitted spikes will be exported as the last Ne templates
+export_all     = True       # If True, unfitted spikes will be exported as the last Ne templates
 sparse_export  = True       # For recent versions of phy, and large number of templates/channels
 prelabelling   = False      # If True, putative labels (good, noise, best, mua) are pre-assigned to neurons
 
