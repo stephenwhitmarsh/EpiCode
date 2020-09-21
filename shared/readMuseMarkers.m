@@ -28,7 +28,7 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname = fullfile(cfg.datasavedir,sprintf('%sMuseStruct.mat', cfg.prefix));
+fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
 
 write = ft_getopt(cfg.muse, 'write', true);
 
@@ -172,7 +172,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
         end
-        
+
         % recover "real time"
         if isNeuralynx
             %from first Neurlynx .txt file
@@ -181,7 +181,8 @@ for ipart = 1 : size(cfg.directorylist, 2)
             hdr         = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp(1).name));
             f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
             clear timestring
-
+            
+            if f >= 0
             % depending on amplifier, there are somewhat different
             % formats of the txt file
             ftype       = 'none';
@@ -212,7 +213,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
             fclose(f);
-
+            
             % add real time of onset of file
             timestring = strsplit(timestring);
             switch ftype
@@ -224,6 +225,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 case 2
                     headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
                     MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
+            end
+            
+            else %error while loading katia text file header
+                warning('Clock time not found, they will be ignored');
+                MuseStruct{ipart}{idir}.starttime  = datetime.empty;
             end
 
         elseif isMicromed
@@ -293,17 +299,22 @@ for ipart = 1 : size(cfg.directorylist, 2)
             for ievent = 1 : nrEvents(imarker)
                 MuseStruct{ipart}{idir}.markers.(name{imarker}).trialnum                 = marks{imarker}(ievent,1);
                 MuseStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent)         = marks{imarker}(ievent,2);
-                MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent,2)) + MuseStruct{ipart}{idir}.starttime;
+                if isempty(MuseStruct{ipart}{idir}.starttime)
+                    MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) = NaN;
+                else
+                    MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent,2)) + MuseStruct{ipart}{idir}.starttime;
+                end
             end
         end
     end
     
+
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
         ft_notice('creating directory %s', cfg.datasavedir);
         mkdir(cfg.datasavedir);
     end
-    
+
 end
 
 if write

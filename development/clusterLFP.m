@@ -74,18 +74,20 @@ for ipart = 1 : size(LFP,2)
         LFP{ipart}{imarker}     = ft_selectdata(cfgtemp, LFP{ipart}{imarker});
         
         % bipolar rereferencing if requested
-        if strcmp(cfg.cluster.refmethod, 'bipolar')
-            labels_nonum    = regexprep(LFP{ipart}{imarker}.label, '[0-9_]', '');
-            [~,~,indx]      = unique(labels_nonum);
-            for i = 1 : max(indx)
-                cfgtemp             = [];
-                cfgtemp.reref       = 'yes';
-                cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.channel     = LFP{ipart}{imarker}.label(indx==i);
-                group{i}            = ft_preprocessing(cfgtemp,LFP{ipart}{imarker});
+        if strcmp(cfg.cluster.reref, 'yes')
+            if strcmp(cfg.cluster.refmethod, 'bipolar')
+                labels_nonum    = regexprep(LFP{ipart}{imarker}.label, '[0-9_]', '');
+                [~,~,indx]      = unique(labels_nonum);
+                for i = 1 : max(indx)
+                    cfgtemp             = [];
+                    cfgtemp.reref       = 'yes';
+                    cfgtemp.refmethod   = 'bipolar';
+                    cfgtemp.channel     = LFP{ipart}{imarker}.label(indx==i);
+                    group{i}            = ft_preprocessing(cfgtemp,LFP{ipart}{imarker});
+                end
+                LFP{ipart}{imarker}     = ft_appenddata([],group{:});
+                clear group
             end
-            LFP{ipart}{imarker}     = ft_appenddata([],group{:});
-            clear group
         end
     end
 end
@@ -144,9 +146,7 @@ if strcmp(cfg.cluster.dbscan, 'yes')
             N = max(indx_dbscan);
             i = 1;
             for icluster = 1 : N
-                
-                
-                
+
                 % realign data again per cluster
                 indx = indx_dbscan == icluster;
                 

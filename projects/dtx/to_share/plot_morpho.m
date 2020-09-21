@@ -258,6 +258,7 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughp
             [unit, troughpeak_corr] = setunit(troughpeak);
             text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
         end
+%     end
     end
 %     end
 end

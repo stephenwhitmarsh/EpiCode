@@ -41,6 +41,8 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+cfg.visible = ft_getopt(cfg, 'visible', 'on');
+
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_alignedXcorr.mat']);
 
@@ -65,22 +67,11 @@ cfgtemp.LFP.channel     = cfg.align.channel;
 cfgtemp.LFP.write       = false;
 [LFP]                   = readLFP(cfgtemp, MuseStruct, true);
 
-% select those markers to read, as you might not want to read all
-% markers defined in cfg.muse
-markerlist = [];
-for imuse = 1 : size(cfg.name,2)
-    for iname = 1 : size(cfg.align.name)
-        if ismember(cfg.name{imuse}, cfg.align.name)
-            markerlist = [markerlist, imuse];
-        end
-    end
-end
-    
-for ipart = 1:size(cfg.directorylist,2)
+for ipart = 1 : size(cfg.directorylist,2)
 
-    for imarker = markerlist
+    for markername = string(cfg.LFP.name)
 
-        if isempty(LFP{ipart}{imarker})
+        if isempty(LFP{ipart}.(markername))
             continue
         end
         
@@ -90,20 +81,23 @@ for ipart = 1:size(cfg.directorylist,2)
         cfgtemp.baselinewindow  = ft_getopt(cfg.align, 'baselinewindow', 'no');
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
-        dat                     = ft_preprocessing(cfgtemp, LFP{ipart}{imarker});
-
+        dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
+        LFP{ipart}.(markername) = [];
+        
         % select data
-        if strcmp('latency','all')
+        if strcmp('latency', 'all')
             latency = [dat.time{1}(1), dat.time{1}(end)];
         end
 
         cfgtemp                 = [];
         cfgtemp.latency         = latency;
         dat_timesel             = ft_selectdata(cfgtemp, dat);
-        dat_avg_orig            = ft_timelockanalysis([], dat);
+        
+        cfgtemp                 = [];
+        dat_avg_orig            = ft_timelockanalysis(cfgtemp, dat);
 
         % put selected timeperiod in single matrix with concatinated channels
-        fprintf('Preparing alignment');
+        fprintf('Preparing alignment...\n');
         d = size(dat_timesel.trial{1});
         LFP_concatinated = nan(size(dat_timesel.trial,2),d(1)*d(2));
         for itrial = 1 : size(dat.trial,2)
@@ -128,81 +122,84 @@ for ipart = 1:size(cfg.directorylist,2)
         dat_avg_shifted     = ft_timelockanalysis([], dat_shifted);
 
         % draw figure
-        fig = figure('visible','off');
+        fig = figure('visible', cfg.visible);
         fig.Renderer = 'Painters';
 
-        subplot(1,5,1);
+        subplot(1, 5, 1);
         imagesc(LFP_concatinated(~rejected,:));
-        title(sprintf('Cleaned (%d-%d)',sum(~rejected),sum(rejected)));
-        set(gca,'xtick',[]);
+        title(sprintf('Cleaned (%d-%d)', sum(~rejected), sum(rejected)));
+        set(gca,'xtick', []);
 
-        subplot(1,5,2);
-        imagesc(shifted(~rejected,:));
+        subplot(1, 5, 2);
+        imagesc(shifted(~rejected, :));
         title('Aligned');
-        set(gca,'xtick',[]);
+        set(gca,'xtick', []);
 
-        subplot(1,5,3);
-        scatter(nshift(~rejected) / dat.fsample * 1000,sum(~rejected):-1:1,'k.');
-        set(gca,'ytick',[]);
+        subplot(1, 5, 3);
+        scatter(nshift(~rejected) / dat.fsample * 1000, sum(~rejected):-1:1,'k.');
+        set(gca,'ytick', []);
         xlabel('ms');
         title('Timeshift');
         axis tight;
 
-        subplot(2,5,[4 5]);
+        subplot(2, 5, [4 5]); hold
         plot(dat_avg_orig.time, dat_avg_orig.avg');
-        xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
         ax = axis;
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
+        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Original');
-
-        subplot(2,5,[9 10]);
+        axis tight
+        xlim([dat.time{1}(1), dat.time{1}(end)]); 
+ 
+        subplot(2,5,[9 10]); hold
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
-        xlim([dat_avg_orig.time(1), dat_avg_orig.time(end)]);
         ax = axis;        
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)],'r','facealpha',0.1,'edgecolor','none');
+        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Aligned');
-        
+        axis tight
+        xlim([dat.time{1}(1), dat.time{1}(end)]); 
+       
         set(fig,'Renderer','Painters');
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart), '_', cfg.name{imarker}, '_alignmentXcorr.png']));
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart), '_', cfg.name{imarker}, '_alignmentXcorr.pdf']));
+        print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png')));
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.pdf')));
 
         close all
         clear shifted shifted_clear shifted_clean_z
 
         % correct MuseStruct
         i = 1;
-        for idir = 1:length(MuseStruct{ipart})
+        for idir = 1 : length(MuseStruct{ipart})
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers,(cfg.muse.startend{imarker,1}))
+            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)), 'synctime')
                 continue
             end
-            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime)
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
                 continue
             end
             todelete = [];
-            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime,2)
-                if any(dat.trialinfo(:,1) == ievent & dat.trialinfo(:,3) == idir)
-                    timeshift = nshift(i) * 1/dat.fsample;
-                    fprintf('Timeshifting event %d in part %d by %d samples (%0.3f seconds) \n',ievent,ipart,nshift(i),timeshift);
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(ievent)      = timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(ievent) + timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(ievent) + seconds(timeshift);
+            
+            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
+                if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
+                    timeshift = nshift(i) * 1 / dat.fsample;
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(i),timeshift);
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(timeshift);
                     i = i + 1;
                 else
-                    fprintf('Removing event %d in part %d\n',ievent,ipart);
+                    fprintf('Removing event %d in part %d\n', ievent, ipart);
                     todelete = [todelete, ievent];
                 end
             end
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).synctime(todelete)       = [];
-            MuseStruct{ipart}{idir}.markers.(cfg.muse.startend{imarker,1}).clock(todelete)          = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(todelete) = [];
+            MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(todelete)    = [];
         end % idir
     end % imarker
 end % ipart

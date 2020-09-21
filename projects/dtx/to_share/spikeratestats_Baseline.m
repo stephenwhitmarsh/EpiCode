@@ -18,7 +18,7 @@ function [stats] = spikeratestats_Baseline(cfg,force)
 % cfg.datasavedir               = data directory of results
 %
 % ### Necessary inputs to add, to compute stats on baseline :
-% cfg.SpikeTrials{parts}{names} = spike data epoched in FieldTrip trial
+% cfg.SpikeTrials{parts}.(name) = spike data epoched in FieldTrip trial
 %                                 data structure
 % cfg.name{names}               = names of the different analysis
 % cfg.spike.baselinename        = name of the analysis which correspond to
@@ -90,27 +90,25 @@ if strcmp(cfg.stats.part_list,'all')
     cfg.stats.part_list = 1:size(cfg.SpikeTrials,2);
 end
 
-%Find which label in cfg.name correspond baseline
-baseline_index        = [];
-for i = 1 : size(cfg.name,2)
-    if strcmp(cfg.name{i},cfg.spike.baselinename)
-        baseline_index = i;
-    end
+%Find baseline name
+baseline_name = string(cfg.spike.baselinename);
+try 
+    cfg.SpikeTrials{ipart}.(baseline_name);
+catch
+    error('no %s field found in SpikeTrials, part %d', convertStringsToChars(baseline_name), ipart);
 end
-if isempty(baseline_index)   , error('No baseline label found.\n')    ; end
+
 
 %% compute stats over time
-cfg.statstime.label_list    = baseline_index;
-statsovertime               = spikestatsOverTime(cfg, cfg.SpikeTrials,true);
+% cfg.statstime.label_list    = baseline_name;
+% statsovertime               = spikestatsOverTime(cfg, cfg.SpikeTrials,true);
 
 
 %% go trhough each part and labels
 for ipart = cfg.stats.part_list
     
-    spike_Fs = cfg.SpikeTrials{ipart}{baseline_index}.hdr.Fs;
-    
-    
-    stats{ipart}.(cfg.name{baseline_index}).label          = cfg.SpikeTrials{ipart}{baseline_index}.label;
+    spike_Fs                            = cfg.SpikeTrials{ipart}.(baseline_name).hdr.Fs;
+    stats{ipart}.(baseline_name).label  = cfg.SpikeTrials{ipart}.(baseline_name).label;
     
     %% Compute ISI baseline
     cfgtemp                                             = [];
@@ -118,30 +116,30 @@ for ipart = cfg.stats.part_list
     cfgtemp.bins                                        = cfg.spike.ISIbins;
     cfgtemp.param                                       = 'coeffvar';       % compute the coefficient of variation (sd/mn of isis)
     cfgtemp.keeptrials                                  = 'yes';
-    stats{ipart}.(cfg.name{baseline_index}).isi         = ft_spike_isi(cfgtemp,cfg.SpikeTrials{ipart}{baseline_index});
+    stats{ipart}.(baseline_name).isi         = ft_spike_isi(cfgtemp,cfg.SpikeTrials{ipart}.(baseline_name));
     
     %plot data for each unit
-    for i_unit = 1:size(cfg.SpikeTrials{ipart}{baseline_index}.label, 2)
+    for i_unit = 1:size(cfg.SpikeTrials{ipart}.(baseline_name).label, 2)
         
         fig = figure;
         %title for the whole figure
-        phy_channr      = cfg.SpikeTrials{ipart}{baseline_index}.template_maxchan(i_unit);
+        phy_channr      = cfg.SpikeTrials{ipart}.(baseline_name).template_maxchan(i_unit);
         nlx_channame    = cfg.circus.channel{phy_channr+1}; %+1 because starts at zero
-        sgtitle(sprintf('Electrode %d (%s) : %s',phy_channr,nlx_channame, cfg.SpikeTrials{ipart}{baseline_index}.label{i_unit}), 'Fontsize', 22, 'Interpreter', 'none', 'FontWeight', 'bold');
+        sgtitle(sprintf('Electrode %d (%s) : %s',phy_channr,nlx_channame, cfg.SpikeTrials{ipart}.(baseline_name).label{i_unit}), 'Fontsize', 22, 'Interpreter', 'none', 'FontWeight', 'bold');
         
         %% Plot firing rate along all data
         subplot(4,4,1:3);hold;
         
-        for itrial = 1:size(cfg.SpikeTrials{ipart}{baseline_index}.trialinfo,1)
+        for itrial = 1:size(cfg.SpikeTrials{ipart}.(baseline_name).trialinfo,1)
             yyaxis left
             clear spike_indx
-            spike_indx              = cfg.SpikeTrials{ipart}{baseline_index}.trial{i_unit} == cfg.SpikeTrials{ipart}{ievent}.trialinfo(itrial,7);
-            trial_begin             = cfg.SpikeTrials{ipart}{baseline_index}.trialinfo(itrial, 3) / spike_Fs;
-            trial_end               = cfg.SpikeTrials{ipart}{baseline_index}.trialinfo(itrial, 4) / spike_Fs;
-            trial_freq_avg(itrial)  = 1 / nanmean(stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit}(spike_indx));
+            spike_indx              = cfg.SpikeTrials{ipart}.(baseline_name).trial{i_unit} == cfg.SpikeTrials{ipart}.(baseline_name).trialinfo.trialnr(itrial);
+            trial_begin             = cfg.SpikeTrials{ipart}.(baseline_name).trialinfo.begsample(itrial) / spike_Fs;
+            trial_end               = cfg.SpikeTrials{ipart}.(baseline_name).trialinfo.endsample(itrial) / spike_Fs;
+            trial_freq_avg(itrial)  = 1 / nanmean(stats{ipart}.(baseline_name).isi.isi{i_unit}(spike_indx));
             legend_Bl               = plot([trial_begin trial_end], log10([trial_freq_avg(itrial) trial_freq_avg(itrial)]),'-b','LineWidth',2);
         end
-        stats{ipart}.(cfg.name{baseline_index}).freq_trialavg{i_unit} = trial_freq_avg;
+        stats{ipart}.(baseline_name).freq_trialavg{i_unit} = trial_freq_avg;
         
         axis tight
         ax = axis;
@@ -154,23 +152,23 @@ for ipart = cfg.stats.part_list
         set(gca, 'YScale', 'log');
         setfig();
         
-        legend(legend_Bl,cfg.name{baseline_index},'location','eastoutside');
+        legend(legend_Bl,convertStringsToChars(baseline_name),'location','eastoutside');
         
         %% Plot amplitude along all data
         subplot(4,4,5:7);hold;
         
         %for baseline
-        for itrial = 1:size(cfg.SpikeTrials{ipart}{baseline_index}.trialinfo,1)
+        for itrial = 1:size(cfg.SpikeTrials{ipart}.(baseline_name).trialinfo,1)
             clear spike_indx
-            spike_indx              = cfg.SpikeTrials{ipart}{baseline_index}.trial{i_unit} == cfg.SpikeTrials{ipart}{baseline_index}.trialinfo(itrial,7);
-            trial_begin             = cfg.SpikeTrials{ipart}{baseline_index}.trialinfo(itrial, 3) / spike_Fs;
-            trial_end               = cfg.SpikeTrials{ipart}{baseline_index}.trialinfo(itrial, 4) / spike_Fs;
-            trial_amp_avg(itrial)   = nanmean(cfg.SpikeTrials{ipart}{baseline_index}.amplitude{i_unit}(spike_indx));
-            trial_amp_std(itrial)   = nanstd(cfg.SpikeTrials{ipart}{baseline_index}.amplitude{i_unit}(spike_indx));
+            spike_indx              = cfg.SpikeTrials{ipart}.(baseline_name).trial{i_unit} == cfg.SpikeTrials{ipart}.(baseline_name).trialnr(itrial);
+            trial_begin             = cfg.SpikeTrials{ipart}.(baseline_name).trialinfo.begsample(itrial) / spike_Fs;
+            trial_end               = cfg.SpikeTrials{ipart}.(baseline_name).trialinfo.endsample(itrial) / spike_Fs;
+            trial_amp_avg(itrial)   = nanmean(cfg.SpikeTrials{ipart}.(baseline_name).amplitude{i_unit}(spike_indx));
+            trial_amp_std(itrial)   = nanstd(cfg.SpikeTrials{ipart}.(baseline_name).amplitude{i_unit}(spike_indx));
             legend_Bl               = plot([trial_begin trial_end], [trial_amp_avg(itrial) trial_amp_avg(itrial)],'-b','LineWidth',2);
         end
-        stats{ipart}.(cfg.name{baseline_index}).amp_trialavg.avg{i_unit} = trial_amp_avg;
-        stats{ipart}.(cfg.name{baseline_index}).amp_trialavg.std{i_unit} = trial_amp_std;
+        stats{ipart}.(baseline_name).amp_trialavg.avg{i_unit} = trial_amp_avg;
+        stats{ipart}.(baseline_name).amp_trialavg.std{i_unit} = trial_amp_std;
         
         axis tight
         xticks(0:3600:ax(2));
@@ -181,14 +179,14 @@ for ipart = cfg.stats.part_list
         ylabel(sprintf('Mean amplitude \nof each trial'));
         setfig();
         
-        legend(legend_Bl,cfg.name{baseline_index},'location','eastoutside');
+        legend(legend_Bl,convertStringsToChars(baseline_name),'location','eastoutside');
         
         
         %% Template
         subplot(8,4,[8 12]); hold;
         
-        tempsel = cfg.SpikeTrials{ipart}{baseline_index}.template{i_unit}(:,cfg.SpikeTrials{ipart}{baseline_index}.template_maxchan(i_unit)+1,:);%+1 because electrodes nr are zero-based
-        temptime = ( (0 : size(cfg.SpikeTrials{ipart}{baseline_index}.template{i_unit},3) - 1) / spike_Fs )';
+        tempsel = cfg.SpikeTrials{ipart}.(baseline_name).template{i_unit}(:,cfg.SpikeTrials{ipart}.(baseline_name).template_maxchan(i_unit)+1,:);%+1 because electrodes nr are zero-based
+        temptime = ( (0 : size(cfg.SpikeTrials{ipart}.(baseline_name).template{i_unit},3) - 1) / spike_Fs )';
         %tempsel dimensions : 1:ntemplates 2:maxchan 3:values
         
         % interpolate template
@@ -222,11 +220,11 @@ for ipart = cfg.stats.part_list
         xticklabels(xticks*1000);
         setfig();
         
-        stats{ipart}.(cfg.name{baseline_index}).template.halfwidth{i_unit}    = halfwidth;
-        stats{ipart}.(cfg.name{baseline_index}).template.peaktrough{i_unit}   = peaktrough;
-        stats{ipart}.(cfg.name{baseline_index}).template.troughpeak{i_unit}   = troughpeak;
-        stats{ipart}.(cfg.name{baseline_index}).template.time{i_unit}         = template.time;
-        stats{ipart}.(cfg.name{baseline_index}).template.values{i_unit}       = template.trial;
+        stats{ipart}.(baseline_name).template.halfwidth{i_unit}    = halfwidth;
+        stats{ipart}.(baseline_name).template.peaktrough{i_unit}   = peaktrough;
+        stats{ipart}.(baseline_name).template.troughpeak{i_unit}   = troughpeak;
+        stats{ipart}.(baseline_name).template.time{i_unit}         = template.time;
+        stats{ipart}.(baseline_name).template.values{i_unit}       = template.trial;
         
         
         %% ISI
@@ -234,15 +232,15 @@ for ipart = cfg.stats.part_list
         
         subplot(8,4,[21 22 25 26 29 30]);hold;
         
-        bar(stats{ipart}.(cfg.name{baseline_index}).isi.time,stats{ipart}.(cfg.name{baseline_index}).isi.avg(i_unit,:), 'EdgeColor','none');
+        bar(stats{ipart}.(baseline_name).isi.time,stats{ipart}.(baseline_name).isi.avg(i_unit,:), 'EdgeColor','none');
         
-        RPV         = (length(find(stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit} < cfg.spike.RPV)) / length(stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit})) * 100;
-        meanISI     = nanmean(stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit})*1000;
-        stdISI      = nanstd(stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit})*1000;
+        RPV         = (length(find(stats{ipart}.(baseline_name).isi.isi{i_unit} < cfg.spike.RPV)) / length(stats{ipart}.(baseline_name).isi.isi{i_unit})) * 100;
+        meanISI     = nanmean(stats{ipart}.(baseline_name).isi.isi{i_unit})*1000;
+        stdISI      = nanstd(stats{ipart}.(baseline_name).isi.isi{i_unit})*1000;
         meanfreq    = 1/(meanISI/1000);
         
         %cv2
-        arraytemp = stats{ipart}.(cfg.name{baseline_index}).isi.isi{i_unit};
+        arraytemp = stats{ipart}.(baseline_name).isi.isi{i_unit};
         if length(arraytemp)>2
             for i = 1:length(arraytemp)-1
                 cv2_data(i) = 2*abs(arraytemp(i)-arraytemp(i+1))/(arraytemp(i)+arraytemp(i+1));
@@ -263,24 +261,24 @@ for ipart = cfg.stats.part_list
         
         setfig();
         
-        stats{ipart}.(cfg.name{baseline_index}).firing.meanISI{i_unit}   = meanISI;
-        stats{ipart}.(cfg.name{baseline_index}).firing.stdISI{i_unit}    = stdISI;
-        stats{ipart}.(cfg.name{baseline_index}).firing.meanfreq{i_unit}  = meanfreq;
-        stats{ipart}.(cfg.name{baseline_index}).firing.RPV{i_unit}       = RPV;
-        stats{ipart}.(cfg.name{baseline_index}).firing.meancv2{i_unit}   = meancv2;
-        stats{ipart}.(cfg.name{baseline_index}).firing.stdcv2{i_unit}    = stdcv2;
+        stats{ipart}.(baseline_name).firing.meanISI{i_unit}   = meanISI;
+        stats{ipart}.(baseline_name).firing.stdISI{i_unit}    = stdISI;
+        stats{ipart}.(baseline_name).firing.meanfreq{i_unit}  = meanfreq;
+        stats{ipart}.(baseline_name).firing.RPV{i_unit}       = RPV;
+        stats{ipart}.(baseline_name).firing.meancv2{i_unit}   = meancv2;
+        stats{ipart}.(baseline_name).firing.stdcv2{i_unit}    = stdcv2;
         
-        titlepos = title(sprintf('\n%s : %d spikes\n',cfg.name{baseline_index}, size(cfg.SpikeTrials{ipart}{baseline_index}.trial{i_unit},2)),'Fontsize',22,'Interpreter','none','HorizontalAlignment','left');
+        titlepos = title(sprintf('\n%s : %d spikes\n',convertStringsToChars(baseline_name), size(cfg.SpikeTrials{ipart}.(baseline_name).trial{i_unit},2)),'Fontsize',22,'Interpreter','none','HorizontalAlignment','left');
         titlepos.Position(1) = 0;
         
         %% Spike Waveforms for baseline
         subplot(8,4,[23 24 27 28 31 32]);hold;
         
         if ~isempty(cfg.SpikeWaveforms)
-            if ~isempty(cfg.SpikeWaveforms{ipart}{baseline_index}{i_unit})
+            if ~isempty(cfg.SpikeWaveforms{ipart}.(baseline_name){i_unit})
                 
                 cfgtemp                     = [];
-                cfgtemp.morpho.channame            = cfg.SpikeWaveforms{ipart}{baseline_index}{i_unit}.label{1};
+                cfgtemp.morpho.channame            = cfg.SpikeWaveforms{ipart}.(baseline_name){i_unit}.label{1};
                 cfgtemp.morpho.plotstd             = 'yes';
                 cfgtemp.morpho.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
                 cfgtemp.morpho.mesurehalfwidth     = 'yes';
@@ -288,8 +286,8 @@ for ipart = cfg.stats.part_list
                 cfgtemp.morpho.mesurepeaktrough    = 'yes';
                 cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.blmethod     = 'min';
                 cfgtemp.morpho.toiac               = 'all';
-                cfgtemp.morpho.name                = cfg.name{baseline_index};
-                [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,cfg.SpikeWaveforms{ipart}{baseline_index}{i_unit});
+                cfgtemp.morpho.name                = baseline_name;
+                [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,cfg.SpikeWaveforms{ipart}.(baseline_name){i_unit});
                 
                 xlabel('Time (ms)');
                 xticklabels(xticks*1000); %convert in ms
@@ -297,9 +295,9 @@ for ipart = cfg.stats.part_list
                 title([]);
                 setfig();
                 
-                stats{ipart}.(cfg.name{baseline_index}).spikewaveform.halfwidth{i_unit}      = halfwidth;
-                stats{ipart}.(cfg.name{baseline_index}).spikewaveform.peaktrough{i_unit}     = peaktrough;
-                stats{ipart}.(cfg.name{baseline_index}).spikewaveform.troughpeak{i_unit}     = troughpeak;
+                stats{ipart}.(baseline_name).spikewaveform.halfwidth{i_unit}      = halfwidth;
+                stats{ipart}.(baseline_name).spikewaveform.peaktrough{i_unit}     = peaktrough;
+                stats{ipart}.(baseline_name).spikewaveform.troughpeak{i_unit}     = troughpeak;
             else
                 axis off;
             end
@@ -318,8 +316,8 @@ for ipart = cfg.stats.part_list
         set(fig,'PaperPosition', [0 0 1 1]);
         fig.PaperType = 'A2';
         
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{baseline_index}.label{i_unit},'-spikestats_',cfg.name{baseline_index},'.pdf']),'-r600');
-        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}{baseline_index}.label{i_unit},'-spikestats_',cfg.name{baseline_index},'.png']),'-r600');
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}.(baseline_name).label{i_unit},'-spikestats_',convertStringsToChars(baseline_name),'.pdf']),'-r600');
+        print(fig, '-dpng', fullfile(cfg.imagesavedir,[cfg.prefix,'p',num2str(ipart),'-',cfg.SpikeTrials{ipart}.(baseline_name).label{i_unit},'-spikestats_',convertStringsToChars(baseline_name),'.png']),'-r600');
         
         close all
         

@@ -181,7 +181,27 @@ for ipart = cfg.circus.part_list
     end
 
     clear timestamps
+    
+    %% Convert data into 1-trial Fieldtrip structure to be more consistent
+    %if no need to have trials (otherwise some scripts written for trial 
+    %structures would not be compatible with this 'raw' structure, ie 
+    %ft_spike_isi.m).
+    filebegin                   = 0-hdr.nSamplesPre;
+    fileend                     = hdr.nSamples-hdr.nSamplesPre;
+    cfgtemp                     = [];
+    cfgtemp.trl                 = [filebegin, fileend, 0];
+    cfgtemp.trlunit             = 'samples';
+    cfgtemp.hdr                 = hdr;
+    cfgtemp.timestampspersecond = hdr.TimeStampPerSample * hdr.Fs;
+    SpikeRaw{ipart}             = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
 
+    SpikeRaw{ipart}.hdr         = hdr; 
+    
+    SpikeRaw{ipart}.trialinfo           = table;
+    SpikeRaw{ipart}.trialinfo.begsample = filebegin;
+    SpikeRaw{ipart}.trialinfo.endsample = fileend;
+    SpikeRaw{ipart}.trialinfo.offset    = 0;
+ 
 end % ipart
 
 save(fname,'SpikeRaw');
