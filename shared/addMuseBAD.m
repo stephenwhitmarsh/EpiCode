@@ -145,8 +145,8 @@ for ipart = cfg.bad.part_list
             %create BAD start and end field if they do not exist
             MuseStruct{ipart}{idir}.markers.BAD__START__            = ft_getopt(MuseStruct{ipart}{idir}.markers, 'BAD__START__', []);
             MuseStruct{ipart}{idir}.markers.BAD__END__              = ft_getopt(MuseStruct{ipart}{idir}.markers, 'BAD__END__', []);
-            MuseStruct{ipart}{idir}.markers.BAD__START__.clock      = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__START__, 'clock', []);
-            MuseStruct{ipart}{idir}.markers.BAD__END__.clock        = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__END__, 'clock', []);
+            MuseStruct{ipart}{idir}.markers.BAD__START__.clock      = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__START__, 'clock', datetime.empty);
+            MuseStruct{ipart}{idir}.markers.BAD__END__.clock        = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__END__, 'clock', datetime.empty);
             MuseStruct{ipart}{idir}.markers.BAD__START__.synctime   = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime', []);
             MuseStruct{ipart}{idir}.markers.BAD__END__.synctime     = ft_getopt(MuseStruct{ipart}{idir}.markers.BAD__END__, 'synctime', []);
             
