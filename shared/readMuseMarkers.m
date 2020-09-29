@@ -64,7 +64,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             name_mrk    = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.mrk']);
         elseif isBrainvision
             name_mrk    = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.vmrk']);
-            load(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '_header']), 'header'); %header create by Paul's script during the conversion from Deltamed to Brainvision
+            load(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '_header.mat']), 'header'); %header create by Paul's script during the conversion from Deltamed to Brainvision
         end
 
         if ~exist(name_mrk,'file')
