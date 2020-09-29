@@ -84,9 +84,9 @@ for ipart = cfg.spikequal.part_list
             
             subplot(12,6,i+1)
             cfgtemp                            = [];
-            cfgtemp.morpho.mesurepeaktrough    = 'yes';
-            cfgtemp.morpho.mesuretroughpeak    = 'no';
-            cfgtemp.morpho.mesurehalfwidth     = 'yes';
+            cfgtemp.morpho.measurepeaktrough    = 'yes';
+            cfgtemp.morpho.measuretroughpeak    = 'no';
+            cfgtemp.morpho.measurehalfwidth     = 'yes';
             cfgtemp.morpho.blmethod            = 'min';
             cfgtemp.morpho.channame            = spikewaveforms{ipart}.(markername){i_unit}.label{1};
             cfgtemp.morpho.plotstd             = cfg.spikequal.plot_std;

@@ -243,7 +243,7 @@ end
 % [h_sua,p_sua] = ttest(freq_begin_sua,freq_end_sua);
 p_mua_freq = signrank(freq_begin_mua,freq_end_mua);
 p_sua_freq = signrank(freq_begin_sua,freq_end_sua);
-
+% ranksum
 figure;hold;
 plot(ones(size(freq_begin_mua))*2+rand, freq_end_mua,'o');
 end

@@ -148,8 +148,8 @@ configcommon.topoplot.toi_multiplot    = [-2 2];
 
 configcommon.morpho.channame           = []; %set for each patient
 configcommon.morpho.toiplot            = [-2 2];
-configcommon.morpho.mesurehalfwidth    = 'yes';
-configcommon.morpho.mesureamplitude    = 'yes';
+configcommon.morpho.measurehalfwidth    = 'yes';
+configcommon.morpho.measureamplitude    = 'yes';
 configcommon.morpho.blmethod           = 'bl';
 configcommon.morpho.toiac              = [-1 1];
 configcommon.morpho.toibl              = [-2 -1];

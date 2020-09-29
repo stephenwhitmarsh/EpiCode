@@ -25,18 +25,18 @@ config = dtx_setparams_patients_lgi1;
 % -	EMG contraction : duration of contraction : OK
 % -	EEG-EMG delay : OK
 % - frequency and regularity of seizures : 
-%   * convertir temps des données coupées, grace au fichier bni
+%   * convertir temps des donnï¿½es coupï¿½es, grace au fichier bni
 %   * distrib des inter-seizure interval et des cv2
-% - plot de chaque crise non artefactée raw EEG + topoplot : avec dir et temps pour la
-% retrouver. Pour choisir les mieux pour les mesures. Plots flipped et
+% - plot de chaque crise non artefactï¿½e raw EEG + topoplot : avec dir et temps pour la
+% retrouver. Pour choisir les mieux pour les measures. Plots flipped et
 % non-flipped. Voir sur quel channel, et quels features, extraire
 % -	Slow wave : 
 %   * morphology (half width C4, half width better channel, autre ?) 
 %   * topography : 1 topoplot par patient et par side (L, R)
 %   * propagation : xcorr
-% - traces brutes représentatives : 1 crise pat 008, + toutes les crises
-% superposées. Vidéo peccoud avec le même eeg
-% - prévoir une vidéo de l'événement
+% - traces brutes reprï¿½sentatives : 1 crise pat 008, + toutes les crises
+% superposï¿½es. Vidï¿½o peccoud avec le mï¿½me eeg
+% - prï¿½voir une vidï¿½o de l'ï¿½vï¿½nement
 
 
 
@@ -111,7 +111,7 @@ ylabel('emg duration (s)');
 
 %% plot each FBDS
 %recover real time in segmented data
-%correct concatenateMuseMarkers : clocktime non changé, synctime en
+%correct concatenateMuseMarkers : clocktime non changï¿½, synctime en
 %fonction du nb de samples. A ne pas utiliser si les fichiers ne sont pas
 %continus.
 MuseStruct1      = readMuseMarkers(config{ipatient},true);
@@ -265,10 +265,10 @@ for ipatient = slurm_task_id
     return %STOP HERE FOR NOW
     %% count markers : time between seizures, eeg/emg delay, emg duration
     
-    %% Propagation : plot canaux positifs, ou tous les canaux, normaliser, et compter délai à la main.
+    %% Propagation : plot canaux positifs, ou tous les canaux, normaliser, et compter dï¿½lai ï¿½ la main.
     
     %% scatter plot stats pooled entre les patients
-    % hw, amplitudes, temps entre 2 crises, délai EEG EMG, EMG
+    % hw, amplitudes, temps entre 2 crises, dï¿½lai EEG EMG, EMG
     % duration. Faire une fonction pour scatter
     
     %% %%%%%%%%%%%%%%%%%%%%%%%%
@@ -299,9 +299,9 @@ for ipatient = slurm_task_id
             cfgtemp.toiplot             = [-2 2];
             cfgtemp.toibl               = config{ipatient}.align.toibaseline{imarker};
             cfgtemp.toiac               = [-1 1];
-            cfgtemp.mesurehalfwidth     = 'yes';
+            cfgtemp.measurehalfwidth     = 'yes';
             cfgtemp.halfwidthmethod     = 'bl';
-            cfgtemp.mesurepeaktrough    = 'yes';
+            cfgtemp.measurepeaktrough    = 'yes';
             cfgtemp.name                = config{ipatient}.LFP.name{imarker};
             cfgtemp.saveplot            = 'yes';
             cfgtemp.imagesavedir        = config{ipatient}.imagesavedir;

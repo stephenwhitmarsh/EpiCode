@@ -22,15 +22,15 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 %                           'no'.
 % cfg.morpho.removeoutliers = whether to plot outlier trials (>10*std to the
 %                           mean). Average is not modified. Default = 'no'.
-% cfg.morpho.mesurehalfwidth= 'yes' or 'no', whether to compute halfwidth.
+% cfg.morpho.measurehalfwidth= 'yes' or 'no', whether to compute halfwidth.
 %                           Default = 'no'.
 % cfg.morpho.blmethod= 'min' or 'bl' : reference for peak-amplitude
-%                           measurement if mesurehalfwidth = 'yes'. 
+%                           measurement if measurehalfwidth = 'yes'. 
 %                           Default = 'bl' (baseline)
-% cfg.morpho.mesurepeaktrough = 'yes' or 'no', whether to compute peak-trough
+% cfg.morpho.measurepeaktrough = 'yes' or 'no', whether to compute peak-trough
 %                           and trough-peak. Default = 'no'.
 % 
-% ### Necessary cfg fields if cfg.morpho.mesurehalfwidth = 'yes' or cfg.morpho.mesurepeaktrough = 'yes'
+% ### Necessary cfg fields if cfg.morpho.measurehalfwidth = 'yes' or cfg.morpho.measurepeaktrough = 'yes'
 % cfg.morpho.toiac        = active period for measurements. Can be 'all' (default)
 % cfg.morpho.toibl        = baseline period if cfg.morpho.blmethod = 'bl'
 % 
@@ -41,9 +41,9 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 % cfg.prefix       = prefix attached to the name of the saved-image
 %
 % ### OUTPUT
-% halfwidth               = mesured halfwidth value, in seconds, or [].
-% peaktrough              = mesured peaktrough value, in seconds, or [].
-% troughpeak              = mesured troughpeak value, in seconds, or [].
+% halfwidth               = measured halfwidth value, in seconds, or [].
+% peaktrough              = measured peaktrough value, in seconds, or [].
+% troughpeak              = measured troughpeak value, in seconds, or [].
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,11 +56,11 @@ cfg.morpho.plotstd                     = ft_getopt(cfg.morpho, 'plotstd'        
 cfg.morpho.plotavg                     = ft_getopt(cfg.morpho, 'plotavg'          , 'yes');
 cfg.morpho.plotraw                     = ft_getopt(cfg.morpho, 'plotraw'          , 'yes');
 cfg.morpho.removeoutliers              = ft_getopt(cfg.morpho, 'removeoutliers'  	, 'no');
-cfg.morpho.mesurehalfwidth             = ft_getopt(cfg.morpho, 'mesurehalfwidth'	, 'no');
-cfg.morpho.mesureamplitude             = ft_getopt(cfg.morpho, 'mesureamplitude'	, 'no');
+cfg.morpho.measurehalfwidth             = ft_getopt(cfg.morpho, 'measurehalfwidth'	, 'no');
+cfg.morpho.measureamplitude             = ft_getopt(cfg.morpho, 'measureamplitude'	, 'no');
 cfg.morpho.blmethod                    = ft_getopt(cfg.morpho, 'blmethod' 	, 'bl');
-cfg.morpho.mesurepeaktrough            = ft_getopt(cfg.morpho, 'mesurepeaktrough'	, 'no');
-cfg.morpho.mesuretroughpeak            = ft_getopt(cfg.morpho, 'mesuretroughpeak'	, 'no');
+cfg.morpho.measurepeaktrough            = ft_getopt(cfg.morpho, 'measurepeaktrough'	, 'no');
+cfg.morpho.measuretroughpeak            = ft_getopt(cfg.morpho, 'measuretroughpeak'	, 'no');
 cfg.morpho.toiplot                     = ft_getopt(cfg.morpho, 'toiplot'          , 'all');
 cfg.morpho.toiac                       = ft_getopt(cfg.morpho, 'toiac'            , 'all');
 cfg.morpho.saveplot                    = ft_getopt(cfg.morpho, 'saveplot'         , 'no');
@@ -147,10 +147,10 @@ cfgtemp         = [];
 cfgtemp.latency = cfg.morpho.toiac;
 data_avg_ac     = ft_selectdata(cfgtemp, data_avg);
 
-%% Mesure and plot half width
+%% measure and plot half width
 halfwidth = NaN;
 
-if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
+if strcmp(cfg.morpho.measurehalfwidth, 'yes')
 %         try %REMOVEME FIXME
 
         %measure peak and half hamp
@@ -195,10 +195,10 @@ if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
 end
 
 
-%% Mesure and plot amplitude
+%% measure and plot amplitude
 amplitude = NaN;
 
-if strcmp(cfg.morpho.mesureamplitude, 'yes')
+if strcmp(cfg.morpho.measureamplitude, 'yes')
     if strcmp(cfg.morpho.blmethod, 'bl')
         cfgtemp         = [];
         cfgtemp.latency = cfg.morpho.toibl;
@@ -224,7 +224,7 @@ end
 peaktrough = NaN;
 troughpeak = NaN;
 
-if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughpeak, 'yes')
+if strcmp(cfg.morpho.measurepeaktrough, 'yes') || strcmp(cfg.morpho.measuretroughpeak, 'yes')
 %     try %REMOVEME FIXME
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
@@ -241,7 +241,7 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughp
         peaktrough = abs(Xpos-Xneg(1));
         troughpeak = abs(Xpos-Xneg(2));
         
-        if strcmp(cfg.morpho.mesuretroughpeak, 'yes')
+        if strcmp(cfg.morpho.measuretroughpeak, 'yes')
             %plot horizontal lines from peak to trough, and add text
             plot([Xpos,Xneg(1)], [Yneg(1)*0.3, Yneg(1)*0.3],'-x','Color',[1 0 0],'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0]);
             x = Xneg(1);
@@ -250,7 +250,7 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughp
             text(x,y,sprintf('%.1f%s   ',peaktrough_corr,unit),'Color','k','HorizontalAlignment','right','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
         end
         
-        if strcmp(cfg.morpho.mesurepeaktrough, 'yes')
+        if strcmp(cfg.morpho.measurepeaktrough, 'yes')
             plot([Xpos,Xneg(2)],-[Yneg(2)*0.3, Yneg(2)*0.3],'-x','Color',[0 0 1],'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1]);
             x = Xneg(2);
             y = double(-Yneg(2)*0.3);
@@ -266,7 +266,7 @@ axis tight;
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 xlabel('Time (s)');
-ylabel('µV');
+ylabel('ï¿½V');
 xlim(cfg.morpho.toiplot);
 
 if strcmp(cfg.morpho.removeoutliers, 'yes')

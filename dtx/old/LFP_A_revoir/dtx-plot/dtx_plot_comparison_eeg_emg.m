@@ -79,7 +79,7 @@ for itrial = 1 : size(data_EEG.trial,2)
 end
 
 title(sprintf('%s - EEG/EMG comparison : %d trials \n\n%s : EEG average',cfg.prefix(1:end-1),length(data{imarker}.trial),cfg.LFP.name{imarker}(1:end-4)),'Fontsize',18,'Interpreter','none');
-ylabel(sprintf('EEG %s (µV)',data_EEG.label{1}),'Fontsize',15,'Interpreter','none');
+ylabel(sprintf('EEG %s (ï¿½V)',data_EEG.label{1}),'Fontsize',15,'Interpreter','none');
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 axis tight;
@@ -97,7 +97,7 @@ data_EEG_rptavg        = ft_timelockanalysis(cfgtemp,data_EEG);
 
 plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
 
-    % Mesure and plot half width
+    % measure and plot half width
     t           = data_EEG_rptavg.time;
     bl          = mean(data_EEG_rptavg.avg(1,(t>cfg.align.toibaseline{imarker}(1)&t<cfg.align.toibaseline{imarker}(2))));
     peak        = max(data_EEG_rptavg.avg(1,(t>-0.5&t<0.5)));
@@ -161,7 +161,7 @@ end
 plot(t,env_avg,'b','LineWidth',2);
 
 
-ylabel(sprintf('%s (µV)',data_EMG.label{1}),'Fontsize',15,'Interpreter','none');
+ylabel(sprintf('%s (ï¿½V)',data_EMG.label{1}),'Fontsize',15,'Interpreter','none');
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 xlim([-abscisse_scale, abscisse_scale]);
@@ -187,7 +187,7 @@ envEMG{ipart}{imarker}.label{1} = 'EMG';
 
 
 title('Average envelope of rectified EMG','Fontsize',18);
-ylabel(sprintf('%s (µV)',data_EMG.label{1}),'Fontsize',15,'Interpreter','none');
+ylabel(sprintf('%s (ï¿½V)',data_EMG.label{1}),'Fontsize',15,'Interpreter','none');
 set(gca,'FontWeight','bold' );
 set(gca,'TickDir','out');
 xlim([-abscisse_scale, abscisse_scale]);
@@ -204,7 +204,7 @@ plot(data_EEG_rptavg.time,data_EEG_rptavg.avg(1,:),'r','LineWidth', 2);
 
 yyaxis left
 set(gca,'ycolor','r');
-ylabel(sprintf('EEG %s (µV)',data_EEG.label{1}), 'Fontsize',15);
+ylabel(sprintf('EEG %s (ï¿½V)',data_EEG.label{1}), 'Fontsize',15);
 
 axis tight
 xlim([-abscisse_scale, abscisse_scale]);

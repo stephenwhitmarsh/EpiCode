@@ -1,77 +1,99 @@
-function dat_xcorr = test_xcorr_LFP(cfg, data)
+function dat_xcorr = dtx_xcorr_LFP(cfg, data)
 
 %pour calculer la propagation trial par trial
 
-cfg.lfp.xcorr.suffix = '_csd';
-cfg.lfp.xcorr.xchan  = 'C4';
-cfg.lfp.xcorr.toi    = [-0.5 0.5];
-cfg.lfp.xcorr.plotdata = 'yes';
+% cfg.LFP.xcorr.suffix = '_csd';
+% cfg.LFP.xcorr.xchan  = 'C4';
+% cfg.LFP.xcorr.toi    = [-0.5 0.5];%can be 'all'
+% cfg.LFP.xcorr.plotdata = 'yes';
 
-if strcmp(cfg.lfp.xcorr.plotdata, 'yes')
-    fig = figure;hold;
-    sgtitle(sprintf('x = %s, y = lfp chan indicated',cfg.lfp.xcorr.xchan),'Interpreter','none','Color','r');
+colors = linspecer(size(data.label,1));
+
+cfgtemp         = [];
+cfgtemp.channel = cfg.LFP.xcorr.xchan;
+cfgtemp.latency = cfg.LFP.xcorr.toi;
+data_x_alltrials= ft_selectdata(cfgtemp, data);
+
+
+if strcmp(cfg.LFP.xcorr.plotdata, 'yes')
+    fig = figure('visible','off');hold;
     set(fig, 'units','normalized','position', [0 0 1 0.5]);
 end
 
 cfgtemp         = [];
-cfgtemp.channel = cfg.lfp.xcorr.xchan;
-cfgtemp.latency = cfg.lfp.xcorr.toi;
-data_x          = ft_selectdata(cfgtemp, data);
+%cfgtemp.trials  = itrial;
+data_x          = ft_selectdata(cfgtemp, data_x_alltrials);
 
 i=1;
 for iy = 1:size(data.label, 1)
     
-    if strcmp(cfg.lfp.xcorr.plotdata, 'yes')
-        subplot(size(data.label, 1),4,[i+1 i+2]);hold;%subplot(size(data.label, 1),size(data.label, 1),i);hold;
-    end
+    %         if strcmp(cfg.LFP.xcorr.plotdata, 'yes')
+    %             subplot(size(data.label, 1),4,[i+1 i+2]);hold;%subplot(size(data.label, 1),size(data.label, 1),i);hold;
+    %         end
     
     cfgtemp         = [];
     cfgtemp.channel = iy;
-    cfgtemp.latency = cfg.lfp.xcorr.toi;
-    data_y           = ft_selectdata(cfgtemp, data);   
+    cfgtemp.latency = cfg.LFP.xcorr.toi;
+    data_y          = ft_selectdata(cfgtemp, data);
     
-    for itrial = 1:size(data_x.trial,2)
-        xcorr_trials(itrial,:) = xcorr(data_x.trial{itrial}, data_y.trial{itrial});
-    end
+    %[xcorr_trial, x] = xcorr(data_x.trial{1}, data_y.trial{1});
+    [xcorr_trial, x] = xcorr(data_x.avg, data_y.avg);
     
-    if strcmp(cfg.lfp.xcorr.xchan, data_y.label{1})
+    %convert x from sample to seconds
+    %Fs = 1/diff(data_y.time{1}(1:2));
+    Fs = 1/diff(data_y.time(1:2));
+    x = x./Fs;
+    
+    if strcmp(cfg.LFP.xcorr.xchan, data_y.label{1})
         c = 'b';
     else
         c = 'k';
     end
     
-    maxcorr(iy) = max(max(xcorr_trials));
-    xcorr_trials_norm = normalize(xcorr_trials, 2, 'range');
-    x = linspace(data_x.time{1}(1),data_x.time{1}(end), size(xcorr_trials,2));
-    [~, lag_idx] = max(nanmean(xcorr_trials_norm));
-    lag(iy) = x(lag_idx);
+    [~, shift] = findpeaks(xcorr_trial);
+    %scatter(x(shift), xcorr_trial(shift), 'rx');
+    if isempty(shift)
+        lag(iy) = nan;
+    else
+        shift = shift(x(shift)~=0); %remove peak at zero
+        if isempty(shift)
+            lag(iy) = 0;
+        else
+            [~, sel] = max(xcorr_trial(shift));
+            shift = shift(sel); %select maximum peak
+            if xcorr_trial(shift) > xcorr_trial(x==0)/2
+                lag(iy) = x(shift);
+            else
+                lag(iy) = 0;
+            end
+        end
+    end
     
-    if strcmp(cfg.lfp.xcorr.plotdata, 'yes')
-        plot(x,xcorr_trials_norm, 'Color', [0.6 0.6 0.6]);
-        plot(x,nanmean(xcorr_trials_norm), c, 'LineWidth',2);
+    if strcmp(cfg.LFP.xcorr.plotdata, 'yes')
+        %plot(x,xcorr_trials_norm, c);
+        leg{iy} = plot(x,xcorr_trial, 'color', colors(iy,:));
         ax = axis;
         plot([0 0], [ax(3), ax(4)],'r');
         plot([lag(iy) lag(iy)], [ax(3), ax(4)],'b');
-        ylabel(sprintf('%s', data_y.label{1}),'FontSize',5);
-        
-        title(sprintf('lag = %g, maxcorr = %g', lag(iy),maxcorr(iy)), 'FontSize',5);
-        xticks([])
-        yticks([]);
+        %             xticks([])
+        %             yticks([]);
         
         i=i+4;
     end
     
-    dat_xcorr.avg{iy}      = nanmean(xcorr_trials);
-    dat_xcorr.avg_norm{iy} = nanmean(xcorr_trials_norm);
-    dat_xcorr.xlabel{iy}   = data_x.label{1};
-    dat_xcorr.ylabel{iy}   = data_y.label{1};
-    dat_xcorr.time{iy}     = x;
+    dat_xcorr.xcorr{iy}         = xcorr_trial;
+    dat_xcorr.xlabel{iy}        = data_x.label{1};
+    dat_xcorr.ylabel{iy}        = data_y.label{1};
+    dat_xcorr.time{iy}          = x;
+    dat_xcorr.lag(iy)           = lag(iy);
     
 end
 
+legend([leg{:}],data.label');
+
 %print to file, if a figure was created
-if strcmp(cfg.lfp.xcorr.plotdata, 'yes')
-    fprintf('Print to file and save data\n');
+if strcmp(cfg.LFP.xcorr.plotdata, 'yes')
+    fprintf('Print to file\n');
     
     if ~isfolder(fullfile(cfg.imagesavedir,'xcorrs_lfp'))
         mkdir(fullfile(cfg.imagesavedir,'xcorrs_lfp'));
@@ -81,11 +103,13 @@ if strcmp(cfg.lfp.xcorr.plotdata, 'yes')
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'p',num2str(ipart),'-xcorr_lfp_',cfg.name{ilabel},cfg.lfp.xcorr.suffix,'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'p',num2str(ipart),'-xcorr_lfp_',cfg.name{ilabel},cfg.lfp.xcorr.suffix,'.png']),'-r600');
+    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.pdf']),'-r600');
+    print(fig, '-dpng', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.png']),'-r600');
     
     close all
 end
+
+%end %itrial
 
 return
 %% Test steps, not used in the function
@@ -97,7 +121,7 @@ for ichan = 1:size(dat_xcorr.avg,2)
 end
 legend(dat_xcorr.ylabel{:});
 ax = axis;
-plot(cfg.lfp.xcorr.toi, [0 0]);
+plot(cfg.LFP.xcorr.toi, [0 0]);
 plot([0 0], [ax(3) ax(4)]);
 
 %find chans with positive avg correlogram

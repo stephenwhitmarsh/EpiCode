@@ -359,15 +359,15 @@ for ipart = cfg.stats.part_list
             
             cfgtemp                     = [];
             cfgtemp.morpho.channame            = 'template';
-            cfgtemp.morpho.mesurehalfwidth     = 'yes';
+            cfgtemp.morpho.measurehalfwidth     = 'yes';
             cfgtemp.morpho.blmethod     = 'min'; 
-            cfgtemp.morpho.mesurepeaktrough    = 'yes';
+            cfgtemp.morpho.measurepeaktrough    = 'yes';
             cfgtemp.morpho.toiac               = 'all';
             cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.blmethod = 'min'; 
             [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,template);
             
             title([]);
-            ylabel('Template (µV)');
+            ylabel('Template (ï¿½V)');
             xlabel('Time (ms)');
             xticklabels(xticks*1000);
             setfig();
@@ -422,7 +422,7 @@ for ipart = cfg.stats.part_list
                     cfgtemp.morpho.toiplot             = cfg.epoch.toi.(event_name);
                     cfgtemp.morpho.toibl               = cfg.stats.bltoi.(event_name);
                     cfgtemp.morpho.toiac               = cfg.stats.actoi.(event_name);
-                    cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                    cfgtemp.morpho.measurehalfwidth     = 'yes';
                     cfgtemp.morpho.blmethod     = 'bl';
                     cfgtemp.morpho.name                = event_name;
                     [hw_lfp, ~, ~] = plot_morpho(cfgtemp,cfg.dataLFP{ipart}.(event_name));
@@ -433,7 +433,7 @@ for ipart = cfg.stats.part_list
                     xlabel([]);
                     titlepos = title(sprintf('\n%s : %d trials, %d spikes',convertStringsToChars(event_name), size(cfg.SpikeTrials{ipart}.(event_name).trialinfo,1), size(cfg.SpikeTrials{ipart}.(event_name).trial{i_unit},2)),'Fontsize',22,'Interpreter','none','HorizontalAlignment','left');
                     titlepos.Position(1) = cfg.epoch.toi.(event_name)(1);
-                    ylabel('LFP (µV)');
+                    ylabel('LFP (ï¿½V)');
                     setfig();
                 end
                 
@@ -634,9 +634,9 @@ for ipart = cfg.stats.part_list
                         cfgtemp.morpho.channame            = cfg.SpikeWaveforms{ipart}.(iplot){i_unit}.label{1};
                         cfgtemp.morpho.plotstd             = 'yes';
                         cfgtemp.morpho.removeoutliers      = 'yes'; %if big noise, impair seeing real data. Still present in avg and std.
-                        cfgtemp.morpho.mesurehalfwidth     = 'yes';
+                        cfgtemp.morpho.measurehalfwidth     = 'yes';
                         cfgtemp.morpho.blmethod            = 'min';
-                        cfgtemp.morpho.mesurepeaktrough    = 'yes';
+                        cfgtemp.morpho.measurepeaktrough    = 'yes';
                         cfgtemp.morpho.toibl               = []; %no need of bl if cfgtemp.blmethod     = 'min';
                         cfgtemp.morpho.toiac               = 'all';
                         cfgtemp.morpho.name                = iplot;
@@ -644,7 +644,7 @@ for ipart = cfg.stats.part_list
                         
                         xlabel('Time (ms)');
                         xticklabels(xticks*1000); %convert in ms
-                        ylabel('Spike waveform (µV)');
+                        ylabel('Spike waveform (ï¿½V)');
                         title([]);
                         setfig();
                         

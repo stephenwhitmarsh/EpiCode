@@ -201,10 +201,10 @@ end
     return %STOP HERE FOR NOW
     %% count markers : time between seizures, eeg/emg delays, emg duration
     
-    %% Propagation : plot canaux positifs, ou tous les canaux, normaliser, et compter délai à la main.
+    %% Propagation : plot canaux positifs, ou tous les canaux, normaliser, et compter dï¿½lai ï¿½ la main.
     
     %% scatter plot stats pooled entre les patients
-    % hw, amplitudes, temps entre 2 crises, délai EEG EMG, EMG
+    % hw, amplitudes, temps entre 2 crises, dï¿½lai EEG EMG, EMG
     % duration. Faire une fonction pour scatter
     
     %% %%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,9 +235,9 @@ end
             cfgtemp.toiplot             = [-2 2];
             cfgtemp.toibl               = config{ipatient}.align.toibaseline{imarker};
             cfgtemp.toiac               = [-1 1];
-            cfgtemp.mesurehalfwidth     = 'yes';
+            cfgtemp.measurehalfwidth     = 'yes';
             cfgtemp.halfwidthmethod     = 'bl';
-            cfgtemp.mesurepeaktrough    = 'yes';
+            cfgtemp.measurepeaktrough    = 'yes';
             cfgtemp.name                = config{ipatient}.LFP.name{imarker};
             cfgtemp.saveplot            = 'yes';
             cfgtemp.imagesavedir        = config{ipatient}.imagesavedir;
