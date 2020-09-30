@@ -22,7 +22,7 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct, fo
 %
 % # cfg fields (all with default values):
 % cfg.rmtrials.method :
-%   'rmtrials'         : remove all trials which intersect with the period
+%   'remove'         : remove all trials which intersect with the period
 %   'keep'           : keep only trials which intersect with the period
 %   Default = 'rmtrials'.
 % cfg.rmtrials.markerstart    : name of the marker which define the beginning of the
@@ -53,8 +53,12 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct, fo
 %                             integers, or 'all'. Default = 'all'.
 % cfg.rmtrials.label_list     : list of groups of trials to analyse. Can be an array
 %                             of integers, or 'all'. Default = 'all'.
-% cfg.rmtrials.write          : 'yes' (default) or 'no', wheter to write
+% cfg.rmtrials.write          : 'yes' or 'no' (default) , wheter to write
 %                             output data on disk or not.
+% cfg.rmtrials.keeptrials     : wheter to remove selected trials, or only
+%                               output a logical array indicating if each 
+%                               trial was selected or not. Default = 'no',
+%                               trials are removed by default.
 %
 % # cfg fields to plot data if required (necessary if cfg.rmtrials.plotdata = 'yes') :
 % cfg.rmtrials.electrodetoplot : name of the electrode used for the plot.
@@ -80,18 +84,9 @@ function [data, MuseStruct] = removetrials_MuseMarkers(cfg, data, MuseStruct, fo
 %   and cutting data into trials.
 %
 
-
-fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_MuseMarkers_WithoutArtefacts.mat']);
-
-if exist(fname) && force == false
-    fprint('Loading precomputed removal of artefacts\n%s\n', fname);
-    data = load(fname);
-    return
-end
-
 % get the default cfg options
 cfg.rmtrials                  = ft_getopt(cfg,'rmtrials',[]);
-cfg.rmtrials.method           = ft_getopt(cfg.rmtrials, 'method'         , 'rmtrials');
+cfg.rmtrials.method           = ft_getopt(cfg.rmtrials, 'method'         , 'remove');
 cfg.rmtrials.markerstart      = ft_getopt(cfg.rmtrials, 'markerstart'    , 'BAD__START__');
 cfg.rmtrials.markerend        = ft_getopt(cfg.rmtrials, 'markerend'      , 'BAD__END__');
 cfg.rmtrials.indexstart       = ft_getopt(cfg.rmtrials, 'indexstart'     , 0);
@@ -103,8 +98,18 @@ cfg.rmtrials.keepindexes      = ft_getopt(cfg.rmtrials, 'keepindexes'    , 'no')
 cfg.rmtrials.plotdata         = ft_getopt(cfg.rmtrials, 'plotdata'       , 'no');
 cfg.rmtrials.part_list        = ft_getopt(cfg.rmtrials, 'part_list'      , 'all');
 cfg.rmtrials.label_list       = ft_getopt(cfg.rmtrials, 'label_list'     , 'all');
-cfg.rmtrials.write            = ft_getopt(cfg.rmtrials, 'write'          , 'yes');
+cfg.rmtrials.write            = ft_getopt(cfg.rmtrials, 'write'          , 'no');
+cfg.rmtrials.keeptrials       = ft_getopt(cfg.rmtrials, 'keeptrials'     , 'no');
 
+if strcmp(cfg.rmtrials.write, 'yes')
+    fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_MuseMarkers_WithoutArtefacts.mat']);
+    
+    if exist(fname) && force == false
+        fprint('Loading precomputed removal of artefacts\n%s\n', fname);
+        data = load(fname);
+        return
+    end
+end
 
 if isempty(data), fprintf('rmtrialstrials_MuseMarkers : Data is empty, nothing is done\n'); return, end
 
@@ -335,22 +340,23 @@ for ipart = cfg.rmtrials.part_list
                 
             end
             
-            %% rmtrials trials :
-            
-            cfgtemp = [];
-            cfgtemp.trials = [];
-            for idir = 1:size(trialremoved,2)
-                cfgtemp.trials = [cfgtemp.trials, ~trialremoved{idir}];
+            %% remove trials :
+            if strcmp(cfg.rmtrials.keeptrials, 'no')
+                cfgtemp = [];
+                cfgtemp.trials = [];
+                for idir = 1:size(trialremoved,2)
+                    cfgtemp.trials = [cfgtemp.trials, ~trialremoved{idir}];
+                end
+                cfgtemp.trials = find(cfgtemp.trials);
+                
+                if strcmp(type, 'raw')
+                    data{ipart}.(markername) = ft_selectdata(cfgtemp, data{ipart}.(markername));
+                elseif strcmp(type, 'spike')
+                    data{ipart}.(markername) = ft_spike_select(cfgtemp, data{ipart}.(markername));
+                end
             end
-            cfgtemp.trials = find(cfgtemp.trials);
             
-            if strcmp(type, 'raw')
-                data{ipart}.(markername) = ft_selectdata(cfgtemp, data{ipart}.(markername));
-            elseif strcmp(type, 'spike')
-                data{ipart}.(markername) = ft_spike_select(cfgtemp, data{ipart}.(markername));
-            end
-            
-            data{ipart}.(markername).trialremoved = trialremoved;
+            data{ipart}.(markername).toremove = [trialremoved{:}];
             
     end %ilabel
 end %ipart

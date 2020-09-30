@@ -151,7 +151,6 @@ for ipart = cfg.spikewaveform.part_list
                 cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % so not to read before BOF or after EOFs
                 cfgtemp.trlunit                 = 'samples';
                 SpikeWaveforms{ipart}.(markername){icluster}                     = ft_redefinetrial(cfgtemp,chandata);
-                
                 SpikeWaveforms{ipart}.(markername){icluster}.label               = [];
                 SpikeWaveforms{ipart}.(markername){icluster}.label{1}            = spikedata{ipart}.(markername).label{icluster};
                 SpikeWaveforms{ipart}.(markername){icluster}.template_maxchan    = spikedata{ipart}.(markername).template_maxchan(icluster);

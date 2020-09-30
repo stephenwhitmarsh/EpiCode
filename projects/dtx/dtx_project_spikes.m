@@ -50,6 +50,9 @@ config = dtx_setparams_probe_spikes([]);
 %
 % end
 
+%FIXME : dtx_remove_wrong_seizure : output markers to remove, clean it with
+%editMuseMarkers
+
 
 %% analyse spyking circus output
 % separation of 'dtx' experiments from 'ctrl' experiments for some
