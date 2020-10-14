@@ -1,6 +1,6 @@
 function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % [halfwidth, peaktrough, troughpeak] = plot_morpho(cfg,data)
 % Plot trials and average of trials. If asked, do measurements on it.
 %
@@ -46,7 +46,6 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 % troughpeak              = mesured troughpeak value, in seconds, or [].
 %
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %Get default cfg parameters
@@ -151,7 +150,7 @@ data_avg_ac     = ft_selectdata(cfgtemp, data_avg);
 halfwidth = NaN;
 
 if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
-        try %REMOVEME FIXME
+        %try %REMOVEME FIXME
 
         %measure peak and half hamp
         if strcmp(cfg.morpho.blmethod, 'bl')
@@ -191,7 +190,7 @@ if strcmp(cfg.morpho.mesurehalfwidth, 'yes')
             
             text(x_precise(2),halfamp,sprintf('   %.1f %s',halfwidth_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontSize',10,'FontWeight','bold');
         end
-        end
+        %end
 end
 
 
@@ -225,7 +224,7 @@ peaktrough = NaN;
 troughpeak = NaN;
 
 if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughpeak, 'yes')
-    try %REMOVEME FIXME
+    %try %REMOVEME FIXME
     % Find the higher positive peak :
     [~,Xpos] = findpeaks(data_avg_ac.avg, data_avg_ac.time,'NPeaks',1,'SortStr','descend','WidthReference','Halfheight'); %Npeaks : max nr of peaks/ SortStr : peak sorting : descend = from largest to smallest
     % Find throughs
@@ -258,7 +257,7 @@ if strcmp(cfg.morpho.mesurepeaktrough, 'yes') || strcmp(cfg.morpho.mesuretroughp
             text(x,y,sprintf('   %.1f%s',troughpeak_corr,unit),'Color','k','HorizontalAlignment','left','VerticalAlignment','middle','FontWeight', 'bold','FontSize',10);
         end
     end
-    end
+    %end
 end
 
 axis tight;
