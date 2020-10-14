@@ -31,6 +31,8 @@ end
 
 config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
+config{1}.rawdir                    = fullfile(rootpath_analysis, 'datatest');
+
 config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');        
 config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');     
 config{1}.visible                   = 'off';
@@ -44,7 +46,6 @@ config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hsp
 config{1}.hyp.backupdir             = fullfile(rootpath_analysis, 'markerbackup');
 config{1}.hyp.markerdir             = fullfile(rootpath_analysis, 'data',   'hspike');
 config{1}.hyp.micromedchannel       = 'F3p6';
-config{1}.hyp.contains              = {'NO_SCORE', 'AWAKE', 'PHASE_1', 'PHASE_2', 'PHASE_3', 'REM'}; 
 config{1}.hyp.markers               = [];
 config{1}.hyp.overwrite             = 'append';
 config{1}.hyp.spikewindow           = 60;
@@ -85,7 +86,13 @@ config{1}.template.reref            = 'yes';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
-config{1}.template.threshold        = 2.5;
+config{1}.template.threshold        = 2.7;
+
+config{1}.circus.channel            = {'mHaT2_7'};
+config{1}.circus.reref              = 'no';
+config{1}.circus.refchan            = '';
+config{1}.circus.outputdir          = 'SpykingCircus';
+% config{1}.circus.suffix             = '-2';
 
 %% Patient 2 
 % Patterns more clear in bipolar reference. Consider this for template
@@ -104,7 +111,7 @@ config{2}.cluster.refmethod         = 'bipolar';
 config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
-config{2}.circus.channel            = {'mHaT1_7'};
+config{2}.circus.channel            = {'mHaT1_1','mHaT1_3','mHaT1_4','mHaT1_6','mHaT1_8'};
 config{2}.circus.reref              = 'no';
 
 %% Patient 3
@@ -123,6 +130,7 @@ config{3}.template.latency          = [-0.2, 0.5];
 config{3}.template.threshold        = 3;
 config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
+config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_1','mHa2g_2','mHa2g_6','mHa2g_7','mHa2g_8'};
 
 %% Patient 4
 config{4}                           = config{1};
@@ -139,6 +147,7 @@ config{4}.cluster.refmethod         = 'bipolar';
 config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
+config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'};
 
 %% Patient 5
 config{5}                           = config{1};
@@ -151,9 +160,10 @@ config{5}.cluster.channel           = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','
 config{5}.cluster.align.latency     = [-0.2 0.5];
 config{5}.cluster.reref             = 'yes';
 config{5}.cluster.refmethod         = 'bipolar';
-config{5}.template.threshold        = 3.5;
+config{5}.template.threshold        = 3;
 config{5}.template.reref            = 'yes';
 config{5}.template.refmethod        = 'bipolar';
+config{5}.circus.channel            = {'mLMS2_2','mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7','mHmT3_4','mHmT3_5','mHmT3_7'};
 
 %% Patient 6
 config{6}                           = config{1};
@@ -169,6 +179,7 @@ config{6}.template.threshold        = 3.2;
 config{6}.template.threshold        = 3;
 config{6}.template.reref            = 'no';
 config{6}.template.refmethod        = 'bipolar';
+config{6}.circus.channel            = {'mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6','mHaT2_6','mHaT2_7','mHaT2_8'};
 
 %% Patient 7
 config{7}                           = config{1};
@@ -226,7 +237,7 @@ config{1}.directorylist             = [];
 config{1}.directorylist{1}          =  {'02711_2019-04-17_12-29',...
                                         '02711_2019-04-17_14-29',...
                                         '02711_2019-04-17_16-29',...
-                                        '02711_2019-04-17_18-29',...
+                                        '02711_2019-04-17_18-29',... 
                                         '02711_2019-04-17_20-29',...
                                         '02711_2019-04-17_22-29',...
                                         '02711_2019-04-18_00-29',...
@@ -235,14 +246,14 @@ config{1}.directorylist{1}          =  {'02711_2019-04-17_12-29',...
                                         '02711_2019-04-18_06-29',...
                                         '02711_2019-04-18_08-29',...
                                         '02711_2019-04-18_10-29',...
-                                        '02711_2019-04-18_11-04'};
+                                        '02711_2019-04-18_11-04'};      % TIMECODES FIXED
 config{1}.directorylist{2}          =  {'02711_2019-04-18_13-04',...
                                         '02711_2019-04-18_15-04',...
                                         '02711_2019-04-18_17-04',...
                                         '02711_2019-04-18_19-04',...
                                         '02711_2019-04-18_21-04',...
                                         '02711_2019-04-18_23-04',...
-                                        '02711_2019-04-19_01-04',...
+                                        '02711_2019-04-19_01-04',...    % TIMECODES FIXED
                                         '02711_2019-04-19_03-04',...
                                         '02711_2019-04-19_05-04',...
                                         '02711_2019-04-19_07-04',...

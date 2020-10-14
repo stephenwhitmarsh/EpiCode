@@ -36,16 +36,12 @@ cfg.template.name           = ft_getopt(cfg.template, 'name', 'TemplateDetect');
 fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
 
 if exist(fname_out,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('** Loading results spikedetection **\n');
-    fprintf('************************************\n\n');
+    fprintf('** Loading results template detection **\n');
     load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
     return
 end
 
-fprintf('**********************\n');
 fprintf('** Detecting spikes **\n');
-fprintf('**********************\n\n');
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -341,6 +337,7 @@ for ipart = 1 :  size(cfg.directorylist,2)
             n = 0;
         end
         title(sprintf('template%d, n = %d', itemp, n));
+        set(gca, 'Layer', 'top');
         
         xticks('');
         set(gca,'fontsize', 6)
@@ -349,18 +346,22 @@ for ipart = 1 :  size(cfg.directorylist,2)
             axisnames{i} = datestr(MuseStruct{ipart}{i}.starttime);           
         end
         axis tight
+        ax = axis;
         box off
     end
     
     % add filenames to extra subplot
     subplot(size(C_norm2{ipart}, 2) + 1, 1, size(C_norm2{ipart}, 2) + 1); hold;
-    axisnames = [];
+    set(gca,'fontsize', 6)
+    
     for i = 1 : length(cumsumdatlength)
         plot3([cumsumdatlength(i), cumsumdatlength(i)], [ax(3), ax(4)], [5, 5], 'color', [0, 0, 0]);
     end
+    axis tight
+    xlim([ax(1), ax(2)]);
     set(gca, 'TickDir', 'out');
     xticks(cumsumdatlength);
-    xticklabels(axisnames);
+    set(gca, 'xticklabels', axisnames);    
     xtickangle(90);
     
     % print to file
@@ -373,23 +374,7 @@ for ipart = 1 :  size(cfg.directorylist,2)
     
     % add to MuseStruct and add to markerfile if requested
     for idir = unique(dirindx)
-        
-        %  read Muse events file
-        fname_mrk = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
-        
-        % backup markerfile
-        if ~exist(cfg.muse.backupdir,'DIR')
-            error('Backup directory does not exist');
-        end
-        [~, d] = fileparts(cfg.directorylist{ipart}{idir});
-        if ~exist(fullfile(cfg.muse.backupdir, d), 'DIR')
-            fprintf('Creating directory: %s\n', fullfile(cfg.muse.backupdir, d));
-            eval(sprintf('!mkdir %s', fullfile(cfg.muse.backupdir, d)));
-        end
-        fname_backup = sprintf('Events_%s.mrk', datestr(now, 'mm-dd-yyyy_HH-MM-SS'));
-        eval(sprintf('!cp %s %s', fname_mrk, fullfile(cfg.muse.backupdir, d, fname_backup)));
-        fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
-        
+         
         % remove previous template markers        
         names = fieldnames(MuseStruct{ipart}{idir}.markers);
         for itemp = 1 : 100
@@ -424,8 +409,24 @@ for ipart = 1 :  size(cfg.directorylist,2)
             MuseStruct{ipart}{idir}.markers.(name).clock         = (seconds(indx / dat.fsample) + MuseStruct{ipart}{idir}.starttime)';
         end
         
-        % write to muse marker file
         if cfg.template.writemuse == true
+            
+            fname_mrk = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'Events.mrk');
+
+            % backup markerfile
+            if ~exist(cfg.muse.backupdir,'DIR')
+                error('Backup directory does not exist');
+            end
+            [~, d] = fileparts(cfg.directorylist{ipart}{idir});
+            if ~exist(fullfile(cfg.muse.backupdir, d), 'DIR')
+                fprintf('Creating directory: %s\n', fullfile(cfg.muse.backupdir, d));
+                eval(sprintf('!mkdir %s', fullfile(cfg.muse.backupdir, d)));
+            end
+            fname_backup = sprintf('Events_%s.mrk', datestr(now, 'mm-dd-yyyy_HH-MM-SS'));
+            eval(sprintf('!cp %s %s', fname_mrk, fullfile(cfg.muse.backupdir, d, fname_backup)));
+            fprintf('Succesfully backed up markerfile to %s\n',fullfile(cfg.muse.backupdir, d, fname_backup));
+            
+            % write to muse marker file
             writeMuseMarkerfile(MuseStruct{ipart}{idir}, fname_mrk);
         end
     end

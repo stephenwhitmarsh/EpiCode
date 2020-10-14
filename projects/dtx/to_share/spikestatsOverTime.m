@@ -85,7 +85,8 @@ for ipart = size(spikedata, 2)
         
         % Compute stats on sliding time window along all data.
         for i_unit = 1:size(spikedata{ipart}.(markername).label, 2)
-            ft_progress('init', 'text',     sprintf('Part %d/%d, %s, Unit %d/%d (%d trials):', ipart,size(spikedata, 2),convertStringsToChars(markername), i_unit, size(spikedata{ipart}.(markername).label, 2), size(spikedata{ipart}.(markername).trialinfo, 1)));
+            ft_progress('init', 'text');
+            fprintf('Part %d/%d, %s, Unit %d/%d (%d trials): ', ipart,size(spikedata, 2),convertStringsToChars(markername), i_unit, size(spikedata{ipart}.(markername).label, 2), size(spikedata{ipart}.(markername).trialinfo, 1));
             trials_win_count = 0;
             
             for itrial = 1:size(spikedata{ipart}.(markername).trialinfo, 1)
@@ -112,7 +113,7 @@ for ipart = size(spikedata, 2)
                     te = t_end + spikedata{ipart}.(markername).trialtime(itrial, 1);
                     i_window = i_window+1;
                     trials_win_count = trials_win_count + 1;
-                    ft_progress(trials_win_count/(nr_win_all_trials+i_window));
+                    ft_progress(trials_win_count/(nr_win_all_trials+i_window), sprintf('%g%%', trials_win_count/(nr_win_all_trials+i_window)));
                     
                     %find spikes in this window
                     spike_index = (spikedata{ipart}.(markername).trial{i_unit}==itrial) & (spikedata{ipart}.(markername).time{i_unit} > ts) & (spikedata{ipart}.(markername).time{i_unit} <=  te);

@@ -8,20 +8,20 @@ if strcmp(cfg.prefix,'DTX2-')
     fprintf('Rat is DTX2, correct cfg and LFP channel names\n');
     
     for ipart = 1:length(data)
-        for imarker = 1:length(data{ipart})
+        for markername = string(fieldnames(data{ipart}))
             
-            if strcmp(cfg.LFP.electrodetoplot{imarker},'ECoGS1')
-                cfg.LFP.electrodetoplot{imarker} = 'ECoGM1G';
+            if strcmp(cfg.LFP.electrodetoplot.(markername),'ECoGS1')
+                cfg.LFP.electrodetoplot.(markername) = 'ECoGM1G';
             end
             
-            for ilabel = 1:length(data{ipart}{imarker}.label)
+            for ilabel = 1:length(data{ipart}.(markername).label)
                 
-                if strcmp(data{ipart}{imarker}.label{ilabel}, 'ECoGM1')
-                    data{ipart}{imarker}.label{ilabel} = 'ECoGM1D';
+                if strcmp(data{ipart}.(markername).label{ilabel}, 'ECoGM1')
+                    data{ipart}.(markername).label{ilabel} = 'ECoGM1D';
                 end
                 
-                if strcmp(data{ipart}{imarker}.label{ilabel}, 'ECoGS1')
-                    data{ipart}{imarker}.label{ilabel} = 'ECoGM1G';
+                if strcmp(data{ipart}.(markername).label{ilabel}, 'ECoGS1')
+                    data{ipart}.(markername).label{ilabel} = 'ECoGM1G';
                 end
                 
                 if strcmp(cfg.labels.macro{ilabel}, 'ECoGM1')
