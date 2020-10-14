@@ -23,7 +23,7 @@ ft_defaults
 
 config = wod_setparams;
 
-for irat = slurm_task_id
+for irat = 8  %slurm_task_id
     
     % loop through different parts
     for ipart = 1 : size(config{irat}.directorylist,2)
