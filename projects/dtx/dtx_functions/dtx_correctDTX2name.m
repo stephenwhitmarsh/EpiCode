@@ -10,6 +10,9 @@ if strcmp(cfg.prefix,'DTX2-')
     for ipart = 1:length(data)
         for markername = string(fieldnames(data{ipart}))
             
+            
+            
+            
             if strcmp(cfg.LFP.electrodetoplot.(markername),'ECoGS1')
                 cfg.LFP.electrodetoplot.(markername) = 'ECoGM1G';
             end

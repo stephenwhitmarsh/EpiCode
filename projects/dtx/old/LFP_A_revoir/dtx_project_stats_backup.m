@@ -137,9 +137,9 @@ load('elec1020_neighb.mat','neighbours');
             cfgtemp.toiplot             = [-2 2];
             cfgtemp.toibl               = config{ipatient}.align.toibaseline{imarker};
             cfgtemp.toiac               = [-1 1];
-            cfgtemp.mesurehalfwidth     = 'yes';
+            cfgtemp.measurehalfwidth     = 'yes';
             cfgtemp.halfwidthmethod     = 'bl'; 
-            cfgtemp.mesurepeaktrough    = 'yes';
+            cfgtemp.measurepeaktrough    = 'yes';
             cfgtemp.name                = config{ipatient}.LFP.name{imarker};
             cfgtemp.saveplot            = 'yes';
             cfgtemp.imagesavedir        = config{ipatient}.imagesavedir;
@@ -151,7 +151,7 @@ load('elec1020_neighb.mat','neighbours');
     
     
     %% morpho SW, EMG, and comparison
-    % choisir si alignement début ou pic, à voir avec les figures d'ajd
+    % choisir si alignement dï¿½but ou pic, ï¿½ voir avec les figures d'ajd
     % ajouter savefig aux arguments input quand script fini de tourner
     %reset save path
     try

@@ -96,6 +96,7 @@ config{1}.spike.baseline            = [-0.001 -0.0005];
 config{1}.spike.bltoi{1}            = [-2,    -1];
 config{1}.spike.bltoi{2}            = [-2,    -1];
 config{1}.spike.bltoi{3}            = [-1,  -0.5];
+config{1}.spike.ISIbins             = [0:0.003:0.150]; %in s
 
 config{1}.stats.actoi{1}            = [-0.15, 0.15];
 config{1}.stats.actoi{2}            = [-0.15, 0.15];

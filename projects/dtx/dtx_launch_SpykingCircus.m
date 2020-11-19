@@ -5,7 +5,7 @@ function dtx_launch_SpykingCircus(irat, analysis)
 % - 'all' to perform the spike sorting + converting
 % - 'extracting' to extract pre-computed templates and only do template
 % matching
-% - 'converting' to only to 
+% - 'converting' to only convert spyking circus output to phy format 
 
 arguments
     irat 
@@ -26,7 +26,6 @@ switch analysis
             filename    = [config{irat}.prefix,'p',num2str(ipart),'-multifile-',config{irat}.circus.channel{1},'.ncs'];
             dirname     = fullfile(config{irat}.datasavedir,subjdir,partdir);
             
-            
             load_sc         = 'module load spyking-circus/0.9.9;';
             open_dir        = sprintf('cd %s;', dirname);
             launch_sc       = sprintf('spyking-circus %s -c 28;', filename);
@@ -44,7 +43,6 @@ switch analysis
             filename    = [config{irat}.prefix,'p',num2str(ipart),'-multifile-',config{irat}.circus.channel{1},'.ncs'];
             dirname     = fullfile(config{irat}.datasavedir,subjdir,partdir);
             
-            
             load_sc         = 'module load spyking-circus/0.9.9;';
             open_dir        = sprintf('cd %s;', dirname);
             launch_sc       = sprintf('spyking-circus %s -m whitening,extracting,fitting -c 28;', filename);
@@ -61,7 +59,6 @@ switch analysis
             partdir     = ['p',num2str(ipart)];
             filename    = [config{irat}.prefix,'p',num2str(ipart),'-multifile-',config{irat}.circus.channel{1},'.ncs'];
             dirname     = fullfile(config{irat}.datasavedir,subjdir,partdir);
-            
             
             load_sc         = 'module load spyking-circus/0.9.9;';
             open_dir        = sprintf('cd %s;', dirname);

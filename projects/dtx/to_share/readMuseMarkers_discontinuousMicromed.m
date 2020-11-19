@@ -290,10 +290,10 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 MuseStruct{ipart}{idir}.iscontinuous = 'no';
                 for isegment = 1:length(segments)
                     temp                         = strsplit(segments{isegment},'\t');
-                    segment_datastart(isegment)  = str2double(erase(temp{6}, 'Sample: '));
-                    segment_realstart(isegment)  = str2double(erase(temp{3}, 'Time: '));
+                    segment_datastart(isegment)  = str2double(erase(temp{6}, 'Sample: ')); %start sample in the cut data
+                    segment_realstart(isegment)  = str2double(erase(temp{3}, 'Time: ')); %start sample in the raw data before cut
                 end
-                timediff =  segment_realstart - segment_datastart;
+                timediff =  segment_realstart - segment_datastart; %time to add to the cut data, to be synchronized with the raw non-cut data
             end
         end
         %%%%%%%%%%
@@ -303,8 +303,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
         if iscontinuous
             MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds(hdr.nSamples / hdr.Fs - hdr.nSamplesPre / hdr.Fs);
         else
-            MuseStruct{ipart}{idir}.starttime  = MuseStruct{ipart}{idir}.starttime + seconds(timediff(1)/hdr.Fs);
-            MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds((hdr.nSamples - hdr.nSamplesPre +timediff(end)) / hdr.Fs );
+            segment_dataend = [diff(segment_datastart), (hdr.nSamples - hdr.nSamplesPre) - segment_datastart(end)]; %length of data segments 
+            MuseStruct{ipart}{idir}.segments          = table; 
+            MuseStruct{ipart}{idir}.segments.begclock = MuseStruct{ipart}{idir}.starttime + seconds(segment_realstart'./hdr.Fs); 
+            MuseStruct{ipart}{idir}.segments.endclock = MuseStruct{ipart}{idir}.starttime + seconds((segment_realstart'+segment_dataend')./hdr.Fs);%make a draw to understand it
+            MuseStruct{ipart}{idir}.endtime           = MuseStruct{ipart}{idir}.starttime + seconds((hdr.nSamples - hdr.nSamplesPre + timediff(end)) / hdr.Fs );
         end
         
         % create markers details in MuseStruct
@@ -324,7 +327,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 else
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) = seconds(marks{imarker}(ievent,2)) + MuseStruct{ipart}{idir}.starttime;
                     if ~iscontinuous
-                        timediff_idx_event = find(MuseStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent) >= segment_datastart./hdr.Fs, 1, 'first');
+                        timediff_idx_event = find(MuseStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent) >= segment_datastart./hdr.Fs, 1, 'last');
                         MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) = MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) + seconds(timediff(timediff_idx_event)/hdr.Fs);
                     end
                 end

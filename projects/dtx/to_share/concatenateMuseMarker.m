@@ -18,8 +18,9 @@ marker.dir      = [];
 length_previous = 0;
 
 %find hdr for each dir
+ft_progress('init','text');
 for idir = 1:size(MuseStruct{ipart},2)
-    fprintf('reading header for dir %d from %d\n',idir, size(MuseStruct{ipart},2));
+    ft_progress(idir/size(MuseStruct{ipart},2),'reading header for dir %d from %d',idir, size(MuseStruct{ipart},2));
     if isNeuralynx
         temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}, '.ncs']));
         fname 	 = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
@@ -30,6 +31,7 @@ for idir = 1:size(MuseStruct{ipart},2)
     end
     hdr{ipart}{idir}     = ft_read_header(fname);
 end
+ft_progress('close');
 
 %concatenate clock times
 for idir = 1:size(MuseStruct{ipart},2) 

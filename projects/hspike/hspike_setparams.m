@@ -1,13 +1,13 @@
-function [config] = hspike_setparams
+function [config] = hspike_setparams(varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [config] = hspike_setparams
+% [config] = hspike_setparams(varargin)
 %
 % This function outputs all the settings of a study, to be defined below
 %
 % Note the consideration of the operating system, because the pointers to
 % the file server is dealt with differently. This could be different for
-% you.
+% you. You can force an OS with the input argument: 'pc' or 'unix'.
 %
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 %
@@ -15,27 +15,38 @@ function [config] = hspike_setparams
 
 disp('setting parameters');
 
-if ismac
-    error('Platform not supported')
-elseif isunix
-    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
-    rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
-elseif ispc
+pc = ispc;
+
+% overwrite if os is forced
+if nargin == 1
+    if strcmp(varargin{1}, 'pc')
+        pc = true;
+    elseif strcmp(varargin{1}, 'unix')
+        pc = false;
+    else
+        error('os not recognized');
+    end
+end
+
+if pc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
     rootpath_data       = '\\lexport\iss01.epimicro\patients\raw';
-else
-    error('Platform not supported')
+%     rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
+    
+else       
+    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+    rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
+%     rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';    
 end
+    
 
 %% Patient 1
 
 config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
-config{1}.rawdir                    = fullfile(rootpath_analysis, 'datatest');
-
 config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');        
 config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');     
-config{1}.visible                   = 'off';
+config{1}.visible                   = 'on';
 
 config{1}.name                      = {'Hspike'};
 config{1}.muse.startmarker.Hspike   = "Hspike";
@@ -88,11 +99,40 @@ config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
 config{1}.template.threshold        = 2.7;
 
-config{1}.circus.channel            = {'mHaT2_7'};
-config{1}.circus.reref              = 'no';
-config{1}.circus.refchan            = '';
-config{1}.circus.outputdir          = 'SpykingCircus';
-% config{1}.circus.suffix             = '-2';
+config{1}.circus.channel                        = {'mHaT2_1', 'mHaT2_3', 'mHaT2_4','mHaT2_6', 'mHaT2_7', 'mHaT2_8'};
+config{1}.circus.reref                          = 'no';
+config{1}.circus.refchan                        = '';
+config{1}.circus.outputdir                      = 'SpykingCircus';
+config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus.params');
+config{1}.circus.params.detection.spike_thresh  = '6';
+config{1}.circus.params.filtering.cut_off       = '300, auto';
+config{1}.circus.params.filtering.remove_median = 'False';
+config{1}.circus.params.clustering.max_elts     = '20000';
+config{1}.circus.params.detection.peaks         = 'positive';
+
+config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
+config{1}.spike.toi.combined1       = [-0.5, 1.5];           % for plotting spikerate
+config{1}.spike.toi.combined2       = [-0.5, 1.5];           % for p200mslotting spikerate
+config{1}.spike.toi.combined3       = [-0.5, 1.5];      % for plotting spikerate
+config{1}.spike.bl.combined1        = [-0.5, -0.2];
+config{1}.spike.bl.combined2        = [-0.5, -0.2];
+config{1}.spike.bl.combined3        = [-0.5, -0.2];
+
+config{1}.spike.resamplefs          = 1000;
+config{1}.spike.pre                 = 0.001;
+config{1}.spike.post                = 0.002;
+config{1}.spike.baseline            = [-0.001 -0.0005];
+config{1}.spike.ISIbins             = [0 : 0.003 : 0.150]; %in s
+config{1}.spike.nrsdfbins           = 100;
+
+config{1}.stats.toi.combined1      = [-0.5, 1.5];
+config{1}.stats.toi.combined2       = [-0.5, 1.5];
+config{1}.stats.toi.combined3       = [-0.5, 1.5]; 
+config{1}.stats.bl.combined1        = [-0.5 -0.2];
+config{1}.stats.bl.combined2        = [-0.5 -0.2];
+config{1}.stats.bl.combined3        = [-0.5 -0.2];
+config{1}.stats.alpha               = 0.025;
+
 
 %% Patient 2 
 % Patterns more clear in bipolar reference. Consider this for template
@@ -111,11 +151,12 @@ config{2}.cluster.refmethod         = 'bipolar';
 config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
-config{2}.circus.channel            = {'mHaT1_1','mHaT1_3','mHaT1_4','mHaT1_6','mHaT1_8'};
+config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
+config{2}.circus.params.detection.spike_thresh  = '5.5';
 
 %% Patient 3
-config{3}                           = config{1};
+config{3}                           = config{1}; 
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
 config{3}.hyp.micromedchannel       = 'Ha2g1';                                    
@@ -130,7 +171,13 @@ config{3}.template.latency          = [-0.2, 0.5];
 config{3}.template.threshold        = 3;
 config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
-config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_1','mHa2g_2','mHa2g_6','mHa2g_7','mHa2g_8'};
+
+config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
+config{3}.circus.channelname        = {'mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mHa2g','mHa2g','mHa2g','mHa2g'};
+
+config{3}.circus.params.detection.spike_thresh  = '6'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
+config{3}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{3}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 4
 config{4}                           = config{1};
@@ -148,6 +195,7 @@ config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
 config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'};
+config{4}.circus.params.detection.spike_thresh  = '6';
 
 %% Patient 5
 config{5}                           = config{1};
@@ -164,6 +212,8 @@ config{5}.template.threshold        = 3;
 config{5}.template.reref            = 'yes';
 config{5}.template.refmethod        = 'bipolar';
 config{5}.circus.channel            = {'mLMS2_2','mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7','mHmT3_4','mHmT3_5','mHmT3_7'};
+config{5}.circus.params.detection.spike_thresh  = '6';
+config{5}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 6
 config{6}                           = config{1};
@@ -196,6 +246,7 @@ config{7}.template.reref            = 'no';
 config{7}.template.refmethod        = 'bipolar';
 config{7}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','mAmT2_6'};
 config{7}.circus.reref              = 'no';
+config{7}.circus.params.detection.spike_thresh  = '6';
 
 %% Patient NO MUA ON FIRST DAY - ONLY HYPNOGRAM ON FIRST DAY
 config{8}                           = config{1};
@@ -347,7 +398,7 @@ config{3}.directorylist{2}          = { '02660_2018-11-14_17-51',...
 config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',...
                                         '02660_2018-11-15_19-41',...
                                         '02660_2018-11-15_21-41',...
-                                        '02660_2018-11-15_23-41',...
+                                        '02660_2018-11-15_23-41',... % missing data ShortITS
                                         '02660_2018-11-16_01-41',...
                                         '02660_2018-11-16_03-41',...
                                         '02660_2018-11-16_05-41',...
@@ -374,7 +425,7 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-16_09-31'...
                                         '02680_2019-01-16_09-52'...
                                         '02680_2019-01-16_10-58'...
-                                        '02680_2019-01-16_11-32'};
+                                        '02680_2019-01-16_11-32'}; % ChWrongSize
 config{4}.directorylist{2}          = { '02680_2019-01-16_13-32'...
                                         '02680_2019-01-16_15-32'...
                                         '02680_2019-01-16_17-32'...
@@ -514,7 +565,7 @@ config{7}.directorylist{2}          = { '02619_2018-07-04_16-45'...
                                         '02619_2018-07-05_16-13'};
 config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
                                         '02619_2018-07-05_20-13'...
-                                        '02619_2018-07-05_22-13'...
+                                        '02619_2018-07-05_22-13'... % DiffSTartMacSync & short ITS
                                         '02619_2018-07-06_00-13'...
                                         '02619_2018-07-06_02-13'...
                                         '02619_2018-07-06_04-13'...
