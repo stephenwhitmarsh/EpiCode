@@ -1,41 +1,29 @@
 
-function [spike_LFP] = spikeLFP(cfg,SpikeRaw, force)
+function [spike_LFP] = spikeLFP(cfg, MuseStruct, SpikeRaw, force)
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'spike_LFP.mat']);
 
 if exist(fname,'file') && force == false
     fprintf('************************************\n');
-    fprintf('*** Loading precomputed LFP data ***\n');
+    fprintf('*** Loading precomputed spike-LFP data ***\n');
     fprintf('************************************\n\n');
     
     load(fname,'spike_LFP');
     
 else
     fprintf('********************************\n');
-    fprintf('*** (re-) computing LFP data ***\n');
+    fprintf('*** (re-) computing spike-LFP data ***\n');
     fprintf('********************************\n\n');
     
-    
-    % entered by writeSpykingCircus
-    fnames = [];
-    ii = 1;
-    for i = 1 : size(cfg.fnames_ncs,2)
-        if ~isempty(cfg.fnames_ncs{i})
-            fnames{ii} = cfg.fnames_ncs{i};
-            ii = ii + 1;
-        end
-    end
-    
+
     for itemp = 1 : size(SpikeRaw.label,2)
         
-        %
-        %     spikesamples = [];
-        %     for i = 1 : size(SpikeRaw.label,2)
-        %         spikesamples = [spikesamples; SpikeRaw.samples{itemp}];
-        %     end
-        ichan = SpikeRaw.template_maxchan(itemp);
+        temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{ifile}, '.ncs']));
+        fname{1}            = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+        dat                 = ft_read_neuralynx_interp(fname);
         
-        hdr = ft_read_header(fnames{ichan});
+        
+        hdr = ft_read_header(MuseStruct.directorylist{});
         
         trl = [];
         trl(:,1) = SpikeRaw.samples{itemp} - (cfg.spike.pre * hdr.Fs);
