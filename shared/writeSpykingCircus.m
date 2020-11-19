@@ -1,4 +1,4 @@
-function [sampleinfo] = writeSpykingCircus(cfg, MuseStruct, force, varargin)
+function [cfg] = writeSpykingCircus(cfg, MuseStruct, force, varargin)
 
 % WRITESPYKINGCIRCUS writes a concatinated data file for SpykingCircus and
 % sampleinfo is returned for later (cutting results back up)
@@ -41,8 +41,7 @@ fname_output                = fullfile(cfg.datasavedir,[cfg.prefix,'SpykingCircu
 
 if exist(fname_output, 'file') && force == false
     fprintf('\nLoading sampleinfo: %s \n', fname_output);
-    temp         = load(fname_output, 'cfg');
-    sampleinfo   = temp.cfg.sampleinfo;
+    load(fname_output, 'cfg');
     %     cfg.deadfile_ms         = temp.cfg.deadfile_ms;
     %     cfg.deadfile_samples    = temp.cfg.deadfile_samples;
 else
@@ -55,7 +54,7 @@ else
         % process channels separately
         for ichan = 1 : size(cfg.circus.channel,2)
             
-            sampleinfo{ipart}{ichan} = [];
+            cfg.sampleinfo{ipart}{ichan} = [];
             clear dirdat
             
             % loop over all directories (time), concatinating channel
@@ -77,13 +76,13 @@ else
                 if write
                     clear fname
                     temp                            = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
-                    fname{1}                        = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+                    fname_in{1}                        = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
                     cfgtemp                         = [];
-                    cfgtemp.dataset                 = fname{1};
-                    fprintf('LOADING: %s\n',cfgtemp.dataset);
+                    cfgtemp.dataset                 = fname_in{1};
+                    fprintf('LOADING: %s\n', cfgtemp.dataset);
                     clear fname
-                    fname{1}                        = cfgtemp.dataset;
-                    dirdat{idir}                    = ft_read_neuralynx_interp(fname);
+                    fname_in{1}                     = cfgtemp.dataset;
+                    dirdat{idir}                    = ft_read_neuralynx_interp(fname_in);
                     
                     if strcmp(cfg.circus.reref, 'yes')
                         temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan,'.ncs']));
@@ -91,8 +90,8 @@ else
                         cfgtemp.dataset             = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
                         fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
                         clear fname
-                        fname{1}                    = cfgtemp.dataset;
-                        refdat                      = ft_read_neuralynx_interp(fname);
+                        fname_in{1}                 = cfgtemp.dataset;
+                        refdat                      = ft_read_neuralynx_interp(fname_in);
                         dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
                         clear refdat
                     end
@@ -116,7 +115,7 @@ else
                 hdr  = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name));
                 
                 % save sampleinfo to reconstruct data again after reading SC
-                sampleinfo{ipart}{ichan}(idir,:) = [1 hdr.nSamples];
+                cfg.sampleinfo{ipart}{ichan}(idir,:) = [1 hdr.nSamples];
                 
             end
             
@@ -136,7 +135,8 @@ else
             clear fname
             subjdir     = cfg.prefix(1:end-1);
             partdir     = ['p', num2str(ipart)];
-            filename    = [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{ichan}, '.ncs'];
+            chandir     = cfg.circus.channel{ichan}
+            filename    = [cfg.prefix, 'p', num2str(ipart), '-multifile-', num2str(ichan), '.ncs'];
             fname       = fullfile(cfg.datasavedir, subjdir, partdir, filename);
             
             % save filenames to cfg (output of function)

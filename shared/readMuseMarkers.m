@@ -58,8 +58,8 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
         % find muse event file and read header if neaded
         if isNeuralynx
-            temp        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'*.mrk'));
-            name_mrk    = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+            temp        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, '*.mrk'));
+            name_mrk    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
         elseif isMicromed
             name_mrk    = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.mrk']);
         elseif isBrainvision
@@ -286,6 +286,9 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
         MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
         MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds(hdr.nSamples / hdr.Fs - hdr.nSamplesPre / hdr.Fs);
+        MuseStruct{ipart}{idir}.nSamples   = hdr.nSamples;
+        MuseStruct{ipart}{idir}.Fs         = hdr.Fs;
+
 
         % create markers details in MuseStruct
         for imarker = 1 : nmarkers

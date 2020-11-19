@@ -72,7 +72,6 @@ for ipart = cfg.circus.part_list
     
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p', num2str(ipart)];
-    nb_channels     = size(cfg.circus.channel,2);
     
     % read Spyking-Circus params file
     ini = IniConfig();
@@ -89,15 +88,15 @@ for ipart = cfg.circus.part_list
         end
     end
     
-    % adjust parameters common to all
-    fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
-    h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None', fname_prb, '','False','SpykingCircus'});
-    h2 = ini.SetValues('noedits', {'filter_done','artefacts_done','ground_done','median_done'}, {'False','False','False','False'});
-    
-    
     % there should be a better way to do this that removes double code...
     if isempty(cfg.circus.channelname)
-        
+        nb_channels     = size(cfg.circus.channel,2);
+    
+        % adjust parameters common to all
+        fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
+        h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None', fname_prb, '','False','SpykingCircus'});
+        h2 = ini.SetValues('noedits', {'filter_done','artefacts_done','ground_done','median_done'}, {'False','False','False','False'});
+
         % add artefact file to params only if needed
         temp = dir(fullfile(cfg.datasavedir, subjdir, partdir, '*.dead'));
         if isempty(temp)
@@ -136,6 +135,13 @@ for ipart = cfg.circus.part_list
             % add artefact file to params only if needed
             temp        = strcmp(cfg.circus.channelname, chandir);
             firstchan   = cfg.circus.channel(find(temp,1,'first'));
+            nb_channels = sum(temp);
+
+            % adjust parameters common to all
+            fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
+            h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None', fname_prb, '','False','SpykingCircus'});
+            h2 = ini.SetValues('noedits', {'filter_done','artefacts_done','ground_done','median_done'}, {'False','False','False','False'});
+
             temp        = dir(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), '*.dead'));
             if isempty(temp)
                 continue
@@ -159,7 +165,7 @@ for ipart = cfg.circus.part_list
                     end
                 end
             end
-            
+             
             filename        = strcat(cfg.prefix, 'p', num2str(ipart), '-multifile-', firstchan, '.params');
             fname_params    = char(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), filename));
             fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
