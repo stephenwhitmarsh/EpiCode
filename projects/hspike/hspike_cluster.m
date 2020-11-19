@@ -129,7 +129,7 @@ end
 SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config_trimmed{ipatient}, true);
 
 % segment into trials based on IED markers
-SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers2(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
 SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
 
 % segment into equal periods

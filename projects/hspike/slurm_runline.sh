@@ -10,4 +10,3 @@
 #SBATCH --array=7-12
 
 eval $(sed -n "$SLURM_ARRAY_TASK_ID"p /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/slurm_job_list.txt)
-
