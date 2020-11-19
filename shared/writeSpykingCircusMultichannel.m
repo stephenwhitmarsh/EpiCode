@@ -48,7 +48,7 @@ else
         for ichan = 1 : size(cfg.circus.channel,2)
             
             cfg.sampleinfo{ipart}{ichan} = [];
-            clear chandat dirdat
+            clear chandat dirdat v_Timestamp
 
             % read one channel for all directories (time)
             for idir = 1 : size(cfg.directorylist{ipart},2)
@@ -207,7 +207,7 @@ else
                         ones(size(timestamps_concat)) * v_NumValSamples(1), ...
                         chandat, st_Header);
                 end
-                if isunix
+                if isunix % this write a file that is too long somehow - second half without data, too many timestamps?
                     delete(fname);                    
                     v_NumRecs = length(timestamps_concat);
                     fprintf('Writing concatinated data with MEX file to %s\n', fname);                

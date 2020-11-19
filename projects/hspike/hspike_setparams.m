@@ -176,7 +176,7 @@ config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','
 config{3}.circus.channelname        = {'mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mHa2g','mHa2g','mHa2g','mHa2g'};
 
 config{3}.circus.params.detection.spike_thresh  = '6'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
-config{3}.circus.params.detection.peaks         = 'positive'; % two different bundles end up having AP peaks in different direction
+config{3}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
 config{3}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 4

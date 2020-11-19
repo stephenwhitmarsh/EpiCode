@@ -43,12 +43,12 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force, varargin)
 
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 
-if nargin == 0
+if nargin == 3
     postfix = '';
-elseif nargin == 1
+elseif nargin == 4
     postfix = varargin{1};
 else
-    error('Not the right amount of input argments');
+    error('Not the right amount of input arguments');
 end
     
     

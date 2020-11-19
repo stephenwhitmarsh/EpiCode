@@ -55,53 +55,55 @@ else
         % process channels separately
         for ichan = 1 : size(cfg.circus.channel,2)
             
-            sampleinfo{ipart}{ichan} = [];
+            cfg.sampleinfo{ipart}{ichan} = [];
             clear dirdat
             
             % loop over all directories (time), concatinating channel
             for idir = 1 : size(cfg.directorylist{ipart},2)
                 
-                if write
-                    clear fname
-                    temp                            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
-                    fname                           = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
-                    fprintf('LOADING: %s\n', fname);
-                    
-                    st_FieldSelection(1) = 1; %timestamps
-                    st_FieldSelection(2) = 1; %Channel Numbers
-                    st_FieldSelection(3) = 1; %sample freq
-                    st_FieldSelection(4) = 1; %Number of Valid Samples
-                    st_FieldSelection(5) = 1; %samples
-                    st_FieldSelection(6) = 1; %header (for creating .ncs only)
-                    s_ExtractHeader      = 1;
-                    s_ExtractMode        = 1; %1 if all samples
-                    v_ModeArray          = []; %[] if all, 2 elements if range
-                    s_AppendToFileFlag   = 0;
-                    s_ExportMode         = 1; %1 if a
-                    v_ExportModeVector   = [];
-                    
+                clear fname
+                temp                            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
+                fname                           = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                fprintf('LOADING: %s\n', fname);
+                
+                st_FieldSelection(1) = 1; %timestamps
+                st_FieldSelection(2) = 1; %Channel Numbers
+                st_FieldSelection(3) = 1; %sample freq
+                st_FieldSelection(4) = 1; %Number of Valid Samples
+                st_FieldSelection(5) = 1; %samples
+                st_FieldSelection(6) = 1; %header (for creating .ncs only)
+                s_ExtractHeader      = 1;
+                s_ExtractMode        = 1; %1 if all samples
+                v_ModeArray          = []; %[] if all, 2 elements if range
+                s_AppendToFileFlag   = 0;
+                s_ExportMode         = 1; %1 if a
+                v_ExportModeVector   = [];
+                
+                if ispc
+                    [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}, st_Header] = Nlx2MatCSC(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                else
                     [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}, st_Header] = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
-                    
-                    if strcmp(cfg.circus.reref, 'yes')
-                        temp                        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*',cfg.circus.refchan, '.ncs']));
-                        fnameref                    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
-                        fprintf('LOADING (reference): %s\n', fnameref);
-                        [~, ~, ~, ~, refdat, ~]     = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);                          
-                        dirdat{idir}                = dirdat{idir} - refdat;
-                        clear refdat
-                    end
-                    
-                end % write
-              
+                end
+                
+                if strcmp(cfg.circus.reref, 'yes')
+                    temp                        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*',cfg.circus.refchan, '.ncs']));
+                    fnameref                    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                    fprintf('LOADING (reference): %s\n', fnameref);
+                    [~, ~, ~, ~, refdat, ~]     = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                    dirdat{idir}                = dirdat{idir} - refdat;
+                    clear refdat
+                end
+                
+                
                 % save sampleinfo to reconstruct data again after reading SC
-                sampleinfo{ipart}{ichan}(idir,:)            = [1 numel(dirdat{idir})];
+                cfg.sampleinfo{ipart}{ichan}(idir,:)            = [1 numel(dirdat{idir})];
             end
             
             % concatinate data over files
             if write
                 chandat = dirdat{1};
                 timestamps_concat = v_Timestamp{1};
-                for idir = 2 %length(cfg.directorylist{ipart}) 8?
+                for idir = length(cfg.directorylist{ipart})
                     fprintf('Concatinating directory %d, channel %d\n', idir, ichan);
                     chandat = [chandat dirdat{idir}];
                     timestamps_concat = [timestamps_concat v_Timestamp{idir}];
@@ -128,13 +130,13 @@ else
                 if ~exist(fullfile(cfg.datasavedir, subjdir, partdir),'dir')
                     mkdir(fullfile(cfg.datasavedir, subjdir, partdir));
                 end
-  
+                
                 if ispc
                     Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, st_FieldSelection, timestamps_concat, v_ChanNum, v_SampleFrequency, v_NumValSamples, chandat, st_Header);
                 end
                 if isunix
                     v_NumRecs = length(timestamps_concat);
-                   
+                    
                     Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, v_NumRecs, st_FieldSelection, timestamps_concat, ...
                         ones(size(timestamps_concat)) * v_ChanNum(1), ...
                         ones(size(timestamps_concat)) * v_SampleFrequency(1), ...

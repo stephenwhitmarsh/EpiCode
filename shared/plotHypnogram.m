@@ -152,8 +152,7 @@ for ipart = 1 : size(MuseStruct,2)
     maxlength       = max(hyp_endtime - hyp_starttime);
     
     %% plotting
-    %     fig = figure('visible', cfg.visible);
-    fig = figure;
+    fig = figure('visible', cfg.visible);
     subplot(numel(unique(mrk_tbl.markerlabel))+1,1,1); hold;
     
     fill([hyp_starttime, hyp_starttime + maxlength, hyp_starttime + maxlength, hyp_starttime], [0 0 1 1], [1 1 1], 'EdgeColor',[1 1 1]);
