@@ -408,7 +408,7 @@ else
 
                 %% Plot alignement
 
-                fig             = figure;
+                fig             = figure('visible','off');
                 fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
 
                 i_h_temp = 0;
@@ -422,9 +422,11 @@ else
            
                 %Find position of the line to plot
                 for itrial = 1 : size(dat_filt_trl.trial,2)
-                    line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
-                    if strcmp(cfg.align.findbegin.(markername), 'yes')
-                        line_idx(itrial) = index_tresh{itrial};
+                    if haspeak(itrial)
+                        line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
+                        if strcmp(cfg.align.findbegin.(markername), 'yes')
+                            line_idx(itrial) = index_tresh{itrial};
+                        end
                     end
                 end
 
