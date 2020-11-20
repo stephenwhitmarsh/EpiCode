@@ -234,7 +234,8 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.idir          = Filenr(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.fileoffset    = FileOffset(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.hyplabel      = hyplabels_trl(full_trial)';
-        
+        SpikeTrials{ipart}.(markername).trialinfo.starttime     = Starttime(full_trial);
+        SpikeTrials{ipart}.(markername).trialinfo.endtime       = Endtime(full_trial);       
         
         artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
         for ievent = 1 : size(SpikeTrials{ipart}.(markername).trialinfo, 1)
