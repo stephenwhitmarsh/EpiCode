@@ -58,7 +58,13 @@ for ipart = cfg.circus.part_list
         continue
     end
     
-    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+    % to deal with multichannel data
+    if isempty(cfg.circus.channelname)
+        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+    else
+        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+    end
+    
     hdr_fname   = fullfile(temp(1).folder, temp(1).name);
     hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
     
@@ -90,6 +96,8 @@ for ipart = cfg.circus.part_list
         Trialnr_dir     = [];
         Filenr          = [];
         FileOffset      = [];
+        Starttime       = [];
+        Endtime         = [];
         dirOnset(1)     = 0;
         trialcount      = 1;
         
@@ -141,6 +149,8 @@ for ipart = cfg.circus.part_list
                 
                 Startsample     = [Startsample; ss + cfg.spike.toi.(markername)(1) * hdr.Fs + dirOnset(idir)];
                 Endsample       = [Endsample;   es + cfg.spike.toi.(markername)(2) * hdr.Fs + dirOnset(idir)];
+                Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)];
+                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx)];
                 Offset          = [Offset;      cfg.spike.toi.(markername)(1) * hdr.Fs];
                 Trialnr_dir     = [Trialnr_dir; trialcount_dir];
                 Trialnr         = [Trialnr;     trialcount];
@@ -212,7 +222,7 @@ for ipart = cfg.circus.part_list
         cfgtemp.trlunit                                         = 'samples';
         cfgtemp.hdr                                             = hdr;
         SpikeTrials{ipart}.(markername)                         = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
-        SpikeTrials{ipart}.(markername).clocktimes              = clocktimes;
+        SpikeTrials{ipart}.(markername).trialinfo.clocktime     = clocktimes;
         SpikeTrials{ipart}.(markername).hdr                     = hdr;
         SpikeTrials{ipart}.(markername).trialinfo               = table;
         SpikeTrials{ipart}.(markername).trialinfo.trialnr_dir   = Trialnr_dir(full_trial); % trialnr which restarts for each dir
@@ -242,7 +252,7 @@ for ipart = cfg.circus.part_list
                     continue
                 end
                 
-                for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)
+                for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
                     
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
