@@ -241,7 +241,7 @@ for ipart = cfg.circus.part_list
             
             % labels have to have unique names
             for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
-                SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir);
+                SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = char(strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir));
             end
         end
                     
