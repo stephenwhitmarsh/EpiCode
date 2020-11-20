@@ -238,7 +238,11 @@ for ipart = cfg.circus.part_list
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.begsample = filebegin;
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.endsample = fileend;
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.offset    = 0;
-            SpikeRaw_temp{ipart}.(char(chandir)).channel             = convertContainedStringsToChars(repmat(chandir, 1, length(SpikeRaw_temp{ipart}.(char(chandir)).template)));
+            
+            % labels have to have unique names
+            for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
+                SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir);
+            end
         end
                     
     end % channelname
