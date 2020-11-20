@@ -87,6 +87,17 @@ config{2}.prefix                    = '2614-N2-seizures-';
 config{2}.rawdir                    = fullfile(rootpath_data,     'pat_02614_1073', 'eeg');
 config{2}.LFP.channel               = {'_TNmg_1','_TNmi_1'};
 
+
+%%%%%%%%%%%%%
+% Patient 3 %
+%%%%%%%%%%%%%
+
+config{3}                           = config{1};
+config{3}.prefix                    = '2689-seizures-';
+config{3}.rawdir                    = fullfile(rootpath_data,     'pat_02614_1073', 'eeg');
+config{3}.LFP.channel               = {'_TNmg_1','_TNmi_1'};
+
+
 %%% DATA %%%
 config{1}.directorylist             = [];
 config{1}.directorylist{1}          = { '02230_2015-02-25_15-16',...

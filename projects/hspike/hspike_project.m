@@ -258,7 +258,8 @@ config{1}.epoch.toi.combined2 = [-0.2  0.8];
   
 
 
-% add to slurm job list
+%% Create slurm job list
+config              = hspike_setparams;
 fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list.txt');
 delete(fname_slurm_joblist);
 for ipatient = 1:7

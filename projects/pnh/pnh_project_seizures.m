@@ -35,14 +35,12 @@ ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
-config = hspike_setparams;
-
 %% General analyses
+config = pnh_setparams_seizures;
 
 
 for ipatient = 3
     
-    config = pnh_setparams_seizures;
     
     % read muse markers
     [MuseStruct] = readMuseMarkers(config{ipatient}, false);

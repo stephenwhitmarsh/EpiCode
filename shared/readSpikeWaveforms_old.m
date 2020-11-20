@@ -1,6 +1,6 @@
 function [SpikeWaveforms] = readSpikeWaveforms(cfg, spikedata, force)
 
-% [SpikeWaveforms] = readSpikeWaveforms(cfg, SpikeTrials, force, parts_to_read)
+% [SpikeWaveforms] = readSpikeWaveforms(cfg,SpikeTrials,force,parts_to_read)
 % Cut continuous data into trials for each spike sample.
 %
 % ### Necessary input
@@ -45,21 +45,21 @@ cfg.spikewaveform.hpfreq        = ft_getopt(cfg.spikewaveform, 'hpfreq'     , 30
 cfg.spikewaveform.part_list     = ft_getopt(cfg.spikewaveform , 'part_list' , 'all');
 
 
-if strcmp(cfg.spikewaveform.part_list, 'all')
-    cfg.spikewaveform.part_list = 1:size(spikedata, 2);
+if strcmp(cfg.spikewaveform.part_list,'all')
+    cfg.spikewaveform.part_list = 1:size(spikedata,2);
 end
 
-fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spike_waveform.mat']);
+fname = fullfile(cfg.datasavedir,[cfg.prefix,'spike_waveform.mat']);
 
-if exist(fname, 'file') && force == false
+if exist(fname,'file') && force == false
     fprintf('*******************************************\n');
     fprintf('*** Loading precomputed spike waveforms ***\n');
     fprintf('*******************************************\n\n');
     
-    load(fname, 'SpikeWaveforms');
+    load(fname,'SpikeWaveforms');
     return
     
-elseif exist(fname, 'file') && force == true
+elseif exist(fname,'file') && force == true
     fprintf('*******************************************\n');
     fprintf('*** Forced  recomputing spike waveforms ***\n');
     fprintf('*******************************************\n\n');
@@ -72,12 +72,13 @@ end
 
 
 for ipart = cfg.spikewaveform.part_list
-
-    for ichan = 1:size(cfg.circus.channel, 2)
+    
+    
+    
+    for ichan = 1:size(cfg.circus.channel,2)
         
         % find concatenated channel used by Spyking Circus
-        %         datafile = fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{ichan}, '.ncs']);
-        datafile = fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', num2str(ichan), '.ncs']);
+        datafile = fullfile(cfg.datasavedir,cfg.prefix(1:end-1),['p',num2str(ipart)],[cfg.prefix,'p',num2str(ipart),'-multifile-',cfg.circus.channel{ichan},'.ncs']);
         
         hdr = ft_read_header(datafile);
         
@@ -105,12 +106,12 @@ for ipart = cfg.spikewaveform.part_list
             for icluster = clusters_idx
                 %Select random spike if required
                 if strcmp(cfg.spikewaveform.nspikes, 'all')
-                    spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster}, 2);
+                    spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster},2);
                 else
-                    if size(spikedata{ipart}.(markername).trial{icluster}, 2) > cfg.spikewaveform.nspikes
-                        spikes_idx_sel = randperm(size(spikedata{ipart}.(markername).trial{icluster}, 2), cfg.spikewaveform.nspikes);
+                    if size(spikedata{ipart}.(markername).trial{icluster},2) > cfg.spikewaveform.nspikes
+                        spikes_idx_sel = randperm(size(spikedata{ipart}.(markername).trial{icluster},2), cfg.spikewaveform.nspikes);
                     else
-                        spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster}, 2);
+                        spikes_idx_sel = 1:size(spikedata{ipart}.(markername).trial{icluster},2);
                     end
                 end
                 
@@ -118,7 +119,7 @@ for ipart = cfg.spikewaveform.part_list
                     SpikeWaveforms{ipart}.(markername){icluster} = [];
                     continue
                 end
-                spikes_idx_sel = 1 : round(size(spikedata{ipart}.(markername).trial{icluster}, 2)/100) : size(spikedata{ipart}.(markername).trial{icluster}, 2);
+                
                 %define Fieldtrip trials
                 trialcount  = 0;
                 Startsample = [];
@@ -142,14 +143,14 @@ for ipart = cfg.spikewaveform.part_list
                 
                 cfgtemp                         = [];
                 cfgtemp.trl                     = [Startsample, Endsample, Offset];
-                %                 cfgtemp.trl(:, 4)                = Startsample;                          % startsample
-                %                 cfgtemp.trl(:, 5)                = Endsample;                            % endsample
-                %                 cfgtemp.trl(:, 6)                = Offset;                               % offset
-                %                 cfgtemp.trl(:, 7)                = Endsample-Startsample+1;              % duration in samples
-                %                 cfgtemp.trl(:, 8)                = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
-                cfgtemp.trl                     = cfgtemp.trl(full_trial, :); % so not to read before BOF or after EOFs
+                %                 cfgtemp.trl(:,4)                = Startsample;                          % startsample
+                %                 cfgtemp.trl(:,5)                = Endsample;                            % endsample
+                %                 cfgtemp.trl(:,6)                = Offset;                               % offset
+                %                 cfgtemp.trl(:,7)                = Endsample-Startsample+1;              % duration in samples
+                %                 cfgtemp.trl(:,8)                = Trialnr;                              % trialnr. to try to find trials that are missing afterwards
+                cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % so not to read before BOF or after EOFs
                 cfgtemp.trlunit                 = 'samples';
-                SpikeWaveforms{ipart}.(markername){icluster}                     = ft_redefinetrial(cfgtemp, chandata);
+                SpikeWaveforms{ipart}.(markername){icluster}                     = ft_redefinetrial(cfgtemp,chandata);
                 SpikeWaveforms{ipart}.(markername){icluster}.label               = [];
                 SpikeWaveforms{ipart}.(markername){icluster}.label{1}            = spikedata{ipart}.(markername).label{icluster};
                 SpikeWaveforms{ipart}.(markername){icluster}.template_maxchan    = spikedata{ipart}.(markername).template_maxchan(icluster);
@@ -170,7 +171,10 @@ for ipart = cfg.spikewaveform.part_list
     end % ilabel
 end %ipart
 
-save(fname, 'SpikeWaveforms', '-v7.3');
+save(fname,'SpikeWaveforms','-v7.3');
+
+end
+
 
 
 

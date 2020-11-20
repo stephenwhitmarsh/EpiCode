@@ -7,6 +7,6 @@
 #SBATCH --chdir=.
 #SBATCH --output=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/%j_%A-%a-%x-output.txt
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/%j_%A-%a-%x-error.txt
-#SBATCH --array=7-12
+#SBATCH --array=13-18
 
 eval $(sed -n "$SLURM_ARRAY_TASK_ID"p /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/slurm_job_list.txt)
