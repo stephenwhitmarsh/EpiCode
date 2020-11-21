@@ -140,7 +140,7 @@ for ipart = cfg.circus.part_list
 
     % find overlap with IEDs
     for markername = string(cfg.name)
-        SpikeTrials{ipart}.window.trialinfo.(markername) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
+        SpikeTrials{ipart}.window.trialinfo.(char(markername)) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     end
 
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
@@ -151,7 +151,7 @@ for ipart = cfg.circus.part_list
 
             for markername = string(cfg.name)
 
-                if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
+                if ~isfield(MuseStruct{ipart}{idir}.markers, char(markername))
                     continue
                 end
 
@@ -177,7 +177,7 @@ for ipart = cfg.circus.part_list
 %
                     % trial falls fully within sleepstate
                     if IEDstart > trlstart && IEDend < trlend
-                        SpikeTrials{ipart}.window.trialinfo.(markername)(ievent) = SpikeTrials{ipart}.window.trialinfo.(markername)(ievent) + 1;
+                        SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) = SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) + 1;
                         fprintf('Found: %s, dir %d, trial %d \n', markername, idir, ievent);
                     end
                 end % ihyp
@@ -231,9 +231,6 @@ for ipart = cfg.circus.part_list
 
     % add artefact to trialinfo
     SpikeTrials{ipart}.window.trialinfo.artefact = artefact;
-
-
-
 
 end % ipart
 

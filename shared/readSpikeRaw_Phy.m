@@ -159,20 +159,25 @@ for ipart = cfg.circus.part_list
         
         %% reorganize data to make a Fieldtrip structure
         
-        %filter data if checked on Phy. Otherwise load all templates
+        % filter data if checked on Phy. Otherwise load all clusters
         if ischecked
             cluster_list   = phydata.cluster_group.cluster_id(phydata.cluster_group.group(:, 1) ~= 'n')'; %only good, or mua clusters (not noise)
         else
             cluster_list   = unique(phydata.spike_templates)';
         end
         
+        % in case no clusters were included
+        if isempty(cluster_list)
+            continue
+        end
+        
         %go trough each cluster
         for icluster = 1:size(cluster_list, 2)
             
-            %add cluster label
+            % add cluster label
             SpikeRaw{ipart}.label{icluster}                 = sprintf('cluster_%d', cluster_list(icluster));
             
-            %find spike time indexes
+            % find spike time indexes
             clear timings_idx
             if ischecked
                 timings_idx                                 = phydata.spike_clusters == cluster_list(icluster);
@@ -180,24 +185,24 @@ for ipart = cfg.circus.part_list
                 timings_idx                                 = phydata.spike_templates == cluster_list(icluster);
             end
             
-            %add template waveforms
+            % add template waveforms
             cluster_templates                               = unique(phydata.spike_templates(timings_idx))+1; %+1 because template begins at zero but index in phyinfos.templates begins at 1
             SpikeRaw{ipart}.template{icluster}              = phydata.templates(cluster_templates, :, :);%all template waveforms merged in this cluster
             
-            %add template maxchan
+            % add template maxchan
             if ischecked
                 imaxchan                                    = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster)) +1; %+1 because chans idx begin at zero
             else
                 [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
             end
-            SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1; %-1 because chans idx begin at zero with Phy
+            SpikeRaw{ipart}.template_maxchan(icluster)      = imaxchan - 1; %-1 because chans idx begin at zero with Phy
             
-            %add amplitude, samples and timestamps at selected spike timings
+            % add amplitude, samples and timestamps at selected spike timings
             SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(timings_idx)';
             SpikeRaw{ipart}.samples{icluster}               = phydata.spike_times(timings_idx)';
             SpikeRaw{ipart}.timestamp{icluster}             = timestamps(SpikeRaw{ipart}.samples{icluster});
             
-            %add Phy group info (good, mua)
+            % add Phy group info (good, mua)
             if ischecked
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster), :);
                 SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
@@ -249,13 +254,16 @@ for ipart = cfg.circus.part_list
     
     % combine diffrent electrodebundles - very smartly! :-)
     if ~strcmp(channelname, 'none')
-        SpikeRaw{ipart} = SpikeRaw_temp{ipart}.(channelname{1});
-        for chandir = string(channelname{2:end})
-            for field = string(fields(SpikeRaw{ipart}))'
-                if ~strcmp(field,{'hdr','cfg','trialinfo','trialtime'})
-                    SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_temp{ipart}.(char(chandir)).(field)];
+        try % in case no clusters were selected
+            SpikeRaw{ipart} = SpikeRaw_temp{ipart}.(channelname{1});
+            for chandir = string(channelname{2:end})
+                for field = string(fields(SpikeRaw{ipart}))'
+                    if ~strcmp(field,{'hdr','cfg','trialinfo','trialtime'})
+                        SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_temp{ipart}.(char(chandir)).(field)];
+                    end
                 end
             end
+        catch
         end
     end
     

@@ -75,10 +75,10 @@ for ipart = cfg.circus.part_list
         % clock time of each event
         clocktimes = [];
         for ifile = 1 : size(MuseStruct{ipart}, 2)
-            if ~isfield(cfg.muse.startmarker, markername)
+            if ~isfield(cfg.muse.startmarker, char(markername))         
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{ifile}.markers, cfg.muse.startmarker.(markername))
+            if ~isfield(MuseStruct{ipart}{ifile}.markers, char(cfg.muse.startmarker.(markername)))
                 continue
             end
             if ~isfield(MuseStruct{ipart}{ifile}.markers.(cfg.muse.startmarker.(markername)), 'clock')
@@ -110,10 +110,10 @@ for ipart = cfg.circus.part_list
             dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples;
             
             % Check whether data has events
-            if ~isfield(cfg.muse.startmarker, markername)
+            if ~isfield(cfg.muse.startmarker, char(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
+            if ~isfield(MuseStruct{ipart}{idir}.markers, char(cfg.muse.startmarker.(markername)))
                 fprintf('No events starting with %s found in filenr %d\n', cfg.muse.startmarker.(markername), idir);
                 continue
             end
