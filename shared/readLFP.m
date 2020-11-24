@@ -52,7 +52,7 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 write     = ft_getopt(cfg.LFP, 'write', false);
-
+keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', false);
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -146,6 +146,13 @@ for markername = string(cfg.LFP.name)
                     dat                 = ft_preprocessing(cfgtemp);
                 end
                 
+                %rereferencing
+                cfgtemp = [];
+                cfgtemp.reref             = ft_getopt(cfg.LFP, 'reref', 'no');
+                cfgtemp.rerefmethod       = ft_getopt(cfg.LFP, 'rerefmethod', []);
+                cfgtemp.refchannel        = ft_getopt(cfg.LFP, 'refchannel', []);
+                dat                       = ft_preprocessing(cfgtemp, dat);
+                
                 % filtering
                 cfgtemp                 = [];
                 cfgtemp.lpfilter        = ft_getopt(cfg.LFP, 'lpfilter', 'no');
@@ -164,33 +171,36 @@ for markername = string(cfg.LFP.name)
                     cfg.EMG = ft_getopt(cfg, 'EMG', []);
                     
                     cfgtemp                   = [];
-                    cfgtemp.channel           = [ft_getopt(cfg.EMG, sprintf('%s',markername), {});ft_getopt(cfg.EMG, 'refchannel',{})]; % load the emg associated with eeg marker, and the ref if any
-                    cfgtemp.dataset           = fname;
-                    cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
-                    cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
-                    cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
-                    data_EMG                  = ft_preprocessing(cfgtemp);
-                    
-                    % filtering
-                    cfgtemp                 = [];
-                    cfgtemp.lpfilter        = ft_getopt(cfg.EMG, 'lpfilter', 'no');
-                    cfgtemp.hpfilter        = ft_getopt(cfg.EMG, 'hpfilter', 'no');
-                    cfgtemp.bpfilter        = ft_getopt(cfg.EMG, 'bpfilter', 'no');
-                    cfgtemp.bsfilter        = ft_getopt(cfg.EMG, 'bsfilter', 'no');
-                    cfgtemp.lpfreq          = ft_getopt(cfg.EMG, 'lpfreq', []);
-                    cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
-                    cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
-                    cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
-                    cfgtemp.lpfiltord       = ft_getopt(cfg.EMG, 'lpfiltord', []);
-                    cfgtemp.hpfiltord       = ft_getopt(cfg.EMG, 'hpfiltord', []);
-                    cfgtemp.bpfiltord       = ft_getopt(cfg.EMG, 'bpfiltord', []);
-                    cfgtemp.bsfiltord       = ft_getopt(cfg.EMG, 'bsfiltord', []);
-                    data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
-                    
-                    % append EMG to EEG data
-                    cfgtemp                 = [];
-                    cfgtemp.keepsampleinfo  = 'yes';
-                    dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
+                    cfgtemp.channel           = {ft_getopt(cfg.EMG, sprintf('%s',markername), []);ft_getopt(cfg.EMG, 'refchannel',[])}; % load the emg associated with eeg marker, and the ref if any
+                    cfgtemp.channel           = cfgtemp.channel(~cellfun(@isempty, cfgtemp.channel));
+                    if ~isempty(cfgtemp.channel)
+                        cfgtemp.dataset           = fname;
+                        cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
+                        cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
+                        cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
+                        data_EMG                  = ft_preprocessing(cfgtemp);
+                        
+                        % filtering
+                        cfgtemp                 = [];
+                        cfgtemp.lpfilter        = ft_getopt(cfg.EMG, 'lpfilter', 'no');
+                        cfgtemp.hpfilter        = ft_getopt(cfg.EMG, 'hpfilter', 'no');
+                        cfgtemp.bpfilter        = ft_getopt(cfg.EMG, 'bpfilter', 'no');
+                        cfgtemp.bsfilter        = ft_getopt(cfg.EMG, 'bsfilter', 'no');
+                        cfgtemp.lpfreq          = ft_getopt(cfg.EMG, 'lpfreq', []);
+                        cfgtemp.hpfreq          = ft_getopt(cfg.EMG, 'hpfreq', []);
+                        cfgtemp.bpfreq          = ft_getopt(cfg.EMG, 'bpfreq', []);
+                        cfgtemp.bsfreq          = ft_getopt(cfg.EMG, 'bsfreq', []);
+                        cfgtemp.lpfiltord       = ft_getopt(cfg.EMG, 'lpfiltord', []);
+                        cfgtemp.hpfiltord       = ft_getopt(cfg.EMG, 'hpfiltord', []);
+                        cfgtemp.bpfiltord       = ft_getopt(cfg.EMG, 'bpfiltord', []);
+                        cfgtemp.bsfiltord       = ft_getopt(cfg.EMG, 'bsfiltord', []);
+                        data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
+                        
+                        % append EMG to EEG data
+                        cfgtemp                 = [];
+                        cfgtemp.keepsampleinfo  = 'yes';
+                        dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
+                    end
                 end
                 
                 % downsample data and correct baseline
@@ -319,6 +329,11 @@ for markername = string(cfg.LFP.name)
             LFP{ipart}.(markername)             = ft_appenddata([],dirdat{find(hasmarker)});
             LFP{ipart}.(markername).fsample     = fsample;
             clear dirdat*
+            
+            %remove cfg to save space on disk, if required
+            if ~istrue(keepcfg)
+                LFP{ipart}.(markername) = rmfield(LFP{ipart}.(markername),'cfg');
+            end
         else
             LFP{ipart}.(markername) = [];
             fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, markername);
@@ -326,8 +341,10 @@ for markername = string(cfg.LFP.name)
         
     end % ipart
     
-    fprintf('*** Saving LFP data for %s ***\n', markername);
-    saveMarker(LFP, markername, fname_out)
+    if write
+        fprintf('*** Saving LFP data for %s ***\n', markername);
+        saveMarker(LFP, markername, fname_out)
+    end
     
 end % markername
 
