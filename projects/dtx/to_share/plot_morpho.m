@@ -46,8 +46,6 @@ function 	[halfwidth, peaktrough, troughpeak, amplitude] = plot_morpho(cfg,data)
 % troughpeak              = measured troughpeak value, in seconds, or [].
 %
 
-
-
 %Get default cfg parameters
 cfg.morpho                             = ft_getopt(cfg, 'morpho', []);
 cfg.morpho.channame                    = ft_getopt(cfg.morpho, 'channame', 1);
@@ -275,7 +273,7 @@ if strcmp(cfg.morpho.measurepeaktrough, 'yes') || strcmp(cfg.morpho.measuretroug
         end
 %     end
     end
-%     end
+    %end
 end
 
 axis tight;

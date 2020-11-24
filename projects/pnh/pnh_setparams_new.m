@@ -1,4 +1,4 @@
-function [config] = pnh_setparams
+function [config] = pnh_setparams_new
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % [config] = pnh_setparams
@@ -13,17 +13,25 @@ function [config] = pnh_setparams
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ismac
-    error('Platform not supported')
-elseif isunix
-    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
-    rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data';
-elseif ispc
+if pc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
-    rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data';
-else
-    error('Platform not supported')
+    rootpath_data       = '\\lexport\iss01.epimicro\patients\raw';
+else       
+    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+    rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
 end
+    
+% if ismac
+%     error('Platform not supported')
+% elseif isunix
+%     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+%     rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data';
+% elseif ispc
+%     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
+%     rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data';
+% else
+%     error('Platform not supported')
+% end
 
 %% 
 

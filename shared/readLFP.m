@@ -12,7 +12,7 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 
 % Necessary LFP fields (with example):
 % cfg.LFP.name                = {'Hspike'};
-% cfg.LFP.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4'}
+% cfg.LFP.channel             = {'_Ha2g_1', '_Ha2g_2', '_Ha2g_3', '_Ha2g_4'}
 % cfg.LFP.write               = true (write LFP to disk, default = false)
 %
 % Necessary generic epoch fields (with example):
@@ -59,24 +59,12 @@ keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', false);
 
 % initialize LFP, to return empty cell in case there is no LFP to load
 LFP = {};
-
-% select those markers to read, as you might not want to read all
-% markers defined in cfg.muse
-
-%     markerlist = [];
-%     for imuse = 1 : size(cfg.name,2)
-%         for iname = 1 : size(cfg.LFP.name)
-%             if ismember(cfg.name{imuse}, cfg.LFP.name)
-%                 markerlist = [markerlist, imuse];
-%             end
-%         end
-%     end
-
+hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % loop over markers
 for markername = string(cfg.LFP.name)
-   
-    fname_out = fullfile(cfg.datasavedir,strcat(cfg.prefix, 'LFP_', markername, '.mat'));
+    
+    fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, '.mat'));
     
     if exist(fname_out, 'file') && force == false
         fprintf('*** Loading precomputed LFP data for %s ***\n', markername);
@@ -95,44 +83,44 @@ for markername = string(cfg.LFP.name)
     for ipart = 1 : size(MuseStruct, 2)
         
         fprintf('For marker %s\n', cell2mat(markername));
-        hasmarker = false(length(MuseStruct{ipart}),1);
+        hasmarker = false(length(MuseStruct{ipart}), 1);
         
         % loop over directories
-        for idir = 1:length(MuseStruct{ipart})
+        for idir = 1 : length(MuseStruct{ipart})
             
-            if ~isfield(MuseStruct{ipart}{idir},'markers')
+            if ~isfield(MuseStruct{ipart}{idir}, 'markers')
                 continue
             end
             if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)), 'synctime')
                 continue
-            end 
+            end
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
                 continue
             end
             if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.endmarker.(markername))
                 continue
             end
-            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)),'synctime')
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)), 'synctime')
                 continue
-            end 
+            end
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
                 continue
             end
             
             if isNeuralynx
-                nfile = size(cfg.LFP.channel,2); % one file per channel
+                nfile = size(cfg.LFP.channel, 2); % one file per channel
             elseif isMicromed
                 nfile = 1; % only one file with all electrodes
-                fname = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);
+                fname = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.TRC']);
             elseif isBrainvision
                 nfile = 1; % only one file with all electrodes
-                fname = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.eeg']);
+                fname = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.eeg']);
             end
             
-            % loop over files
+            % loop over files (electrodes)
             for ifile = 1 : nfile
                 
                 %load data
@@ -163,7 +151,7 @@ for markername = string(cfg.LFP.name)
                 cfgtemp.hpfreq          = ft_getopt(cfg.LFP, 'hpfreq', []);
                 cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
                 cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);
-                dat                     = ft_preprocessing(cfgtemp,dat);
+                dat                     = ft_preprocessing(cfgtemp, dat);
                 
                 % append EMG data (if any)
                 if isMicromed || isBrainvision %not adapted for nlx data (1 file per electrode) for now
@@ -173,6 +161,7 @@ for markername = string(cfg.LFP.name)
                     cfgtemp                   = [];
                     cfgtemp.channel           = {ft_getopt(cfg.EMG, sprintf('%s',markername), []);ft_getopt(cfg.EMG, 'refchannel',[])}; % load the emg associated with eeg marker, and the ref if any
                     cfgtemp.channel           = cfgtemp.channel(~cellfun(@isempty, cfgtemp.channel));
+
                     if ~isempty(cfgtemp.channel)
                         cfgtemp.dataset           = fname;
                         cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
@@ -204,7 +193,7 @@ for markername = string(cfg.LFP.name)
                 end
                 
                 % downsample data and correct baseline
-                if isfield(cfg.LFP,'resamplefs')
+                if isfield(cfg.LFP, 'resamplefs')
                     
                     cfgtemp                         = [];
                     cfgtemp.resamplefs              = ft_getopt(cfg.LFP, 'resamplefs', []);
@@ -214,7 +203,7 @@ for markername = string(cfg.LFP.name)
                         cfgtemp.demean              = 'yes';
                         cfgtemp.baselinewindow      = cfg.LFP.baselinewindow.(markername);
                     end
-                    dat                             = ft_resampledata(cfgtemp,dat);
+                    dat                             = ft_resampledata(cfgtemp, dat);
                 end
                 
                 fsample = dat.fsample; %store this info for output LFP
@@ -224,16 +213,17 @@ for markername = string(cfg.LFP.name)
                 % of one dir.
                 Startsample             = [];
                 Endsample               = [];
-                Stage                   = [];
                 Offset                  = [];
                 trialnr                 = [];
-                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime,2)
+                hyplabels_trl           = [];
+                
+                for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                     
                     ss = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * dat.fsample);
                     if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
                         es = ss;
                     else
-                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss,1,'first');
+                        idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * dat.fsample);
                     end
                     
@@ -245,88 +235,98 @@ for markername = string(cfg.LFP.name)
                     Endsample(ievent)   = es + cfg.epoch.toi.(markername)(2) * dat.fsample + cfg.epoch.pad.(markername) * dat.fsample;
                     Offset(ievent)      = (cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername)) * dat.fsample;
                     trialnr(ievent)     = ievent;
-                    Stage(ievent)       = -1;
                     
                     % find overlap with hypnogram markers
-                    for hyplabel = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"]
-                        if ~isfield(MuseStruct{ipart}{idir}.markers, [hyplabel,'__START__'])
+                    trlstart        = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent);
+                    trlend          = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent);
+                    overlap         = zeros(size(hyplabels));
+                    
+                    for ihyplabel = 1 : size(hyplabels, 2)
+                        if ~isfield(MuseStruct{ipart}{idir}.markers, strcat(hyplabels{ihyplabel}, '__START__'))
+                            overlap(6) = 1;
                             continue
                         end
-                        for i = 1 : size(MuseStruct{ipart}{idir}.markers.(strcat(hyplabel,'__START__')).synctime,2)
-                            y1 = MuseStruct{ipart}{idir}.markers.(strcat(hyplabel,'__START__')).synctime(i) * dat.fsample;
-                            y2 = MuseStruct{ipart}{idir}.markers.(strcat(hyplabel,'__END__')).synctime(i) * dat.fsample;
-                            if (y1 < ss) && (ss < y2)
-                                fprintf('Found "%s" overlapping with "%s" : adding to trialinfo: ', markername, hyplabel);
-                                switch hyplabel
-                                    case 'PHASE_1'
-                                        fprintf('%d\n',1);
-                                        Stage(ievent) = 1;
-                                    case 'PHASE_2'
-                                        fprintf('%d\n',2);
-                                        Stage(ievent) = 2;
-                                    case 'PHASE_3'
-                                        fprintf('%d\n',3);
-                                        Stage(ievent) = 3;
-                                    case 'REM'
-                                        fprintf('%d\n',4);
-                                        Stage(ievent) = 4;
-                                    case 'AWAKE'
-                                        fprintf('%d\n',0);
-                                        Stage(ievent) = 0;
-                                    case 'NO_SCORE'
-                                        fprintf('%d\n',0);
-                                        Stage(ievent) = 0;
-                                    otherwise
-                                        error('Unexpected label name in Hypnogram\n');
-                                end
+                        %                 fprintf('Checking for overlap in part %d of %d, directory %d of %d, trial %d of %d with %s\n', ipart, length(cfg.circus.part_list), idir, size(MuseStruct{ipart}, 2), ievent, size(SpikeTrials{ipart}.window.trialinfo, 1), hyplabels{ihyplabel});
+                        for ihyp = 1 : size(MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).synctime, 2)
+                            
+                            hypstart = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).clock(ihyp);
+                            hypend   = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__END__')).clock(ihyp);
+                            
+                            % end of trial overlaps with beginning of sleepstate
+                            if hypstart > trlstart && hypstart < trlend
+                                overlap(ihyplabel) = seconds(trlend - hypstart);
+                            end
+                            
+                            % sleepstage falls fully within trial
+                            if hypstart > trlstart && hypend < trlend
+                                overlap(ihyplabel) = seconds(hypend - hypstart);
+                            end
+                            
+                            % beginning of trial overlaps with end of sleepstate
+                            if hypstart < trlstart && hypend > trlstart
+                                overlap(ihyplabel) = seconds(hypend - trlstart);
+                            end
+                            
+                            % trial falls fully within sleepstate
+                            if hypstart < trlstart && hypend > trlend && ~(hypend > trlstart)
+                                overlap(ihyplabel) = seconds(trlend - trlstart);
                             end
                         end
-                    end
+                    end % hyplabel
+                    
+                    % add sleep stage to trialinfo
+                    [~, indx]       = max(overlap);
+                    hyplabels_trl   = [hyplabels_trl hyplabels(indx)];
+                    
                 end
                 
                 % create Fieldtrip trl
-                full_trial = Startsample > 0 & Endsample < length(dat.trial{1});% don't read before BOF or after EOF
-                cfgtemp                         = [];
-                cfgtemp.trl                     = round([Startsample; Endsample; Offset]');
-%                 cfgtemp.trl(:,4)                = trialnr;
-%                 cfgtemp.trl(:,6)                = idir;
-%                 cfgtemp.trl(:,7)                = Stage;
-%                 cfgtemp.trl(:,8)                = Startsample;
-%                 cfgtemp.trl(:,9)                = Endsample;
-%                 cfgtemp.trl(:,10)               = Offset;
-                cfgtemp.trl                     = cfgtemp.trl(full_trial,:); % don't read before BOF or after EOF
-                filedat{ifile}                  = ft_redefinetrial(cfgtemp,dat);
+                full_trial = Startsample > 0 & Endsample < length(dat.trial{1}); % don't read before BOF or after EOF
                 
+                cfgtemp                             = [];
+                cfgtemp.trl                         = round([Startsample; Endsample; Offset]');
+                cfgtemp.trl                         = cfgtemp.trl(full_trial, :);
+                
+                if isempty(cfgtemp.trl)
+                    continue
+                end
+                
+                filedat{ifile}                      = ft_redefinetrial(cfgtemp, dat);
                 filedat{ifile}.trialinfo            = table;
                 filedat{ifile}.trialinfo.begsample  = Startsample(full_trial)';
                 filedat{ifile}.trialinfo.endsample  = Endsample(full_trial)';
                 filedat{ifile}.trialinfo.offset     = Offset(full_trial)';
                 filedat{ifile}.trialinfo.trialnr    = trialnr(full_trial)';
                 filedat{ifile}.trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
-                filedat{ifile}.trialinfo.stage      = Stage(full_trial)';
+                filedat{ifile}.trialinfo.hyplabel   = hyplabels_trl(full_trial)';
                 clear dat
                 
                 if isNeuralynx
                     % same label over files
-                    filedat{ifile}.label{1}     = cfg.LFP.channel{ifile};
+                    filedat{ifile}.label{1} = cfg.LFP.channel{ifile};
                 end
                 
                 % flag for averaging
-                hasmarker(idir)                 = true;
-            end
+                hasmarker(idir) = true;
+                
+            end % ifile (/electrodes)
             
             % concatinate channels
-            cfgtemp                             = [];
-            cfgtemp.keepsampleinfo              = 'no';
-            dirdat{idir}                        = ft_appenddata(cfgtemp,filedat{:});
-            clear filedat*
+            if exist('filedat','var')
+                cfgtemp                             = [];
+                cfgtemp.keepsampleinfo              = 'no';
+                dirdat{idir}                        = ft_appenddata(cfgtemp, filedat{:});
+                clear filedat*
+            else % if there are no events at all in this directory
+                dirdat{idir} = [];
+            end
             
         end % idir
         
-        if exist('dirdat','var') % in case there is no marker in the data
+        if exist('dirdat', 'var') % in case there is no marker in the data
             
             % concatinate data of different datasets (over trials)
-            LFP{ipart}.(markername)             = ft_appenddata([],dirdat{find(hasmarker)});
+            LFP{ipart}.(markername)             = ft_appenddata([], dirdat{hasmarker});
             LFP{ipart}.(markername).fsample     = fsample;
             clear dirdat*
             
@@ -336,7 +336,7 @@ for markername = string(cfg.LFP.name)
             end
         else
             LFP{ipart}.(markername) = [];
-            fprintf('%s part %d : No data with marker ''%s''\n',cfg.prefix(1:end-1), ipart, markername);
+            fprintf('%s part %d : No data with marker ''%s''\n', cfg.prefix(1:end-1), ipart, markername);
         end
         
     end % ipart
