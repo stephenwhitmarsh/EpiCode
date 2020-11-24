@@ -294,8 +294,8 @@ for ipart = 1 : size(cfg.directorylist, 2)
         % create markers details in MuseStruct
         for imarker = 1 : nmarkers
             name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
-            name{imarker} = strrep(name{imarker},':',''); % cant make fieldnames with minusses
-            name{imarker} = strrep(name{imarker},'.',''); % cant make fieldnames with minusses
+            name{imarker} = strrep(name{imarker},':',''); % cant make fieldnames with ':'
+            name{imarker} = strrep(name{imarker},'.',''); % cant make fieldnames with '.'
             MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = nrEvents(imarker);
             MuseStruct{ipart}{idir}.markers.(name{imarker}).comment        = comment{imarker};
             MuseStruct{ipart}{idir}.markers.(name{imarker}).color          = color{imarker};
