@@ -51,8 +51,8 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-write     = ft_getopt(cfg.LFP, 'write', false);
-keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', false);
+write     = ft_getopt(cfg.LFP, 'write', true);
+keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', true);
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
