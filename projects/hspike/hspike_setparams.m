@@ -1,13 +1,13 @@
-function [config] = hspike_setparams
+function [config] = hspike_setparams(varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [config] = hspike_setparams
+% [config] = hspike_setparams(varargin)
 %
 % This function outputs all the settings of a study, to be defined below
 %
 % Note the consideration of the operating system, because the pointers to
 % the file server is dealt with differently. This could be different for
-% you.
+% you. You can force an OS with the input argument: 'pc' or 'unix'.
 %
 % Stephen Whitmarsh (stephen.whitmarsh@gmail.com)
 %
@@ -15,27 +15,38 @@ function [config] = hspike_setparams
 
 disp('setting parameters');
 
-if ismac
-    error('Platform not supported')
-elseif isunix
-    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
-    rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
-elseif ispc
+pc = ispc;
+
+% overwrite if os is forced
+if nargin == 1
+    if strcmp(varargin{1}, 'pc')
+        pc = true;
+    elseif strcmp(varargin{1}, 'unix')
+        pc = false;
+    else
+        error('os not recognized');
+    end
+end
+
+if pc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
     rootpath_data       = '\\lexport\iss01.epimicro\patients\raw';
+%     rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
+
 else
-    error('Platform not supported')
+    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+    rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
+%     rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
 end
+
 
 %% Patient 1
 
 config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
-config{1}.rawdir                    = fullfile(rootpath_analysis, 'datatest');
-
-config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');        
-config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');     
-config{1}.visible                   = 'off';
+config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');
+config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');
+config{1}.visible                   = 'on';
 
 config{1}.name                      = {'Hspike'};
 config{1}.muse.startmarker.Hspike   = "Hspike";
@@ -88,17 +99,46 @@ config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
 config{1}.template.threshold        = 2.7;
 
-config{1}.circus.channel            = {'mHaT2_7'};
-config{1}.circus.reref              = 'no';
-config{1}.circus.refchan            = '';
-config{1}.circus.outputdir          = 'SpykingCircus';
-% config{1}.circus.suffix             = '-2';
+config{1}.circus.channel                        = {'mHaT2_1', 'mHaT2_3', 'mHaT2_4','mHaT2_6', 'mHaT2_7', 'mHaT2_8'};
+config{1}.circus.reref                          = 'no';
+config{1}.circus.refchan                        = '';
+config{1}.circus.outputdir                      = 'SpykingCircus';
+config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus.params');
+config{1}.circus.params.detection.spike_thresh  = '6';
+config{1}.circus.params.filtering.cut_off       = '300, auto';
+config{1}.circus.params.filtering.remove_median = 'False';
+config{1}.circus.params.clustering.max_elts     = '20000';
+config{1}.circus.params.detection.peaks         = 'positive';
 
-%% Patient 2 
+config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
+config{1}.spike.toi.combined1       = [-0.5, 1.5];           % for plotting spikerate
+config{1}.spike.toi.combined2       = [-0.5, 1.5];           % for p200mslotting spikerate
+config{1}.spike.toi.combined3       = [-0.5, 1.5];      % for plotting spikerate
+config{1}.spike.bl.combined1        = [-0.5, -0.2];
+config{1}.spike.bl.combined2        = [-0.5, -0.2];
+config{1}.spike.bl.combined3        = [-0.5, -0.2];
+
+config{1}.spike.resamplefs          = 1000;
+config{1}.spike.pre                 = 0.001;
+config{1}.spike.post                = 0.002;
+config{1}.spike.baseline            = [-0.001 -0.0005];
+config{1}.spike.ISIbins             = [0 : 0.003 : 0.150]; %in s
+config{1}.spike.nrsdfbins           = 100;
+
+config{1}.stats.toi.combined1      = [-0.5, 1.5];
+config{1}.stats.toi.combined2       = [-0.5, 1.5];
+config{1}.stats.toi.combined3       = [-0.5, 1.5];
+config{1}.stats.bl.combined1        = [-0.5 -0.2];
+config{1}.stats.bl.combined2        = [-0.5 -0.2];
+config{1}.stats.bl.combined3        = [-0.5 -0.2];
+config{1}.stats.alpha               = 0.025;
+
+
+%% Patient 2
 % Patterns more clear in bipolar reference. Consider this for template
 % matching.
 config{2}                           = config{1};
-config{2}.prefix                    = '2718-'; 
+config{2}.prefix                    = '2718-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02718_1201', 'eeg');
 config{2}.hyp.micromedchannel       = 'HaT11';
 config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
@@ -111,14 +151,15 @@ config{2}.cluster.refmethod         = 'bipolar';
 config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
-config{2}.circus.channel            = {'mHaT1_1','mHaT1_3','mHaT1_4','mHaT1_6','mHaT1_8'};
+config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
+config{2}.circus.params.detection.spike_thresh  = '5.5';
 
 %% Patient 3
 config{3}                           = config{1};
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
-config{3}.hyp.micromedchannel       = 'Ha2g1';                                    
+config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.LFP.channel               = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.latency             = [-0.1 0.1];
@@ -130,13 +171,19 @@ config{3}.template.latency          = [-0.2, 0.5];
 config{3}.template.threshold        = 3;
 config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
-config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_1','mHa2g_2','mHa2g_6','mHa2g_7','mHa2g_8'};
+
+config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
+config{3}.circus.channelname        = {'mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mHa2g','mHa2g','mHa2g','mHa2g'};
+
+config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
+config{3}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{3}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 4
 config{4}                           = config{1};
 config{4}.prefix                    = '2680-';
 config{4}.rawdir                    = fullfile(rootpath_data,'pat_02680_1158', 'eeg');
-config{4}.hyp.micromedchannel       = 'HaT21';                                    
+config{4}.hyp.micromedchannel       = 'HaT21';
 config{4}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.align.latency             = [-0.1 0.1];
@@ -148,6 +195,10 @@ config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
 config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'};
+config{4}.circus.channelname        = {'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mHaT2'  ,'mHaT2'  ,'mHaT2'};
+config{4}.circus.params.detection.spike_thresh  = '6';
+config{4}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{4}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 5
 config{5}                           = config{1};
@@ -164,6 +215,9 @@ config{5}.template.threshold        = 3;
 config{5}.template.reref            = 'yes';
 config{5}.template.refmethod        = 'bipolar';
 config{5}.circus.channel            = {'mLMS2_2','mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7','mHmT3_4','mHmT3_5','mHmT3_7'};
+config{5}.circus.params.detection.spike_thresh  = '6';
+config{5}.circus.params.filtering.remove_median = 'True';
+config{5}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
 
 %% Patient 6
 config{6}                           = config{1};
@@ -196,6 +250,7 @@ config{7}.template.reref            = 'no';
 config{7}.template.refmethod        = 'bipolar';
 config{7}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','mAmT2_6'};
 config{7}.circus.reref              = 'no';
+config{7}.circus.params.detection.spike_thresh  = '6';
 
 %% Patient NO MUA ON FIRST DAY - ONLY HYPNOGRAM ON FIRST DAY
 config{8}                           = config{1};
@@ -214,7 +269,7 @@ config{8}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','
 config{8}.circus.reref              = 'no';
 
 
-% %% Patient NO HYPNOGRAM 
+% %% Patient NO HYPNOGRAM
 % config{8}                           = config{1};
 % config{8}.prefix                    = '2599-';
 % config{8}.rawdir                    = fullfile(rootpath_data,'pat_02599_1057', 'eeg');
@@ -231,13 +286,13 @@ config{8}.circus.reref              = 'no';
 % config{8}.template.reref            = 'no';
 % config{8}.template.refmethod        = 'bipolar';
 
-%% DATA   
+%% DATA
 
 config{1}.directorylist             = [];
 config{1}.directorylist{1}          =  {'02711_2019-04-17_12-29',...
                                         '02711_2019-04-17_14-29',...
                                         '02711_2019-04-17_16-29',...
-                                        '02711_2019-04-17_18-29',... 
+                                        '02711_2019-04-17_18-29',...
                                         '02711_2019-04-17_20-29',...
                                         '02711_2019-04-17_22-29',...
                                         '02711_2019-04-18_00-29',...
@@ -312,8 +367,8 @@ config{2}.directorylist{3}          =  {'02718_2019-05-16_13-15',...
                                         '02718_2019-05-17_05-15',...
                                         '02718_2019-05-17_07-15',...
                                         '02718_2019-05-17_09-15',...
-                                        '02718_2019-05-17_10-12'};                                                                  
-  
+                                        '02718_2019-05-17_10-12'};
+
 config{3}.directorylist             = [];
 config{3}.directorylist{1}          = { '02660_2018-11-13_16-08',...
                                         '02660_2018-11-13_18-08',...
@@ -347,7 +402,7 @@ config{3}.directorylist{2}          = { '02660_2018-11-14_17-51',...
 config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',...
                                         '02660_2018-11-15_19-41',...
                                         '02660_2018-11-15_21-41',...
-                                        '02660_2018-11-15_23-41',...
+                                        '02660_2018-11-15_23-41',... % missing data ShortITS
                                         '02660_2018-11-16_01-41',...
                                         '02660_2018-11-16_03-41',...
                                         '02660_2018-11-16_05-41',...
@@ -357,9 +412,9 @@ config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',...
                                         '02660_2018-11-16_11-56',...
                                         '02660_2018-11-16_13-56',...
                                         '02660_2018-11-16_13-59',...
-                                        '02660_2018-11-16_15-59'}; 
+                                        '02660_2018-11-16_15-59'};
 
-config{4}.directorylist             = [];                             
+config{4}.directorylist             = [];
 config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-15_14-45'...
                                         '02680_2019-01-15_15-31'...
@@ -374,7 +429,7 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
                                         '02680_2019-01-16_09-31'...
                                         '02680_2019-01-16_09-52'...
                                         '02680_2019-01-16_10-58'...
-                                        '02680_2019-01-16_11-32'};
+                                        '02680_2019-01-16_11-32'}; % ChWrongSize
 config{4}.directorylist{2}          = { '02680_2019-01-16_13-32'...
                                         '02680_2019-01-16_15-32'...
                                         '02680_2019-01-16_17-32'...
@@ -402,8 +457,8 @@ config{4}.directorylist{3}          = { '02680_2019-01-17_16-01'...
                                         '02680_2019-01-18_11-41'...
                                         '02680_2019-01-18_13-41'...
                                         '02680_2019-01-18_14-08'};
-                                    
-config{5}.directorylist             = [];                             
+
+config{5}.directorylist             = [];
 config{5}.directorylist{1}          = { '02689_2019-02-12_13-23'...
                                         '02689_2019-02-12_15-23'...
                                         '02689_2019-02-12_17-23'...
@@ -417,9 +472,9 @@ config{5}.directorylist{1}          = { '02689_2019-02-12_13-23'...
                                         '02689_2019-02-13_09-23'...
                                         '02689_2019-02-13_09-25'...
                                         '02689_2019-02-13_10-37'...
-                                        '02689_2019-02-13_12-37'};                                       
+                                        '02689_2019-02-13_12-37'};
                                        % '02689_2019-02-13_10-32'... short
-                                       % and full of artefacts    
+                                       % and full of artefacts
 config{5}.directorylist{2}          = { '02689_2019-02-13_14-37'...
                                         '02689_2019-02-13_16-37'...
                                         '02689_2019-02-13_18-37'...
@@ -444,9 +499,9 @@ config{5}.directorylist{3}          = { '02689_2019-02-14_14-25'...
                                         '02689_2019-02-15_08-25'...
                                         '02689_2019-02-15_09-54'...
                                         '02689_2019-02-15_11-54'...
-                                        '02689_2019-02-15_13-54'};               
-                                       
-config{6}.directorylist             = [];                             
+                                        '02689_2019-02-15_13-54'};
+
+config{6}.directorylist             = [];
 config{6}.directorylist{1}          = { '02651_2018-10-16_15-31'...
                                         '02651_2018-10-16_17-31'... % fully artefacted
                                         '02651_2018-10-16_19-31'...
@@ -486,8 +541,8 @@ config{6}.directorylist{3}          = { '02651_2018-10-18_16-01'...
                                         '02651_2018-10-19_10-45'...
                                         '02651_2018-10-19_12-45'...
                                         '02651_2018-10-19_14-45'};
-                                    
-config{7}.directorylist             = [];                             
+
+config{7}.directorylist             = [];
 config{7}.directorylist{1}          = { '02619_2018-07-03_16-40'...
                                         '02619_2018-07-03_18-40'...
                                         '02619_2018-07-03_20-40'... % very artefacted - macro needs rereferencing (e.g. bipolar), micro constant movement artefacts
@@ -514,7 +569,7 @@ config{7}.directorylist{2}          = { '02619_2018-07-04_16-45'...
                                         '02619_2018-07-05_16-13'};
 config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
                                         '02619_2018-07-05_20-13'...
-                                        '02619_2018-07-05_22-13'...
+                                        '02619_2018-07-05_22-13'... % DiffSTartMacSync & short ITS
                                         '02619_2018-07-06_00-13'...
                                         '02619_2018-07-06_02-13'...
                                         '02619_2018-07-06_04-13'...
@@ -528,7 +583,7 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
                                         '02619_2018-07-06_14-30'...
                                         '02619_2018-07-06_16-30'};
 
-% config{8}.directorylist             = [];                             
+% config{8}.directorylist             = [];
 % config{8}.directorylist{1}          = { '02599_2018-04-24_12-36'...
 %                                         '02599_2018-04-24_14-36'...
 %                                         '02599_2018-04-24_16-36'...
@@ -573,23 +628,23 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 
 
 
-%%                                   
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
+%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 % config{1}.hyp.notcontains         = {"ADStartLoss","ADEndLoss","TTL","StartRecord","StopRecord","NLXEvent","BAD"};
 
 % config{1}.align.name                = {'Hspike','SpikeDetect'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
@@ -606,27 +661,27 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 % config{1}.align.toiplot{2}          = [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % config{1}.align.toiactive{2}        = [-0.05,  0.05];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % config{1}.align.toibaseline{2}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% 
+%
 % config{1}.circus.channel            = {'mHaT2_1','mHaT2_3','mHaT2_4','mHaT2_6','mHaT2_8'};
 % config{1}.circus.reref              = 'yes';
 % config{1}.circus.refchan            = 'mHaT2_2';
 % config{1}.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'hspike', 'SpykingCircus');
-% config{1}.circus.hpfilter           = 'no'; 
-% config{1}.circus.hpfreq             = 0;    
+% config{1}.circus.hpfilter           = 'no';
+% config{1}.circus.hpfreq             = 0;
 % config{1}.circus.postfix            = '-1';
-% 
+%
 % config{1}.TFR.channel               = {'_HaT2_1','_HaT2_6'};
-% 
+%
 % config{1}.spike.slidestep           = 0.001;
-% config{1}.spike.toispikerate{1}     = [-2, 1];         
+% config{1}.spike.toispikerate{1}     = [-2, 1];
 % config{1}.spike.resamplefs          = 1000;
 % config{1}.spike.width               = 15;
 % config{1}.spike.ISIbins             = 0 : 0.05 : 0.150;
-% 
-% config{1}.stats.bltoi{1}            = [-0.5, -0.1];  
-% config{1}.stats.actoi{1}            = [0,    1];  
-% config{1}.stats.bltoi{2}            = [-0.5, -0.1]; 
-% config{1}.stats.actoi{2}            = [0,    1]; 
+%
+% config{1}.stats.bltoi{1}            = [-0.5, -0.1];
+% config{1}.stats.actoi{1}            = [0,    1];
+% config{1}.stats.bltoi{2}            = [-0.5, -0.1];
+% config{1}.stats.actoi{2}            = [0,    1];
 % config{1}.stats.alpha               = 0.025;
 
 % config{1}.spikedetect.LS            = 5;    % Left half-wave slope; default: 7
@@ -639,7 +694,7 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 % config{1}.spikedetect.BlockSize     = 1;    % Data processing block size in minutes
 % config{1}.spikedetect.TroughSearch  = 40;   % distance in ms to search for a trough on each side of a detected peak
 % config{1}.spikedetect.FilterSpec    = [20; 50; 1; 35;];
-% 
+%
 % config{2}.align.name                = {'SpikeHaT1_1'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % config{2}.align.channel             = {'_HaT1_3','_HaT1_3'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % config{2}.align.abs                 = {'no','no'};
@@ -654,12 +709,11 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 % config{2}.align.toiplot{2}          = [-0.3,  0.7];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 % config{2}.align.toiactive{2}        = [-0.05,  0.05];                                          % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 % config{2}.align.toibaseline{2}      = [-0.3, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-% % 
-% config{2}.circus.channel            = {'mHaT1_7'}; 
+% %
+% config{2}.circus.channel            = {'mHaT1_7'};
 % config{2}.circus.reref              = 'no';
 % config{2}.circus.refchan            = 'mHaT1_1';
 % config{2}.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'hspike', 'SpykingCircus');
 % config{2}.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
 % config{2}.circus.hpfreq             = 0; % even when not using
 % config{2}.circus.postfix            = '-1'; % after using circus-gui-matlab's SAVE number
-

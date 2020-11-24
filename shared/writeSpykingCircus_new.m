@@ -1,4 +1,4 @@
-function [cfg] = writeSpykingCircus(cfg, MuseStruct, force, varargin)
+function [sampleinfo] = writeSpykingCircus(cfg, MuseStruct, force, varargin)
 
 % WRITESPYKINGCIRCUS writes a concatinated data file for SpykingCircus and
 % sampleinfo is returned for later (cutting results back up)
@@ -41,7 +41,8 @@ fname_output                = fullfile(cfg.datasavedir,[cfg.prefix,'SpykingCircu
 
 if exist(fname_output, 'file') && force == false
     fprintf('\nLoading sampleinfo: %s \n', fname_output);
-    load(fname_output, 'cfg');
+    temp         = load(fname_output, 'cfg');
+    sampleinfo   = temp.cfg.sampleinfo;
     %     cfg.deadfile_ms         = temp.cfg.deadfile_ms;
     %     cfg.deadfile_samples    = temp.cfg.deadfile_samples;
 else
@@ -60,82 +61,59 @@ else
             % loop over all directories (time), concatinating channel
             for idir = 1 : size(cfg.directorylist{ipart},2)
                 
-                %
-                %                 % NEED SOMETHING LIKE THIS
-                %                 % select MICRO files
-                %                 micro_filenrs = [];
-                %                 for ifile = 1 : size(MuseStruct_micro{ipart}{idir}.filenames,2)
-                %                     for ilabel = 1 : size(cfg.labels.micro,2)
-                %                         if ~isempty(strfind(MuseStruct_micro{ipart}{idir}.filenames{ifile},cfg.labels.micro{ilabel}))
-                %                             micro_filenrs       = [micro_filenrs, ifile];
-                %                             microlabel{ifile}   = cfg.labels.micro{ilabel};
-                %                         end
-                %                     end
-                %                 end
+                clear fname
+                temp                            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
+                fname                           = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                fprintf('LOADING: %s\n', fname);
                 
-                if write
-                    clear fname
-                    temp                            = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
-                    fname_in{1}                        = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
-                    cfgtemp                         = [];
-                    cfgtemp.dataset                 = fname_in{1};
-                    fprintf('LOADING: %s\n', cfgtemp.dataset);
-                    clear fname
-                    fname_in{1}                     = cfgtemp.dataset;
-                    dirdat{idir}                    = ft_read_neuralynx_interp(fname_in);
-                    
-                    if strcmp(cfg.circus.reref, 'yes')
-                        temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan,'.ncs']));
-                        cfgtemp                     = [];
-                        cfgtemp.dataset             = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
-                        fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
-                        clear fname
-                        fname_in{1}                 = cfgtemp.dataset;
-                        refdat                      = ft_read_neuralynx_interp(fname_in);
-                        dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
-                        clear refdat
-                    end
-                    
-                    % Large offsets can create artefacts, dealt with by
-                    % filtering. Should not happen with continuous data
-                    if strcmp(cfg.circus.hpfilter, 'yes')
-                        cfgtemp                   = [];
-                        cfgtemp.hpfilter          = cfg.circus.hpfilter;
-                        cfgtemp.hpfreq            = cfg.circus.hpfreq;
-                        dirdat{idir}              = ft_preprocessing(cfgtemp,dirdat{idir});
-                    end
-                    
-                    % truncate label to make them equal over files
-                    dirdat{idir}.label{1} = dirdat{idir}.label{1}(end-6:end); % can be replaced by circus.channel
-                    
-                end % write
+                st_FieldSelection(1) = 1; %timestamps
+                st_FieldSelection(2) = 1; %Channel Numbers
+                st_FieldSelection(3) = 1; %sample freq
+                st_FieldSelection(4) = 1; %Number of Valid Samples
+                st_FieldSelection(5) = 1; %samples
+                st_FieldSelection(6) = 1; %header (for creating .ncs only)
+                s_ExtractHeader      = 1;
+                s_ExtractMode        = 1; %1 if all samples
+                v_ModeArray          = []; %[] if all, 2 elements if range
+                s_AppendToFileFlag   = 0;
+                s_ExportMode         = 1; %1 if a
+                v_ExportModeVector   = [];
                 
-                % create sampleinfo (nr of samples in file)
-                temp = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.channel{ichan},'.ncs']));
-                hdr  = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name));
+                if ispc
+                    [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}, st_Header] = Nlx2MatCSC(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                else
+                    [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}, st_Header] = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                end
+                
+                if strcmp(cfg.circus.reref, 'yes')
+                    temp                        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*',cfg.circus.refchan, '.ncs']));
+                    fnameref                    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                    fprintf('LOADING (reference): %s\n', fnameref);
+                    [~, ~, ~, ~, refdat, ~]     = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                    dirdat{idir}                = dirdat{idir} - refdat;
+                    clear refdat
+                end
+                
                 
                 % save sampleinfo to reconstruct data again after reading SC
-                cfg.sampleinfo{ipart}{ichan}(idir,:) = [1 hdr.nSamples];
-                
+                cfg.sampleinfo{ipart}{ichan}(idir,:)            = [1 numel(dirdat{idir})];
             end
             
             % concatinate data over files
             if write
                 chandat = dirdat{1};
-                for idir = 2 : length(cfg.directorylist{ipart})
+                timestamps_concat = v_Timestamp{1};
+                for idir = length(cfg.directorylist{ipart})
                     fprintf('Concatinating directory %d, channel %d\n', idir, ichan);
-                    chandat.trial{1}        = [chandat.trial{1} dirdat{idir}.trial{1}];
-                    chandat.time{1}         = [chandat.time{1} (dirdat{idir}.time{1} + chandat.time{1}(end))];
+                    chandat = [chandat dirdat{idir}];
+                    timestamps_concat = [timestamps_concat v_Timestamp{idir}];
                 end
             end
             
             % create filename for concatinated data
             temp        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
-            hdrtemp     = ft_read_header(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name));
-            clear fname
             subjdir     = cfg.prefix(1:end-1);
             partdir     = ['p', num2str(ipart)];
-            chandir     = cfg.circus.channel{ichan}
             filename    = [cfg.prefix, 'p', num2str(ipart), '-multifile-', num2str(ichan), '.ncs'];
             fname       = fullfile(cfg.datasavedir, subjdir, partdir, filename);
             
@@ -153,46 +131,18 @@ else
                     mkdir(fullfile(cfg.datasavedir, subjdir, partdir));
                 end
                 
-                hdr                         = [];
-                hdr.Fs                      = hdrtemp.Fs;
-                hdr.nSamples                = size(chandat.trial{1},2);
-                hdr.nSamplePre              = 0;
-                hdr.nChans                  = 1;
-                hdr.FirstTimeStamp          = 0;
-                hdr.TimeStampPerSample      = hdrtemp.TimeStampPerSample;
-                hdr.label                   = chandat.label;
-                ft_write_data(fname,chandat.trial{1},'chanindx',1,'dataformat','neuralynx_ncs','header',hdr);
-                
-                %
-                %                 hdr                         = [];
-                %                 hdr.Fs                      = hdrtemp.Fs;
-                %                 hdr.nSamples                = size(dirdat{1}.trial{1},2);
-                %                 hdr.nSamplePre              = 0;
-                %                 hdr.nChans                  = 1;
-                %                 hdr.FirstTimeStamp          = 0;
-                %                 hdr.TimeStampPerSample      = hdrtemp.TimeStampPerSample;
-                %                 hdr.label                   = dirdat{1}.label;
-                %                 ft_write_data(fname{1},dirdat{1}.trial{1},'chanindx',1,'dataformat','neuralynx_ncs','header',hdr);
-                
-                %
-                %                 st_FieldSelection  = ones(1,6);
-                %
-                %                 s_ExtractHeader    = 1;
-                %                 s_ExtractMode      = 1;
-                %                 v_ModeArray        = [];
-                %                 s_AppendToFileFlag = 0; %1 if append data to file when creating ncs file
-                %
-                %                 s_ExportMode       = 1; %1 if a
-                %                 v_ExportModeVector = [];
-                %                 if ispc
-                %                     Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, st_FieldSelection, ...
-                %                         v_TimestampI, v_ChanNumI, v_SampleFrequency, v_NumValSamplesI, v_SamplesI, st_Header);
-                %                 end
-                %                 if isunix
-                %                     v_NumRecs = length(v_TimestampI);
-                %                     Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, v_NumRecs, st_FieldSelection, ...
-                %                         v_TimestampI, v_ChanNumI, v_SampleFrequency, v_NumValSamplesI, v_SamplesI, st_Header);
-                %                 end
+                if ispc
+                    Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, st_FieldSelection, timestamps_concat, v_ChanNum, v_SampleFrequency, v_NumValSamples, chandat, st_Header);
+                end
+                if isunix
+                    v_NumRecs = length(timestamps_concat);
+                    
+                    Mat2NlxCSC(fname, s_AppendToFileFlag, s_ExportMode, v_ExportModeVector, v_NumRecs, st_FieldSelection, timestamps_concat, ...
+                        ones(size(timestamps_concat)) * v_ChanNum(1), ...
+                        ones(size(timestamps_concat)) * v_SampleFrequency(1), ...
+                        ones(size(timestamps_concat)) * v_NumValSamples(1), ...
+                        chandat, st_Header);
+                end
             end
             
             clear chandat
