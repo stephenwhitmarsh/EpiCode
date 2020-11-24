@@ -30,6 +30,7 @@ function [SpikeTrials] = readSpikeTrials_windowed(cfg, MuseStruct, SpikeRaw, for
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);

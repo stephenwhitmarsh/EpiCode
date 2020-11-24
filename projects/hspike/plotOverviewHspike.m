@@ -18,9 +18,15 @@ labelorder  = ["REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"];
 
 for ipart = 1 : size(cfg.directorylist,2)
     
+    if isempty(SpikeTrials_windowed{ipart}.window)
+        continue
+    end
+    
     SpikeTrials_windowed{ipart}.window.trialinfo.hyplabel(SpikeTrials_windowed{ipart}.window.trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
-
+    
     for markername = unique(marker.name)'
+        
+        fprintf('Building overview for part %d marker %s\n', ipart, markername);
         
         LFP{ipart}.(markername).trialinfo.hyplabel(LFP{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
         SpikeTrials_timelocked{ipart}.(markername).trialinfo.hyplabel(SpikeTrials_timelocked{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
@@ -116,54 +122,58 @@ for ipart = 1 : size(cfg.directorylist,2)
             set(hl, 'position', pos_legend);
 
             %% TFR & LFP
-            h = subplot(9,7, [44, 51, 58]); hold off;            
-            title(sprintf('TFR & LFP electrode %s', LFP_avg.(hyplabel).label{chansel}(2:end)),'Interpreter', 'none');
-
-            cfgtemp                 = [];
-            cfgtemp.channel         = 1;
-            cfgtemp.baseline        = [-0.5 0.2];
-            cfgtemp.baselinetype    = 'relchange';
-            cfgtemp.ylim            = [10, 100];
-            cfgtemp.zlim            = 'maxabs';
-            cfgtemp.title           = '';
-            cfgtemp.colorbar        = 'no';
-            cfgtemp.figure          = h;
-            cfgtemp.interactive     = 'no';
-            ft_singleplotTFR(cfgtemp, TFR{ipart}.(markername));
-            xlabel('Time (s)'); ylabel('Frequency');
-            c = colorbar;
-            set(c, 'Location', 'southoutside', 'color', [0 0 0]);
-            c.Title.String = 'Relative change in power';
-            pos = get(c, 'Position');
-            pos(2) = 0.03;
-            set(c, 'pos', pos);
-            colormap(jet(1000));
-            title(sprintf('TFR & LFP electrode %s', LFP_avg.(hyplabel).label{chansel}(2:end)),'Interpreter', 'none');
-
-            % plot single average LFP 
-            yyaxis right
-            set(gca,'YColor','k');
-            hold on
-            n = 1;
-            ytick = [];
-            label = [];
-            l = [];
-            [~, chansel] = max(var(LFP_avg.all.avg, 0, 2));          
-            x = LFP_avg.all.time;
-            y = LFP_avg.all.avg(chansel, :);
-            ystd = sqrt(LFP_avg.all.var(chansel, :));
-%             patch([x x(end:-1:1)], [y-ystd y(end:-1:1) + ystd(end:-1:1)], [0 0 0], 'edgecolor', 'none', 'facealpha', 0.2);
-            plot(x, y, 'color', [0 0 0],'linewidth', 0.5);
-            h = ylabel('uV');
-%             h.Position(1) = 1.5;
-            h.Rotation = -90;
             
-            ymax = max(abs([y + ystd, y - ystd]));
-            ylim([-ymax, ymax]);
-            xlim([cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2)]);   
+            try
+                h = subplot(9,7, [44, 51, 58]); hold off;
+                title(sprintf('TFR & LFP electrode %s', LFP_avg.(hyplabel).label{chansel}(2:end)),'Interpreter', 'none');
+                
+                cfgtemp                 = [];
+                cfgtemp.channel         = 1;
+                cfgtemp.baseline        = [-0.5 0.2];
+                cfgtemp.baselinetype    = 'relchange';
+                cfgtemp.ylim            = [10, 100];
+                cfgtemp.zlim            = 'maxabs';
+                cfgtemp.title           = '';
+                cfgtemp.colorbar        = 'no';
+                cfgtemp.figure          = h;
+                cfgtemp.interactive     = 'no';
+                ft_singleplotTFR(cfgtemp, TFR{ipart}.(markername));
+                xlabel('Time (s)'); ylabel('Frequency');
+                c = colorbar;
+                set(c, 'Location', 'southoutside', 'color', [0 0 0]);
+                c.Title.String = 'Relative change in power';
+                pos = get(c, 'Position');
+                pos(2) = 0.03;
+                set(c, 'pos', pos);
+                colormap(jet(1000));
+                title(sprintf('TFR & LFP electrode %s', LFP_avg.(hyplabel).label{chansel}(2:end)),'Interpreter', 'none');
+                
+                % plot single average LFP
+                yyaxis right
+                set(gca,'YColor','k');
+                hold on
+                n = 1;
+                ytick = [];
+                label = [];
+                l = [];
+                [~, chansel] = max(var(LFP_avg.all.avg, 0, 2));
+                x = LFP_avg.all.time;
+                y = LFP_avg.all.avg(chansel, :);
+                ystd = sqrt(LFP_avg.all.var(chansel, :));
+                %             patch([x x(end:-1:1)], [y-ystd y(end:-1:1) + ystd(end:-1:1)], [0 0 0], 'edgecolor', 'none', 'facealpha', 0.2);
+                plot(x, y, 'color', [0 0 0],'linewidth', 0.5);
+                h = ylabel('uV');
+                %             h.Position(1) = 1.5;
+                h.Rotation = -90;
+                
+                ymax = max(abs([y + ystd, y - ystd]));
+                ylim([-ymax, ymax]);
+                xlim([cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2)]);
+                
+                set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
+            catch
+            end
             
-            set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
-
             %% Spike Density and stats
             subplot(9, 7, 53); hold on;
             title('Spike Density');
@@ -264,6 +274,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             set(hl, 'position', pos_legend);
             
             %% Raster
+            try
             subplot(9,7, [45, 52, 59]); % hold on;
             cfgtemp                 = [];
             cfgtemp.spikechannel    = itemp;
@@ -289,7 +300,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             
             state = "xxx";
             startend = "end";
-            clear x y 
+            clear x y
             y = [0 0];
             for itrial = 1 : size(SpikeTrials_timelocked{ipart}.(markername).trialinfo, 1)
                 
@@ -311,7 +322,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                         % plot
                         x = [cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2), cfg.epoch.toi.(markername)(2), cfg.epoch.toi.(markername)(1)];
                         patch(x, [y(1) y(1) y(2) y(2)], cm(ci, :) ,'edgecolor', 'none', 'facealpha',0.4);
-                        fprintf('Start %s, y = %d', state, itrial);
+%                         fprintf('Start %s, y = %d', state, itrial);
                         
                         % if already passed "start", we are now at the end
                     else
@@ -323,7 +334,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                         y(2) = itrial;
                         patch(x, [y(1) y(1) y(2) y(2)], cm(ci, :) ,'edgecolor', 'none', 'facealpha',0.4);
                         
-                        fprintf('; End %s, y = %d\n', state, itrial);
+%                         fprintf('; End %s, y = %d\n', state, itrial);
                         
                     end
                 end
@@ -332,7 +343,9 @@ for ipart = 1 : size(cfg.directorylist,2)
             ylabel('');
             xlim([cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2)]);
             set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
-                        
+            catch
+            end
+                
             %% ISI windowed
             subplot(9,7, 47); hold on;
             title('ISI');            
@@ -378,7 +391,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             end     
             [G, order]  = sort(G);
             spikefreq   = SpikeStats_windowed{ipart}.window{itemp}.trialfreq(order)';
-            IEDfreq     = SpikeTrials_windowed{ipart}.window.trialinfo.(markername)(order);
+            IEDfreq     = SpikeTrials_windowed{ipart}.window.trialinfo.(char(markername))(order);
             amplitude   = SpikeStats_windowed{ipart}.window{itemp}.amplitude(order);
             
             % plotting
@@ -431,7 +444,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             m = -inf;
             for hyplabel = hyplabels
                 barloc      = find(hyplabel ==labelorder);
-                y           = hypmusestat{ipart}.(markername).duration.(hyplabel);
+                y           = hypmusestat{ipart}.(char(markername)).duration.(hyplabel);
                 hb          = bar(barloc, y, 1);
                 l{barloc}   = sprintf('%s=%0.2fhrs', hyplabel, y);
                 m           = max(m, y);
@@ -452,8 +465,8 @@ for ipart = 1 : size(cfg.directorylist,2)
             
             %% IED rate over time
             subplot(9,7,8:13); hold on;
-            title(sprintf('IED rate "%s"', markername));
-            marker_sel      = marker(marker.name == markername & marker.ipart == ipart, :);
+            title(sprintf('IED rate "%s"', char(markername)));
+            marker_sel      = marker(marker.name == char(markername) & marker.ipart == ipart, :);
             [n, edges, ~]   = histcounts(marker_sel.clock, 'BinWidth', seconds(60));
             bar(edges(1:end-1), n, 1, 'EdgeColor', 'none', 'FaceColor', [0, 0, 0]);
             ylabel('IED / min.');
@@ -469,7 +482,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             m = -inf;
             for hyplabel = hyplabels
                 barloc      = find(hyplabel ==labelorder);
-                y           = hypmusestat{ipart}.(markername).IEDrateNorm.(hyplabel);
+                y           = hypmusestat{ipart}.(char(markername)).IEDrateNorm.(hyplabel);
                 hb          = bar(barloc, y, 1);
                 l{barloc}   = sprintf('%s=%0.2f', hyplabel, y);
                 m           = max(m, y);
@@ -648,7 +661,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             pos_legend(1) = 0.92;
             set(hl, 'position', pos_legend);
             
-            %% Spike waveform  
+            %% Spike waveform
             subplot(9, 7, 46); hold on;
             title(sprintf('Action Potential Waveform (%s)', SpikeTrials_windowed{ipart}.window.cluster_group{itemp}(1:3)));
             y = cat(1, SpikeWaveforms{ipart}.window{itemp}.trial{:});
@@ -656,13 +669,13 @@ for ipart = 1 : size(cfg.directorylist,2)
             for itrial = 1 : size(SpikeWaveforms{ipart}.window{itemp}.trial, 2)
                 lh = plot(SpikeWaveforms{ipart}.window{itemp}.time{itrial}*1000, SpikeWaveforms{ipart}.window{itemp}.trial{itrial}, 'color', [0.3 0.3 0.3]);
                 lh.Color = [0,0,0,0.1];
-            end  
+            end
             plot(SpikeWaveforms{ipart}.window{itemp}.time{itrial}*1000, avg_waveshape, 'color', [1 1 1 ], 'linewidth', 1);
             axis tight
             ylim( [-max(abs(avg_waveshape)) max(abs(avg_waveshape))]*1.5);
             xlabel('Time (ms)'); ylabel('uV');
             set(gca, 'XGrid', 'on', 'YGrid', 'on', 'box', 'off', 'TickDir', 'out');
-  
+
             %% print to file
             
             set(findall(fig, '-property', 'fontsize'), 'fontsize', 8);

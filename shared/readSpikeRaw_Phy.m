@@ -54,6 +54,7 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
 
 % check if depencies is on path, if not add
 w = which('readNPY');
@@ -147,11 +148,10 @@ for ipart = cfg.circus.part_list
             clear timings_idx
         end
         
-        % take the first concatinated channel to extract the timestamps
+        %% take the first concatinated channel to extract the timestamps
         temp        = dir(fullfile(datadir, '*.ncs'));
         hdr_fname   = fullfile(datadir, temp(1).name);
-        hdr         = ft_read_header(hdr_fname);
-        
+        hdr         = ft_read_header(hdr_fname);  
         timestamps  = ft_read_data(hdr_fname, 'timestamp', 'true');
         
         %% The following is dangerous as missing data in e.g. Neuralynx files will result in unexpected offsets
@@ -199,8 +199,8 @@ for ipart = cfg.circus.part_list
             
             % add amplitude, samples and timestamps at selected spike timings
             SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(timings_idx)';
-            SpikeRaw{ipart}.samples{icluster}               = phydata.spike_times(timings_idx)';
-            SpikeRaw{ipart}.timestamp{icluster}             = timestamps(SpikeRaw{ipart}.samples{icluster});
+            SpikeRaw{ipart}.sample{icluster}                = phydata.spike_times(timings_idx)';
+            SpikeRaw{ipart}.timestamp{icluster}             = timestamps(SpikeRaw{ipart}.sample{icluster});
             
             % add Phy group info (good, mua)
             if ischecked
