@@ -51,11 +51,11 @@ for ifile = 1:length(listing)
 end
 
 if isNeuralynx
-    fprintf('Data is Neuralynx\n');
+    ft_info('Data is Neuralynx\n');
 elseif isMicromed
-    fprintf('Data is Micromed\n');
+    ft_info('Data is Micromed\n');
 elseif isBrainvision
-    fprintf('Data is Brainvision\n');
+    ft_info('Data is Brainvision\n');
 
 end
 

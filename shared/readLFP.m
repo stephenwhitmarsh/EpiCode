@@ -51,7 +51,8 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-write = ft_getopt(cfg.LFP, 'write', true);
+write     = ft_getopt(cfg.LFP, 'write', true);
+keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', true);
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -158,7 +159,9 @@ for markername = string(cfg.LFP.name)
                     cfg.EMG = ft_getopt(cfg, 'EMG', []);
                     
                     cfgtemp                   = [];
-                    cfgtemp.channel           = [ft_getopt(cfg.EMG, sprintf('%s',markername), {});ft_getopt(cfg.EMG, 'refchannel',{})]; % load the emg associated with eeg marker, and the ref if any
+                    cfgtemp.channel           = {ft_getopt(cfg.EMG, sprintf('%s',markername), []);ft_getopt(cfg.EMG, 'refchannel',[])}; % load the emg associated with eeg marker, and the ref if any
+                    cfgtemp.channel           = cfgtemp.channel(~cellfun(@isempty, cfgtemp.channel));
+
                     if ~isempty(cfgtemp.channel)
                         cfgtemp.dataset           = fname;
                         cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
@@ -326,6 +329,11 @@ for markername = string(cfg.LFP.name)
             LFP{ipart}.(markername)             = ft_appenddata([], dirdat{hasmarker});
             LFP{ipart}.(markername).fsample     = fsample;
             clear dirdat*
+            
+            %remove cfg to save space on disk, if required
+            if ~istrue(keepcfg)
+                LFP{ipart}.(markername) = rmfield(LFP{ipart}.(markername),'cfg');
+            end
         else
             LFP{ipart}.(markername) = [];
             fprintf('%s part %d : No data with marker ''%s''\n', cfg.prefix(1:end-1), ipart, markername);

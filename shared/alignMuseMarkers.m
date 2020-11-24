@@ -324,7 +324,7 @@ else
                     end
                     med_all_bl = nanmedian(mean_bl);
                     
-                    zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
+                    %zci = @(v) find(v(:).*circshift(v(:), [-1 0]) <= 0); %find time cross zero
                 end
 
                 for itrial = 1 : size(dat_filt_trl.trial,2)
@@ -367,15 +367,19 @@ else
                         
                         %align to the begin of the event if asked
                         if strcmp(cfg.align.findbegin.(markername),'yes')
-                            thresh = cfg.align.beginthresh.(markername);
                             %find begin according to peak found before
                             peak_loc(itrial)        = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
-                            thresh(itrial)          = med_all_bl + (peaks_ac_sel{itrial}(ip(itrial)) - med_all_bl) * thresh;
-                            index_tresh{itrial}     = zci(dat_filt_trl.trial{itrial}(t1_ac_indx(itrial):peak_loc(itrial)) - thresh(itrial)) + t1_ac_indx(itrial) - 1;
+                            thresh(itrial)          = med_all_bl + (peaks_ac_sel{itrial}(ip(itrial)) - med_all_bl) * cfg.align.beginthresh.(markername);
+
+                            x1 = dat_filt_trl.time{itrial}(t1_ac_indx(itrial):peak_loc(itrial));
+                            y1 = dat_filt_trl.trial{itrial}(t1_ac_indx(itrial):peak_loc(itrial));
+                            x2 = dat_filt_trl.time{itrial}(t1_ac_indx(itrial):peak_loc(itrial));
+                            y2 = ones(size(dat_filt_trl.trial{itrial}(t1_ac_indx(itrial):peak_loc(itrial)))) .* thresh(itrial);
+                            [x_intersect{itrial}, y_intersect{itrial}] = intersections(x1,y1,x2,y2,true);
                             
-                            if ~isempty(index_tresh{itrial})
-                                index_tresh{itrial}             = index_tresh{itrial}(end-1); %take last good index (-1 because last = end of trial)
-                                timeshift                       = dat_filt_trl.time{itrial}(index_tresh{itrial});
+                            if ~isempty(x_intersect{itrial})
+                                x_intersect{itrial}              = x_intersect{itrial}(end);
+                                timeshift                        = x_intersect{itrial};
                                 
                                 %remove bad detection (assuming that marker is put after wave begining)
                                 if timeshift > 0
@@ -418,14 +422,15 @@ else
                         h_temp(i_h_temp) = max(peaks_ac_sel{ipeak});
                     end
                 end
-                h               = mean(h_temp)/2;%1200; 
+                
+                h =0;%overdraw of all data
            
                 %Find position of the line to plot
                 for itrial = 1 : size(dat_filt_trl.trial,2)
                     if haspeak(itrial)
                         line_idx(itrial) = locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1;
                         if strcmp(cfg.align.findbegin.(markername), 'yes')
-                            line_idx(itrial) = index_tresh{itrial};
+                            line_idx(itrial) = nearest(dat_filt_trl.time{itrial},x_intersect{itrial});
                         end
                     end
                 end
@@ -437,7 +442,8 @@ else
                         color = 'k';
                         t     = dat_filt_trl.time{itrial}(line_idx(itrial));
                         line_position = dat_filt_trl.trial{itrial}(line_idx(itrial));
-                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
+                        scatter(t,line_position+itrial*h,'bx');
+                        %line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -446,7 +452,8 @@ else
 %                     else
 %                         color = 'k';
                     end
-                    plot(dat_filt_trl.time{itrial},dat_filt_trl.trial{itrial} + itrial*h,'color',color);
+                    p = plot(dat_filt_trl.time{itrial},dat_filt_trl.trial{itrial} + itrial*h,'color',color);
+                    p.ZData = ones(size(p.YData)) .* -1;
                 end
                 title('Detection');
                 set(gca, 'YTickLabel', '');
@@ -464,7 +471,8 @@ else
                         color = 'k';
                         t       = 0;
                         line_position = dat_filt_trl.trial{itrial}(line_idx(itrial));
-                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
+                        scatter(t,line_position+itrial*h,'bx');
+                        %line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r'); 
 %                         
 %                     else
 %                         color = 'r';
@@ -474,7 +482,8 @@ else
 %                     else
 %                         color = 'k';
 %                     end
-                   plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
+                   p = plot(dat_filt_aligned.time{itrial},dat_filt_aligned.trial{itrial}+ itrial*h,'color',color); 
+                   p.ZData = ones(size(p.YData)) .* -1;
                     end
                 end
                 title('Alignment');
@@ -493,7 +502,8 @@ else
                         color = 'k';
                         t       = dat_sel_trl.time{itrial}(line_idx(itrial));
                         line_position = dat_sel_trl.trial{itrial}(line_idx(itrial));
-                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
+                        scatter(t,line_position+itrial*h,'bx');
+                        %line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
                     else
                         color = 'r';
                     end
@@ -502,7 +512,8 @@ else
 %                     else
 %                         color = 'k';
                     end
-                    plot(dat_sel_trl.time{itrial},dat_sel_trl.trial{itrial} + itrial*h,'color',color);
+                    p = plot(dat_sel_trl.time{itrial},dat_sel_trl.trial{itrial} + itrial*h,'color',color);
+                    p.ZData = ones(size(p.YData)) .* -1;
                 end
                 title('Original data');
                 set(gca, 'YTickLabel', '');
@@ -520,7 +531,8 @@ else
                         color = 'k';
                         t       = 0;
                         line_position = dat_sel_trl.trial{itrial}(line_idx(itrial));
-                        line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
+                        scatter(t,line_position+itrial*h,'bx');
+                        %line([t,t],[(line_position-h)+itrial*h, (line_position+h)+itrial*h],'color','r');
 %                     else
 %                         color = 'r';
 %                     end
@@ -529,7 +541,8 @@ else
 %                     else
 %                         color = 'k';
 %                     end
-                    plot(dat_sel_aligned.time{itrial},dat_sel_aligned.trial{itrial} + itrial*h,'color',color);
+                    p = plot(dat_sel_aligned.time{itrial},dat_sel_aligned.trial{itrial} + itrial*h,'color',color);
+                    p.ZData = ones(size(p.YData)) .* -1;
                     end
 
                 end
