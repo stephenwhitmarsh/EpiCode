@@ -33,11 +33,8 @@ for ipart = 1 : size(SpikeTrials, 2)
     
     for markername = string(fields(SpikeTrials{ipart}))'
         
-        % temporary fix - is fixed now
-        for ilabel = 1 : length(SpikeTrials{ipart}.(markername).label)
-            SpikeTrials{ipart}.(markername).label{ilabel} = char(SpikeTrials{ipart}.(markername).label{ilabel});
-        end
-        
+        if isempty(SpikeTrials{ipart}.(markername)); continue; end
+
         SpikeTrials{ipart}.(markername).trialinfo.hyplabel(SpikeTrials{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
 
         % ISI over conditions
