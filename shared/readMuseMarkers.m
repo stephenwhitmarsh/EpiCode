@@ -182,7 +182,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             hdr         = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp(1).name));
             f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
             clear timestring
-            
+
             if f >= 0
             % depending on amplifier, there are somewhat different
             % formats of the txt file
@@ -214,7 +214,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
             fclose(f);
-            
+
             % add real time of onset of file
             timestring = strsplit(timestring);
             switch ftype
@@ -227,7 +227,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                     headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
                     MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
             end
-            
+
             else %error while loading katia text file header
                 warning('Clock time not found, they will be ignored');
                 MuseStruct{ipart}{idir}.starttime  = datetime.empty;
@@ -287,8 +287,8 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
         MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
         MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds(hdr.nSamples / hdr.Fs - hdr.nSamplesPre / hdr.Fs);
-        MuseStruct{ipart}{idir}.nSamples   = hdr.nSamples;
-        MuseStruct{ipart}{idir}.Fs         = hdr.Fs;
+        % MuseStruct{ipart}{idir}.nSamples   = hdr.nSamples;
+        % MuseStruct{ipart}{idir}.Fs         = hdr.Fs;
 
 
         % create markers details in MuseStruct
@@ -313,7 +313,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             end
         end
     end
-    
+
 
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
