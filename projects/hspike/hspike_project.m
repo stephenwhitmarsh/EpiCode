@@ -260,10 +260,9 @@ config{1}.epoch.toi.combined2 = [-0.2  0.8];
 
 %% Create slurm job list
 config              = hspike_setparams;
-fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list.txt');
+fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list3.txt');
 delete(fname_slurm_joblist);
 for ipatient = 1:7
-    
     for ipart = 1 : size(config{ipatient}.directorylist, 2)
         subjdir     = config{ipatient}.prefix(1:end-1);
         partdir     = ['p', num2str(ipart)];
@@ -272,11 +271,11 @@ for ipatient = 1:7
             if fid == -1
                 error('Could not create/open %s', fname_slurm_joblist);
             end
-            filename    = [config{ipatient}.prefix, 'p', num2str(ipart), '-multifile-1.ncs'];
+            filename    = strcat(config{ipatient}.prefix, 'p', num2str(ipart), '-multifile-', config{ipatient}.circus.channel{1} ,'.ncs');
             dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir);
             fprintf(fid,'module load spyking-circus/0.9.9 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
-            fclose(fid);
-            
+            fprintf('module load spyking-circus/0.9.9 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
+            fclose(fid);  
         else
             for chandir = unique(config{ipatient}.circus.channelname)
                 fid = fopen(fname_slurm_joblist, 'a');
@@ -288,8 +287,8 @@ for ipatient = 1:7
                 filename    = strcat(config{ipatient}.prefix, 'p', num2str(ipart), '-multifile-', firstchan ,'.ncs');
                 dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir, '/', string(chandir));
                 fprintf(fid,'module load spyking-circus/0.9.9 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
+                fprintf('module load spyking-circus/0.9.9 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
                 fclose(fid);
-                
             end
         end
     end
