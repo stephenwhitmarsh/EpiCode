@@ -31,6 +31,10 @@ function [SpikeTrials] = readSpikeTrials_windowed(cfg, MuseStruct, SpikeRaw, for
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
+cfg.spikewin.findoverlap       = ft_getopt(cfg.spikewin, 'findoverlap', []);
+cfg.spikewin.findoverlap.hyp   = ft_getopt(cfg.spikewin.findoverlap, 'hyp', 'yes');
+cfg.spikewin.findoverlap.ied   = ft_getopt(cfg.spikewin.findoverlap, 'ied', 'yes');
+cfg.spikewin.findoverlap.bad   = ft_getopt(cfg.spikewin.findoverlap, 'bad', 'yes');
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
@@ -57,33 +61,26 @@ for ipart = cfg.circus.part_list
         continue
     end
 
-    % to deal with multichannel data
-    if isempty(cfg.circus.channelname)
-        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-    else
-        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-    end
-
-    hdr_fname   = fullfile(temp(1).folder, temp(1).name);
-    hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-
+    hdr = SpikeRaw{ipart}.hdr;
+    
     % create trials of x seconds
     cfgtemp                                         = [];
-    cfgtemp.trl(:, 1)                               = 0 : hdr.Fs * (cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : hdr.nSamples - (hdr.Fs * cfg.hyp.spikewindow);
-    cfgtemp.trl(:, 2)                               = cfgtemp.trl(:, 1) + hdr.Fs * cfg.hyp.spikewindow;
+    cfgtemp.trl(:, 1)                               = 0 : hdr.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : hdr.nSamples - (hdr.Fs * cfg.spikewin.windowsize);
+    cfgtemp.trl(:, 2)                               = cfgtemp.trl(:, 1) + hdr.Fs * cfg.spikewin.windowsize - 1; %-1 because starts at zero
     cfgtemp.trl(:, 3)                               = zeros(size(cfgtemp.trl, 1), 1);
     cfgtemp.trlunit                                 = 'samples';
     cfgtemp.hdr                                     = hdr;
     SpikeTrials{ipart}.window                       = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
     SpikeTrials{ipart}.window.trialinfo             = table;
-    SpikeTrials{ipart}.window.trialinfo.starttime   = (MuseStruct{ipart}{1}.starttime : seconds(cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : MuseStruct{ipart}{end}.endtime - seconds(cfg.hyp.spikewindow))';
-    SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.hyp.spikewindow) : seconds(cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : MuseStruct{ipart}{end}.endtime)';
+    SpikeTrials{ipart}.window.trialinfo.starttime   = (MuseStruct{ipart}{1}.starttime : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime - seconds(cfg.spikewin.windowsize))';
+    SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.spikewin.windowsize -1/hdr.Fs) : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime)';
 
     if height(SpikeTrials{ipart}.window.trialinfo) ~= size(cfgtemp.trl, 1)
         error('Difference in total duration of TRL and MuseMarker list - have you trimmed your directorylist?');
     end
 
     % find overlap with sleepstages
+    if istrue(cfg.spikewin.findoverlap.hyp)
     overlap     = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 6);
     hyplabels   = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
@@ -138,7 +135,9 @@ for ipart = cfg.circus.part_list
             SpikeTrials{ipart}.window.trialinfo.hyplabel(ievent) = "NO_SCORE";
         end
     end
-
+    end %istrue(cfg.spikewin.findoverlap.hyp)
+    
+    if istrue(cfg.spikewin.findoverlap.ied)
     % find overlap with IEDs
     for markername = string(cfg.name)
         SpikeTrials{ipart}.window.trialinfo.(char(markername)) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
@@ -176,7 +175,7 @@ for ipart = cfg.circus.part_list
 %                         SpikeTrials{ipart}.window.trialinfo.(markername)(ievent) = SpikeTrials{ipart}.window.trialinfo.(markername)(ievent) + 1;
 %                     end
 %
-                    % trial falls fully within sleepstate
+                    % ied falls fully within trial
                     if IEDstart > trlstart && IEDend < trlend
                         SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) = SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) + 1;
                         fprintf('Found: %s, dir %d, trial %d \n', markername, idir, ievent);
@@ -185,10 +184,14 @@ for ipart = cfg.circus.part_list
             end % ihyplabel
         end % idir
     end % ievent
+    end % istrue(cfg.spikewin.findoverlap.ied)
 
+    if istrue(cfg.spikewin.findoverlap.bad)
+    cfg.spike.minbadtime.window = ft_getopt(cfg.spike.minbadtime, 'window', 0);
     artefact = false(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
+    ft_progress('init','text')
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
-        fprintf('Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.window.trialinfo, 1))
+        ft_progress(ievent/size(SpikeTrials{ipart}.window.trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.window.trialinfo, 1))
         trlstart = SpikeTrials{ipart}.window.trialinfo.starttime(ievent);
         trlend   = SpikeTrials{ipart}.window.trialinfo.endtime(ievent);
 
@@ -206,29 +209,25 @@ for ipart = cfg.circus.part_list
 
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
-
-                    % end of trial overlaps with beginning of sleepstate
-                    if artstart > trlstart && artstart < trlend
-                        artefact(ievent) = true;
+                    
+                    %ignore too short artefacts
+                    if artend - artstart < seconds(cfg.spike.minbadtime.window)
+                        continue
                     end
-
-                    % sleepstage falls fully within trial
-                    if artstart > trlstart && artend < trlend
-                        artefact(ievent) = true;
-                    end
-
-                    % beginning of trial overlaps with end of sleepstate
-                    if artstart < trlstart && artend > trlstart
-                        artefact(ievent) = true;
-                    end
-
-                    % trial falls fully within sleepstate
-                    if artstart < trlstart && artend > trlend && ~(hypend > trlstart)
+                    %full trial is before artefact
+                    if trlstart < artstart && trlend < artstart
+                        continue
+                        %full trial is after artefact
+                    elseif trlstart > artend && trlend > artend
+                        continue
+                    else
                         artefact(ievent) = true;
                     end
                 end % ihyp
         end % idir
     end % ievent
+    ft_progress('close');
+    end
 
     % add artefact to trialinfo
     SpikeTrials{ipart}.window.trialinfo.artefact = artefact;

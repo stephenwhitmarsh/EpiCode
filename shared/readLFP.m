@@ -53,6 +53,7 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 
 write     = ft_getopt(cfg.LFP, 'write', true);
 keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', true);
+cfg.LFP.minbadtime = ft_getopt(cfg.LFP, 'minbadtime', []);
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -329,6 +330,53 @@ for markername = string(cfg.LFP.name)
             LFP{ipart}.(markername)             = ft_appenddata([], dirdat{hasmarker});
             LFP{ipart}.(markername).fsample     = fsample;
             clear dirdat*
+            
+            %annotate artefacted trials
+            cfg.LFP.minbadtime.(markername) = ft_getopt(cfg.LFP.minbadtime, char(markername), 0);
+            artefact = false(size(LFP{ipart}.(markername).trialinfo, 1), 1);
+            ft_progress('init','text')
+            for ievent = 1 : size(LFP{ipart}.(markername).trialinfo, 1)
+                ft_progress(ievent/size(LFP{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(LFP{ipart}.(markername).trialinfo, 1))
+                trlstart = LFP{ipart}.(markername).trialinfo.starttime(ievent);
+                trlend   = LFP{ipart}.(markername).trialinfo.endtime(ievent);
+                
+                for idir = LFP{ipart}.(markername).trialinfo.idir(ievent)%1 : size(MuseStruct{ipart}, 2)
+                    
+                    if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
+                        continue
+                    end
+                    
+                    if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
+                        continue
+                    end
+                    
+                    for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)
+                        
+                        artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
+                        artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
+                        
+                        %ignore too short artefacts
+                        if artend - artstart < seconds(cfg.LFP.minbadtime.window)
+                            continue
+                        end
+                        %full trial is before artefact
+                        if trlstart < artstart && trlend < artstart
+                            continue
+                            %full trial is after artefact
+                        elseif trlstart > artend && trlend > artend
+                            continue
+                        else
+                            artefact(ievent) = true;
+                        end
+                    end % iart
+                end % idir
+            end % ievent
+            ft_progress('close');
+        end
+        
+        % add artefact to trialinfo
+        LFP{ipart}.(markername).trialinfo.artefact = artefact;
+
             
             %remove cfg to save space on disk, if required
             if ~istrue(keepcfg)

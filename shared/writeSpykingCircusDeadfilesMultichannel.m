@@ -1,11 +1,13 @@
-function [artefacts] = writeSpykingCircusDeadfilesMultichannel(cfg, MuseStruct, force)
+function [artefacts] = writeSpykingCircusDeadfilesMultichannel(cfg, MuseStruct, force, suffix)
 
 % WRITESPYKINGCIRCUS_DEADFILES creates artefact files (deadtime) for
 % SpykingCircus in data directories for spike analysis
 %
 % use as
 %   writeSpykingCircus_deadfiles(cfg, MuseStruct, force)
-
+% or 
+%   writeSpykingCircus_deadfiles(cfg, MuseStruct, force, suffix)
+% 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -22,8 +24,12 @@ function [artefacts] = writeSpykingCircusDeadfilesMultichannel(cfg, MuseStruct, 
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname_output                = fullfile(cfg.datasavedir, [cfg.prefix, 'SpykingCircus_artefacts.mat']);
+if nargin < 4
+    suffix = [];
+end
+fname_output                = fullfile(cfg.datasavedir, [cfg.prefix, 'SpykingCircus_artefacts', char(suffix), '.mat']);
 cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
+
 
 if exist(fname_output, 'file') && force == false
     fprintf('\nLoading sampleinfo artefacts: %s \n', fname_output);
@@ -110,11 +116,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
     end
     
     if isempty(cfg.circus.channelname)
-        filename = 'SpykingCircus_artefacts_ms.dead';
+        filename = sprintf('SpykingCircus_artefacts_ms%s.dead', suffix);
         fprintf('Writing artefacts for Spyking-Circus to: %s\n', filename);
         dlmwrite(fullfile(cfg.datasavedir, subjdir, partdir, filename), deadfile_ms, 'delimiter', '	', 'precision', '%.4f');
         
-        filename = 'SpykingCircus_artefacts_samples.dead';
+        filename = sprintf('SpykingCircus_artefacts_samples%s.dead', suffix);
         fprintf('Writing artefacts for Spyking-Circus to: %s\n', filename);
         dlmwrite(fullfile(cfg.datasavedir, subjdir, partdir, filename), deadfile_samples, 'delimiter', '	', 'precision', '%.4f');    
     else
@@ -126,11 +132,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 mkdir(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir)));
             end
 
-            filename = 'SpykingCircus_artefacts_ms.dead';
+            filename = sprintf('SpykingCircus_artefacts_ms%s.dead', suffix);
             fprintf('Writing artefacts for Spyking-Circus to: %s\n', filename);
             dlmwrite(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), filename), deadfile_ms, 'delimiter', '	', 'precision', '%.4f');
             
-            filename = 'SpykingCircus_artefacts_samples.dead';
+            filename = sprintf('SpykingCircus_artefacts_samples%s.dead', suffix);
             fprintf('Writing artefacts for Spyking-Circus to: %s\n', filename);
             dlmwrite(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), filename), deadfile_samples, 'delimiter', '	', 'precision', '%.4f');
         end

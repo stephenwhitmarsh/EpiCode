@@ -31,6 +31,7 @@ function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg, MuseStruct, SpikeRaw, 
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
+cfg.spike.minbadtime     = ft_getopt(cfg.spike,  'minbadtime', []);
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
@@ -60,14 +61,16 @@ for ipart = cfg.circus.part_list
     end
     
     % to deal with multichannel data
-    if isempty(cfg.circus.channelname)
-        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-    else
-        temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-    end
+%     if isempty(cfg.circus.channelname)
+%         temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+%     else
+%         temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+%     end
+%     
+%     hdr_fname   = fullfile(temp(1).folder, temp(1).name);
+%     hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
     
-    hdr_fname   = fullfile(temp(1).folder, temp(1).name);
-    hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+    hdr = SpikeRaw{ipart}.hdr;
     
     % create trials
     clear Trials
@@ -238,9 +241,11 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.starttime     = Starttime(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.endtime       = Endtime(full_trial);       
         
+        cfg.spike.minbadtime.(markername) = ft_getopt(cfg.spike.minbadtime, char(markername), 0);
         artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
+        ft_progress('init','text')
         for ievent = 1 : size(SpikeTrials{ipart}.(markername).trialinfo, 1)
-            fprintf('Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
+            ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
             trlstart = SpikeTrials{ipart}.(markername).trialinfo.starttime(ievent);
             trlend   = SpikeTrials{ipart}.(markername).trialinfo.endtime(ievent);
             
@@ -259,28 +264,24 @@ for ipart = cfg.circus.part_list
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
                     
-                    % end of trial overlaps with beginning of sleepstate
-                    if artstart > trlstart && artstart < trlend
-                        artefact(ievent) = true;
+                    if artstart - artend < seconds(cfg.spike.minbadtime.(markername))
+                        continue
                     end
                     
-                    % sleepstage falls fully within trial
-                    if artstart > trlstart && artend < trlend
+                    %full trial is before artefact
+                    if trlstart < artstart && trlend < artstart
+                        continue
+                    %full trial is after artefact
+                    elseif trlstart > artend && trlend > artend
+                        continue
+                    else
                         artefact(ievent) = true;
                     end
-                    
-                    % beginning of trial overlaps with end of sleepstate
-                    if artstart < trlstart && artend > trlstart
-                        artefact(ievent) = true;
-                    end
-                    
-                    % trial falls fully within sleepstate
-                    if artstart < trlstart && artend > trlend && ~(hypend > trlstart)
-                        artefact(ievent) = true;
-                    end
-                end % ihyp
+                   
+                end % iart
             end % idir
         end % ievent
+        ft_progress('close');
         
         % add artefact to trialinfo
         SpikeTrials{ipart}.(markername).trialinfo.artefact = artefact;
