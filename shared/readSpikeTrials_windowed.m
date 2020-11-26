@@ -75,6 +75,7 @@ for ipart = cfg.circus.part_list
     cfgtemp.trlunit                                 = 'samples';
     cfgtemp.hdr                                     = hdr;
     SpikeTrials{ipart}.window                       = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
+    if isfield(SpikeRaw{ipart},'clustername'); SpikeTrials{ipart}.clustername = SpikeRaw{ipart}.clustername; end
     SpikeTrials{ipart}.window.trialinfo             = table;
     SpikeTrials{ipart}.window.trialinfo.starttime   = (MuseStruct{ipart}{1}.starttime : seconds(cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : MuseStruct{ipart}{end}.endtime - seconds(cfg.hyp.spikewindow))';
     SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.hyp.spikewindow) : seconds(cfg.hyp.spikewindow * cfg.hyp.spikewindowoverlap) : MuseStruct{ipart}{end}.endtime)';
