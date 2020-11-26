@@ -84,7 +84,7 @@ for ipart = cfg.spikewaveform.part_list
             if icluster > 1
                 % if channel is different from loaded data
                 if ~isempty(cfg.circus.channelname)
-                    if ~strcmp(cfg.circus.channelname(icluster), cfg.circus.channelname(icluster-1)); loadnew = true; end
+                    if ~strcmp(SpikeRaw{ipart}.window.channelname{icluster}, SpikeRaw{ipart}.window.channelname{icluster-1}); loadnew = true; end
                 end
                 % if max electrode plot is different from loaded data
                 if SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) ~= SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster-1); loadnew = true; end
