@@ -261,11 +261,10 @@ for ipart = cfg.circus.part_list
                 end
                 
                 for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
-                    
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
                     
-                    if artstart - artend < seconds(cfg.spike.minbadtime.(markername))
+                    if artend - artstart < seconds(cfg.spike.minbadtime.(markername))
                         continue
                     end
                     

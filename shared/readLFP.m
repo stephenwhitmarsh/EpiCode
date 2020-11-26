@@ -361,7 +361,7 @@ for markername = string(cfg.LFP.name)
                         artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
                         
                         %ignore too short artefacts
-                        if artend - artstart < seconds(cfg.LFP.minbadtime.window)
+                        if artend - artstart < seconds(cfg.LFP.minbadtime.(markername))
                             continue
                         end
                         %full trial is before artefact
