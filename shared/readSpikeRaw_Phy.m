@@ -176,7 +176,8 @@ for ipart = cfg.circus.part_list
             
             % add cluster label
             SpikeRaw{ipart}.label{icluster}                 = sprintf('cluster_%d', cluster_list(icluster));
-            
+            SpikeRaw{ipart}.channelname{icluster}           = chandir;
+  
             % find spike time indexes
             clear timings_idx
             if ischecked
@@ -256,7 +257,6 @@ for ipart = cfg.circus.part_list
                         SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_temp{ipart}.(char(chandir)).(field)];
                     end
                 end
-                SpikeRaw{ipart}.channelname = channelname;
             end
             
         catch
