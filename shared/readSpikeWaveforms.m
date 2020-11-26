@@ -84,7 +84,7 @@ for ipart = cfg.spikewaveform.part_list
             if icluster > 1
                 % if channel is different from loaded data
                 if ~isempty(cfg.circus.channelname)
-                    if ~strcmp(SpikeRaw{ipart}.window.channelname{icluster}, SpikeRaw{ipart}.window.channelname{icluster-1}); loadnew = true; end
+                    if ~strcmp(SpikeRaw{ipart}.(markername).channelname{icluster}, SpikeRaw{ipart}.(markername).channelname{icluster-1}); loadnew = true; end
                 end
                 % if max electrode plot is different from loaded data
                 if SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) ~= SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster-1); loadnew = true; end
@@ -97,10 +97,17 @@ for ipart = cfg.spikewaveform.part_list
                 if isempty(cfg.circus.channelname)
                     temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
                 else
-                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{maxchan}, [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
+                    idx         = find(strcmp(SpikeRaw{ipart}.(char(markername)).channelname(icluster),cfg.circus.channelname));
+                    channel     = cfg.circus.channel{idx(maxchan)};
+                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channel, [cfg.prefix, 'p', num2str(ipart), '-multifile-', channel,'.ncs']));
                 end
                 datafile        = fullfile(temp.folder, temp.name);
-                hdr             = ft_read_header(datafile);
+                
+                if isfield(SpikeRaw{ipart}.(char(markername)),'hdr')
+                    hdr         = SpikeRaw{ipart}.(char(markername)).hdr;
+                else
+                    hdr         = ft_read_header(datafile);
+                end
                 
                 clear chandata
                 fprintf('Loading spike waveforms from channel %s\n', datafile);
