@@ -61,16 +61,18 @@ for ipart = cfg.circus.part_list
     end
     
     % to deal with multichannel data
-%     if isempty(cfg.circus.channelname)
-%         temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-%     else
-%         temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-%     end
-%     
-%     hdr_fname   = fullfile(temp(1).folder, temp(1).name);
-%     hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-    
-    hdr = SpikeRaw{ipart}.hdr;
+    if isfield(SpikeRaw{ipart}, 'hdr')
+        hdr = SpikeRaw{ipart}.hdr;
+    else
+        if isempty(cfg.circus.channelname)
+            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+        else
+            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+        end
+        
+        hdr_fname   = fullfile(temp(1).folder, temp(1).name);
+        hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+    end
     
     % create trials
     clear Trials
@@ -241,9 +243,72 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.hyplabel      = hyplabels_trl(full_trial)';
         SpikeTrials{ipart}.(markername).trialinfo.starttime     = Starttime(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.endtime       = Endtime(full_trial);       
+        %%
         
-        cfg.spike.minbadtime.(markername) = ft_getopt(cfg.spike.minbadtime, char(markername), 0);
+          %test an other way of removing artefacts
+          %cfg.spike.minbadtime.(markername) = ft_getopt(cfg.spike.minbadtime, char(markername), 0);
+          artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
+          artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
+          ft_progress('init','text')
+          
+          trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample / hdr.Fs;
+          trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample / hdr.Fs;
+          
+          dir_list   = unique(SpikeTrials{ipart}.(markername).trialinfo.idir);
+          dir_offset = unique(SpikeTrials{ipart}.(markername).trialinfo.fileoffset);
+
+          for idir = 1 : size(MuseStruct{ipart}, 2)
+              length_previousdir = dir_offset(dir_list == idir) / hdr.Fs;
+              
+              if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
+                  continue
+              end
+              
+              if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
+                  continue
+              end
+              
+              for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
+                  
+                  ft_progress(0, 'Dir %d : check if artefact %d/%d overlaps with a trial', idir, iart, size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2));
+                  
+                  artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.synctime(iart) + length_previousdir;
+                  artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(iart) + length_previousdir;
+                  
+                  if trlstart(1) > artend
+                      continue
+                  end
+                  
+                  %find last trialstart before artefact
+                  idx = binarySearch(trlstart, artstart, [], 'down');
+                  if trlend(idx) > artstart
+                      artefact(idx) = true;
+                      artefact_length(idx) = artend - artstart;
+                  end
+                  
+                  %find first trialstart after artefact
+                  idx = idx+1;
+                  if idx > length(trlstart)
+                      continue
+                  end
+                  if trlstart(idx) < artend
+                      artefact(idx) = true;
+                      artefact_length(idx) = artend - artstart;
+                  end
+              end
+          end
+          ft_progress('close');
+          
+        % add artefact to trialinfo
+        SpikeTrials{ipart}.(markername).trialinfo.artefact_test = artefact;
+        SpikeTrials{ipart}.(markername).trialinfo.artefactlength_test = artefact_length;
+        clear artefact
+        
+        %%
+        
+        cfg.spike.minbadtime.(markername) = 0;%ft_getopt(cfg.spike.minbadtime, char(markername), 0);
         artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
+        artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
         ft_progress('init','text')
         for ievent = 1 : size(SpikeTrials{ipart}.(markername).trialinfo, 1)
             ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
@@ -276,6 +341,7 @@ for ipart = cfg.circus.part_list
                         continue
                     else
                         artefact(ievent) = true;
+                        artefact_length(ievent) = seconds(artend - artstart);
                     end
                    
                 end % iart
@@ -285,6 +351,11 @@ for ipart = cfg.circus.part_list
         
         % add artefact to trialinfo
         SpikeTrials{ipart}.(markername).trialinfo.artefact = artefact;
+        SpikeTrials{ipart}.(markername).trialinfo.artefact_length = artefact_length;
+        
+      
+        
+        
         
     end % markername
     
