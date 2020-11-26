@@ -31,10 +31,6 @@ function [SpikeTrials] = readSpikeTrials_windowed(cfg, MuseStruct, SpikeRaw, for
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
-cfg.spikewin.findoverlap       = ft_getopt(cfg.spikewin, 'findoverlap', []);
-cfg.spikewin.findoverlap.hyp   = ft_getopt(cfg.spikewin.findoverlap, 'hyp', 'yes');
-cfg.spikewin.findoverlap.ied   = ft_getopt(cfg.spikewin.findoverlap, 'ied', 'yes');
-cfg.spikewin.findoverlap.bad   = ft_getopt(cfg.spikewin.findoverlap, 'bad', 'yes');
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
@@ -60,8 +56,19 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.window = [];
         continue
     end
-
-    hdr = SpikeRaw{ipart}.hdr;
+    
+    if isfield(SpikeRaw{ipart}, 'hdr')
+        hdr = SpikeRaw{ipart}.hdr;
+    else
+        if isempty(cfg.circus.channelname)
+            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+        else
+            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+        end
+        
+        hdr_fname   = fullfile(temp(1).folder, temp(1).name);
+        hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+    end
     
     % create trials of x seconds
     cfgtemp                                         = [];
@@ -81,12 +88,12 @@ for ipart = cfg.circus.part_list
     end
 
     % find overlap with sleepstages
-    if istrue(cfg.spikewin.findoverlap.hyp)
     overlap     = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 6);
     hyplabels   = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
+    ft_progress('init','text')
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
-        fprintf('Looking for overlap with hypnogram in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.window.trialinfo, 1))
+        ft_progress(ievent/size(SpikeTrials{ipart}.window.trialinfo, 1), 'Looking for overlap with hypnogram in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.window.trialinfo, 1))
         trlstart = SpikeTrials{ipart}.window.trialinfo.starttime(ievent);
         trlend   = SpikeTrials{ipart}.window.trialinfo.endtime(ievent);
 
@@ -126,7 +133,8 @@ for ipart = cfg.circus.part_list
             end % ihyplabel
         end % idir
     end % ievent
-
+    ft_progress('close');
+    
     % add sleep stage to trialinfo
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
         [val, indx] = max(overlap(ievent, :));
@@ -136,14 +144,13 @@ for ipart = cfg.circus.part_list
             SpikeTrials{ipart}.window.trialinfo.hyplabel(ievent) = "NO_SCORE";
         end
     end
-    end %istrue(cfg.spikewin.findoverlap.hyp)
     
-    if istrue(cfg.spikewin.findoverlap.ied)
     % find overlap with IEDs
     for markername = string(cfg.name)
         SpikeTrials{ipart}.window.trialinfo.(char(markername)) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     end
 
+    ft_progress('init','text');
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
         trlstart = SpikeTrials{ipart}.window.trialinfo.starttime(ievent);
         trlend   = SpikeTrials{ipart}.window.trialinfo.endtime(ievent);
@@ -179,15 +186,14 @@ for ipart = cfg.circus.part_list
                     % ied falls fully within trial
                     if IEDstart > trlstart && IEDend < trlend
                         SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) = SpikeTrials{ipart}.window.trialinfo.(char(markername))(ievent) + 1;
-                        fprintf('Found: %s, dir %d, trial %d \n', markername, idir, ievent);
+                        ft_progress(0,'Found: %s, dir %d, trial %d \n', markername, idir, ievent);
                     end
                 end % ihyp
             end % ihyplabel
         end % idir
     end % ievent
-    end % istrue(cfg.spikewin.findoverlap.ied)
+    ft_progress('close');
 
-    if istrue(cfg.spikewin.findoverlap.bad)
     cfg.spike.minbadtime.window = ft_getopt(cfg.spike.minbadtime, 'window', 0);
     artefact = false(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     ft_progress('init','text')
@@ -228,7 +234,6 @@ for ipart = cfg.circus.part_list
         end % idir
     end % ievent
     ft_progress('close');
-    end
 
     % add artefact to trialinfo
     SpikeTrials{ipart}.window.trialinfo.artefact = artefact;
