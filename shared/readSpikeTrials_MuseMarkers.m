@@ -153,8 +153,8 @@ for ipart = cfg.circus.part_list
                 
                 Startsample     = [Startsample; ss + cfg.spike.toi.(markername)(1) * hdr.Fs + dirOnset(idir)];
                 Endsample       = [Endsample;   es + cfg.spike.toi.(markername)(2) * hdr.Fs + dirOnset(idir)];
-                Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)];
-                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx)];
+                Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
+                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx) + seconds(cfg.spike.toi.(markername)(2))];
                 Offset          = [Offset;      cfg.spike.toi.(markername)(1) * hdr.Fs];
                 Trialnr_dir     = [Trialnr_dir; trialcount_dir];
                 Trialnr         = [Trialnr;     trialcount];

@@ -162,7 +162,7 @@ for markername = string(cfg.LFP.name)
                     cfgtemp                   = [];
                     cfgtemp.channel           = {ft_getopt(cfg.EMG, sprintf('%s',markername), []);ft_getopt(cfg.EMG, 'refchannel',[])}; % load the emg associated with eeg marker, and the ref if any
                     cfgtemp.channel           = cfgtemp.channel(~cellfun(@isempty, cfgtemp.channel));
-
+                    
                     if ~isempty(cfgtemp.channel)
                         cfgtemp.dataset           = fname;
                         cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
@@ -223,6 +223,7 @@ for markername = string(cfg.LFP.name)
                     ss = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * dat.fsample);
                     if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
                         es = ss;
+                        idx = ievent;
                     else
                         idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * dat.fsample);
@@ -236,6 +237,8 @@ for markername = string(cfg.LFP.name)
                     Endsample(ievent)   = es + cfg.epoch.toi.(markername)(2) * dat.fsample + cfg.epoch.pad.(markername) * dat.fsample;
                     Offset(ievent)      = (cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername)) * dat.fsample;
                     trialnr(ievent)     = ievent;
+                    Starttime(ievent)   = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername));
+                    Endtime(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx) + seconds(cfg.epoch.toi.(markername)(2) + cfg.epoch.pad.(markername));
                     
                     % find overlap with hypnogram markers
                     trlstart        = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent);
@@ -300,6 +303,8 @@ for markername = string(cfg.LFP.name)
                 filedat{ifile}.trialinfo.trialnr    = trialnr(full_trial)';
                 filedat{ifile}.trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
                 filedat{ifile}.trialinfo.hyplabel   = hyplabels_trl(full_trial)';
+                filedat{ifile}.trialinfo.starttime  = Starttime(full_trial)';
+                filedat{ifile}.trialinfo.endtime    = Endtime(full_trial)';
                 clear dat
                 
                 if isNeuralynx
@@ -372,11 +377,9 @@ for markername = string(cfg.LFP.name)
                 end % idir
             end % ievent
             ft_progress('close');
-        end
-        
-        % add artefact to trialinfo
-        LFP{ipart}.(markername).trialinfo.artefact = artefact;
-
+            
+            % add artefact to trialinfo
+            LFP{ipart}.(markername).trialinfo.artefact = artefact;
             
             %remove cfg to save space on disk, if required
             if ~istrue(keepcfg)
