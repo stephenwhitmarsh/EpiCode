@@ -194,7 +194,7 @@ config{4}.cluster.refmethod         = 'bipolar';
 config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
-config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'};
+config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'}; % might just as well remove amygdata electrodes as they are too noisy
 config{4}.circus.channelname        = {'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mHaT2'  ,'mHaT2'  ,'mHaT2'};
 config{4}.circus.params.detection.spike_thresh  = '6';
 config{4}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
@@ -251,6 +251,8 @@ config{7}.template.refmethod        = 'bipolar';
 config{7}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','mAmT2_6'};
 config{7}.circus.reref              = 'no';
 config{7}.circus.params.detection.spike_thresh  = '6';
+config{7}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{7}.circus.params.filtering.remove_median = 'True';
 
 %% Patient NO MUA ON FIRST DAY - ONLY HYPNOGRAM ON FIRST DAY
 config{8}                           = config{1};

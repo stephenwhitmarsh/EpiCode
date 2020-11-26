@@ -114,7 +114,7 @@ for ipart = 1 : 3
     last    = find(strcmp(config{ipatient}.directorylist{ipart}, sel(end)));
     config_trimmed{ipatient}.directorylist{ipart}   = config{ipatient}.directorylist{ipart}(first:last);
     MuseStruct_trimmed{ipatient}{ipart}             = MuseStruct_combined{ipatient}{ipart}(first:last);
-    
+
     % if still more than 7, cut off the beginning
     if size(config_trimmed{ipatient}.directorylist{ipart}, 2) > 7
         config_trimmed{ipatient}.directorylist{ipart}   = config_trimmed{ipatient}.directorylist{ipart}(end-6:end);
@@ -125,5 +125,4 @@ end
 % write data and parameters for spyking circus
 writeSpykingCircusDeadfilesMultichannel(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true);
 writeSpykingCircusParametersMultichannel(config_trimmed{ipatient})
-writeSpykingCircusMultichannel(config_trimmed{ipatient}, true);
-
+% writeSpykingCircusMultichannel(config_trimmed{ipatient}, true);

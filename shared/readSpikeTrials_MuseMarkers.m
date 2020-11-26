@@ -226,6 +226,7 @@ for ipart = cfg.circus.part_list
         cfgtemp.trlunit                                         = 'samples';
         cfgtemp.hdr                                             = hdr;
         SpikeTrials{ipart}.(markername)                         = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
+        if isfield(SpikeRaw{ipart},'clusternames'); SpikeTrials{ipart}.clusternames = SpikeRaw{ipart}.clusternames; end   
         SpikeTrials{ipart}.(markername).trialinfo.clocktime     = clocktimes;
         SpikeTrials{ipart}.(markername).hdr                     = hdr;
         SpikeTrials{ipart}.(markername).trialinfo               = table;

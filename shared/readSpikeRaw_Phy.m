@@ -171,12 +171,13 @@ for ipart = cfg.circus.part_list
             continue
         end
         
-        %go trough each cluster
+        % go trough each cluster
         for icluster = 1:size(cluster_list, 2)
             
             % add cluster label
             SpikeRaw{ipart}.label{icluster}                 = sprintf('cluster_%d', cluster_list(icluster));
-            
+            SpikeRaw{ipart}.channelname{icluster}           = chandir;
+  
             % find spike time indexes
             clear timings_idx
             if ischecked
@@ -188,15 +189,7 @@ for ipart = cfg.circus.part_list
             % add template waveforms
             cluster_templates                               = unique(phydata.spike_templates(timings_idx))+1; %+1 because template begins at zero but index in phyinfos.templates begins at 1
             SpikeRaw{ipart}.template{icluster}              = phydata.templates(cluster_templates, :, :);%all template waveforms merged in this cluster
-            
-            % add template maxchan
-            if ischecked
-                imaxchan                                    = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster)) +1; %+1 because chans idx begin at zero
-            else
-                [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
-            end
-            SpikeRaw{ipart}.template_maxchan(icluster)      = imaxchan - 1; %-1 because chans idx begin at zero with Phy
-            
+                        
             % add amplitude, samples and timestamps at selected spike timings
             SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(timings_idx)';
             SpikeRaw{ipart}.sample{icluster}                = phydata.spike_times(timings_idx)';
@@ -206,7 +199,6 @@ for ipart = cfg.circus.part_list
             if ischecked
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster), :);
                 SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
-                %new field with purity index in 0.9.9 version of Spyking-Circus
                 try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id == cluster_list(icluster)); end
             else
                 [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
@@ -243,6 +235,9 @@ for ipart = cfg.circus.part_list
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.begsample = filebegin;
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.endsample = fileend;
             SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.offset    = 0;
+            for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
+                SpikeRaw_temp{ipart}.(char(chandir)).channelname{ilabel} = char(chandir);
+            end
             
             % labels have to have unique names
             for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
@@ -264,6 +259,7 @@ for ipart = cfg.circus.part_list
                     end
                 end
             end
+            
         catch
         end
     end
