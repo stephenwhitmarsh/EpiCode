@@ -155,7 +155,7 @@ for ipart = cfg.circus.part_list
                 Startsample     = [Startsample; ss + cfg.spike.toi.(markername)(1) * hdr.Fs + dirOnset(idir)];
                 Endsample       = [Endsample;   es + cfg.spike.toi.(markername)(2) * hdr.Fs + dirOnset(idir)];
                 Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
-                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx) + seconds(cfg.spike.toi.(markername)(2))];
+                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx) + seconds(cfg.spike.toi.(markername)(2))];
                 Offset          = [Offset;      cfg.spike.toi.(markername)(1) * hdr.Fs];
                 Trialnr_dir     = [Trialnr_dir; trialcount_dir];
                 Trialnr         = [Trialnr;     trialcount];
@@ -247,63 +247,58 @@ for ipart = cfg.circus.part_list
           %test an other way of removing artefacts
           artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
           artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
-          ft_progress('init','text')
-          
-          trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample / hdr.Fs;
-          trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample / hdr.Fs;
-          
           dir_list   = unique(SpikeTrials{ipart}.(markername).trialinfo.idir);
           dir_offset = unique(SpikeTrials{ipart}.(markername).trialinfo.fileoffset);
-
-          for idir = 1 : size(MuseStruct{ipart}, 2)
-              length_previousdir = dir_offset(dir_list == idir) / hdr.Fs;
+          ft_info('Looking for artefacts overlapping trials\n');
+          
+          for ievent = 1:size(SpikeTrials{ipart}.(markername).trialinfo.begsample, 1)
+              trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample(ievent) / hdr.Fs;
+              trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample(ievent) / hdr.Fs;
               
-              if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
-                  continue
-              end
-              
-              if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
-                  continue
-              end
-              
-              for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
+              for idir = 1 : size(MuseStruct{ipart}, 2)
+                  length_previousdir = dir_offset(dir_list == idir) / hdr.Fs;
                   
-                  ft_progress(0, 'Dir %d : check if artefact %d/%d overlaps with a trial', idir, iart, size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2));
-                  
-                  artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.synctime(iart) + length_previousdir;
-                  artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(iart) + length_previousdir;
-                  
-                  if trlstart(1) > artend
+                  if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
                       continue
                   end
                   
-                  %find last trialstart before artefact
-                  idx = bsearch(trlstart, artstart);
-                  if trlstart(idx) > artstart
+                  if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
+                      continue
+                  end
+                  
+                  artstart = sort(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime + length_previousdir);
+                  artend   = sort(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime + length_previousdir);
+                  
+                  if artstart(1) > trlend
+                      continue
+                  end
+                  
+                  %find last artstart before trial
+                  idx = bsearch(artstart, trlstart);
+                  if artstart(idx) > trlstart && idx > 1
                       idx = idx-1;
                   end
                   
-                  %it must end before the artefact
-                  if trlend(idx) > artstart
-                      artefact(idx) = true;
-                      artefact_length(idx) = artend - artstart;
+                  %it must end before the trial
+                  if artend(idx) > trlstart
+                      artefact(ievent) = true;
+                      artefact_length(ievent) = artend(idx) - artstart(idx);
                   end
                   
-                  %first trialstart after artefact start must begin after
-                  %artefact end
+                  %first artstart after trial start must begin after
+                  %trial end
                   idx = idx+1;
-                  if idx > length(trlstart)
+                  if idx > length(artstart)
                       continue
                   end
-                  if trlstart(idx) < artend
-                      artefact(idx) = true;
-                      artefact_length(idx) = artend - artstart;
+                  if artstart(idx) < trlend
+                      artefact(ievent) = true;
+                      artefact_length(ievent) = artend(idx) - artstart(idx);
                   end
                   
               end
           end
-          ft_progress('close');
-          
+    
         % add artefact to trialinfo
         SpikeTrials{ipart}.(markername).trialinfo.artefact_test = artefact;
         SpikeTrials{ipart}.(markername).trialinfo.artefactlength_test = artefact_length;
@@ -318,7 +313,7 @@ for ipart = cfg.circus.part_list
             ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
             trlstart = SpikeTrials{ipart}.(markername).trialinfo.starttime(ievent);
             trlend   = SpikeTrials{ipart}.(markername).trialinfo.endtime(ievent);
-            
+
             for idir = 1 : size(MuseStruct{ipart}, 2)
                 
                 if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')

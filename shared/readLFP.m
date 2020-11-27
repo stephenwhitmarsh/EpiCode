@@ -237,7 +237,7 @@ for markername = string(cfg.LFP.name)
                     Offset(ievent)      = (cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername)) * dat.fsample;
                     trialnr(ievent)     = ievent;
                     Starttime(ievent)   = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername));
-                    Endtime(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(idx) + seconds(cfg.epoch.toi.(markername)(2) + cfg.epoch.pad.(markername));
+                    Endtime(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx) + seconds(cfg.epoch.toi.(markername)(2) + cfg.epoch.pad.(markername));
                     
                     % find overlap with hypnogram markers
                     trlstart        = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent);
