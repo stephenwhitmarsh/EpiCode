@@ -54,7 +54,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
     % Go through directory list
     for idir = 1 : size(cfg.directorylist{ipart}, 2)
 
-        fprintf('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
+        ft_info('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
 
         % find muse event file and read header if neaded
         if isNeuralynx
@@ -70,7 +70,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
         if ~exist(name_mrk,'file')
             error('%s not found', name_mrk);
         else
-            fprintf('Found markerfile: %s \n',name_mrk);
+            ft_info('Found markerfile: %s \n',name_mrk);
         end
 
         % read muse event file
@@ -87,7 +87,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
         fclose(f);
 
         if isempty(markfile)
-            fprintf('\n\n %s is empty!!! \n\n', name_mrk);
+            ft_info('\n\n %s is empty!!! \n\n', name_mrk);
             continue
         end
 
@@ -109,7 +109,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
             for i = 1:length(nrEvents)
                 if nrEvents(i) > 0
-                    fprintf('found %d occurances of %s \n', nrEvents(i), name{i});
+                    ft_info('found %d occurances of %s \n', nrEvents(i), name{i});
                 end
             end
 
@@ -169,7 +169,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             for imarker = 1:nmarkers
                 nrEvents(imarker)        = size(marks{imarker},1);
                 if nrEvents(imarker)>0
-                    fprintf('found %d occurances of %s \n', size(marks{imarker},1), name{imarker});
+                    ft_info('found %d occurances of %s \n', size(marks{imarker},1), name{imarker});
                 end
             end
         end
@@ -197,7 +197,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                         if strcmp(tline(1:length(searchstring1)),searchstring1)
                             timestring = tline;
                             ftype = 1;
-                            disp('Great, found timestamp in header file - Type 1');
+                            ft_info('Great, found timestamp in header file - Type 1');
                             break
                         end
                     end
@@ -205,7 +205,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                         if strcmp(tline(1:length(searchstring2)),searchstring2)
                             timestring = tline;
                             ftype = 2;
-                            disp('Great, found timestamp in header file - Type 2');
+                            ft_info('Great, found timestamp in header file - Type 2');
                             break
                         end
                     end

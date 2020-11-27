@@ -195,6 +195,7 @@ if strcmp(cfg.trlunit,'timestamps')
     try spike.unit{iUnit}           = spike.unit{iUnit}(sel); end       %#ok<*TRYNC>
     try spike.fourierspctrm{iUnit}  = spike.fourierspctrm{iUnit}(sel,:,:); end
     try spike.amplitude{iUnit}      = spike.amplitude{iUnit}(sel); end
+    try spike.sample{iUnit}      = spike.sample{iUnit}(sel); end
     ts = spike.timestamp{iUnit}(sel);
     spike.timestamp{iUnit} = ts(:)';
   end
@@ -268,6 +269,7 @@ elseif strcmp(cfg.trlunit,'samples')
     try, spike.unit{iUnit}          = spike.unit{iUnit}(waveSel);              end
     try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
     try, spike.amplitude{iUnit}     = spike.amplitude{iUnit}(waveSel);         end 
+    try, spike.sample{iUnit}        = spike.sample{iUnit}(waveSel);         end 
   end
 end
 

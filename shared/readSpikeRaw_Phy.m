@@ -104,7 +104,6 @@ for ipart = cfg.circus.part_list
         
         %% load spike data
         fprintf('Loading spike data from %s\n', phydir);
-        phydata.cluster_group           = tdfread(fullfile(phydir, 'cluster_group.tsv'));   %phy classification.
         phydata.spike_times             = readNPY(fullfile(phydir, 'spike_times.npy'));     %each timing of any spike, in samples
         phydata.spike_templates         = readNPY(fullfile(phydir, 'spike_templates.npy')); %for each timing, which (non merged) template. Include the garbage templates
         phydata.whitening_mat           = readNPY(fullfile(phydir, 'whitening_mat.npy'));   %whitening infos to recover real amplitude data
@@ -116,6 +115,7 @@ for ipart = cfg.circus.part_list
         %opened at least once with Phy :
         if exist(fullfile(phydir, 'cluster_info.tsv'), 'file') && exist(fullfile(phydir, 'spike_clusters.npy'), 'file')
             ischecked                   = true;
+            phydata.cluster_group       = tdfread(fullfile(phydir, 'cluster_group.tsv'));   %phy classification.
             phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));%id, amp, ch, depth, fr, group, n_spikes, sh
             phydata.spike_clusters      = readNPY(fullfile(phydir, 'spike_clusters.npy')); %for each timing, which (merged) cluster. Include garbage clusters
             
@@ -243,6 +243,7 @@ for ipart = cfg.circus.part_list
             for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
                 SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = char(strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir));
             end
+            clear SpikeRaw
         end
                     
     end % channelname
@@ -251,7 +252,7 @@ for ipart = cfg.circus.part_list
     if ~strcmp(channelname, 'none')
         try % in case no clusters were selected
             SpikeRaw{ipart} = SpikeRaw_temp{ipart}.(channelname{1});
-            for chandir = string(channelname{2:end})
+            for chandir = string(channelname(2:end))
                 for field = string(fields(SpikeRaw{ipart}))'
                     if ~strcmp(field,{'hdr','cfg','trialinfo','trialtime'})
                         SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_temp{ipart}.(char(chandir)).(field)];
