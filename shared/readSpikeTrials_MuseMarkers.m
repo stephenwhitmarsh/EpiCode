@@ -31,7 +31,6 @@ function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg, MuseStruct, SpikeRaw, 
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
-cfg.spike.minbadtime     = ft_getopt(cfg.spike,  'minbadtime', []);
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
@@ -246,7 +245,6 @@ for ipart = cfg.circus.part_list
         %%
         
           %test an other way of removing artefacts
-          %cfg.spike.minbadtime.(markername) = ft_getopt(cfg.spike.minbadtime, char(markername), 0);
           artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
           artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
           ft_progress('init','text')
@@ -280,13 +278,19 @@ for ipart = cfg.circus.part_list
                   end
                   
                   %find last trialstart before artefact
-                  idx = binarySearch(trlstart, artstart, [], 'down');
+                  idx = bsearch(trlstart, artstart);
+                  if trlstart(idx) > artstart
+                      idx = idx-1;
+                  end
+                  
+                  %it must end before the artefact
                   if trlend(idx) > artstart
                       artefact(idx) = true;
                       artefact_length(idx) = artend - artstart;
                   end
                   
-                  %find first trialstart after artefact
+                  %first trialstart after artefact start must begin after
+                  %artefact end
                   idx = idx+1;
                   if idx > length(trlstart)
                       continue
@@ -295,6 +299,7 @@ for ipart = cfg.circus.part_list
                       artefact(idx) = true;
                       artefact_length(idx) = artend - artstart;
                   end
+                  
               end
           end
           ft_progress('close');
@@ -306,7 +311,6 @@ for ipart = cfg.circus.part_list
         
         %%
         
-        cfg.spike.minbadtime.(markername) = 0;%ft_getopt(cfg.spike.minbadtime, char(markername), 0);
         artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
         artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
         ft_progress('init','text')
@@ -328,11 +332,7 @@ for ipart = cfg.circus.part_list
                 for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
-                    
-                    if artend - artstart < seconds(cfg.spike.minbadtime.(markername))
-                        continue
-                    end
-                    
+                                        
                     %full trial is before artefact
                     if trlstart < artstart && trlend < artstart
                         continue

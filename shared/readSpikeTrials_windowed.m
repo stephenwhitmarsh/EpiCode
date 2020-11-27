@@ -194,7 +194,6 @@ for ipart = cfg.circus.part_list
     end % ievent
     ft_progress('close');
 
-    cfg.spike.minbadtime.window = ft_getopt(cfg.spike.minbadtime, 'window', 0);
     artefact = false(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     ft_progress('init','text')
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
@@ -216,11 +215,7 @@ for ipart = cfg.circus.part_list
 
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
-                    
-                    %ignore too short artefacts
-                    if artend - artstart < seconds(cfg.spike.minbadtime.window)
-                        continue
-                    end
+                   
                     %full trial is before artefact
                     if trlstart < artstart && trlend < artstart
                         continue
