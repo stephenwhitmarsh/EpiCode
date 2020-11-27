@@ -70,7 +70,7 @@ else
         
         % do my own way of creating ISI
         for itemp = 1 : nrtemplates
-            stats{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs * 1000;
+            stats{ipart}.isi{itemp} = diff(double(SpikeRaw{ipart}.sample{itemp})) / hdr.Fs * 1000;
         end
         
         fig = figure; hold

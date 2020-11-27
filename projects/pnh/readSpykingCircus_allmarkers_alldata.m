@@ -52,15 +52,15 @@ else
         for i = 1:numel(clusternr)
             % read spike timings (in seconds)
             datasetname = char(strcat('/spiketimes/',SpikeRaw.label{i}));
-            SpikeRaw.samples{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
+            SpikeRaw.sample{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
             
             % read amplitudes
             datasetname = char(strcat('/amplitudes/',SpikeRaw.label{i}));
             SpikeRaw.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
             
             % map samplenrs onto timestamps
-%             SpikeRaw.timestamp{i} = timestamps(SpikeRaw.samples{i});
-            SpikeRaw.timestamp{i} = SpikeRaw.samples{i} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);
+%             SpikeRaw.timestamp{i} = timestamps(SpikeRaw.sample{i});
+            SpikeRaw.timestamp{i} = SpikeRaw.sample{i} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);
             
         end
         
@@ -84,8 +84,8 @@ else
         
         %% cross correlation between templates
         for i = 1 : size(SpikeRaw.label,2)
-            SpikeRaw.time{i} = [SpikeRaw.samples{i} / hdr.Fs];
-            SpikeRaw.trial{i} = ones(size(SpikeRaw.samples{i}));
+            SpikeRaw.time{i} = [SpikeRaw.sample{i} / hdr.Fs];
+            SpikeRaw.trial{i} = ones(size(SpikeRaw.sample{i}));
         end
         SpikeRaw.trialtime = [0 hdr.nSamples / hdr.Fs];
         

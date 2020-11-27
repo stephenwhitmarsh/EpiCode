@@ -9,51 +9,51 @@ data_searchstring       = '*m1*.ncs';
 
 eventtype_start         = 'BAD__START__';
 eventtype_end           = 'BAD__END__';
-[bad.clocktime,bad.clocktime_append,bad.samples,bad.data,bad.ldir,bad.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[bad.clocktime,bad.clocktime_append,bad.sample,bad.data,bad.ldir,bad.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'P';
 eventtype_end           = 'P';
-[P.clocktime,P.clocktime_append,P.samples,P.data,P.ldir,P.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[P.clocktime,P.clocktime_append,P.sample,P.data,P.ldir,P.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'RR__START__';
 eventtype_end           = 'RR__END__';
-[RR.clocktime,RR.clocktime_append,RR.samples,RR.data,RR.ldir,RR.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[RR.clocktime,RR.clocktime_append,RR.sample,RR.data,RR.ldir,RR.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'VF4__START__';
 eventtype_end           = 'VF4__END__';
-[VF4.clocktime,VF4.clocktime_append,VF4.samples,VF4.data,VF4.ldir,VF4.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[VF4.clocktime,VF4.clocktime_append,VF4.sample,VF4.data,VF4.ldir,VF4.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'VF1__START__';
 eventtype_end           = 'VF1__END__';
-[VF1.clocktime,VF1.clocktime_append,VF1.samples,VF1.data,VF1.ldir,VF1.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[VF1.clocktime,VF1.clocktime_append,VF1.sample,VF1.data,VF1.ldir,VF1.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'PP__START__';
 eventtype_end           = 'PP__END__';
-[PP.clocktime,PP.clocktime_append,PP.samples,PP.data,PP.ldir,PP.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[PP.clocktime,PP.clocktime_append,PP.sample,PP.data,PP.ldir,PP.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'BAD';
 eventtype_end           = 'BAD';
-[bad2.clocktime,bad2.clocktime_append,bad2.samples,bad2.data,bad2.ldir,bad2.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[bad2.clocktime,bad2.clocktime_append,bad2.sample,bad2.data,bad2.ldir,bad2.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'VF3__START__';
 eventtype_end           = 'VF3__END__';
-[VF3.clocktime,VF3.clocktime_append,VF3.samples,VF3.data,VF3.ldir,VF3.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[VF3.clocktime,VF3.clocktime_append,VF3.sample,VF3.data,VF3.ldir,VF3.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'StartRecord';
 eventtype_end           = 'StartRecord';
-[start.clocktime,start.clocktime_append,start.samples,start.data,start.ldir,start.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[start.clocktime,start.clocktime_append,start.sample,start.data,start.ldir,start.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'StopRecord';
 eventtype_end           = 'StopRecord';
-[stop.clocktime,stop.clocktime_append,stop.samples,stop.data,stop.ldir,stop.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[stop.clocktime,stop.clocktime_append,stop.sample,stop.data,stop.ldir,stop.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'StartRecord';
 eventtype_end           = 'StopRecord';
-[rec.clocktime,rec.clocktime_append,rec.samples,rec.data,rec.ldir,rec.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[rec.clocktime,rec.clocktime_append,rec.sample,rec.data,rec.ldir,rec.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 eventtype_start         = 'PP__START__';
 eventtype_end           = 'PP__END__';
-[PP.clocktime,PP.clocktime_append,PP.samples,PP.data,PP.ldir,PP.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[PP.clocktime,PP.clocktime_append,PP.sample,PP.data,PP.ldir,PP.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 %% Plot overview
 
@@ -168,14 +168,14 @@ Filename        = [];
 Folder          = [];
 Event           = [];
 
-for idir = 1 : size(bad.samples,2)
-    for ievent = 1 : size(bad.samples{idir},1)
+for idir = 1 : size(bad.sample,2)
+    for ievent = 1 : size(bad.sample{idir},1)
         Event       = [Event; 'bad'];
         Starttime   = [Starttime;   bad.clocktime{idir}(ievent,1)];
         Endtime     = [Endtime;     bad.clocktime{idir}(ievent,2)];
-        Startsample = [Startsample; bad.samples{idir}(ievent,1)];
-        Endsample   = [Endsample;   bad.samples{idir}(ievent,2)];  
-        Duration    = [Duration;    (bad.samples{idir}(ievent,2) - bad.samples{idir}(ievent,1))/32000;];
+        Startsample = [Startsample; bad.sample{idir}(ievent,1)];
+        Endsample   = [Endsample;   bad.sample{idir}(ievent,2)];  
+        Duration    = [Duration;    (bad.sample{idir}(ievent,2) - bad.sample{idir}(ievent,1))/32000;];
         Filename    = [Filename;    bad.ldir(idir).name];
         Folder      = [Folder;      bad.ldir(idir).folder];
     end  
@@ -202,14 +202,14 @@ Filename        = [];
 Folder          = [];
 Event           = [];
 
-for idir = 1 : size(VF1.samples,2) 
-    for ievent = 1 : size(VF1.samples{idir},1)
+for idir = 1 : size(VF1.sample,2) 
+    for ievent = 1 : size(VF1.sample{idir},1)
         Event       = [Event; 'VF1'];
         Starttime   = [Starttime;   VF1.clocktime{idir}(ievent,1)];
         Endtime     = [Endtime;     VF1.clocktime{idir}(ievent,2)];
-        Startsample = [Startsample; VF1.samples{idir}(ievent,1)];
-        Endsample   = [Endsample;   VF1.samples{idir}(ievent,2)];  
-        Duration    = [Duration;    (VF1.samples{idir}(ievent,2) - VF1.samples{idir}(ievent,1))/32000;];
+        Startsample = [Startsample; VF1.sample{idir}(ievent,1)];
+        Endsample   = [Endsample;   VF1.sample{idir}(ievent,2)];  
+        Duration    = [Duration;    (VF1.sample{idir}(ievent,2) - VF1.sample{idir}(ievent,1))/32000;];
         Filename    = [Filename;    VF1.ldir(idir).name];
         Folder      = [Folder;      VF1.ldir(idir).folder];
     end  
@@ -235,14 +235,14 @@ ylabel('Nr. of events');
 % Folder          = [];
 % Event           = [];
 % 
-% for idir = 1 : size(VF3.samples,2)
-%     for ievent = 1 : size(VF3.samples{idir},1)
+% for idir = 1 : size(VF3.sample,2)
+%     for ievent = 1 : size(VF3.sample{idir},1)
 %         Event       = [Event; 'VF3'];
 %         Starttime   = [Starttime;   VF3.clocktime{idir}(ievent,1)];
 %         Endtime     = [Endtime;     VF3.clocktime{idir}(ievent,2)];
-%         Startsample = [Startsample; VF3.samples{idir}(ievent,1)];
-%         Endsample   = [Endsample;   VF3.samples{idir}(ievent,2)];
-%         Duration    = [Duration;    (VF3.samples{idir}(ievent,2) - VF3.samples{idir}(ievent,1))/32000;];
+%         Startsample = [Startsample; VF3.sample{idir}(ievent,1)];
+%         Endsample   = [Endsample;   VF3.sample{idir}(ievent,2)];
+%         Duration    = [Duration;    (VF3.sample{idir}(ievent,2) - VF3.sample{idir}(ievent,1))/32000;];
 %         Filename    = [Filename;    VF3.ldir(idir).name];
 %         Folder      = [Folder;      VF3.ldir(idir).folder];
 %     end
@@ -268,14 +268,14 @@ Filename        = [];
 Folder          = [];
 Event           = [];
 
-for idir = 1 : size(VF4.samples,2) 
-    for ievent = 1 : size(VF4.samples{idir},1)
+for idir = 1 : size(VF4.sample,2) 
+    for ievent = 1 : size(VF4.sample{idir},1)
         Event       = [Event; 'VF1'];
         Starttime   = [Starttime;   VF4.clocktime{idir}(ievent,1)];
         Endtime     = [Endtime;     VF4.clocktime{idir}(ievent,2)];
-        Startsample = [Startsample; VF4.samples{idir}(ievent,1)];
-        Endsample   = [Endsample;   VF4.samples{idir}(ievent,2)];  
-        Duration    = [Duration;    (VF4.samples{idir}(ievent,2) - VF4.samples{idir}(ievent,1))/32000;];
+        Startsample = [Startsample; VF4.sample{idir}(ievent,1)];
+        Endsample   = [Endsample;   VF4.sample{idir}(ievent,2)];  
+        Duration    = [Duration;    (VF4.sample{idir}(ievent,2) - VF4.sample{idir}(ievent,1))/32000;];
         Filename    = [Filename;    VF4.ldir(idir).name];
         Folder      = [Folder;      VF4.ldir(idir).folder];
     end  
@@ -301,14 +301,14 @@ Filename        = [];
 Folder          = [];
 Event           = [];
 
-for idir = 1 : size(RR.samples,2)
-    for ievent = 1 : size(RR.samples{idir},1)
+for idir = 1 : size(RR.sample,2)
+    for ievent = 1 : size(RR.sample{idir},1)
         Event       = [Event; 'RR'];
         Starttime   = [Starttime;   RR.clocktime{idir}(ievent,1)];
         Endtime     = [Endtime;     RR.clocktime{idir}(ievent,2)];
-        Startsample = [Startsample; RR.samples{idir}(ievent,1)];
-        Endsample   = [Endsample;   RR.samples{idir}(ievent,2)];  
-        Duration    = [Duration;    (RR.samples{idir}(ievent,2) - RR.samples{idir}(ievent,1))/32000;];
+        Startsample = [Startsample; RR.sample{idir}(ievent,1)];
+        Endsample   = [Endsample;   RR.sample{idir}(ievent,2)];  
+        Duration    = [Duration;    (RR.sample{idir}(ievent,2) - RR.sample{idir}(ievent,1))/32000;];
         Filename    = [Filename;    RR.ldir(idir).name];
         Folder      = [Folder;      RR.ldir(idir).folder];
     end  
@@ -344,14 +344,14 @@ Filename        = [];
 Folder          = [];
 Event           = [];
 
-for idir = 1 : size(P.samples,2)
-    for ievent = 1 : size(P.samples{idir},1)
+for idir = 1 : size(P.sample,2)
+    for ievent = 1 : size(P.sample{idir},1)
         Event       = [Event; 'P'];
         Starttime   = [Starttime;   P.clocktime{idir}(ievent,1)];
         Endtime     = [Endtime;     P.clocktime{idir}(ievent,2)];
-        Startsample = [Startsample; P.samples{idir}(ievent,1)];
-        Endsample   = [Endsample;   P.samples{idir}(ievent,2)];  
-        Duration    = [Duration;    (P.samples{idir}(ievent,2) - P.samples{idir}(ievent,1))/32000;];
+        Startsample = [Startsample; P.sample{idir}(ievent,1)];
+        Endsample   = [Endsample;   P.sample{idir}(ievent,2)];  
+        Duration    = [Duration;    (P.sample{idir}(ievent,2) - P.sample{idir}(ievent,1))/32000;];
         Filename    = [Filename;    P.ldir(idir).name];
         Folder      = [Folder;      P.ldir(idir).folder];
     end  

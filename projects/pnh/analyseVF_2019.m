@@ -229,7 +229,7 @@ for itemp = 1 : size(spike_LFP,2)
     % average
     i = 1;
     for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-        if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+        if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
             
             fprintf('Normalizing unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
             
@@ -504,7 +504,7 @@ for ipatient = 1 : 3
         spike_LFP_sel = spike_LFP{itemp};
         i = 1;
         for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-            if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+            if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
                 fprintf('Adding unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
                 spike_LFP_sel.trial{i} = spike_LFP{itemp}.trial{trialnr};
                 i = i + 1;
@@ -762,7 +762,7 @@ w_post = config{ipatient}.spike.post * spike_LFP{itemp}.fsample;
 clear spike
 i = 1;
 for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-    if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+    if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
         fprintf('Adding unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
         spike(i,:) = spike_LFP{itemp}.trial{trialnr};
         i = i + 1;
@@ -983,7 +983,7 @@ for ipatient = 1 : 3
         
         % ISI
         subplottight(h,2,iplot); hold;
-        isi = diff(SpikeRaw{ipatient}.samples{itemp}) / hdr.Fs * 1000;
+        isi = diff(SpikeRaw{ipatient}.sample{itemp}) / hdr.Fs * 1000;
         histogram(isi,'BinWidth',0.5,'BinLimits',[0,25],'FaceColor',[0,0,0],'EdgeColor',[0,0,0],'FaceAlpha',1);
         %       bar(stats.isi_1s.time*1000,stats.isi_1s.avg(itemp,:),1);
         %       xticks(stats.isi_1s.time*1000);

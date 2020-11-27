@@ -268,7 +268,7 @@ else
                 inNeuraLynxFile = samples_NL>0 & samples_NL < neuralynx_hdr{iNeuraLynx}.nSamples; % sort out with resample freq
                 micromed_markers_file{iMicroMed}.Sample_NL(inNeuraLynxFile)             = samples_NL(inNeuraLynxFile);
                 micromed_markers_file{iMicroMed}.Seconds_NL(inNeuraLynxFile)            = seconds_NL(inNeuraLynxFile);
-                micromed_markers_file{iMicroMed}.sampleshift(inNeuraLynxFile)           = repmat(sampleshift,sum(inNeuraLynxFile),1); 
+                micromed_markers_file{iMicroMed}.samplehift(inNeuraLynxFile)           = repmat(sampleshift,sum(inNeuraLynxFile),1); 
                 
                 temp = repmat(neuralynx_datafiles{iNeuraLynx}(1).folder,height(micromed_markers_file{iMicroMed}),1);
                 micromed_markers_file{iMicroMed}.DataFileFolder_NL(inNeuraLynxFile,:)   = temp(inNeuraLynxFile,:);     

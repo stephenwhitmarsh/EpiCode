@@ -264,7 +264,7 @@ elseif strcmp(cfg.trlunit,'samples')
     spike.timestamp{iUnit}          = spike.timestamp{iUnit}(waveSel);
     try, spike.unit{iUnit}          = spike.unit{iUnit}(waveSel);              end
     try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(waveSel,:,:); end
-    try, spike.samples{iUnit}       = spike.samples{iUnit}(waveSel); end %Paul
+    try, spike.sample{iUnit}       = spike.sample{iUnit}(waveSel); end %Paul
     try, spike.amplitude{iUnit}     = spike.amplitude{iUnit}(waveSel); end %Paul
   end 
 end

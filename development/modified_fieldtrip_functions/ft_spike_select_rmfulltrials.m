@@ -95,7 +95,7 @@ if ~doAll
   try, spike.template_maxchan = spike.template_maxchan(spikesel); end %Paul
   try, spike.amplitude = spike.amplitude(spikesel); end %Paul
   try, spike.sample = spike.sample(spikesel); end %Paul
-  try, spike.samples = spike.samples(spikesel); end %Paul
+  try, spike.sample = spike.sample(spikesel); end %Paul
   try, spike.cluster_group = spike.cluster_group(spikesel); end %Paul
 end
 
@@ -120,7 +120,7 @@ else
       try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(spikesInTrial,:,:); end
       try, spike.amplitude{iUnit} = spike.amplitude{iUnit}(spikesInTrial,:,:); end %Paul
       try, spike.sample{iUnit} = spike.sample{iUnit}(spikesInTrial,:,:); end %Paul
-      try, spike.samples{iUnit} = spike.samples{iUnit}(spikesInTrial,:,:); end %Paul
+      try, spike.sample{iUnit} = spike.sample{iUnit}(spikesInTrial,:,:); end %Paul
       %reorder trials from 1 %Paul
       new_trialnr = 0; %Paul
       for itrial = cfg.trials' %Paul
@@ -165,7 +165,7 @@ else
         try, spike.fourierspctrm{iUnit} = spike.fourierspctrm{iUnit}(spikesInWin,:,:); end
         try, spike.amplitude{iUnit} = spike.amplitude{iUnit}(spikesInTrial,:,:); end %Paul
         try, spike.sample{iUnit} = spike.sample{iUnit}(spikesInTrial,:,:); end %Paul
-        try, spike.samples{iUnit} = spike.samples{iUnit}(spikesInTrial,:,:); end %Paul
+        try, spike.sample{iUnit} = spike.sample{iUnit}(spikesInTrial,:,:); end %Paul
     end
     % modify the trialtime
     adjust = spike.trialtime(:,1)<=cfg.latency(1);

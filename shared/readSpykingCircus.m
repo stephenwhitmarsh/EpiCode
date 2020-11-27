@@ -99,15 +99,15 @@ else
             for i = 1:numel(clusternr)
                 % read spike timings (in seconds)
                 datasetname = char(strcat('/spiketimes/',SpikeRaw{ipart}.label{i}));
-                SpikeRaw{ipart}.samples{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
+                SpikeRaw{ipart}.sample{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
 
                 % read amplitudes
                 datasetname = char(strcat('/amplitudes/',SpikeRaw{ipart}.label{i}));
                 SpikeRaw{ipart}.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
 
                 % map samplenrs onto timestamps
-                SpikeRaw{ipart}.timestamp{clusternr(i)+1} = timestamps(SpikeRaw{ipart}.samples{clusternr(i)+1});
-                % SpikeRaw.timestamp{clusternr(i)+1} = int64(SpikeRaw.samples{clusternr(i)+1}) * int64(hdr.TimeStampPerSample) + int64(hdr.FirstTimeStamp);
+                SpikeRaw{ipart}.timestamp{clusternr(i)+1} = timestamps(SpikeRaw{ipart}.sample{clusternr(i)+1});
+                % SpikeRaw.timestamp{clusternr(i)+1} = int64(SpikeRaw.sample{clusternr(i)+1}) * int64(hdr.TimeStampPerSample) + int64(hdr.FirstTimeStamp);
             end
 
             % load templates
@@ -202,8 +202,8 @@ else
                 SpikeTrials{ipart}{ilabel}.clocktimes   = clocktimes;
 
                 % commented out on 9-8-2019 after looking with Zoe
-                %             SpikeRaw.time{ilabel}           = SpikeRaw.samples{ilabel} / hdr.Fs;
-                %             SpikeRaw.trial{ilabel}          = ones(size(SpikeRaw.samples{ilabel}));
+                %             SpikeRaw.time{ilabel}           = SpikeRaw.sample{ilabel} / hdr.Fs;
+                %             SpikeRaw.trial{ilabel}          = ones(size(SpikeRaw.sample{ilabel}));
 
             end % patterns
             SpikeRaw{ipart}.trialtime = [0 hdr.nSamples / hdr.Fs];

@@ -6,14 +6,14 @@ data_searchstring       = '*m1*.ncs';
 
 eventtype_start         = 'P';
 eventtype_end           = 'P';
-[P.clocktime,P.clocktime_append,P.samples,P.data,P.ldir,P.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
+[P.clocktime,P.clocktime_append,P.sample,P.data,P.ldir,P.fdir] = extractMuseMarkers(patient_directory,directory_searchstring,data_searchstring,eventtype_start,eventtype_end);
 
 hdr = ft_read_header(fullfile(P.fdir{1}(1).folder,P.fdir{1}(1).name));
 
 for idir = 1 : size(P.ldir,1)
     
     % in case of no events in markerfile
-    if ~isempty(P.samples{idir})
+    if ~isempty(P.sample{idir})
         
         for ifile = [1,4,6,7,8] % do not bother with artefacted channels or reference channel; 1 : size(P.fdir{idir},1)
             
@@ -31,10 +31,10 @@ for idir = 1 : size(P.ldir,1)
             cfg = [];
             prestim         = 0.200; % in seconds, including 50 ms for realignment
             poststim        = 0.850;
-            cfg.trl         = P.samples{idir};
-            cfg.trl(:,1)    = P.samples{idir}(:,1) - round(hdr.Fs * prestim);
-            cfg.trl(:,2)    = P.samples{idir}(:,1) + round(hdr.Fs * poststim);
-            cfg.trl(:,3)    = ones(size(P.samples{idir},1),1) * - round(hdr.Fs * prestim);
+            cfg.trl         = P.sample{idir};
+            cfg.trl(:,1)    = P.sample{idir}(:,1) - round(hdr.Fs * prestim);
+            cfg.trl(:,2)    = P.sample{idir}(:,1) + round(hdr.Fs * poststim);
+            cfg.trl(:,3)    = ones(size(P.sample{idir},1),1) * - round(hdr.Fs * prestim);
             cfg.trl(:,4)    = idir;
             cfg.trl(:,5)    = ifile;
             filedat{ifile}  = ft_redefinetrial(cfg,temp);

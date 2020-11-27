@@ -43,14 +43,14 @@ if exist(fname_spikes,'file')
     for i = 1:numel(clusternr)
         % read spike timings (in seconds)
         datasetname = char(strcat('/spiketimes/',SpikeRaw.label{i}));
-        SpikeRaw.samples{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
+        SpikeRaw.sample{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
         
         % read amplitudes
         datasetname = char(strcat('/amplitudes/',SpikeRaw.label{i}));
         SpikeRaw.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
         
         % map samplenrs onto timestamps
-        SpikeRaw.timestamp{i} = timestamps(SpikeRaw.samples{i});
+        SpikeRaw.timestamp{i} = timestamps(SpikeRaw.sample{i});
     end
     
     % load templates

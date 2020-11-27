@@ -41,15 +41,15 @@ else
         for i = 1:numel(clusternr)
             % read spike timings (in seconds)
             datasetname = char(strcat('/spiketimes/',SpikeRaw.label{i}));
-            SpikeRaw.samples{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
+            SpikeRaw.sample{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
             
             % read amplitudes
             datasetname = char(strcat('/amplitudes/',SpikeRaw.label{i}));
             SpikeRaw.amplitude{clusternr(i)+1} = h5read(fname_spikes,datasetname); % count from 1 instead of 0
             
             % map samplenrs onto timestamps
-            SpikeRaw.timestamp{i} = timestamps(SpikeRaw.samples{i});
-            %         SpikeRaw.timestamp{i} = SpikeRaw.samples{i} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);
+            SpikeRaw.timestamp{i} = timestamps(SpikeRaw.sample{i});
+            %         SpikeRaw.timestamp{i} = SpikeRaw.sample{i} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);
             
         end
         
@@ -72,8 +72,8 @@ else
 %         
 %         itemp = 1;
 %         clear x
-%         x = zeros(1,SpikeRaw.samples{itemp}(end));
-%         x(SpikeRaw.samples{itemp}) = 1;
+%         x = zeros(1,SpikeRaw.sample{itemp}(end));
+%         x(SpikeRaw.sample{itemp}) = 1;
 %         maxsample = floor(length(x)/hdr.Fs) * hdr.Fs;
 %         x = x(1:maxsample);
 %         xr = reshape(x,length(x)/hdr.Fs,hdr.Fs);

@@ -75,7 +75,7 @@ for ipart = size(spikedata, 2)
                 spikedata{ipart}.(markername).time{i_unit}(toremove)      = [];
                 spikedata{ipart}.(markername).trial{i_unit}(toremove)     = [];
                 spikedata{ipart}.(markername).timestamp{i_unit}(toremove) = [];
-                spikedata{ipart}.(markername).samples{i_unit}(toremove)   = [];
+                spikedata{ipart}.(markername).sample{i_unit}(toremove)   = [];
                 spikedata{ipart}.(markername).amplitude{i_unit}(toremove) = [];
             end
         end

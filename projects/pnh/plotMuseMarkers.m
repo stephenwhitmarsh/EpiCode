@@ -20,11 +20,11 @@ MuseStruct_append = rmfield(MuseStruct{1},'filenames');
 % for first directory
 mrknames = fieldnames(MuseStruct{1}.markers);
 for imarker = 1 : numel(mrknames)
-    MuseStruct_append.markers.(mrknames{imarker}).samples = [];
+    MuseStruct_append.markers.(mrknames{imarker}).sample = [];
     if isfield(MuseStruct{1}.markers.(mrknames{imarker}).events,'sample')
         for ievent = 1 : length(MuseStruct{1}.markers.(mrknames{imarker}).events)
-            MuseStruct_append.markers.(mrknames{imarker}).samples = ...
-                [MuseStruct_append.markers.(mrknames{imarker}).samples, ...
+            MuseStruct_append.markers.(mrknames{imarker}).sample = ...
+                [MuseStruct_append.markers.(mrknames{imarker}).sample, ...
                 MuseStruct{1}.markers.(mrknames{imarker}).events(ievent).sample];
         end
     end
@@ -57,12 +57,12 @@ for idir = 2 : size(MuseStruct,2)
             end
             
             if ~isfield(MuseStruct_append.markers.(mrknames{imarker}),'samples')
-                MuseStruct_append.markers.(mrknames{imarker}).samples = [];
+                MuseStruct_append.markers.(mrknames{imarker}).sample = [];
             end            
             if isfield(MuseStruct{idir}.markers.(mrknames{imarker}).events,'sample')
                 for ievent = 1 : length(MuseStruct{idir}.markers.(mrknames{imarker}).events)
-                MuseStruct_append.markers.(mrknames{imarker}).samples = ...
-                    [MuseStruct_append.markers.(mrknames{imarker}).samples, ...
+                MuseStruct_append.markers.(mrknames{imarker}).sample = ...
+                    [MuseStruct_append.markers.(mrknames{imarker}).sample, ...
                     MuseStruct{idir}.markers.(mrknames{imarker}).events(ievent).sample];
                 end
             end  

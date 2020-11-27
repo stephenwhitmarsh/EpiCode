@@ -194,12 +194,12 @@ else
                     
                     sampleshift_micro               = round(timeshift*dat_filt_trl.fsample); % round to number of samples to shift
                     MuseStruct_micro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial)         = MuseStruct_micro{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial) + sampleshift_micro; % note different direction than time
-                    MuseStruct_micro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).sampleshift(itrial)    = sampleshift_micro;
+                    MuseStruct_micro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).samplehift(itrial)    = sampleshift_micro;
                     MuseStruct_micro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                     
                     sampleshift_macro               = round(timeshift*hdr_macro.Fs); % round to number of samples to shift
                     MuseStruct_macro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial)         = MuseStruct_macro{idir}.markers.(cfg.muse.startend{imarker,1}).offset(itrial) + sampleshift_macro; % note different direction than time
-                    MuseStruct_macro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).sampleshift(itrial)    = sampleshift_macro;
+                    MuseStruct_macro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).samplehift(itrial)    = sampleshift_macro;
                     MuseStruct_macro_aligned{idir}.markers.(cfg.muse.startend{imarker,1}).timeshift(itrial)      = timeshift;
                     
                 end

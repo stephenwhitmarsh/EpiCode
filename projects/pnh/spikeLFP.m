@@ -26,9 +26,9 @@ else
         hdr = ft_read_header(MuseStruct.directorylist{});
         
         trl = [];
-        trl(:,1) = SpikeRaw.samples{itemp} - (cfg.spike.pre * hdr.Fs);
-        trl(:,2) = SpikeRaw.samples{itemp} + (cfg.spike.post * hdr.Fs);
-        trl(:,3) = ones(length(SpikeRaw.samples{itemp}),1) * -(cfg.spike.pre * hdr.Fs);
+        trl(:,1) = SpikeRaw.sample{itemp} - (cfg.spike.pre * hdr.Fs);
+        trl(:,2) = SpikeRaw.sample{itemp} + (cfg.spike.post * hdr.Fs);
+        trl(:,3) = ones(length(SpikeRaw.sample{itemp}),1) * -(cfg.spike.pre * hdr.Fs);
                 
         cfgtemp                 = [];
 %         cfgtemp.hpfilter        = 'yes';
@@ -63,8 +63,8 @@ end
 % rng('shuffle')
 % trialnr = 1;
 % while trialnr < 1000
-%     r = randi(size(SpikeRaw.samples{itemp},1),1,1);
-%     if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(r)+cfg.spike.width & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(r)-cfg.spike.width),1) == 1
+%     r = randi(size(SpikeRaw.sample{itemp},1),1,1);
+%     if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(r)+cfg.spike.width & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(r)-cfg.spike.width),1) == 1
 %         plot(spike_LFP{itemp}.time{r},spike_LFP{itemp}.trial{r},'r');
 %         trialnr = trialnr + 1;
 %     end

@@ -78,7 +78,7 @@ else
     
     % ISI as continuous data
     for itemp = 1 : nrtemplates
-        stats.isi{itemp} = diff(SpikeRaw.samples{itemp}) / hdr.Fs * 1000;
+        stats.isi{itemp} = diff(SpikeRaw.sample{itemp}) / hdr.Fs * 1000;
     end
     
     % plot ISI histogram
