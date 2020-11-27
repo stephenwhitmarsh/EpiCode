@@ -93,13 +93,14 @@ for ipart = cfg.spikewaveform.part_list
             end
             
             if loadnew
-                maxchan = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + 1;
                 if isempty(cfg.circus.channelname)
+                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + 1;
                     temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
                 else
-                    idx         = find(strcmp(SpikeRaw{ipart}.(char(markername)).channelname(icluster),cfg.circus.channelname));
-                    channel     = cfg.circus.channel{idx(maxchan)};
-                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channel, [cfg.prefix, 'p', num2str(ipart), '-multifile-', channel,'.ncs']));
+                    chanoffset  = find(strcmp(SpikeRaw{ipart}.(char(markername)).channelname(icluster),cfg.circus.channelname), 1, 'first');
+                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + chanoffset;                    
+                    channel     = cfg.circus.channelname{maxchan};
+                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channel, [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
                 end
                 datafile        = fullfile(temp.folder, temp.name);
                 
