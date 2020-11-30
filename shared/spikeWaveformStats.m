@@ -161,4 +161,4 @@ for ipart = 1:size(SpikeWaveforms)
     end
 end
     
-% save(fname_out, 'stats', '-v7.3');
+save(fname_out, 'stats', '-v7.3');
