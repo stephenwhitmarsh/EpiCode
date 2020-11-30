@@ -3,8 +3,8 @@ function [stats] = spikeTrialStats(cfg, SpikeTrials, force, postfix)
 % SPIKERATESTATSEVENTS calculates and plots spike statistics
 %
 % use as
-%   spikeratestatsEvents(cfg, SpikeRaw, SpikeTrials, force, varargin)
-
+%   [stats] = spikeTrialStats(cfg, SpikeTrials, force, postfix)
+% 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -20,6 +20,8 @@ function [stats] = spikeTrialStats(cfg, SpikeTrials, force, postfix)
 %
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+
+cfg.spike.RPV = ft_getopt(cfg.spike, 'RPV', 0.001);
 
 fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikestats-', postfix, '.mat']);
 if exist(fname, 'file') && force == false
@@ -82,6 +84,10 @@ for ipart = 1 : size(SpikeTrials, 2)
             stats{ipart}.(markername){itemp}.isi_avg        = isi_temp.avg(itemp, :);
             stats{ipart}.(markername){itemp}.isi_avg_time   = isi_temp.time;
             stats{ipart}.(markername){itemp}.label          = isi_temp.label{itemp};
+            refr = sum(stats{ipart}.(markername){itemp}.isi < cfg.spike.RPV);
+            tot  = length((stats{ipart}.(markername){itemp}.isi));
+            stats{ipart}.(markername){itemp}.RPV = refr/tot;
+            
             % spike autocorr
             cfgtemp              = [];
             cfgtemp.spikechannel = SpikeTrials{ipart}.(markername).label{itemp};

@@ -77,6 +77,8 @@ for ipart = cfg.circus.part_list
     clear Trials
     for markername = string(cfg.name)
         
+        SpikeTrials{ipart}.(markername) = []; %initialize to avoid bug in case no marker are found and need to output empty structure
+        
         % clock time of each event
         clocktimes = [];
         for ifile = 1 : size(MuseStruct{ipart}, 2)
@@ -255,6 +257,10 @@ for ipart = cfg.circus.part_list
             trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample(ievent) / hdr.Fs;
             
             for idir = 1 : size(MuseStruct{ipart}, 2)
+                if ~ismember(idir,dir_list)
+                    continue
+                end
+                
                 length_previousdir = dir_offset(dir_list == idir) / hdr.Fs;
                 
                 if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
@@ -281,7 +287,7 @@ for ipart = cfg.circus.part_list
                 %it must end before the trial
                 if artend(idx) > trlstart
                     artefact(ievent) = true;
-                    artefact_length(ievent) = artend(idx) - artstart(idx);
+                    artefact_length(ievent) = artend(idx) - artstart(idx) + artefact_length(ievent); %in case several artefacts intersect this trial
                 end
                 
                 %first artstart after trial start must begin after
@@ -292,7 +298,7 @@ for ipart = cfg.circus.part_list
                 end
                 if artstart(idx) < trlend
                     artefact(ievent) = true;
-                    artefact_length(ievent) = artend(idx) - artstart(idx);
+                    artefact_length(ievent) = artend(idx) - artstart(idx) + artefact_length(ievent); %in case several artefacts intersect this trial
                 end
                 
             end
@@ -334,7 +340,7 @@ for ipart = cfg.circus.part_list
                         continue
                     else
                         artefact(ievent) = true;
-                        artefact_length(ievent) = seconds(artend - artstart);
+                        artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent); %in case several artefacts intersect this trial
                     end
                     
                 end % iart

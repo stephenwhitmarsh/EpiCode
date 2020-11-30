@@ -3,7 +3,7 @@ function [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 % SPIKERATESTATSEVENTS calculates spike statistics
 %
 % use as
-%   spikeratestatsEvents(cfg, SpikeRaw, SpikeTrials, force, varargin)
+%   [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -34,6 +34,8 @@ if exist(fname, 'file') && force == false
     return
 end
 
+stats = {};
+
 for ipart = cfg.spike.part_list
     
     if ipart > size(SpikeTrials, 2)
@@ -45,12 +47,22 @@ for ipart = cfg.spike.part_list
     
     for markername = string(fields(SpikeTrials{ipart}))'
         
+        if isempty(SpikeTrials{ipart}.(markername))
+            continue
+        end
+        
+        %spike pssth (no smoothing)
+        cfgtemp                         = [];
+        cfgtemp.binsize                 = cfg.spike.psthbin.(markername);
+        cfgtemp.keeptrials              = 'yes';
+        psth_event                      = ft_spike_psth(cfgtemp,SpikeTrials{ipart}.(markername));
+        stats{ipart}.psth.(markername)  = psth_event;
+        
         % spike density function, with smoothed version
         cfgtemp                         = [];
-        cfgtemp.fsample                 = cfg.spike.resamplefs;   % sample at 1000 hz
+        cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);   % sample at 1000 hz
         cfgtemp.keeptrials              = 'yes';
-        cfgtemp.latency                 = [cfg.spike.toi.(markername)(1), cfg.spike.toi.(markername)(2)];
-        cfgtemp.timwin                  = [-0.05 0.05]; % cfg.spike.toispikerate{ilabel} / 4;
+        cfgtemp.timwin                  = cfg.spike.sdftimwin.(markername);
         sdf_line{ipart}                 = ft_spikedensity(cfgtemp, SpikeTrials{ipart}.(markername));
         
         % prepare data for stats on bar graph
