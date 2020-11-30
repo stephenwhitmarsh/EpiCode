@@ -40,9 +40,9 @@ else
 end
 
 % add external/intersections path if not already
-mfile_name          = mfilename('fullpath');
-pathstr             = fileparts(fileparts(mfile_name));
-pathCell            = regexp(path, pathsep, 'split');
+mfile_name = mfilename('fullpath');
+pathstr    = fileparts(fileparts(mfile_name));
+pathCell   = regexp(path, pathsep, 'split');
 if ispc  % Windows is not case-sensitive
     onPath = any(strcmpi(fullfile(pathstr, ['external', filesep, 'intersections']), pathCell));
 else
@@ -51,7 +51,6 @@ end
 if ~onPath
     addpath(fullfile(pathstr, ['external', filesep, 'intersections']));
 end
-
 
 for ipart = 1:size(SpikeWaveforms)
     for markername = string(fieldnames(SpikeWaveforms{ipart}))'
@@ -67,8 +66,8 @@ for ipart = 1:size(SpikeWaveforms)
                 evalc('waveformavg = ft_timelockanalysis([], SpikeWaveforms{ipart}.(markername){icluster});');%remove text output
                 
                 %interpolate the averaged waveform to have more precise values
-                time_temp = linspace(waveformavg.time(1),waveformavg.time(end),1000);
-                avg_temp  = pchip(waveformavg.time,waveformavg.avg,time_temp);
+                time_temp        = linspace(waveformavg.time(1),waveformavg.time(end),1000);
+                avg_temp         = pchip(waveformavg.time,waveformavg.avg,time_temp);
                 waveformavg.time = time_temp;
                 waveformavg.avg  = avg_temp;
                 %scatter(waveformavg.time, waveformavg.avg, '.');
@@ -86,22 +85,20 @@ for ipart = 1:size(SpikeWaveforms)
                 
                 %halfwidth
                 halfamp     = bl+(peak-bl)/2;
-                x1 = waveformavg.time;
+                x  = waveformavg.time;
                 y1 = waveformavg.avg;
-                x2 = x1;
                 y2 = ones(size(x1)) .* halfamp .* flip;
-                [x_intersect, y_intersect] = intersections(x1,y1,x2,y2,true);
+                [x_intersect, y_intersect] = intersections(x,y1,x,y2,true);
                 
                 if length(x_intersect) < 2
                     ok = false;
                 elseif all(x_intersect <=0) || all(x_intersect >=0)
                     ok = false;
                 else
-                    indx(1) = find(x_intersect <0, 1, 'last');
-                    indx(2) = find(x_intersect >0, 1, 'first');
-                    halfwidth.val = diff(x_intersect(indx));
-                    halfwidth.x = x_intersect(indx);
-                    halfwidth.y = y_intersect(indx);
+                    idx = find(x_intersect <0, 1, 'last');
+                    halfwidth.val = diff(x_intersect([idx, idx+1]));
+                    halfwidth.x   = x_intersect([idx, idx+1]);
+                    halfwidth.y   = y_intersect([idx, idx+1]);
                     %scatter(halfwidth.x, halfwidth.y, 'xk');
                     
                     % Find throughs
@@ -109,16 +106,16 @@ for ipart = 1:size(SpikeWaveforms)
                     
                     if length(Xneg_temp) >= 2
                         % Search first through before and after peak
-                        [Xneg(1),x_idx]  = max(Xneg_temp(Xneg_temp-amplitude.x < 0));
-                        [Xneg(2), ~] = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
-                        Yneg = Yneg([x_idx, x_idx+1]);
+                        [Xneg(1),x_idx] = max(Xneg_temp(Xneg_temp-amplitude.x < 0));
+                        [Xneg(2), ~]    = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
+                        Yneg            = Yneg([x_idx, x_idx+1]);
                         
-                        peaktrough.val = abs(amplitude.x-Xneg(1));
-                        peaktrough.x = [Xneg(1)  amplitude.x];
-                        peaktrough.y = [-Yneg(1)*flip amplitude.y];
-                        troughpeak.val = abs(amplitude.x-Xneg(2));
-                        troughpeak.x = [amplitude.x Xneg(2)];
-                        troughpeak.y = [amplitude.y -Yneg(2)*flip];
+                        peaktrough.val  = abs(amplitude.x-Xneg(1));
+                        peaktrough.x    = [Xneg(1)  amplitude.x];
+                        peaktrough.y    = [-Yneg(1)*flip amplitude.y];
+                        troughpeak.val  = abs(amplitude.x-Xneg(2));
+                        troughpeak.x    = [amplitude.x Xneg(2)];
+                        troughpeak.y    = [amplitude.y -Yneg(2)*flip];
                         %scatter(peaktrough.x, peaktrough.y, 'xk');
                         %scatter(troughpeak.x, troughpeak.y, 'xk');
                     end
@@ -128,7 +125,7 @@ for ipart = 1:size(SpikeWaveforms)
             end %isempty
             
             %store for output
-            stats{ipart}.(markername).label{icluster}          = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
+            stats{ipart}.(markername).label{icluster}              = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
             if ok
                 stats{ipart}.(markername).waveformavg{icluster}    = waveformavg;
                 stats{ipart}.(markername).amplitude.val(icluster)  = amplitude.val;
@@ -163,5 +160,4 @@ for ipart = 1:size(SpikeWaveforms)
     end
 end
     
-save(fname_out, 'stats', '-v7.3');        
-
+save(fname_out, 'stats', '-v7.3');
