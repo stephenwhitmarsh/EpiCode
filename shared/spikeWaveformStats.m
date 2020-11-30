@@ -87,14 +87,11 @@ for ipart = 1:size(SpikeWaveforms)
                 halfamp     = bl+(peak-bl)/2;
                 x  = waveformavg.time;
                 y1 = waveformavg.avg;
-                y2 = ones(size(x1)) .* halfamp .* flip;
+                y2 = ones(size(x)) .* halfamp .* flip;
                 [x_intersect, y_intersect] = intersections(x,y1,x,y2,true);
                 
-                if length(x_intersect) < 2
-                    ok = false;
-                elseif all(x_intersect <=0) || all(x_intersect >=0)
-                    ok = false;
-                else
+                if length(x_intersect) >= 2 && any(x_intersect <=0) && any(x_intersect >=0)
+                  
                     idx = find(x_intersect <0, 1, 'last');
                     halfwidth.val = diff(x_intersect([idx, idx+1]));
                     halfwidth.x   = x_intersect([idx, idx+1]);
@@ -107,7 +104,7 @@ for ipart = 1:size(SpikeWaveforms)
                     if length(Xneg_temp) >= 2
                         % Search first through before and after peak
                         [Xneg(1),x_idx] = max(Xneg_temp(Xneg_temp-amplitude.x < 0));
-                        [Xneg(2), ~]    = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
+                        Xneg(2)         = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
                         Yneg            = Yneg([x_idx, x_idx+1]);
                         
                         peaktrough.val  = abs(amplitude.x-Xneg(1));
@@ -118,7 +115,11 @@ for ipart = 1:size(SpikeWaveforms)
                         troughpeak.y    = [amplitude.y -Yneg(2)*flip];
                         %scatter(peaktrough.x, peaktrough.y, 'xk');
                         %scatter(troughpeak.x, troughpeak.y, 'xk');
+                    else
+                        ok = false;                       
                     end
+                else
+                    ok = false;
                 end
             else
                 ok = false;
@@ -141,7 +142,7 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.(markername).troughpeak.x(icluster,:) = troughpeak.x;
                 stats{ipart}.(markername).troughpeak.y(icluster,:) = troughpeak.y;
             else
-                stats{ipart}.(markername).waveformavg{icluster}    = nan;
+                stats{ipart}.(markername).waveformavg{icluster}    = [];
                 stats{ipart}.(markername).amplitude.val(icluster)  = nan;
                 stats{ipart}.(markername).amplitude.x(icluster)    = nan;
                 stats{ipart}.(markername).amplitude.y(icluster)    = nan;
