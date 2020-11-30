@@ -128,6 +128,7 @@ for ipart = 1:size(SpikeWaveforms)
             end %isempty
             
             %store for output
+            stats{ipart}.(markername).label{icluster}          = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
             if ok
                 stats{ipart}.(markername).waveformavg{icluster}    = waveformavg;
                 stats{ipart}.(markername).amplitude.val(icluster)  = amplitude.val;
