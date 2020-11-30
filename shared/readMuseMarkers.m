@@ -44,8 +44,21 @@ else
     fprintf('*************************\n\n');
 end
 
+% add utilities path if not already
+mfile_name          = mfilename('fullpath');
+[pathstr, name, ~]  = fileparts(mfile_name); 
+pathCell            = regexp(path, pathsep, 'split');
+
+if ispc  % Windows is not case-sensitive
+    onPath = any(strcmpi(fullfile(pathstr, 'utilities'), pathCell));
+else
+    onPath = any(strcmp(fullfile(pathstr, 'utilities'), pathCell));
+end
+if ~onPath
+    addpath(fullfile(pathstr, 'utilities'));
+end
+
 %get format to adapt script for each format
-%specificities :
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
 
 % Go through different parts
