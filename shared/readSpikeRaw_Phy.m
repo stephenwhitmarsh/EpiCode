@@ -97,7 +97,7 @@ for ipart = cfg.circus.part_list
         
         temp    = dir(fullfile(datadir, 'SpykingCircus', '*.GUI'));
         if isempty(temp)
-            error('Could not find Phy-converted Spyking-Circus results: %s\n', phydir);
+            error('Could not find Phy-converted Spyking-Circus results in %s\n', fullfile(datadir, 'SpykingCircus', '*.GUI'));
         else
             phydir = fullfile(temp.folder, temp.name);
         end

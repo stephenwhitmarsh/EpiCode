@@ -162,6 +162,10 @@ for ipart = cfg.circus.part_list
                 if ~isfield(MuseStruct{ipart}{idir}.markers, char(markername))
                     continue
                 end
+                
+                if ~isfield(MuseStruct{ipart}{idir}.markers.(char(markername)), 'synctime')
+                    continue
+                end
 
                 for iIED = 1 : size(MuseStruct{ipart}{idir}.markers.(markername).synctime, 2)
 
@@ -194,7 +198,8 @@ for ipart = cfg.circus.part_list
     end % ievent
     ft_progress('close');
 
-    artefact = false(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
+    artefact        = false(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
+    artefact_length = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     ft_progress('init','text')
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
         ft_progress(ievent/size(SpikeTrials{ipart}.window.trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.window.trialinfo, 1))
@@ -224,14 +229,18 @@ for ipart = cfg.circus.part_list
                         continue
                     else
                         artefact(ievent) = true;
+                        artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent);
                     end
+                    
+                    
                 end % ihyp
         end % idir
     end % ievent
     ft_progress('close');
 
     % add artefact to trialinfo
-    SpikeTrials{ipart}.window.trialinfo.artefact = artefact;
+    SpikeTrials{ipart}.window.trialinfo.artefact        = artefact;
+    SpikeTrials{ipart}.window.trialinfo.artefact_length = artefact_length;
 
 end % ipart
 
