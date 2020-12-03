@@ -304,6 +304,8 @@ for markername = string(cfg.LFP.name)
                 filedat{ifile}.trialinfo.hyplabel   = hyplabels_trl(full_trial)';
                 filedat{ifile}.trialinfo.starttime  = Starttime(full_trial)';
                 filedat{ifile}.trialinfo.endtime    = Endtime(full_trial)';
+                filedat{ifile}.trialinfo.directory  = repmat(cfg.directorylist{ipart}{idir}, height(filedat{ifile}.trialinfo), 1);
+
                 clear dat
                 
                 if isNeuralynx
