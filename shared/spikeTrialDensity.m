@@ -53,7 +53,9 @@ for ipart = cfg.spike.part_list
         
         %spike pssth (no smoothing)
         cfgtemp                         = [];
-        cfgtemp.binsize                 = cfg.spike.psthbin.(markername);
+        if isfield(cfg.spike, 'psthbin')
+            cfgtemp.binsize             = cfg.spike.psthbin.(markername);
+        end
         cfgtemp.keeptrials              = 'yes';
         psth_event                      = ft_spike_psth(cfgtemp,SpikeTrials{ipart}.(markername));
         stats{ipart}.psth.(markername)  = psth_event;
