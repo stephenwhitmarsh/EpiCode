@@ -41,10 +41,10 @@ for ipart = 1 : size(Trialdata,2)
         cfgtemp.taper                   = 'hanning';
         cfgtemp.pad                     = 'nextpow2'; 
         cfgtemp.keeptrials              = 'yes';
-        cfgtemp.foi                     = 5:1:100;
+        cfgtemp.foi                     = 4:2:100;
         cfgtemp.t_ftimwin               = 7./cfgtemp.foi;
-        cfgtemp.toi                     = cfg.epoch.toi.(markername)(1) : 0.012 : cfg.epoch.toi.(markername)(2);
-%         cfgtemp.feedback = 'off';
+        cfgtemp.toi                     = cfg.epoch.toi.(markername)(1) : 0.036 : cfg.epoch.toi.(markername)(2);
+        cfgtemp.feedback                = 'off';
         TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp,Trialdata{ipart}.(markername));
         
     end

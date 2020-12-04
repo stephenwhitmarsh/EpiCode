@@ -47,19 +47,6 @@ end
 
 hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
-% add external/intersections path if not already
-mfile_name = mfilename('fullpath');
-pathstr    = fileparts(fileparts(mfile_name));
-pathCell   = regexp(path, pathsep, 'split');
-if ispc  % Windows is not case-sensitive
-    onPath = any(strcmpi(fullfile(pathstr, ['external', filesep, 'bsearch']), pathCell));
-else
-    onPath = any(strcmp(fullfile(pathstr, ['external', filesep, 'bsearch']), pathCell));
-end
-if ~onPath
-    addpath(fullfile(pathstr, ['external', filesep, 'bsearch']));
-end
-
 % start loop
 for ipart = cfg.circus.part_list
 
