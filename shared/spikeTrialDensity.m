@@ -64,7 +64,9 @@ for ipart = cfg.spike.part_list
         cfgtemp                         = [];
         cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);   % sample at 1000 hz
         cfgtemp.keeptrials              = 'yes';
-        cfgtemp.timwin                  = cfg.spike.sdftimwin.(markername);
+        if isfield(cfg.spike, 'sdftimwin')
+            cfgtemp.timwin              = cfg.spike.sdftimwin.(markername);
+        end
         sdf_line{ipart}                 = ft_spikedensity(cfgtemp, SpikeTrials{ipart}.(markername));
         
         % prepare data for stats on bar graph
