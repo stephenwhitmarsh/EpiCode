@@ -25,7 +25,8 @@ function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg, MuseStruct, SpikeRaw, 
 %
 % ### Output:
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
-%
+
+
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
