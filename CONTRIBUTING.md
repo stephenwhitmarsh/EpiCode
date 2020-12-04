@@ -30,7 +30,7 @@ git push origin my-new-feature
 
 ## How Do I Submit A (Good) Bug Report?
 
-Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/). In the issue explain the problem and include additional details to help us reproduce the problem:
+Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/) [_here_](https://github.com/stephenwhitmarsh/EpiCode/issues). In the issue explain the problem and include additional details to help us reproduce the problem:
 
 * Use a clear and descriptive title for the issue to identify the problem.
 * Provide specific examples to demonstrate the steps. Include links to files, or copy/pasteable snippets, which you use in those examples.
