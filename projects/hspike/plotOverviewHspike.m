@@ -23,14 +23,14 @@ for ipart = 1 : size(cfg.directorylist,2)
     end
     
     SpikeTrials_windowed{ipart}.window.trialinfo.hyplabel(SpikeTrials_windowed{ipart}.window.trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
-    
+
     for markername = unique(marker.name)'
         
         fprintf('Building overview for part %d marker %s\n', ipart, markername);
         
         LFP{ipart}.(markername).trialinfo.hyplabel(LFP{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
         SpikeTrials_timelocked{ipart}.(markername).trialinfo.hyplabel(SpikeTrials_timelocked{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
-  
+
         % baseline correction
         cfgtemp             = [];
         cfgtemp.baseline    = 'yes';
@@ -69,6 +69,8 @@ for ipart = 1 : size(cfg.directorylist,2)
         
         for itemp = 1 : size(SpikeTrials_timelocked{ipart}.(markername).label, 2)
             
+            SpikeStats_windowed{ipart}.window{itemp}.trialinfo.hyplabel(SpikeStats_windowed{ipart}.window{itemp}.trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
+
             fig = figure('visible', cfg.visible);
             set(gcf,'position', get(0,'ScreenSize'));
             set(fig, 'PaperOrientation', 'landscape');
