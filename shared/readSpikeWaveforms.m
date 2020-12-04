@@ -56,7 +56,7 @@ if exist(fname, 'file') && force == false
     return
 
 elseif exist(fname, 'file') && force == true
-    fprintf('Forced  recomputing spike waveforms\n');
+    fprintf('Forced recomputing of spike waveforms\n');
 
 else
     fprintf('Computing spike waveforms\n');
@@ -90,10 +90,11 @@ for ipart = cfg.spikewaveform.part_list
                     maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + 1;
                     temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
                 else
-                    chanoffset  = find(strcmp(SpikeRaw{ipart}.(char(markername)).channelname{icluster}, SpikeRaw{ipart}.(char(markername)).channelname), 1, 'first');
-                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + chanoffset;
-                    channel     = cfg.circus.channelname{maxchan};
-                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channel, [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
+                    channelname = SpikeRaw{ipart}.(char(markername)).channelname{icluster};
+                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster);
+                    chanoffset  = find(strcmp(cfg.circus.channelname, channelname), 1, 'first');
+                    chan        = cfg.circus.channel{maxchan + chanoffset};     
+                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channelname, [cfg.prefix, 'p', num2str(ipart), '-multifile-', chan,'.ncs']));          
                 end
                 datafile        = fullfile(temp.folder, temp.name);
 
