@@ -38,40 +38,27 @@ disp('setting parameters');
 muscale = 50; % multiunit scale
 
 % Patient 1, perivetricular heterotopia #1
-config{1}.prefix                    = '2230-seizures-';
-config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02230_0674', 'eeg');
-config{1}.datasavedir               = fullfile(rootpath_analysis, 'data');         % where to write data
-config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images');       % where to print images
+config{1}.prefix                        = '2230-seizures-';
+config{1}.rawdir                        = fullfile(rootpath_data,     'pat_02230_0674', 'eeg');
+config{1}.datasavedir                   = fullfile(rootpath_analysis, 'data');         % where to write data
+config{1}.imagesavedir                  = fullfile(rootpath_analysis, 'images');       % where to print images
 
-config{1}.name                      = {'seizure'};
-config{1}.muse.startmarker.seizure  = "CriseStart";
-config{1}.muse.endmarker.seizure    = "CriseStart";
-config{1}.muse.backupdir            = fullfile(rootpath_analysis, 'markerbackup');
+config{1}.name                          = {'seizure'};
+config{1}.muse.startmarker.seizure      = "CriseStart";
+config{1}.muse.endmarker.seizure        = "CriseStart";
+config{1}.muse.backupdir                = fullfile(rootpath_analysis, 'markerbackup');
 
-config{1}.LFP.name                  = 'seizure';
-config{1}.LFP.hpfilter              = 'no';
-config{1}.LFP.hpfreq                = 1;
-config{1}.LFP.resamplefs            = 1000;
-config{1}.LFP.baseline              = 'yes';
-config{1}.LFP.baselinewindow.seizure = [-1, -0.5];
-config{1}.LFP.slidestep             = [0.01, 0.01, 0.01];
-config{1}.LFP.channel               = {'_2pNi_1','_1pNs_1','_1pHe_1'};
+config{1}.LFP.name                      = 'seizure';
+config{1}.LFP.hpfilter                  = 'no';
+config{1}.LFP.hpfreq                    = 1;
+config{1}.LFP.resamplefs                = 1000;
+config{1}.LFP.baseline                  = 'yes';
+config{1}.LFP.baselinewindow.seizure    = [-1, -0.5];
+config{1}.LFP.slidestep                 = [0.01, 0.01, 0.01];
+config{1}.LFP.channel                   = {'_2pNi_1', '_1pNs_1', '_1pHe_1'};
 
-config{1}.align.channel             = {'m1pNs_4','m1pNs_4','m1pNs_4'};                                                                                    % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
-config{1}.align.method              = {'max','first','max'};                                                              % whether to align to max, first-after-zero, or nearest-to-zero peak {'max','first', or 'nearest'}
-config{1}.align.filter              = {'bp','bp','bp'};
-config{1}.align.freq                = {[1, 4],[1, 4],[1, 40]};                                                                                  % lowpass filter freq to smooth peak detection (Hz)
-config{1}.align.hilbert             = {'no','no','no'};
-config{1}.align.thresh              = [0,0.25,0.25];
-config{1}.align.toiactive{1}        = [-0.1,  0.4];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-config{1}.align.toiactive{2}        = [-0.1,  0.3];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-config{1}.align.toiactive{3}        = [-0.1,  0.1];                                            % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-config{1}.align.toibaseline{1}      = [-1.0, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-config{1}.align.toibaseline{2}      = [-1.0, -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-config{1}.align.toibaseline{3}      = [-1.0  -0.1];                                            % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-
-config{1}.epoch.toi.seizure         = [-1  10];
-config{1}.epoch.pad.seizure         = 0.5;
+config{1}.epoch.toi.seizure             = [-1  10];
+config{1}.epoch.pad.seizure             = 0.5;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Patient 2, first nodule %
@@ -79,9 +66,8 @@ config{1}.epoch.pad.seizure         = 0.5;
 
 config{2}                           = config{1};
 config{2}.prefix                    = '2614-seizures-';
-config{2}.rawdir                    = fullfile(rootpath_data,     'pat_02614_1073', 'eeg');
-config{2}.LFP.channel               = {'_TNmg_1','_TNmi_1'};
-
+config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02614_1073', 'eeg');
+config{2}.LFP.channel               = {'_TNmg_1', '_TNmi_1'};
 
 %%%%%%%%%%%%%
 % Patient 3 %
@@ -89,5 +75,5 @@ config{2}.LFP.channel               = {'_TNmg_1','_TNmi_1'};
 
 config{3}                           = config{1};
 config{3}.prefix                    = '2689-seizures-';
-config{3}.rawdir                    = fullfile(rootpath_data,     'pat_02689_1168', 'eeg');
-config{3}.LFP.channel               = {'_TNmg_1','_TNmi_1'};
+config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
+config{3}.LFP.channel               = {'_TNmg_1', '_TNmi_1'};

@@ -290,7 +290,6 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.artefact_length = artefact_length;
 
     end % markername
-
 end % ipart
 
 save(fname, 'SpikeTrials', '-v7.3');

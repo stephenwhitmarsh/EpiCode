@@ -73,6 +73,11 @@ config{1}.LFP.resamplefs            = 250;
 config{1}.LFP.baseline              = 'yes';
 config{1}.LFP.baselinewindow.Hspike = [-1, -0.5];
 
+config{1}.TFR.channel               = 'all';
+config{1}.TFR.foi                   = 4:4:80;
+config{1}.TFR.t_ftimwin             = 7./config{1}.TFR.foi;
+config{1}.TFR.toi                   = config{1}.epoch.toi.Hspike(1) : 0.04 : config{1}.epoch.toi.Hspike(2);
+
 config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.align.reref               = 'yes';
