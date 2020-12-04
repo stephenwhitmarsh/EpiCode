@@ -2,8 +2,8 @@
             /\ \         /\ \     /\ \       /\ \           /\ \         /\ \         /\ \    
            /  \ \       /  \ \    \ \ \     /  \ \         /  \ \       /  \ \____   /  \ \   
           / /\ \ \     / /\ \ \   /\ \_\   / /\ \ \       / /\ \ \     / /\ \_____\ / /\ \ \  
-         / / /\ \_\   / / /\ \_\ / /\/_/  / / /\ \ \     / / /\ \ \   / / /\/___  // / /\ \_\ 
-        / /_/_ \/_/  / / /_/ / // / /    / / /  \ \_\   / / /  \ \_\ / / /   / / // /_/_ \/_/ 
+         / / /\ \_\   / / /\ \_\ / /\/_/  / / /\ \ \     / / /\ \ \   / / /\/___  // / /\ \_\
+        / /_/_ \/_/  / / /_/ / // / /    / / /  \ \_\   / / /  \ \_\ / / /   / / // /_/_ \/_/
        / /____/\    / / /__\/ // / /    / / /    \/_/  / / /   / / // / /   / / // /____/\    
       / /\____\/   / / /_____// / /    / / /          / / /   / / // / /   / / // /\____\/    
      / / /______  / / /   ___/ / /__  / / /________  / / /___/ / / \ \ \__/ / // / /______    
@@ -40,16 +40,14 @@ _ICM, Paris_
 
 EpiCode is organized as follows:
 
- * [shared](shared) contains the main code, and their documentation, shared between projects 
+ * [shared](shared) contains the main code, and their documentation, shared between projects
  * [external](external) contains code not made by me, and not within the EpiCode GNU license
  * [development](development) contains code in development, and old code, just in case
- * [projects](projects) contains analysis projects. These are organized as follows.
-
- Every [analysis project directory](projects) contains:
- * A single settings file that contains all parameters
- * An analysis script that calls EpiCode (and other) MATLAB fuctions, and i.e. loops over patients.
- * An [R script](https://www.r-project.org/) for statistical analyses
- * A MATLAB and bash/SLURM script, for running analyses on the computing cluster
+ * [projects](projects) contains analysis projects. Each [project](projects) contains:
+   * One or more settings file(s) that contains all parameters using it the corresponding analysis script
+   * An analysis script that calls EpiCode (and other) MATLAB functions, and i.e. loops over patients.
+   * Optionally: An [R script](https://www.r-project.org/) for statistical analyses
+   * Optionally: A MATLAB and bash/SLURM script, for running analyses on the computing cluster
 
 ## Dependencies
 
@@ -61,13 +59,19 @@ EpiCode is organized as follows:
 
  * Use at your own risk.
  * The code is under heavy development, and will be (but will hopefully stabilize over time).
- * The code is aimed specifically at analysing intercranial data that is recorded from epileptic patients over the course of presurgical evaluation. 
- * No data is or will ever be shared through this repository. 
+ * The code is aimed specifically at analysing intercranial data that is recorded from epileptic patients over the course of presurgical evaluation.
+ * No data is or will ever be shared through this repository.
 
 ## Reporting issues
 
  * Please use the [issues page](https://github.com/stephenwhitmarsh/EpiCode/issues) to report and keep track of bugs and requests.
 
+## Code of Conduct
+
+* By participating in this project, you agree to abide by our [code of conduct](CODE_OF_CONDUCT.md).
+
 ## License
 
- * GNU GPL v3, see LICENSE file for more details. [External](external) are shared according to their own license files (I lost some, but will include them ASAP) 
+* GNU GPL v3, see [LICENSE](LICENSE) for more details.
+* Files in [External](external) are shared according to their own license.
+* All contributions will conform to our [LICENSE](LICENSE).
