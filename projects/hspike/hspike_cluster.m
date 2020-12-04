@@ -4,7 +4,7 @@ function hspike_cluster(ipatient)
 %
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
- 
+
 
 %% Add path
 
@@ -16,7 +16,7 @@ if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/DBSCAN/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13   
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
 end
@@ -126,7 +126,7 @@ for ipart = 1 : 3
 end
 
 % read spike data from Phy as one continuous trial
-SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config_trimmed{ipatient}, true);
+SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config_trimmed{ipatient}, false);
 
 % segment into trials based on IED markers
 SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
@@ -135,7 +135,7 @@ SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatien
 % segment into equal periods
 SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
 SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, false, 'windowed');
-SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
+SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, false);
 
 % plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
 %     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...

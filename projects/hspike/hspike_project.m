@@ -156,7 +156,7 @@ for ipatient = 1:7
     
     
     % segment into trials based on IED markers
-    SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers2(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+    SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
     SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
 
     SpikeWaveforms{ipatient}              = readSpikeWaveforms_new(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
