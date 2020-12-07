@@ -1,11 +1,11 @@
-function stats = spikeTrialDensity(cfg, SpikeTrials, force)
+function [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 
 % SPIKERATESTATSEVENTS calculates spike statistics
 %
 % use as
-%   stats = spikeTrialDensity(cfg, SpikeTrials, force)
+%   [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 % or, if need to only load precomputed data :
-%   stats = spikeTrialDensity(cfg)
+%   [stats] = spikeTrialDensity(cfg)
 % 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
