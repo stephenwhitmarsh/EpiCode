@@ -89,9 +89,9 @@ for ipart = 1:size(SpikeWaveforms)
                 y1 = waveformavg.avg;
                 y2 = ones(size(x)) .* halfamp .* flip;
                 [x_intersect, y_intersect] = intersections(x,y1,x,y2,true);
-
-                if length(x_intersect) >= 2 && any(x_intersect <=0) && any(x_intersect >=0)
-
+                
+                if length(x_intersect) >= 2 && any(x_intersect <0) && any(x_intersect >0)
+                  
                     idx = find(x_intersect <0, 1, 'last');
                     halfwidth.val = diff(x_intersect([idx, idx+1]));
                     halfwidth.x   = x_intersect([idx, idx+1]);
@@ -100,8 +100,8 @@ for ipart = 1:size(SpikeWaveforms)
 
                     % Find throughs
                     [Yneg,Xneg_temp] = findpeaks(-waveformavg.avg.*flip,waveformavg.time);
-
-                    if length(Xneg_temp) >= 2
+                    
+                    if length(Xneg_temp) >= 2 && any(Xneg_temp-amplitude.x < 0) && any(Xneg_temp-amplitude.x > 0)
                         % Search first through before and after peak
                         [Xneg(1),x_idx] = max(Xneg_temp(Xneg_temp-amplitude.x < 0));
                         Xneg(2)         = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
@@ -115,6 +115,7 @@ for ipart = 1:size(SpikeWaveforms)
                         troughpeak.y    = [amplitude.y -Yneg(2)*flip];
                         %scatter(peaktrough.x, peaktrough.y, 'xk');
                         %scatter(troughpeak.x, troughpeak.y, 'xk');
+                        
                     else
                         ok = false;
                     end
@@ -126,9 +127,15 @@ for ipart = 1:size(SpikeWaveforms)
             end %isempty
 
             %store for output
-            stats{ipart}.(markername).label{icluster}              = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
-            if ok
+            
+            if isempty(SpikeWaveforms{ipart}.(markername){icluster})
+                stats{ipart}.(markername).label{icluster}          = [];
+                stats{ipart}.(markername).waveformavg{icluster}    = [];
+            else
+                stats{ipart}.(markername).label{icluster}          = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
                 stats{ipart}.(markername).waveformavg{icluster}    = waveformavg;
+            end
+            if ok
                 stats{ipart}.(markername).amplitude.val(icluster)  = amplitude.val;
                 stats{ipart}.(markername).amplitude.x(icluster)    = amplitude.x;
                 stats{ipart}.(markername).amplitude.y(icluster)    = amplitude.y;
@@ -142,7 +149,6 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.(markername).troughpeak.x(icluster,:) = troughpeak.x;
                 stats{ipart}.(markername).troughpeak.y(icluster,:) = troughpeak.y;
             else
-                stats{ipart}.(markername).waveformavg{icluster}    = [];
                 stats{ipart}.(markername).amplitude.val(icluster)  = nan;
                 stats{ipart}.(markername).amplitude.x(icluster)    = nan;
                 stats{ipart}.(markername).amplitude.y(icluster)    = nan;
