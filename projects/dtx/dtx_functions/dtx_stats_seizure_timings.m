@@ -12,6 +12,12 @@ function seizure_infos = dtx_stats_seizure_timings(cfg, MuseStruct_concat,ipart)
 
 % MuseStruct_concat, output from concatenateMuseMarkers
 
+if ~isfield(cfg, 'seizuretimings')
+    warning('No field ''seizuretimings'' found in cfg, nothing is done');
+    seizure_infos = [];
+    return
+end
+
 %% get all marker timings
 time_start = MuseStruct_concat{ipart}.markers.(cfg.seizuretimings.marker_start);%concatenateMuseMarker(cfg,MuseStruct_concat,ipart, cfg.seizuretimings.marker_start);
 if isfield(cfg.seizuretimings, 'marker_end')
@@ -160,6 +166,7 @@ if ~isempty(ft_getopt(cfg.seizuretimings, 'winsize'))
         
         %remove values if this is part of missing file
         keepwindow = true;
+        cfg.missingdata = ft_getopt(cfg, 'missingdata');
         if ~isempty(cfg.missingdata)
             if twin_start > cfg.missingdata(1) && twin_start > cfg.missingdata(2)
                 keepwindow = true;

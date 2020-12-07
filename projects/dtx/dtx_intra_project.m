@@ -104,3 +104,36 @@ for irat = 1
     plot(rmdyn(1,:), rmdyn_movmean,'LineWidth',2);
 %     plot(rmdyn(1,:), rmdyn(2,:));
     xlim([2416.004 2418.598])
+    
+    %% FI 
+    FI = readtable('Z:\analyses\lgi1\DTX-INTRA\temporaire_fi.csv'); %output xy view from Spike2
+    %FI.DTX_ith(end-1) = nan; FI.DTX_gain(end-1) = nan; FI.Ctrl_ith(4) = nan; FI.Ctrl_gain(4) = nan;
+    p1 = ranksum(FI.DTX_ith, FI.Ctrl_ith);
+    p2 = ranksum(FI.DTX_gain, FI.Ctrl_gain);
+
+    fig = figure; hold on;
+    bar(1, nanmean(FI.DTX_ith),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
+    bar(2, nanmean(FI.Ctrl_ith),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
+    scatter(rand(size(FI.DTX_ith))*0.2+1-0.1, FI.DTX_ith, 100, 'o','filled', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'white');
+    scatter(rand(size(FI.Ctrl_ith))*0.2+2-0.1, FI.Ctrl_ith, 100, 'o','filled', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'white');
+    errorbar(1, nanmean(FI.DTX_ith),0, nanstd(FI.DTX_ith),'k','CapSize',10);
+    errorbar(2, nanmean(FI.Ctrl_ith),0, nanstd(FI.Ctrl_ith),'k','CapSize',10);
+    setfig();
+    xticks([]);
+    title(sprintf('p=%g', p1));
+    fname = 'Z:\analyses\lgi1\DTX-INTRA\temporaire_fi_ith';
+    dtx_savefigure(fig, fname, 'png', 'pdf', 'close');
+    
+    fig = figure; hold on;
+    bar(1, nanmean(FI.DTX_gain),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
+    bar(2, nanmean(FI.Ctrl_gain),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
+    scatter(rand(size(FI.DTX_gain))*0.2+1-0.1, FI.DTX_gain, 100, 'o','filled', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'white');
+    scatter(rand(size(FI.Ctrl_gain))*0.2+2-0.1, FI.Ctrl_gain, 100, 'o','filled', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'white');
+    errorbar(1, nanmean(FI.DTX_gain),0, nanstd(FI.DTX_gain),'k','CapSize',10);
+    errorbar(2, nanmean(FI.Ctrl_gain),0, nanstd(FI.Ctrl_gain),'k','CapSize',10);
+    setfig();
+    xticks([]);
+    title(sprintf('p=%g', p2));
+    fname = 'Z:\analyses\lgi1\DTX-INTRA\temporaire_fi_gain';
+    dtx_savefigure(fig, fname, 'png', 'pdf', 'close');
+end

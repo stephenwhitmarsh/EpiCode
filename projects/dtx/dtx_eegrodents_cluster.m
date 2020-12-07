@@ -35,7 +35,7 @@ feature('DefaultCharacterSet', 'CP1252'); % To fix bug for weird character probl
 
 config = eval(config_script);%dtx_setparams_eegvideo;
 ipart = 1;
-do_align = true;
+do_align = false;
 do_morpho = true;
 
 %% align LFP, remove bad trials, correct baseline
@@ -50,13 +50,13 @@ if do_align
     %align slowwave to peak and read slowwave
     config{ipatient}.align.name = {'SlowWave'};
     config{ipatient}.LFP.name   = {'SlowWave'};
-    MuseStruct                  = alignMuseMarkers(config{ipatient},MuseStruct,true);
+    MuseStruct                  = alignMuseMarkersPeaks(config{ipatient},MuseStruct,true);
     LFP_SlowWave                = readLFP(config{ipatient},MuseStruct,true);
     
     %align slowwave to begin and read slowwave
     config{ipatient}.align.name = {'SlowWave_begin'};
     config{ipatient}.LFP.name   = {'SlowWave_begin'};
-    MuseStruct                  = alignMuseMarkers(config{ipatient},MuseStruct,true);
+    MuseStruct                  = alignMuseMarkersPeaks(config{ipatient},MuseStruct,true);
     LFP_SlowWave_begin          = readLFP(config{ipatient},MuseStruct,true);
     
     %append LFP data
@@ -103,7 +103,7 @@ if do_align
     save(fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'LFP.mat']), 'LFP', '-v7.3');
 else
     MuseStruct = readMuseMarkers(config{ipatient},false);
-    MuseStruct = alignMuseMarkers(config{ipatient},MuseStruct,false);
+    MuseStruct = alignMuseMarkersPeaks(config{ipatient},MuseStruct,false);
     MuseStruct_concat = concatenateMuseMarkers(config{ipatient},MuseStruct,false); %for sliding time window of morpho
     load(fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'LFP.mat']), 'LFP');
 end
@@ -166,8 +166,15 @@ if do_morpho
                     amp = nan;
                 end
                 
+                cfgtemp         = [];
+                cfgtemp.latency = config{ipatient}.LFP.baselinewindow.SlowWave;
+                cfgtemp.channel = config{ipatient}.align.channel.SlowWave;
+                data_sel        = ft_selectdata(cfgtemp, LFP_onetrial);
+                std_bl          = nanstd(data_sel.trial{:});
+                
                 morpho.(i_filt).halfwidth(itrial) = hw;
                 morpho.(i_filt).amplitude(itrial) = amp;
+                morpho.(i_filt).amplitude_norm(itrial) = amp/std_bl;
                 startdir                              = MuseStruct{1}{LFP_onetrial.trialinfo.idir}.starttime;
                 morpho.(i_filt).time(itrial)      = startdir + seconds((LFP_onetrial.trialinfo.begsample - LFP_onetrial.trialinfo.offset) / LFP_onetrial.fsample);
             end
@@ -178,7 +185,6 @@ if do_morpho
             %fname = fullfile(config{ipatient}.imagesavedir,'sw_morpho',sprintf('%smorpho_%s',config{ipatient}.prefix,markername));
             fname = fullfile(config{ipatient}.imagesavedir,'..','morpho_eachrat',convertStringsToChars(i_filt),sprintf('%smorpho_%s_%s',config{ipatient}.prefix,markername,i_filt));
             dtx_savefigure(fig,fname,'pdf','png','close');
-            
             
             %% average over a sliding time window
             morpho.(i_filt).statsovertime.winsize = config{ipatient}.morpho.winsize;
@@ -207,7 +213,7 @@ if do_morpho
                     morpho.(i_filt).statsovertime.endtime(i_window)        = twin_end;
                 end
                 
-                for iparam= ["halfwidth", "amplitude"]
+                for iparam= ["halfwidth", "amplitude", "amplitude_norm"]
                     %mean and std of param
                     idx = morpho.(i_filt).time > twin_start & morpho.(i_filt).time < twin_end;
                     morpho.(i_filt).statsovertime.(sprintf('%s_nb_sw',iparam))(i_window) = sum(idx);
@@ -227,7 +233,7 @@ if do_morpho
                     end
                 end
                 if ~keepwindow
-                    for iparam= ["halfwidth", "amplitude"]
+                    for iparam= ["halfwidth", "amplitude", "amplitude_norm"]
                         %mean and std of param
                         morpho.(i_filt).statsovertime.(sprintf('%s_nb_sw',iparam))(i_window) = nan;
                         morpho.(i_filt).statsovertime.(sprintf('%s_mean',iparam))(i_window) = nan;

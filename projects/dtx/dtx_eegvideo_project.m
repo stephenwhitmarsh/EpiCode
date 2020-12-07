@@ -31,9 +31,10 @@ feature('DefaultCharacterSet', 'CP1252'); % To fix bug for weird character probl
 
 config = dtx_eegvideo_setparams;
 ipart = 1;
-setfig = @() set(gca,'TickDir','out','FontWeight','bold', 'FontSize', 15);
+setfig = @() set(gca,'TickDir','out','FontWeight','bold', 'FontSize', 25);
 
 pat_list = 1:size(config,2);
+table_output = table;
 
 %% vérifier les marqueurs
 % ipatient=9;
@@ -193,20 +194,83 @@ for iparam = ["timebetween2seizures_mean", "timebetween2seizures_cv2", "seizured
     for ipatient = 1:size(config,2)
         to_plot = seizure_timing{ipatient}.statsovertime.(iparam);
         bar(ipatient, nanmean(to_plot),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
-        scatter(rand(1,size(to_plot,2))*0.2+ipatient-0.1,to_plot, '.', 'MarkerEdgeColor', 'k');
+        scatter(rand(1,size(to_plot,2))*0.2+ipatient-0.1,to_plot, 'o', 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'white');
         errorbar(ipatient, nanmean(to_plot), 0,nanstd(to_plot),'k','CapSize',10);
+        
+        table_output.(iparam)(ipatient) = nanmean(to_plot);
     end
     % xlim([0 size(config,2)+1]);
     title(iparam,'Interpreter','none');
     ax = axis;
     ylim([0 ax(4)]);
-    xticks(1:size(config,2));
-    xlabel('rat nr');
+    xticks([]);
+    xlabel('Rat');
+    
+    if contains(iparam, 'cv2')
+        ylabel('CV2');
+        x = xlim;
+        ylim([0 2]);
+        plot(x, [1 1], '--k');
+    end
+    
     setfig();
     fname = fullfile(config{ipatient}.imagesavedir,'..','seizure_description',sprintf('allpatients_%s_distrib',iparam));
     dtx_savefigure(fig,fname,'pdf','png','fig','close');
+
 end
 
+mean(table_output.timebetween2seizures_cv2)
+std(table_output.timebetween2seizures_cv2)
+mean(table_output.seizureduration_mean)
+std(table_output.seizureduration_mean)
+
+%% plot seizures over time in lines
+
+for idir = 1:30
+    fig = figure;
+    for ipatient = 1:size(config,2)
+        subplot(size(config,2),1,ipatient); hold on;
+        
+        if idir > size(MuseStruct{ipatient}{ipart}, 2)
+            axis off
+            continue
+        end
+        
+        if ~isfield(MuseStruct{ipatient}{1}{idir}.markers.SlowWave, 'clock')
+            continue
+        end
+        
+        for iseizure= 1:size(MuseStruct{ipatient}{1}{idir}.markers.SlowWave.clock,2)
+            t = MuseStruct{ipatient}{1}{idir}.markers.SlowWave.clock(iseizure);
+            plot([t,t],[-1,1],'-r');
+        end
+        xlim([MuseStruct{ipatient}{1}{idir}.starttime, MuseStruct{ipatient}{1}{idir}.endtime]);
+        
+    end
+    fname = fullfile(config{ipatient}.imagesavedir, '..', 'SlowWave_line_overtime', sprintf('allrats_slowwave_line_%d', idir));
+    dtx_savefigure(fig, fname, 'png', 'pdf', 'close');
+end
+
+% plot one example
+ipatient = 3;
+idir = 2;
+fig = figure;
+subplot(5,1,1); hold on;
+for iseizure= 1:size(MuseStruct{ipatient}{1}{idir}.markers.SlowWave.clock,2)
+    t = MuseStruct{ipatient}{1}{idir}.markers.SlowWave.clock(iseizure);
+    plot([t,t],[-1,1],'-r','LineWidth',2);
+end
+
+% xlim([0 ax(2)]);
+yticks([]);
+ylim([-2 2]);
+setfig();
+set(gca, 'FontSize', 15);
+xlabel('Time');
+xlim([MuseStruct{ipatient}{1}{idir}.starttime, MuseStruct{ipatient}{1}{idir}.endtime]);
+
+fname = fullfile(config{ipatient}.imagesavedir, '..', 'SlowWave_line_overtime', sprintf('%s_slowwave_line_%d', config{ipatient}.prefix(1:end-1), idir));
+dtx_savefigure(fig,fname,'pdf','png','close');
 
 %% plot emg duration and eeg-emg delay over time
 for iparam = ["eeg_emg_delay_mean", "emg_duration_mean"]
@@ -289,23 +353,39 @@ for iparam = ["eeg_emg_delay_mean", "emg_duration_mean"]
     dtx_savefigure(fig,fname,'pdf','png','fig','close');
 end
 
-
 %% plot distrib of eeg emg delay, and emg duration
 %voir si différencer emg artefacté ou absence d'emg
 %eeg emg delay
+
 for iparam = ["eeg_emg_delay", "emg_duration"]
     fig = figure;hold on
+    iplot = 0;
     for ipatient = 1:size(config,2)
-        bar(ipatient, nanmean(emg_timing{ipatient}.(iparam)),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
-        scatter(rand(size(emg_timing{ipatient}.(iparam)))*0.2+ipatient-0.1, emg_timing{ipatient}.(iparam), '.', 'MarkerEdgeColor', 'k');
-        errorbar(ipatient, nanmean(emg_timing{ipatient}.(iparam)),0, nanstd(emg_timing{ipatient}.(iparam)),'k','CapSize',10);
+        if isempty(emg_timing{ipatient}.eeg_emg_delay)
+            table_output.(iparam)(ipatient) = nan;
+            continue
+        end
+        iplot = iplot+1;
+        bar(iplot, nanmean(emg_timing{ipatient}.(iparam)),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
+        scatter(rand(size(emg_timing{ipatient}.(iparam)))*0.2+iplot-0.1, emg_timing{ipatient}.(iparam), '.', 'MarkerEdgeColor', 'k');
+        errorbar(iplot, nanmean(emg_timing{ipatient}.(iparam)),0, nanstd(emg_timing{ipatient}.(iparam)),'k','CapSize',10);
+        table_output.(iparam)(ipatient) = nanmean(emg_timing{ipatient}.(iparam));
     end
-    xlim([0 size(config,2)+1]);
-    ylabel(iparam, 'Interpreter','none');
+    xlim([0 iplot+1]);
+    ylabel('ms');
+    y = ylim;
+    %yticks([-0.100:0.100:0.400]);
+    yticklabels(yticks.*1000);
+    xticks([]);
     setfig();
     fname = fullfile(config{ipatient}.imagesavedir,'..','seizure_description',sprintf('allpatients_%s',iparam));
     dtx_savefigure(fig,fname,'pdf','png','fig','close');
 end
+
+nanmean(table_output.eeg_emg_delay)
+nanstd(table_output.eeg_emg_delay)
+nanmean(table_output.emg_duration)
+nanstd(table_output.emg_duration)
 
 %eeg emg delay summary
 for iparam = ["eeg_emg_delay", "emg_duration"]
@@ -325,7 +405,6 @@ for iparam = ["eeg_emg_delay", "emg_duration"]
     fname = fullfile(config{ipatient}.imagesavedir,'..','seizure_description',sprintf('allpatients_%s_summary',iparam));
     dtx_savefigure(fig,fname,'pdf','png','fig','close');
 end
-
 
 % for ipatient = 1:size(config,2)
 %     fprintf('patient %d : last seizure %g hours post injection\n',ipatient, hours(seizure_timing{ipatient}.time_start.clock(end) - config{ipatient}.injectiontime));
@@ -351,6 +430,25 @@ end
 
 %done with dtx_cluster_eegvideo_plotalldata
 
+%% plot example of slowwave_overdrawed
+ipatient = 3;
+cfgtemp         = [];
+cfgtemp.channel = 'M1G';
+to_plot         = ft_selectdata(cfgtemp, LFP{ipatient}{1}.SlowWave);
+
+fig = figure; hold on;
+for itrial = 1:size(to_plot.trial, 2)
+    p = plot(to_plot.time{itrial},to_plot.trial{itrial},'k');
+    p.Color(4) = 0.1;
+end
+xlim([-2 2]);
+setfig();
+xlabel('Time (s)');
+ylabel('uV');
+yticklabels(yticks./10);
+fname = fullfile(config{ipatient}.imagesavedir, sprintf('%sSlowWave_Figure', config{ipatient}.prefix));
+dtx_savefigure(fig, fname, 'png', 'pdf', 'close');
+
 %% #DATA COMPUTED IN dtx_cluster_eegvideo.m# slow wave morphology + average over a sliding time window
 clear morpho
 %only computed for markername "SlowWave"
@@ -366,7 +464,7 @@ end
 
 %% plot slow wave morphology distribution
 clear param meanparam stdparam
-for iparam = ["halfwidth", "amplitude"]
+for iparam = ["halfwidth", "amplitude", "amplitude_norm"]
     for i_filt = ["raw","hpfilt_0_15"]
         fig=figure;hold on
         for ipatient = pat_list
@@ -378,27 +476,31 @@ for iparam = ["halfwidth", "amplitude"]
             stdparam.(i_filt).(iparam)(ipatient)  = nanstd(param);
             
             bar(ipatient, meanparam.(i_filt).(iparam)(ipatient),'FaceColor',[0.6 0.6 0.6],'EdgeColor','k');
-            scatter(rand(size(param))*0.2+ipatient-0.1, param, '.', 'MarkerEdgeColor', 'k');
+            scatter(rand(size(param))*0.3+ipatient-0.1, param, '.', 'MarkerEdgeColor', 'k');
             errorbar(ipatient, meanparam.(i_filt).(iparam)(ipatient),0, stdparam.(i_filt).(iparam)(ipatient),'k');
-            
+            table_output.(sprintf('%s_%s', iparam, i_filt))(ipatient) = meanparam.(i_filt).(iparam)(ipatient);
         end
-        
-        
         
         ax = axis;
         ylim([0 ax(4)]);
         xlim([0, size(pat_list,2)+1]);
-        xticks(1:size(pat_list,2));
-        xticklabels(1:size(pat_list,2));
+        xticks([]);
+        xlabel('Rats');
         setfig();
-        ylabel(iparam);
-        set(gca, 'Fontsize', 11);
+        if strcmp(iparam, 'halfwidth')
+            ylabel('ms');
+            yticklabels(yticks.*1000);
+        else
+            ylabel('uV');
+        end
         
         %print to file
         fname = fullfile(config{ipatient}.imagesavedir,'..','morpho_all',sprintf('allpatients_morpho_%s_%s',iparam,i_filt));
         dtx_savefigure(fig,fname,'pdf','png','close');
     end
 end
+mean(table_output.halfwidth_raw)
+std(table_output.halfwidth_raw)
 
 %plot mean of all patients in the same plot
 for iparam = ["halfwidth", "amplitude"]
@@ -508,9 +610,36 @@ for i_filt = ["raw","hpfilt_0_15"]
     end
 end
 
+
+%% some exemples of morphology
+for markername = "SlowWave"
+    for ipatient = 1:size(config, 2)
+        cfgtemp         = [];
+        cfgtemp.channel = config{ipatient}.align.channel.(markername);
+        to_plot         = ft_selectdata(cfgtemp, LFP{ipatient}{1}.(markername));
+        
+        fig = figure; hold on;
+        for itrial = 1:size(to_plot.trial, 2)
+            y   = to_plot.trial{itrial};
+            x   = to_plot.time{itrial};
+            p = plot(x,y,'k');
+            p.Color(4) = 0.1;
+        end
+        
+        % y    = nanmean(y,1);
+        % plot(x,y, 'r', 'LineWidth', 2);
+        axis tight;
+        xlim([-2 2]);
+        set(gca, 'TickDir', 'out', 'FontSize', 25, 'FontWeight', 'bold');
+        xlabel('Time (s)');
+        ylabel('uV');
+        fname = fullfile(config{ipatient}.imagesavedir, '..', 'figure_morpho', [config{ipatient}.prefix,'SlowWave_morpho_', char(markername)]);
+        dtx_savefigure(fig,fname, 'png', 'pdf', 'close');
+    end
+end
+
 %% EMG : compute envelopes
 for markername = "SlowWave_EMG_begin"
-    
     for ipatient = pat_list
         
         if ~isfield(LFP{ipatient}{ipart}, markername)
@@ -552,7 +681,7 @@ end
 
 %% EMG : plot overdraw and avg of envelopes for each rat (no normalization)
 for markername = "SlowWave_EMG_begin"
-    for ipatient = pat_list
+    for ipatient = [2 3]%pat_list
         if ~isfield(LFP{ipatient}{ipart}, markername)
             continue
         end
@@ -570,7 +699,15 @@ for markername = "SlowWave_EMG_begin"
         % emg raw + avg
 %         subplot(3,1,1);hold on;
         %plot each trial with baseline substraction
+        count = 0;
         for itrial = 1:size(env{ipatient}.trial,2)
+            %             if ipatient == 2
+            %                 %if max(env{ipatient}.trial{itrial}(t>0.5&t<1)) > 50 || max(env{ipatient}.trial{itrial}(t>-0.5&t<0.5)) > 150
+            %                 if max(env{ipatient}.trial{itrial}(t>-0.5&t<0.5)) > 150
+            %                     count = count+1;
+            %                     continue
+            %                 end
+            %             end
             bl_trial   = nanmean(env{ipatient}.trial{itrial}(t>-2&t<-0.5));
             trial = env{ipatient}.trial{itrial} - bl_trial;
             p = plot(t,trial,'k');
@@ -588,19 +725,18 @@ for markername = "SlowWave_EMG_begin"
         x = t;
         y = [EMG_avg_blcorrected - std_data; std_data; std_data]';
         filled_SD = area(x,y);
-        filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
+        filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.2; filled_SD(3).FaceAlpha = 0.2;
         filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
-        filled_SD(2).FaceColor = 'b'; filled_SD(3).FaceColor = 'b';
+        filled_SD(2).FaceColor = 'k'; filled_SD(3).FaceColor = 'k';
         filled_SD(1).ShowBaseLine = 'off';
     
         %set figure display
         ax = axis;
-        xlim([-1 1]);
+        xlim([-0.5 1]);
         ylim([min(EMG_avg_blcorrected(t>-2&t<2) - std_data(t>-2&t<2)) max(EMG_avg_blcorrected(t>-2&t<2) + std_data(t>-2&t<2))]);
         xlabel('Time (s)','Interpreter','none', 'Fontsize',15);
         ylabel('uV');
-        set(gca, 'FontWeight','bold', 'Fontsize',15);
-        set(gca,'TickDir','out');
+        setfig();
 %         title('EMG morphology : envelopes of each trial, + average +/- std','Fontsize',18);
 %         set(gca,'ycolor','b');
 %         
@@ -692,7 +828,7 @@ for markername = "SlowWave_EMG_begin"
 %         xlabel('Time (s)','Interpreter','none', 'Fontsize',15);
 %         ylim([-1 2]);
         
-        fname = fullfile(config{ipatient}.imagesavedir,'..','emg_morpho', sprintf('%semg_morphology',config{ipatient}.prefix));
+        fname = fullfile(config{ipatient}.imagesavedir,'..','emg_morpho', sprintf('%semg_morphology_figure',config{ipatient}.prefix));
         dtx_savefigure(fig,fname, 'png','close'); %do not save in pdf as it takes 6 hours per figure
     end
 end
@@ -1027,6 +1163,7 @@ count.without_artefacts.emg_eeg_proportion.med_non_zero = median(count.without_a
 % - count.without_artefacts.seizures
 % - count.without_artefacts.emg
 save(fullfile(config{ipatient}.datasavedir, 'allpatients_count_datalength.mat'), 'count'); 
+writetable(table_output,fullfile(config{ipatient}.datasavedir, 'allpatients_summary_table.csv'));
 
 
 

@@ -12,5 +12,5 @@
 #SBATCH --array=1-9
 
 module load MATLAB/R2019b
-matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "dtx_cluster_eegvideo($SLURM_ARRAY_TASK_ID,'dtx_eegvideo_setparams');"
+matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "dtx_eegrodents_cluster($SLURM_ARRAY_TASK_ID,'dtx_eegvideo_setparams');"
 sleep 5;
