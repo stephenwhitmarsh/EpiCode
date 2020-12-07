@@ -73,6 +73,11 @@ config{1}.LFP.resamplefs            = 250;
 config{1}.LFP.baseline              = 'yes';
 config{1}.LFP.baselinewindow.Hspike = [-1, -0.5];
 
+config{1}.TFR.channel               = 'all';
+config{1}.TFR.foi                   = 4:4:80;
+config{1}.TFR.t_ftimwin             = 7./config{1}.TFR.foi;
+config{1}.TFR.toi                   = config{1}.epoch.toi.Hspike(1) : 0.04 : config{1}.epoch.toi.Hspike(2);
+
 config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.align.reref               = 'yes';
@@ -118,12 +123,18 @@ config{1}.spike.bl.combined1        = [-0.5, -0.2];
 config{1}.spike.bl.combined2        = [-0.5, -0.2];
 config{1}.spike.bl.combined3        = [-0.5, -0.2];
 
-config{1}.spike.resamplefs          = 1000;
+config{1}.spike.resamplefs.combined1 = 1000;
+config{1}.spike.resamplefs.combined2 = 1000;
+config{1}.spike.resamplefs.combined3 = 1000;
+
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
 config{1}.spike.ISIbins             = [0 : 0.003 : 0.150]; %in s
 config{1}.spike.nrsdfbins           = 100;
+
+config{1}.spikewin.windowsize       = 60;
+config{1}.spikewin.windowoverlap    = 0.5;
 
 config{1}.stats.toi.combined1      = [-0.5, 1.5];
 config{1}.stats.toi.combined2       = [-0.5, 1.5];
@@ -173,7 +184,7 @@ config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
 
 config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
-config{3}.circus.channelname        = {'mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mTBmd','mHa2g','mHa2g','mHa2g','mHa2g'};
+config{3}.circus.channelname        = {'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g'};
 
 config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
 config{3}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction

@@ -25,7 +25,8 @@ function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg, MuseStruct, SpikeRaw, 
 %
 % ### Output:
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
-%
+
+
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
@@ -47,18 +48,19 @@ end
 
 hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
+% start loop
 for ipart = cfg.circus.part_list
-    
+
     if ipart > size(SpikeRaw, 2)
         SpikeTrials{ipart} = [];
         continue
     end
-    
+
     if isempty(SpikeRaw{ipart})
         SpikeTrials{ipart} = [];
         continue
     end
-    
+
     % to deal with multichannel data
     if isfield(SpikeRaw{ipart}, 'hdr')
         hdr = SpikeRaw{ipart}.hdr;
@@ -68,17 +70,17 @@ for ipart = cfg.circus.part_list
         else
             temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
         end
-        
+
         hdr_fname   = fullfile(temp(1).folder, temp(1).name);
         hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
     end
-    
+
     % create trials
     clear Trials
     for markername = string(cfg.name)
-        
+
         SpikeTrials{ipart}.(markername) = []; %initialize to avoid bug in case no marker are found and need to output empty structure
-        
+
         % clock time of each event
         clocktimes = [];
         for ifile = 1 : size(MuseStruct{ipart}, 2)
@@ -93,7 +95,7 @@ for ipart = cfg.circus.part_list
             end
             clocktimes = [clocktimes, MuseStruct{ipart}{ifile}.markers.(cfg.muse.startmarker.(markername)).clock];
         end
-        
+
         % first sample starts at 0, add cumulative directory along the way
         hyplabels_trl   = [];
         Startsample     = [];
@@ -107,15 +109,15 @@ for ipart = cfg.circus.part_list
         Endtime         = [];
         dirOnset(1)     = 0;
         trialcount      = 1;
-        
+
         % loop over directories
         for idir = 1 : size(MuseStruct{ipart}, 2)
-            
+
             % calculate duration of single file/directory
             temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}(1:end-2), '*.ncs']));
             hdrtemp             = ft_read_header(fullfile(temp(1).folder, temp(1).name));
             dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples;
-            
+
             % Check whether data has events
             if ~isfield(cfg.muse.startmarker, char(markername))
                 continue
@@ -130,30 +132,30 @@ for ipart = cfg.circus.part_list
             if isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2))
                 continue
             end
-            
+
             % starting trialcount fresh at every directory
             trialcount_dir      = 1;
-            
+
             % sort times in case markers have been e.g. combined
             [~, sidx] = sort(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime    = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(sidx);
-            
+
             [~, sidx] = sort(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime      = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock         = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(sidx);
-            
+
             % loop over events
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
-                
+
                 ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * hdr.Fs);
                 idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * hdr.Fs) >= ss, 1, 'first');
                 es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * hdr.Fs);
-                
+
                 if isempty(es)
                     continue
                 end
-                
+
                 Startsample     = [Startsample; ss + cfg.spike.toi.(markername)(1) * hdr.Fs + dirOnset(idir)];
                 Endsample       = [Endsample;   es + cfg.spike.toi.(markername)(2) * hdr.Fs + dirOnset(idir)];
                 Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
@@ -163,48 +165,48 @@ for ipart = cfg.circus.part_list
                 Trialnr         = [Trialnr;     trialcount];
                 Filenr          = [Filenr;      idir];
                 FileOffset      = [FileOffset;  dirOnset(idir)];
-                
+
                 trialcount      = trialcount + 1;
                 trialcount_dir  = trialcount_dir + 1;
-                
+
                 % find overlap with hypnogram markers
                 trlstart        = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent);
                 trlend          = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent);
                 overlap         = zeros(size(hyplabels));
-                
+
                 for ihyplabel = 1 : size(hyplabels, 2)
-                    
+
                     if ~isfield(MuseStruct{ipart}{idir}.markers, strcat(hyplabels{ihyplabel}, '__START__'))
                         continue
                     end
-                    
+
                     for ihyp = 1 : size(MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).synctime, 2)
-                        
+
                         hypstart = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).clock(ihyp);
                         hypend   = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__END__')).clock(ihyp);
-                        
+
                         % end of trial overlaps with beginning of sleepstate
                         if hypstart > trlstart && hypstart < trlend
                             overlap(ihyplabel) = seconds(trlend - hypstart);
                         end
-                        
+
                         % sleepstage falls fully within trial
                         if hypstart > trlstart && hypend < trlend
                             overlap(ihyplabel) = seconds(hypend - hypstart);
                         end
-                        
+
                         % beginning of trial overlaps with end of sleepstate
                         if hypstart < trlstart && hypend > trlstart
                             overlap(ihyplabel) = seconds(hypend - trlstart);
                         end
-                        
+
                         % trial falls fully within sleepstate
                         if hypstart < trlstart && hypend > trlend && ~(hypend > trlstart)
                             overlap(ihyplabel) = seconds(trlend - trlstart);
                         end
                     end
                 end % ihyplabel
-                
+
                 % add sleep stage to trialinfo
                 [val, indx] = max(overlap, [], 2);
                 if val > 0
@@ -212,19 +214,19 @@ for ipart = cfg.circus.part_list
                 else
                     hyplabels_trl = [hyplabels_trl, "NO_SCORE"];
                 end
-                
+
             end % ievent
         end %idir
-        
+
         full_trial = Startsample > 0 & Endsample < hdr.nSamples;% so not to read before BOF or after EOFs
         cfgtemp                         = [];
         cfgtemp.trl                     = [Startsample, Endsample, Offset];
         cfgtemp.trl                     = cfgtemp.trl(full_trial, :); % so not to read before BOF or after EOFs
-        
+
         if isempty(cfgtemp.trl)
             continue
         end
-        
+
         % create spiketrials timelocked to events
         cfgtemp.trlunit                                         = 'samples';
         cfgtemp.hdr                                             = hdr;
@@ -244,71 +246,7 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.hyplabel      = hyplabels_trl(full_trial)';
         SpikeTrials{ipart}.(markername).trialinfo.starttime     = Starttime(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.endtime       = Endtime(full_trial);
-        
-        %test an other way of removing artefacts
-        artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
-        artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
-        dir_list   = unique(SpikeTrials{ipart}.(markername).trialinfo.idir);
-        dir_offset = unique(SpikeTrials{ipart}.(markername).trialinfo.fileoffset);
-        ft_info('Looking for artefacts overlapping trials\n');
-        
-        for ievent = 1:size(SpikeTrials{ipart}.(markername).trialinfo.begsample, 1)
-            trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample(ievent) / hdr.Fs;
-            trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample(ievent) / hdr.Fs;
-            
-            for idir = 1 : size(MuseStruct{ipart}, 2)
-                if ~ismember(idir,dir_list)
-                    continue
-                end
-                
-                length_previousdir = dir_offset(dir_list == idir) / hdr.Fs;
-                
-                if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
-                    continue
-                end
-                
-                if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
-                    continue
-                end
-                
-                artstart = sort(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime + length_previousdir);
-                artend   = sort(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime + length_previousdir);
-                
-                if artstart(1) > trlend
-                    continue
-                end
-                
-                %find last artstart before trial
-                idx = bsearch(artstart, trlstart);
-                if artstart(idx) > trlstart && idx > 1
-                    idx = idx-1;
-                end
-                
-                %it must end before the trial
-                if artend(idx) > trlstart
-                    artefact(ievent) = true;
-                    artefact_length(ievent) = artend(idx) - artstart(idx) + artefact_length(ievent); %in case several artefacts intersect this trial
-                end
-                
-                %first artstart after trial start must begin after
-                %trial end
-                idx = idx+1;
-                if idx > length(artstart)
-                    continue
-                end
-                if artstart(idx) < trlend
-                    artefact(ievent) = true;
-                    artefact_length(ievent) = artend(idx) - artstart(idx) + artefact_length(ievent); %in case several artefacts intersect this trial
-                end
-                
-            end
-        end
-        
-        % add artefact to trialinfo
-        SpikeTrials{ipart}.(markername).trialinfo.artefact_test = artefact;
-        SpikeTrials{ipart}.(markername).trialinfo.artefactlength_test = artefact_length;
-        clear artefact
-        
+
         %% Detect artefacts
         artefact = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
         artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
@@ -317,21 +255,21 @@ for ipart = cfg.circus.part_list
             ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
             trlstart = SpikeTrials{ipart}.(markername).trialinfo.starttime(ievent);
             trlend   = SpikeTrials{ipart}.(markername).trialinfo.endtime(ievent);
-            
+
             for idir = 1 : size(MuseStruct{ipart}, 2)
-                
+
                 if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
                     continue
                 end
-                
+
                 if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
                     continue
                 end
-                
+
                 for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.clock, 2)
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
-                    
+
                     % full trial is before artefact
                     if trlstart < artstart && trlend < artstart
                         continue
@@ -342,19 +280,17 @@ for ipart = cfg.circus.part_list
                         artefact(ievent) = true;
                         artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent); %in case several artefacts intersect this trial
                     end
-                    
+
                 end % iart
             end % idir
         end % ievent
         ft_progress('close');
-        
+
         % add artefact to trialinfo
         SpikeTrials{ipart}.(markername).trialinfo.artefact = artefact;
         SpikeTrials{ipart}.(markername).trialinfo.artefact_length = artefact_length;
-        
+
     end % markername
-    
 end % ipart
 
 save(fname, 'SpikeTrials', '-v7.3');
-

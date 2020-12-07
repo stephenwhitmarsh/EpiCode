@@ -33,20 +33,16 @@ fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
 write = ft_getopt(cfg.muse, 'write', true);
 
 if exist(fname,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('** loading precomputed MuseStruct **\n');
-    fprintf('************************************\n\n');
+    fprintf('Loading precomputed MuseStruct\n');
     load(fname,'MuseStruct');
     return
 else
-    fprintf('*************************\n');
-    fprintf('** creating MuseStruct **\n');
-    fprintf('*************************\n\n');
+    fprintf('Creating MuseStruct\n');
 end
 
 % add utilities path if not already
 mfile_name          = mfilename('fullpath');
-[pathstr, name, ~]  = fileparts(mfile_name); 
+[pathstr, name, ~]  = fileparts(mfile_name);
 pathCell            = regexp(path, pathsep, 'split');
 
 if ispc  % Windows is not case-sensitive
@@ -303,7 +299,6 @@ for ipart = 1 : size(cfg.directorylist, 2)
         % MuseStruct{ipart}{idir}.nSamples   = hdr.nSamples;
         % MuseStruct{ipart}{idir}.Fs         = hdr.Fs;
 
-
         % create markers details in MuseStruct
         for imarker = 1 : nmarkers
             name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
@@ -327,13 +322,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
         end
     end
 
-
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
         ft_notice('creating directory %s', cfg.datasavedir);
         mkdir(cfg.datasavedir);
     end
-
 end
 
 if write

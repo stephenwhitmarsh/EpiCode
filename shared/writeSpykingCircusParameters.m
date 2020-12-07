@@ -50,6 +50,20 @@ cfg.circus.part_list        = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.paramfile        = ft_getopt(cfg.circus, 'paramfile', []);
 cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
 
+
+% add external/iniconfig path if not already
+mfile_name = mfilename('fullpath');
+pathstr    = fileparts(fileparts(mfile_name));
+pathCell   = regexp(path, pathsep, 'split');
+if ispc  % Windows is not case-sensitive
+    onPath = any(strcmpi(fullfile(pathstr, ['external', filesep, 'iniconfig']), pathCell));
+else
+    onPath = any(strcmp(fullfile(pathstr, ['external', filesep, 'iniconfig']), pathCell));
+end
+if ~onPath
+    addpath(fullfile(pathstr, ['external', filesep, 'iniconfig']));
+end
+
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist,2);
 end
@@ -69,14 +83,14 @@ else
 end
 
 for ipart = cfg.circus.part_list
-    
+
     subjdir         = cfg.prefix(1:end-1);
     partdir         = ['p', num2str(ipart)];
-    
+
     % read Spyking-Circus params file
     ini = IniConfig();
     ini.ReadFile(fname_params_default);
-    
+
     % remove inline comments
     [sections, count_sections] = ini.GetSections();
     for sectioni = 1 : count_sections
@@ -87,11 +101,11 @@ for ipart = cfg.circus.part_list
             ini.SetValues(sections{sectioni}, keys{keysi}, temp{1});
         end
     end
-    
+
     % there should be a better way to do this that removes double code...
     if isempty(cfg.circus.channelname)
         nb_channels     = size(cfg.circus.channel,2);
-    
+
         % adjust parameters common to all
         fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
         h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None', fname_prb, '','False','SpykingCircus'});
@@ -108,7 +122,7 @@ for ipart = cfg.circus.part_list
             h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
         end
         if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
-        
+
         % replace settings with those defined in cfg.circus.params
         if isfield(cfg.circus, 'params')
             if ~isempty(cfg.circus.params)
@@ -121,17 +135,17 @@ for ipart = cfg.circus.part_list
                 end
             end
         end
-        
+
         filename        = [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{1}, '.params'];
         fname_params    = fullfile(cfg.datasavedir, subjdir, partdir, filename);
         status          = ini.WriteFile(fname_params);
         if status == false, error('Couldn''t write file %s', fname_params); end
         writeProbeFile(nb_channels, fullfile(cfg.datasavedir, subjdir, partdir, fname_prb));
-        
+
     else
-        
+
         for chandir = unique(cfg.circus.channelname)
-            
+
             % add artefact file to params only if needed
             temp        = strcmp(cfg.circus.channelname, chandir);
             firstchan   = cfg.circus.channel(find(temp,1,'first'));
@@ -152,7 +166,7 @@ for ipart = cfg.circus.part_list
                 h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
             end
             if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
-            
+
             % replace settings with those defined in cfg.circus.params
             if isfield(cfg.circus, 'params')
                 if ~isempty(cfg.circus.params)
@@ -165,7 +179,7 @@ for ipart = cfg.circus.part_list
                     end
                 end
             end
-             
+
             filename        = strcat(cfg.prefix, 'p', num2str(ipart), '-multifile-', firstchan, '.params');
             fname_params    = char(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), filename));
             fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];

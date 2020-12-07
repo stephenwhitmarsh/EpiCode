@@ -95,7 +95,7 @@ for ipart = cfg.circus.part_list
             datadir = fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], char(chandir));
         end
         
-        temp    = dir(fullfile(datadir, 'SpykingCircus', '*.GUI'));
+        temp = dir(fullfile(datadir, 'SpykingCircus', '*.GUI'));
         if isempty(temp)
             error('Could not find Phy-converted Spyking-Circus results in %s\n', fullfile(datadir, 'SpykingCircus', '*.GUI'));
         else
@@ -243,9 +243,8 @@ for ipart = cfg.circus.part_list
             for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
                 SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = char(strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir));
             end
-            clear SpikeRaw
         end
-                    
+        SpikeRaw{ipart}.(char(chandir)) = [];        
     end % channelname
     
     % combine diffrent electrodebundles - very smartly! :-)

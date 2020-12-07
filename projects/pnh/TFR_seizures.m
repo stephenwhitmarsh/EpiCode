@@ -1,4 +1,4 @@
-function [TFR] = TFRtrials(cfg, Trialdata, force)
+function [TFR] = TFR_seizures(cfg, Trialdata, force)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -38,17 +38,18 @@ for ipart = 1 : size(Trialdata,2)
         cfgtemp.channel                 = 'all'; 
         cfgtemp.method                  = 'mtmconvol';
         cfgtemp.output                  = 'pow';
-        cfgtemp.taper                   = 'hanning';
+        cfgtemp.taper                   = 'dpss';
         cfgtemp.pad                     = 'nextpow2'; 
         cfgtemp.keeptrials              = 'yes';
-        cfgtemp.foi                     = cfg.TFR.foi;
-        cfgtemp.t_ftimwin               = cfg.TFR.t_ftimwin;
-        cfgtemp.toi                     = cfg.TFR.toi;
-        cfgtemp.feedback                = 'off';
+        cfgtemp.foi                     = 10:2:200;
+        cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi));
+        cfgtemp.tapsmofrq               = 5;
+        
+        cfgtemp.toi                     = cfg.epoch.toi.(markername)(1) : 0.10 : cfg.epoch.toi.(markername)(2);
+%         cfgtemp.feedback = 'off';
         TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp,Trialdata{ipart}.(markername));
         
-    end % markername
-    
+    end
 end % ipart
     
 

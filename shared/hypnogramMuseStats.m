@@ -26,16 +26,12 @@ warning('off', 'all');
 fname = fullfile(cfg.datasavedir, sprintf('%shypnogramStats.mat', cfg.prefix));
 
 if exist(fname, 'file') && force == false
-    fprintf('**********************************\n');
-    fprintf('** loading precomputed stats *****\n');
-    fprintf('**********************************\n\n');
+    fprintf('loading precomputed stats\n');
     load(fname, 'stats', 'marker', 'hypnogram');
     return
 end
 
-fprintf('***********************\n');
-fprintf('** creating stats *****\n');
-fprintf('***********************\n\n');
+fprintf('Calculating stats\n');
 
 % eventnr will increased over all marker events and all files
 eventnr = 0;
@@ -48,19 +44,19 @@ hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 % hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE"];
 
 for markername = string(cfg.hyp.markers)
-    
+
     % Go through different parts
     for ipart = 1 : size(cfg.directorylist, 2)
-        
+
         % Go through directory list
         for idir = 1 : size(cfg.directorylist{ipart}, 2)
-            
+
             try
                 StartRecord(ipart, idir) = MuseStruct{ipart}{idir}.markers.StartRecord.clock;
                 StopRecord(ipart, idir)  = MuseStruct{ipart}{idir}.markers.StopRecord.clock;
             catch
             end
-            
+
             if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
                 continue
             end
@@ -70,15 +66,15 @@ for markername = string(cfg.hyp.markers)
             if isempty(MuseStruct{ipart}{idir}.markers.(markername).synctime)
                 continue
             end
-            
+
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(markername).synctime, 2)
-                
+
                 eventnr = eventnr + 1;
                 marker.clock(eventnr)       = MuseStruct{ipart}{idir}.markers.(markername).clock(ievent);
                 marker.name(eventnr)        = markername;
                 marker.ipart(eventnr)       = ipart;
                 marker.idir(eventnr)        = idir;
-                
+
                 % find overlap with hypnogram markers
                 for hyplabel = hyplabels
                     if ~isfield(MuseStruct{ipart}{idir}.markers, [cell2mat(hyplabel), '__START__'])
@@ -114,10 +110,10 @@ ihyp = 0;
 
 % Go through different parts
 for ipart = 1 : size(cfg.directorylist, 2)
-    
+
     % Go through directory list
     for idir = 1 : size(cfg.directorylist{ipart}, 2)
-        
+
         for hyplabel = hyplabels
             if isfield(MuseStruct{ipart}{idir}.markers, [cell2mat(hyplabel), '__START__'])
                 for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']).clock, 2)
@@ -133,7 +129,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
         end
     end
 end
-% 
+%
 % try
 %     hypnogram.hyplabel(hypnogram.hyplabel == "NO_SCORE") = "AWAKE";
 % catch
@@ -142,10 +138,10 @@ hypnogram = sortrows(hypnogram);
 
 % IEDs x Sleep stage per marker, separate for every night
 for markername = string(cfg.hyp.markers)
-    
+
     clear totaldur totalsum
     for ipart = unique(hypnogram.part)'
-        
+
         s = 0;
         for hyplabel = hyplabels
             stats{ipart}.(markername).duration.(hyplabel)   = hours(sum(hypnogram.duration(hypnogram.hyplabel == hyplabel & hypnogram.part == ipart)));

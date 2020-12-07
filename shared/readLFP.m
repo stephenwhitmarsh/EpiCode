@@ -63,31 +63,31 @@ hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % loop over markers
 for markername = string(cfg.LFP.name)
-    
+
     fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, '.mat'));
-    
+
     if exist(fname_out, 'file') && force == false
-        fprintf('*** Loading precomputed LFP data for %s ***\n', markername);
-        
+        fprintf('Loading precomputed LFP data for %s\n', markername);
+
         temp = load(fname_out, 'LFP');
         for ipart = 1 : size(MuseStruct, 2)
             LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
         end
         continue
-        
+
     else
-        fprintf('*** (re-) computing LFP data for %s ***\n', markername);
+        fprintf('(re-) computing LFP data for %s\n', markername);
     end
-    
+
     % loop over parts within subject
     for ipart = 1 : size(MuseStruct, 2)
-        
+
         fprintf('For marker %s\n', cell2mat(markername));
         hasmarker = false(length(MuseStruct{ipart}), 1);
-        
+
         % loop over directories
         for idir = 1 : length(MuseStruct{ipart})
-            
+
             if ~isfield(MuseStruct{ipart}{idir}, 'markers')
                 continue
             end
@@ -109,7 +109,7 @@ for markername = string(cfg.LFP.name)
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
                 continue
             end
-            
+
             if isNeuralynx
                 nfile = size(cfg.LFP.channel, 2); % one file per channel
             elseif isMicromed
@@ -119,10 +119,10 @@ for markername = string(cfg.LFP.name)
                 nfile = 1; % only one file with all electrodes
                 fname = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.eeg']);
             end
-            
+
             % loop over files (electrodes)
             for ifile = 1 : nfile
-                
+
                 %load data
                 if isNeuralynx
                     temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{ifile}, '.ncs']));
@@ -133,14 +133,14 @@ for markername = string(cfg.LFP.name)
                     cfgtemp.channel     = cfg.labels.macro';
                     dat                 = ft_preprocessing(cfgtemp);
                 end
-                
+
                 %rereferencing
                 cfgtemp = [];
                 cfgtemp.reref             = ft_getopt(cfg.LFP, 'reref', 'no');
                 cfgtemp.rerefmethod       = ft_getopt(cfg.LFP, 'rerefmethod', []);
                 cfgtemp.refchannel        = ft_getopt(cfg.LFP, 'refchannel', []);
                 dat                       = ft_preprocessing(cfgtemp, dat);
-                
+
                 % filtering
                 cfgtemp                 = [];
                 cfgtemp.lpfilter        = ft_getopt(cfg.LFP, 'lpfilter', 'no');
@@ -152,23 +152,23 @@ for markername = string(cfg.LFP.name)
                 cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
                 cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);
                 dat                     = ft_preprocessing(cfgtemp, dat);
-                
+
                 % append EMG data (if any)
                 if isMicromed || isBrainvision %not adapted for nlx data (1 file per electrode) for now
-                    
+
                     cfg.EMG = ft_getopt(cfg, 'EMG', []);
-                    
+
                     cfgtemp                   = [];
                     cfgtemp.channel           = {ft_getopt(cfg.EMG, sprintf('%s',markername), []);ft_getopt(cfg.EMG, 'refchannel',[])}; % load the emg associated with eeg marker, and the ref if any
                     cfgtemp.channel           = cfgtemp.channel(~cellfun(@isempty, cfgtemp.channel));
-                    
+
                     if ~isempty(cfgtemp.channel)
                         cfgtemp.dataset           = fname;
                         cfgtemp.reref             = ft_getopt(cfg.EMG, 'reref', 'no');
                         cfgtemp.rerefmethod       = ft_getopt(cfg.EMG, 'rerefmethod', []);
                         cfgtemp.refchannel        = ft_getopt(cfg.EMG, 'refchannel', []);
                         data_EMG                  = ft_preprocessing(cfgtemp);
-                        
+
                         % filtering
                         cfgtemp                 = [];
                         cfgtemp.lpfilter        = ft_getopt(cfg.EMG, 'lpfilter', 'no');
@@ -184,17 +184,17 @@ for markername = string(cfg.LFP.name)
                         cfgtemp.bpfiltord       = ft_getopt(cfg.EMG, 'bpfiltord', []);
                         cfgtemp.bsfiltord       = ft_getopt(cfg.EMG, 'bsfiltord', []);
                         data_EMG                = ft_preprocessing(cfgtemp,data_EMG);
-                        
+
                         % append EMG to EEG data
                         cfgtemp                 = [];
                         cfgtemp.keepsampleinfo  = 'yes';
                         dat                     = ft_appenddata(cfgtemp, dat, data_EMG);
                     end
                 end
-                
+
                 % downsample data and correct baseline
                 if isfield(cfg.LFP, 'resamplefs')
-                    
+
                     cfgtemp                         = [];
                     cfgtemp.resamplefs              = ft_getopt(cfg.LFP, 'resamplefs', []);
                     if strcmp(ft_getopt(cfg.LFP, 'baseline', 'no'), 'no')
@@ -205,9 +205,9 @@ for markername = string(cfg.LFP.name)
                     end
                     dat                             = ft_resampledata(cfgtemp, dat);
                 end
-                
+
                 fsample = dat.fsample; %store this info for output LFP
-                
+
                 % create trial segmentation common to resampled
                 % data. Neuralynx : same markers for all files
                 % of one dir.
@@ -216,9 +216,9 @@ for markername = string(cfg.LFP.name)
                 Offset                  = [];
                 trialnr                 = [];
                 hyplabels_trl           = [];
-                
+
                 for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
-                    
+
                     ss = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * dat.fsample);
                     if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
                         es = ss;
@@ -227,23 +227,23 @@ for markername = string(cfg.LFP.name)
                         idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * dat.fsample);
                     end
-                    
+
                     if isempty(es)
                         continue
                     end
-                    
+
                     Startsample(ievent) = ss + cfg.epoch.toi.(markername)(1) * dat.fsample - cfg.epoch.pad.(markername) * dat.fsample;
                     Endsample(ievent)   = es + cfg.epoch.toi.(markername)(2) * dat.fsample + cfg.epoch.pad.(markername) * dat.fsample;
                     Offset(ievent)      = (cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername)) * dat.fsample;
                     trialnr(ievent)     = ievent;
                     Starttime(ievent)   = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.epoch.toi.(markername)(1) - cfg.epoch.pad.(markername));
                     Endtime(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx) + seconds(cfg.epoch.toi.(markername)(2) + cfg.epoch.pad.(markername));
-                    
+
                     % find overlap with hypnogram markers
                     trlstart        = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent);
                     trlend          = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent);
                     overlap         = zeros(size(hyplabels));
-                    
+
                     for ihyplabel = 1 : size(hyplabels, 2)
                         if ~isfield(MuseStruct{ipart}{idir}.markers, strcat(hyplabels{ihyplabel}, '__START__'))
                             overlap(6) = 1;
@@ -251,49 +251,49 @@ for markername = string(cfg.LFP.name)
                         end
                         %                 fprintf('Checking for overlap in part %d of %d, directory %d of %d, trial %d of %d with %s\n', ipart, length(cfg.circus.part_list), idir, size(MuseStruct{ipart}, 2), ievent, size(SpikeTrials{ipart}.window.trialinfo, 1), hyplabels{ihyplabel});
                         for ihyp = 1 : size(MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).synctime, 2)
-                            
+
                             hypstart = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).clock(ihyp);
                             hypend   = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__END__')).clock(ihyp);
-                            
+
                             % end of trial overlaps with beginning of sleepstate
                             if hypstart > trlstart && hypstart < trlend
                                 overlap(ihyplabel) = seconds(trlend - hypstart);
                             end
-                            
+
                             % sleepstage falls fully within trial
                             if hypstart > trlstart && hypend < trlend
                                 overlap(ihyplabel) = seconds(hypend - hypstart);
                             end
-                            
+
                             % beginning of trial overlaps with end of sleepstate
                             if hypstart < trlstart && hypend > trlstart
                                 overlap(ihyplabel) = seconds(hypend - trlstart);
                             end
-                            
+
                             % trial falls fully within sleepstate
                             if hypstart < trlstart && hypend > trlend && ~(hypend > trlstart)
                                 overlap(ihyplabel) = seconds(trlend - trlstart);
                             end
                         end
                     end % hyplabel
-                    
+
                     % add sleep stage to trialinfo
                     [~, indx]       = max(overlap);
                     hyplabels_trl   = [hyplabels_trl hyplabels(indx)];
-                    
+
                 end
-                
+
                 % create Fieldtrip trl
                 full_trial = Startsample > 0 & Endsample < length(dat.trial{1}); % don't read before BOF or after EOF
-                
+
                 cfgtemp                             = [];
                 cfgtemp.trl                         = round([Startsample; Endsample; Offset]');
                 cfgtemp.trl                         = cfgtemp.trl(full_trial, :);
-                
+
                 if isempty(cfgtemp.trl)
                     continue
                 end
-                
+
                 filedat{ifile}                      = ft_redefinetrial(cfgtemp, dat);
                 filedat{ifile}.trialinfo            = table;
                 filedat{ifile}.trialinfo.begsample  = Startsample(full_trial)';
@@ -304,18 +304,20 @@ for markername = string(cfg.LFP.name)
                 filedat{ifile}.trialinfo.hyplabel   = hyplabels_trl(full_trial)';
                 filedat{ifile}.trialinfo.starttime  = Starttime(full_trial)';
                 filedat{ifile}.trialinfo.endtime    = Endtime(full_trial)';
+                filedat{ifile}.trialinfo.directory  = repmat(cfg.directorylist{ipart}{idir}, height(filedat{ifile}.trialinfo), 1);
+
                 clear dat
-                
+
                 if isNeuralynx
                     % same label over files
                     filedat{ifile}.label{1} = cfg.LFP.channel{ifile};
                 end
-                
+
                 % flag for averaging
                 hasmarker(idir) = true;
-                
+
             end % ifile (/electrodes)
-            
+
             % concatinate channels
             if exist('filedat','var')
                 cfgtemp                             = [];
@@ -325,11 +327,11 @@ for markername = string(cfg.LFP.name)
             else % if there are no events at all in this directory
                 dirdat{idir} = [];
             end
-            
+
         end % idir
-        
+
         if exist('dirdat', 'var') % in case there is no marker in the data
-            
+
             % concatinate data of different datasets (over trials)
             LFP{ipart}.(markername)             = ft_appenddata([], dirdat{hasmarker});
             LFP{ipart}.(markername).fsample     = fsample;
@@ -343,19 +345,19 @@ for markername = string(cfg.LFP.name)
                 ft_progress(ievent/size(LFP{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(LFP{ipart}.(markername).trialinfo, 1))
                 trlstart = LFP{ipart}.(markername).trialinfo.starttime(ievent);
                 trlend   = LFP{ipart}.(markername).trialinfo.endtime(ievent);
-                
+
                 for idir = LFP{ipart}.(markername).trialinfo.idir(ievent)%1 : size(MuseStruct{ipart}, 2)
-                    
+
                     if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
                         continue
                     end
-                    
+
                     if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
                         continue
                     end
-                    
+
                     for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)
-                        
+
                         artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                         artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
 
@@ -367,17 +369,17 @@ for markername = string(cfg.LFP.name)
                             continue
                         else
                             artefact(ievent) = true;
-                            artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent); 
+                            artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent);
                         end
                     end % iart
                 end % idir
             end % ievent
             ft_progress('close');
-            
+
             % add artefact to trialinfo
             LFP{ipart}.(markername).trialinfo.artefact = artefact;
             LFP{ipart}.(markername).trialinfo.artefact_length = artefact_length;
-            
+
             %annotate artefacted trials
             artefact = false(size(LFP{ipart}.(markername).trialinfo, 1), 1);
             ft_progress('init','text')
@@ -385,19 +387,19 @@ for markername = string(cfg.LFP.name)
                 ft_progress(ievent/size(LFP{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(LFP{ipart}.(markername).trialinfo, 1))
                 trlstart = LFP{ipart}.(markername).trialinfo.starttime(ievent);
                 trlend   = LFP{ipart}.(markername).trialinfo.endtime(ievent);
-                
+
                 for idir = LFP{ipart}.(markername).trialinfo.idir(ievent)%1 : size(MuseStruct{ipart}, 2)
-                    
+
                     if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
                         continue
                     end
-                    
+
                     if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
                         continue
                     end
-                    
+
                     for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)
-                        
+
                         artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                         artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
 
@@ -414,10 +416,10 @@ for markername = string(cfg.LFP.name)
                 end % idir
             end % ievent
             ft_progress('close');
-            
+
             % add artefact to trialinfo
             LFP{ipart}.(markername).trialinfo.artefact = artefact;
-            
+
             %remove cfg to save space on disk, if required
             if ~istrue(keepcfg)
                 LFP{ipart}.(markername) = rmfield(LFP{ipart}.(markername),'cfg');
@@ -426,14 +428,14 @@ for markername = string(cfg.LFP.name)
             LFP{ipart}.(markername) = [];
             fprintf('%s part %d : No data with marker ''%s''\n', cfg.prefix(1:end-1), ipart, markername);
         end
-        
+
     end % ipart
-    
+
     if write
-        fprintf('*** Saving LFP data for %s ***\n', markername);
+        fprintf('Saving LFP data for %s\n', markername);
         saveMarker(LFP, markername, fname_out)
     end
-    
+
 end % markername
 
 if isempty(markername)

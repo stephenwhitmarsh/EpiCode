@@ -56,7 +56,7 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.window = [];
         continue
     end
-    
+
     if isfield(SpikeRaw{ipart}, 'hdr')
         hdr = SpikeRaw{ipart}.hdr;
     else
@@ -65,11 +65,11 @@ for ipart = cfg.circus.part_list
         else
             temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
         end
-        
+
         hdr_fname   = fullfile(temp(1).folder, temp(1).name);
         hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
     end
-    
+
     % create trials of x seconds
     cfgtemp                                         = [];
     cfgtemp.trl(:, 1)                               = 0 : hdr.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : hdr.nSamples - (hdr.Fs * cfg.spikewin.windowsize);
@@ -134,7 +134,7 @@ for ipart = cfg.circus.part_list
         end % idir
     end % ievent
     ft_progress('close');
-    
+
     % add sleep stage to trialinfo
     for ievent = 1 : size(SpikeTrials{ipart}.window.trialinfo, 1)
         [val, indx] = max(overlap(ievent, :));
@@ -144,7 +144,7 @@ for ipart = cfg.circus.part_list
             SpikeTrials{ipart}.window.trialinfo.hyplabel(ievent) = "NO_SCORE";
         end
     end
-    
+
     % find overlap with IEDs
     for markername = string(cfg.name)
         SpikeTrials{ipart}.window.trialinfo.(char(markername)) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
@@ -162,7 +162,7 @@ for ipart = cfg.circus.part_list
                 if ~isfield(MuseStruct{ipart}{idir}.markers, char(markername))
                     continue
                 end
-                
+
                 if ~isfield(MuseStruct{ipart}{idir}.markers.(char(markername)), 'synctime')
                     continue
                 end
@@ -220,7 +220,7 @@ for ipart = cfg.circus.part_list
 
                     artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.clock(iart);
                     artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.clock(iart);
-                   
+
                     %full trial is before artefact
                     if trlstart < artstart && trlend < artstart
                         continue
@@ -231,8 +231,8 @@ for ipart = cfg.circus.part_list
                         artefact(ievent) = true;
                         artefact_length(ievent) = seconds(artend - artstart) + artefact_length(ievent);
                     end
-                    
-                    
+
+
                 end % ihyp
         end % idir
     end % ievent

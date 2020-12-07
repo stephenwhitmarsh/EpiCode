@@ -50,8 +50,8 @@ elseif nargin == 4
 else
     error('Not the right amount of input arguments');
 end
-    
-    
+
+
 % check if results exist
 fname = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr', postfix, '.mat']);
 
@@ -60,16 +60,12 @@ write   = ft_getopt(cfg.align, 'write', false);
 latency = ft_getopt(cfg.align, 'latency', 'all');
 
 if exist(fname,'file') && force == false
-    fprintf('*******************************\n');
-    fprintf('** Loading results alignment **\n');
-    fprintf('*******************************\n\n');
+    fprintf('Loading results xcorr alignment\n');
     load(fname,'MuseStruct');
     return
 end
 
-fprintf('**************\n');
-fprintf('** Aligning **\n');
-fprintf('**************\n\n');
+fprintf('Aligning with xcorr\n');
 
 cfgtemp                 = rmfield(cfg, 'LFP');
 cfgtemp.LFP.name        = cfg.align.name;
@@ -84,7 +80,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         if isempty(LFP{ipart}.(markername))
             continue
         end
-        
+
         % baseline correct & bipolar rereferencing
         cfgtemp                 = [];
         cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'no');
@@ -93,7 +89,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
         dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
         LFP{ipart}.(markername) = [];
-        
+
         % select data
         if strcmp('latency', 'all')
             latency = [dat.time{1}(1), dat.time{1}(end)];
@@ -102,7 +98,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp                 = [];
         cfgtemp.latency         = latency;
         dat_timesel             = ft_selectdata(cfgtemp, dat);
-        
+
         cfgtemp                 = [];
         dat_avg_orig            = ft_timelockanalysis(cfgtemp, dat);
 
@@ -158,16 +154,16 @@ for ipart = 1 : size(cfg.directorylist,2)
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Original');
         axis tight
-        xlim([dat.time{1}(1), dat.time{1}(end)]); 
- 
+        xlim([dat.time{1}(1), dat.time{1}(end)]);
+
         subplot(2,5,[9 10]); hold
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
-        ax = axis;        
+        ax = axis;
         patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Aligned');
         axis tight
-        xlim([dat.time{1}(1), dat.time{1}(end)]); 
-       
+        xlim([dat.time{1}(1), dat.time{1}(end)]);
+
         set(fig,'Renderer','Painters');
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
@@ -194,7 +190,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                 continue
             end
             todelete = [];
-            
+
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                 if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
                     timeshift = nshift(i) * 1 / dat.fsample;

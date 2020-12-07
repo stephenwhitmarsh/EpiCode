@@ -53,7 +53,9 @@ for ipart = cfg.spike.part_list
         
         %spike pssth (no smoothing)
         cfgtemp                         = [];
-        cfgtemp.binsize                 = cfg.spike.psthbin.(markername);
+        if isfield(cfg.spike, 'psthbin')
+            cfgtemp.binsize             = cfg.spike.psthbin.(markername);
+        end
         cfgtemp.keeptrials              = 'yes';
         psth_event                      = ft_spike_psth(cfgtemp,SpikeTrials{ipart}.(markername));
         stats{ipart}.psth.(markername)  = psth_event;
@@ -62,7 +64,9 @@ for ipart = cfg.spike.part_list
         cfgtemp                         = [];
         cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);   % sample at 1000 hz
         cfgtemp.keeptrials              = 'yes';
-        cfgtemp.timwin                  = cfg.spike.sdftimwin.(markername);
+        if isfield(cfg.spike, 'sdftimwin')
+            cfgtemp.timwin              = cfg.spike.sdftimwin.(markername);
+        end
         sdf_line{ipart}                 = ft_spikedensity(cfgtemp, SpikeTrials{ipart}.(markername));
         
         % prepare data for stats on bar graph
