@@ -19,16 +19,12 @@ function [TFR] = TFRtrials(cfg, Trialdata, force)
 fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'TFRtrials.mat']);
 
 if exist(fname_out,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('*** Loading precomputed TFR data ***\n');
-    fprintf('************************************\n\n');
+    fprintf('Loading TFR\n');
     load(fname_out,'TFR');
     return
 end
 
-fprintf('********************************\n');
-fprintf('*** (re-) computing TFR data ***\n');
-fprintf('********************************\n\n');
+fprintf('Computing TFR\n');
 
 for ipart = 1 : size(Trialdata,2)
     
@@ -46,11 +42,10 @@ for ipart = 1 : size(Trialdata,2)
         cfgtemp.toi                     = cfg.TFR.toi;
         cfgtemp.feedback                = 'off';
         TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp,Trialdata{ipart}.(markername));
+        TFR{ipart}                      = rmfield(TFR{ipart}, 'cfg');
         
     end % markername
-    
 end % ipart
     
-
 save(fname_out,'TFR','-v7.3');
 
