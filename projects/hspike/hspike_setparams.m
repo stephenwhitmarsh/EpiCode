@@ -183,12 +183,13 @@ config{3}.template.threshold        = 3;
 config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
 
-config{3}.circus.channel            = {'mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8','mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
-config{3}.circus.channelname        = {'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g'};
+config{3}.circus.channel            = {'mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8','mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
+config{3}.circus.channelname        = {'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd', };
 
 config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
-config{3}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{3}.circus.params.detection.peaks         = 'positive'; % two different bundles end up having AP peaks in different direction
 config{3}.circus.params.filtering.remove_median = 'True';
+config{3}.circus.version = 'fieldtrip';
 
 %% Patient 4
 config{4}                           = config{1};

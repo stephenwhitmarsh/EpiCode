@@ -17,7 +17,7 @@ if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/DBSCAN/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries/ 
 end
 if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
@@ -29,6 +29,7 @@ if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
 end
+
 
 ft_defaults
 
@@ -51,8 +52,6 @@ for ipart = 1 : 3
             MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
         catch
         end
-        MuseStruct_template{ipatient}{ipart}{idir}.nSamples = MuseStruct_orig{ipatient}{ipart}{idir}.nSamples;
-        MuseStruct_template{ipatient}{ipart}{idir}.Fs = MuseStruct_orig{ipatient}{ipart}{idir}.Fs;
     end
 end
 
@@ -123,6 +122,6 @@ for ipart = 1 : 3
 end
 
 % write data and parameters for spyking circus
-writeSpykingCircusDeadfilesMultichannel(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true);
-writeSpykingCircusParametersMultichannel(config_trimmed{ipatient})
-% writeSpykingCircusMultichannel(config_trimmed{ipatient}, true);
+writeSpykingCircusDeadfiles(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true);
+writeSpykingCircusParameters(config_trimmed{ipatient})
+% writeSpykingCircus(config_trimmed{ipatient}, true);

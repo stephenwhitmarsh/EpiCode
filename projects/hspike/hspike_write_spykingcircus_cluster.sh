@@ -7,7 +7,7 @@
 #SBATCH --chdir=.
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/%A_%a_%j-%x_error.txt
 #SBATCH --output=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm_output/%A_%a_%j-%x_output.txt
-#SBATCH --array=7
+#SBATCH --array=3
 
 module load MATLAB/R2019b
 
