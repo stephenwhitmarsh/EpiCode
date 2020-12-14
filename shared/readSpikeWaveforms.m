@@ -87,14 +87,15 @@ for ipart = cfg.spikewaveform.part_list
 
             if loadnew
                 if isempty(cfg.circus.channelname)
-                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + 1;
-                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{maxchan},'.ncs']));
+                    chanindx_cfg    = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster) + 1;
+                    temp            = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{chanindx_cfg},'.ncs']));
                 else
-                    channelname = SpikeRaw{ipart}.(char(markername)).channelname{icluster};
-                    maxchan     = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster);
-                    chanoffset  = find(strcmp(cfg.circus.channelname, channelname), 1, 'first');
-                    chan        = cfg.circus.channel{maxchan + chanoffset};     
-                    temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channelname, [cfg.prefix, 'p', num2str(ipart), '-multifile-', chan,'.ncs']));          
+                    % make sure to pick the right file
+                    channelname     = SpikeRaw{ipart}.(char(markername)).channelname{icluster};
+                    maxchan         = SpikeRaw{ipart}.(char(markername)).template_maxchan(icluster);
+                    chanoffset      = find(strcmp(cfg.circus.channelname, channelname), 1, 'first');
+                    chanindx_cfg    = maxchan + chanoffset;
+                    temp            = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], channelname, [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{chanindx_cfg} ,'.ncs']));          
                 end
                 datafile        = fullfile(temp.folder, temp.name);
 
@@ -142,6 +143,7 @@ for ipart = cfg.spikewaveform.part_list
             Trialnr     = [];
 
             % note that the sample field has to been added by ft_spike_maketrials, so use the adapted version in /external/fieldtrip:
+            % note that the indexing of the channels can be different.
             for ispike = spikes_idx_sel
                 trialcount   = trialcount + 1;
                 %                     Startsample  = [Startsample; round(SpikeRaw{ipart}.(char(markername)).sample{icluster}(ispike) / hdr.TimeStampPerSample  + cfg.spikewaveform.toi(1) * hdr.Fs)];
