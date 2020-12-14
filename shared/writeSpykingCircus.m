@@ -1,4 +1,4 @@
-function [cfg] = writeSpykingCircusMultichannel(cfg, force)
+function [cfg] = writeSpykingCircus(cfg, force)
 
 % WRITESPYKINGCIRCUS writes a concatinated data file for SpykingCircus and
 % sampleinfo is returned for later (cutting results back up)
