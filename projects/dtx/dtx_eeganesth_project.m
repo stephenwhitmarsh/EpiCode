@@ -31,7 +31,7 @@ feature('DefaultCharacterSet', 'CP1252'); % To fix bug for weird character probl
 
 config = dtx_eeganesth_setparams;
 ipart = 1;
-setfig = @() set(gca,'TickDir','out','FontWeight','bold', 'FontSize', 15);
+setfig = @() set(gca,'TickDir','out','FontWeight','bold', 'FontSize', 25);
 
 pat_list = 1:size(config,2);
 
@@ -59,20 +59,14 @@ end
 for ipatient = 1:size(config,2)
     %analysis only on the last part 
     ipart = size(MuseStruct{ipatient},2);
-    
-    %FIXME à déplacer dans le setparams
-    %seizure stats
 
     config{ipatient}.seizuretimings.injection_clock= config{ipatient}.injectiontime;
-   
     seizure_timing{ipatient} = dtx_stats_seizure_timings(config{ipatient},MuseStruct_concat{ipatient},ipart);
     
-
     %count seizures, slowwaves and emg
     count.seizures.all(ipatient)  = size(seizure_timing{ipatient}.time_start.synctime,2);
     count.slowwaves.all(ipatient) = size(MuseStruct_concat{ipatient}{1}.markers.SlowWave.synctime,2);
     count.data_length.all(ipatient) = hours(seizure_timing{ipatient}.recordduration);
-    
 end
 count.seizures.total   = sum(count.seizures.all);
 count.seizures.min     = min(count.seizures.all);
@@ -251,8 +245,6 @@ for iparam = ["halfwidth", "amplitude"]
             
         end
         
-        
-        
         ax = axis;
         ylim([0 ax(4)]);
         xlim([0, size(pat_list,2)+1]);
@@ -284,7 +276,6 @@ for iparam = ["halfwidth", "amplitude"]
         ylabel(iparam);
         set(gca,'TickDir','out','FontWeight','bold');
         ax = axis; ylim([0 ax(4)]);
-        
         
         %print to file
         fname = fullfile(config{ipatient}.imagesavedir,'..','morpho_all',sprintf('allpatients_morpho_%s_%s_summary',iparam,i_filt));
@@ -408,7 +399,7 @@ count.without_artefacts.seizures.max      = max(count.without_artefacts.seizures
 save(fullfile(config{ipatient}.datasavedir, 'allpatients_count_datalength.mat'), 'count'); 
 
 %% TFR : clean data
-if true
+if false
     for ipatient = 1:size(config,2)
         i=0;
         for markername = ["SlowWave_begin", "SlowWave", "Crise_End"]

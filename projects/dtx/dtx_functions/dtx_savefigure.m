@@ -1,4 +1,5 @@
 function dtx_savefigure(fig,fname, varargin)
+%dtx_savefigure(fig,fname, varargin)
 
 %save figure in png, pdf or fig format, formats are specified as strings in varargin
 %avoir repeat those line many times because I have sometimes lot of

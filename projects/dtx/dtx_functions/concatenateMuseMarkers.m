@@ -27,7 +27,12 @@ for ipart = 1:size(MuseStruct,2)
     for idir = 1:size(MuseStruct{ipart},2)
         ft_progress(idir/size(MuseStruct{ipart},2),'reading header for dir %d from %d',idir, size(MuseStruct{ipart},2));
         if isNeuralynx
-            temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{1}, '.ncs']));
+            if ~isempty(cfg.LFP.channel)
+                chan_list = cfg.LFP.channel;
+            else
+                chan_list = cfg.circus.channel;
+            end
+            temp  	 = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', chan_list{1}, '.ncs']));
             datapath = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
         elseif isMicromed
             datapath = fullfile(cfg.rawdir,[cfg.directorylist{ipart}{idir} '.TRC']);

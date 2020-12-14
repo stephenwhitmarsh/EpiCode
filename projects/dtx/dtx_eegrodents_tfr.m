@@ -34,8 +34,6 @@ feature('DefaultCharacterSet', 'CP1252'); % To fix bug for weird character probl
 
 config = eval(config_script);%dtx_setparams_eegvideo;
 
-ipart = 1;
-
 if ipatient > 0
     
     %% load precomputed data
@@ -50,7 +48,6 @@ if ipatient > 0
         LFP  = temp.LFP;
     end
     clear temp
-    
     
     %% do time frequency analysis
     %setup baseline
@@ -97,7 +94,6 @@ if ipatient > 0
             end
         end
        
-        
         %compute TFR
         fprintf('patient %d : do TFR analysis\n', ipatient);
              

@@ -7,7 +7,12 @@ function [MuseStruct_corrected] = dtx_remove_wrong_seizure(cfg, MuseStruct,remov
 % remove_seizure_between_2_files : if true, remove seizure if it begins in one file and
 % ends in the next file
 
-%Paul Baudin
+cfg.type = ft_getopt(cfg, 'type');
+if ~strcmp(cfg.type, 'dtx')
+    ft_info('Patient is not DTX, do not search wrong seizures to remove.\n');
+    MuseStruct_corrected = MuseStruct;
+    return
+end
 
 
 fname = fullfile(cfg.datasavedir,[cfg.prefix,'MuseStruct_corrected_dtx.mat']);

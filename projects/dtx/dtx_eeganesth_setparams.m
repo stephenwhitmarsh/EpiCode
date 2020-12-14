@@ -27,8 +27,6 @@ imagesavedir = fullfile(rootpath_analysis);
 imagesavedir = fullfile(rootpath_analysis);
 
 configcommon.os                        = os;
-% SlowWave_begin
-% SlowWave_peak
 configcommon.name                      = {'SlowWave','SlowWave_begin','Crise_End','SlowWave_not_aligned','SlowWave_EMG_begin'};
 configcommon.datasavedir               = datasavedir;         % where to write data
 configcommon.type                      = 'dtx';
@@ -139,17 +137,10 @@ configcommon.TFR.foi                   = 3:0.1:200;
 configcommon.TFR.tapsmofrq             = 5.02;
 configcommon.TFR.timewinsize           = 0.35;
 configcommon.TFR.timewinstep           = 0.01;
-% configcommon.TFR.baseline.marker   = "SlowWave_begin";
-% configcommon.TFR.baseline.toi      = [-5 -2];
 configcommon.TFR.toi.SlowWave      =[-2 2];
 configcommon.TFR.toi.SlowWave_begin=[-2 2];
 configcommon.TFR.toi.Crise_End     =[0 5];
 configcommon.TFR.toi.Baseline      =[-7 -2];
-% configcommon.TFR.toi.SlowWave_begin    = 'all';
-% configcommon.TFR.toi.Crise_End         = 'all';
-% configcommon.TFR.baseline                 = [-10 -5];
-% configcommon.TFR.baselinetype             = 'relchange';
-
 
 %Intra : 
 %Avant DTX22 : hp filter analogue 1Hz => manips non gardées pour la morpho
@@ -165,7 +156,7 @@ configcommon.TFR.toi.Baseline      =[-7 -2];
 
 
 %% Rodent 1
-%ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS? CORRIGES AVEC
+%ATTENTION : SUR MUSE, MAUVAIS NOMS DE CHANNELS : CORRIGES AVEC
 %DTX_CORRECTDTX2NAME
 config{1}                           = configcommon;
 config{1}.domorpho                  = 'no';%no because filtered at 1Hz
@@ -449,7 +440,7 @@ config{11}.morpho.toiac              = [-0.5 0.5];
 config{11}.morpho.toibl              = [-2 -0.5];
 
 %% Rodent 7
-%fichier _002 data manquatnes entre 6300 et 7100
+%fichier _002 data manquantes entre 6300 et 7100
 config{12}                           = configcommon;
 config{12}.domorpho                  = 'yes';%no because filtered at 1Hz
 config{12}.prefix                    = 'DTX38-';
@@ -524,7 +515,6 @@ config{14}.morpho.toibl              = [-2 -0.5];
 %% Rodent 7
 %fichier très artefacté. Pour la morpho de l'onde lente, rétrécir la
 %période pour détecter si artefacts
-%Ne pas faire de TFR car artefact de fond trop systématique
 config{15}                           = configcommon;
 config{15}.domorpho                  = 'yes';%no because filtered at 1Hz
 config{15}.prefix                    = 'DTX52-';
@@ -564,103 +554,103 @@ for irat = 6:size(config,2)
     clear filelist
 end
 
-return %other rats : marker not done yet
+return 
 
-%% Rodent 16
-config{16}                           = configcommon;
-config{16}.domorpho                  = 'no';%no because filtered at 1Hz
-config{16}.prefix                    = 'DTX20-';
-config{16}.rawdir                    = fullfile(rootpath_data, 'DTX20-M1-10uM-INTRA', 'Brainvision');
-config{16}.imagesavedir              = fullfile(imagesavedir,'DTX20');       % where to print images
-config{16}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{16}.labels.macro              = {'EEG M1G'};
-config{16}.injectiontime             = datetime('21-May-2019 15:11:20');
-config{16}.LFP.channel               = config{16}.labels.macro;
-
-%% Rodent 17
-config{17}                           = configcommon;
-config{17}.domorpho                  = 'no';%no because filtered at 1Hz
-config{17}.prefix                    = 'DTX23-';
-config{17}.rawdir                    = fullfile(rootpath_data, 'DTX23-M1-10uM-INTRA', 'Brainvision');
-config{17}.imagesavedir              = fullfile(imagesavedir,'DTX23');       % where to print images
-config{17}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{17}.labels.macro              = {'EEG M1G'};
-config{17}.injectiontime             = datetime('29-May-2019 12:44:56');
-config{17}.LFP.channel               = config{17}.labels.macro;
-
-%% Rodent 18
-config{18}                           = configcommon;
-config{18}.domorpho                  = 'no';%no because filtered at 1Hz
-config{18}.prefix                    = 'DTX24-';
-config{18}.rawdir                    = fullfile(rootpath_data, 'DTX24-M1-10uM-INTRA', 'Brainvision');
-config{18}.imagesavedir              = fullfile(imagesavedir,'DTX24');       % where to print images
-config{18}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{18}.labels.macro              = {'EEG M1G'};
-config{18}.injectiontime             = datetime('03-Jun-2019 14:44:20');
-config{18}.LFP.channel               = config{18}.labels.macro;
-
-%% Rodent 19
-config{19}                           = configcommon;
-config{19}.domorpho                  = 'no';%no because filtered at 1Hz
-config{19}.prefix                    = 'DTX26-';
-config{19}.rawdir                    = fullfile(rootpath_data, 'DTX26-M1-INTRA', 'Brainvision');
-config{19}.imagesavedir              = fullfile(imagesavedir,'DTX26');       % where to print images
-config{19}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{19}.labels.macro              = {'EEG M1G'};
-config{19}.injectiontime             = datetime('12-Jun-2019 12:15:18');
-config{19}.LFP.channel               = config{19}.labels.macro;
-
-%% Rodent 20
-config{20}                           = configcommon;
-config{20}.domorpho                  = 'no';%no because filtered at 1Hz
-config{20}.prefix                    = 'DTX27-';
-config{20}.rawdir                    = fullfile(rootpath_data, 'DTX27-M1-INTRA', 'Brainvision');
-config{20}.imagesavedir              = fullfile(imagesavedir,'DTX27');       % where to print images
-config{20}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{20}.labels.macro              = {'EEG M1G'};
-config{20}.injectiontime             = datetime('13-Jun-2019 12:34:25');
-config{20}.LFP.channel               = config{20}.labels.macro;
-
-%% Rodent 21
-config{21}                           = configcommon;
-config{21}.domorpho                  = 'no';%no because filtered at 1Hz
-config{21}.prefix                    = 'DTX28-';
-config{21}.rawdir                    = fullfile(rootpath_data, 'DTX28-M1-INTRA', 'Brainvision');
-config{21}.imagesavedir              = fullfile(imagesavedir,'DTX28');       % where to print images
-config{21}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{21}.labels.macro              = {'EEG M1G'};
-config{21}.injectiontime             = datetime('18-Jun-2019 13:03:01');
-config{21}.LFP.channel               = config{21}.labels.macro;
-
-%% Rodent 22
-config{22}                           = configcommon;
-config{22}.domorpho                  = 'no';%no because filtered at 1Hz
-config{22}.prefix                    = 'DTX29-';
-config{22}.rawdir                    = fullfile(rootpath_data, 'DTX29-M1-INTRA', 'Brainvision');
-config{22}.imagesavedir              = fullfile(imagesavedir,'DTX29');       % where to print images
-config{22}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{22}.labels.macro              = {'EEG M1G'};
-config{22}.injectiontime             = datetime('21-Jun-2019 13:33:13');
-config{22}.LFP.channel               = config{22}.labels.macro;
-
-%% Rodent 23
-config{23}                           = configcommon;
-config{23}.domorpho                  = 'no';%no because filtered at 1Hz
-config{23}.prefix                    = 'DTX30-';
-config{23}.rawdir                    = fullfile(rootpath_data, 'DTX30_2019_07_07-INTRA', 'Brainvision');
-config{23}.imagesavedir              = fullfile(imagesavedir,'DTX30');       % where to print images
-config{23}.directorylist{1}          = []; %automatically set at the end of this script
-
-config{23}.labels.macro              = {'EEG M1G'};
-config{23}.injectiontime             = datetime('07-Jul-2019 14:47:56');
-config{23}.LFP.channel               = config{23}.labels.macro;
+% %% Rodent 16
+% config{16}                           = configcommon;
+% config{16}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{16}.prefix                    = 'DTX20-';
+% config{16}.rawdir                    = fullfile(rootpath_data, 'DTX20-M1-10uM-INTRA', 'Brainvision');
+% config{16}.imagesavedir              = fullfile(imagesavedir,'DTX20');       % where to print images
+% config{16}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{16}.labels.macro              = {'EEG M1G'};
+% config{16}.injectiontime             = datetime('21-May-2019 15:11:20');
+% config{16}.LFP.channel               = config{16}.labels.macro;
+% 
+% %% Rodent 17
+% config{17}                           = configcommon;
+% config{17}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{17}.prefix                    = 'DTX23-';
+% config{17}.rawdir                    = fullfile(rootpath_data, 'DTX23-M1-10uM-INTRA', 'Brainvision');
+% config{17}.imagesavedir              = fullfile(imagesavedir,'DTX23');       % where to print images
+% config{17}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{17}.labels.macro              = {'EEG M1G'};
+% config{17}.injectiontime             = datetime('29-May-2019 12:44:56');
+% config{17}.LFP.channel               = config{17}.labels.macro;
+% 
+% %% Rodent 18
+% config{18}                           = configcommon;
+% config{18}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{18}.prefix                    = 'DTX24-';
+% config{18}.rawdir                    = fullfile(rootpath_data, 'DTX24-M1-10uM-INTRA', 'Brainvision');
+% config{18}.imagesavedir              = fullfile(imagesavedir,'DTX24');       % where to print images
+% config{18}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{18}.labels.macro              = {'EEG M1G'};
+% config{18}.injectiontime             = datetime('03-Jun-2019 14:44:20');
+% config{18}.LFP.channel               = config{18}.labels.macro;
+% 
+% %% Rodent 19
+% config{19}                           = configcommon;
+% config{19}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{19}.prefix                    = 'DTX26-';
+% config{19}.rawdir                    = fullfile(rootpath_data, 'DTX26-M1-INTRA', 'Brainvision');
+% config{19}.imagesavedir              = fullfile(imagesavedir,'DTX26');       % where to print images
+% config{19}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{19}.labels.macro              = {'EEG M1G'};
+% config{19}.injectiontime             = datetime('12-Jun-2019 12:15:18');
+% config{19}.LFP.channel               = config{19}.labels.macro;
+% 
+% %% Rodent 20
+% config{20}                           = configcommon;
+% config{20}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{20}.prefix                    = 'DTX27-';
+% config{20}.rawdir                    = fullfile(rootpath_data, 'DTX27-M1-INTRA', 'Brainvision');
+% config{20}.imagesavedir              = fullfile(imagesavedir,'DTX27');       % where to print images
+% config{20}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{20}.labels.macro              = {'EEG M1G'};
+% config{20}.injectiontime             = datetime('13-Jun-2019 12:34:25');
+% config{20}.LFP.channel               = config{20}.labels.macro;
+% 
+% %% Rodent 21
+% config{21}                           = configcommon;
+% config{21}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{21}.prefix                    = 'DTX28-';
+% config{21}.rawdir                    = fullfile(rootpath_data, 'DTX28-M1-INTRA', 'Brainvision');
+% config{21}.imagesavedir              = fullfile(imagesavedir,'DTX28');       % where to print images
+% config{21}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{21}.labels.macro              = {'EEG M1G'};
+% config{21}.injectiontime             = datetime('18-Jun-2019 13:03:01');
+% config{21}.LFP.channel               = config{21}.labels.macro;
+% 
+% %% Rodent 22
+% config{22}                           = configcommon;
+% config{22}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{22}.prefix                    = 'DTX29-';
+% config{22}.rawdir                    = fullfile(rootpath_data, 'DTX29-M1-INTRA', 'Brainvision');
+% config{22}.imagesavedir              = fullfile(imagesavedir,'DTX29');       % where to print images
+% config{22}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{22}.labels.macro              = {'EEG M1G'};
+% config{22}.injectiontime             = datetime('21-Jun-2019 13:33:13');
+% config{22}.LFP.channel               = config{22}.labels.macro;
+% 
+% %% Rodent 23
+% config{23}                           = configcommon;
+% config{23}.domorpho                  = 'no';%no because filtered at 1Hz
+% config{23}.prefix                    = 'DTX30-';
+% config{23}.rawdir                    = fullfile(rootpath_data, 'DTX30_2019_07_07-INTRA', 'Brainvision');
+% config{23}.imagesavedir              = fullfile(imagesavedir,'DTX30');       % where to print images
+% config{23}.directorylist{1}          = []; %automatically set at the end of this script
+% 
+% config{23}.labels.macro              = {'EEG M1G'};
+% config{23}.injectiontime             = datetime('07-Jul-2019 14:47:56');
+% config{23}.LFP.channel               = config{23}.labels.macro;
 
 
 
