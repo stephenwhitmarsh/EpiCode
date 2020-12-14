@@ -116,8 +116,8 @@ for ipart = cfg.circus.part_list
         if exist(fullfile(phydir, 'cluster_info.tsv'), 'file') && exist(fullfile(phydir, 'spike_clusters.npy'), 'file')
             ischecked                   = true;
             phydata.cluster_group       = tdfread(fullfile(phydir, 'cluster_group.tsv'));   %phy classification.
-            phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));%id, amp, ch, depth, fr, group, n_spikes, sh
-            phydata.spike_clusters      = readNPY(fullfile(phydir, 'spike_clusters.npy')); %for each timing, which (merged) cluster. Include garbage clusters
+            phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));    %id, amp, ch, depth, fr, group, n_spikes, sh
+            phydata.spike_clusters      = readNPY(fullfile(phydir, 'spike_clusters.npy'));  %for each timing, which (merged) cluster. Include garbage clusters
             
             %correct difference in field names depending on the Spyking-Circus' version
             try
@@ -151,7 +151,7 @@ for ipart = cfg.circus.part_list
         %% take the first concatinated channel to extract the timestamps
         temp        = dir(fullfile(datadir, '*.ncs'));
         hdr_fname   = fullfile(datadir, temp(1).name);
-        hdr         = ft_read_header(hdr_fname);  
+        hdr         = ft_read_header(hdr_fname);
         timestamps  = ft_read_data(hdr_fname, 'timestamp', 'true');
         
         %% The following is dangerous as missing data in e.g. Neuralynx files will result in unexpected offsets
@@ -168,7 +168,13 @@ for ipart = cfg.circus.part_list
         
         % in case no clusters were included
         if isempty(cluster_list)
-            continue
+            if strcmp(channelname, 'none')
+                SpikeRaw{ipart} = [];
+                continue
+            else
+                SpikeRaw_chan{ipart}.(char(chandir)) = [];
+                continue
+            end
         end
         
         % go trough each cluster
@@ -179,34 +185,37 @@ for ipart = cfg.circus.part_list
             SpikeRaw{ipart}.channelname{icluster}           = chandir;
   
             % find spike time indexes
-            clear timings_idx
             if ischecked
-                timings_idx                                 = phydata.spike_clusters == cluster_list(icluster);
+                cluster_idx                                 = phydata.spike_clusters == cluster_list(icluster);
             else
-                timings_idx                                 = phydata.spike_templates == cluster_list(icluster);
+                cluster_idx                                 = phydata.spike_templates == cluster_list(icluster);
             end
             
             % add template waveforms
-            cluster_templates                               = unique(phydata.spike_templates(timings_idx))+1; %+1 because template begins at zero but index in phyinfos.templates begins at 1
+            cluster_templates                               = unique(phydata.spike_templates(cluster_idx))+1; %+1 because template begins at zero but index in phyinfos.templates begins at 1
             SpikeRaw{ipart}.template{icluster}              = phydata.templates(cluster_templates, :, :);%all template waveforms merged in this cluster
                         
             % add amplitude, samples and timestamps at selected spike timings
-            SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(timings_idx)';
-            SpikeRaw{ipart}.sample{icluster}                = phydata.spike_times(timings_idx)';
+            SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(cluster_idx)';
+            SpikeRaw{ipart}.sample{icluster}                = phydata.spike_times(cluster_idx)';
             SpikeRaw{ipart}.timestamp{icluster}             = timestamps(SpikeRaw{ipart}.sample{icluster});
             
             % add Phy group info (good, mua)
             if ischecked
-                SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id == cluster_list(icluster), :);
-                SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
-                try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id == cluster_list(icluster)); end
+                SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id  == cluster_list(icluster), :);
+                SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster));
+                try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id   == cluster_list(icluster)); catch; end
             else
                 [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
-                SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1; %-1 because chans idx begin at zero with Phy
+                SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1; % -1 because chans idx begin at zero with Phy
             end
             
         end
         
+        SpikeRaw{ipart}.amplitudedimord                 = '{chan}_spike';
+        SpikeRaw{ipart}.sampledimord                    = '{chan}_spike';
+        SpikeRaw{ipart}.timestampdimord                 = '{chan}_spike';
+
         clear timestamps
         
         %% Convert data into 1-trial Fieldtrip structure to be more consistent
@@ -229,37 +238,56 @@ for ipart = cfg.circus.part_list
             SpikeRaw{ipart}.trialinfo.endsample = fileend;
             SpikeRaw{ipart}.trialinfo.offset    = 0;
         else
-            SpikeRaw_temp{ipart}.(char(chandir))                     = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
-            SpikeRaw_temp{ipart}.(char(chandir)).hdr                 = hdr;
-            SpikeRaw_temp{ipart}.(char(chandir)).trialinfo           = table;
-            SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.begsample = filebegin;
-            SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.endsample = fileend;
-            SpikeRaw_temp{ipart}.(char(chandir)).trialinfo.offset    = 0;
-            for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
-                SpikeRaw_temp{ipart}.(char(chandir)).channelname{ilabel} = char(chandir);
+            SpikeRaw_chan{ipart}.(char(chandir))                     = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
+            SpikeRaw_chan{ipart}.(char(chandir)).hdr                 = hdr;
+            SpikeRaw_chan{ipart}.(char(chandir)).trialinfo           = table;
+            SpikeRaw_chan{ipart}.(char(chandir)).trialinfo.begsample = filebegin;
+            SpikeRaw_chan{ipart}.(char(chandir)).trialinfo.endsample = fileend;
+            SpikeRaw_chan{ipart}.(char(chandir)).trialinfo.offset    = 0;
+
+            for ilabel = 1 : length(SpikeRaw_chan{ipart}.(char(chandir)).label)
+                SpikeRaw_chan{ipart}.(char(chandir)).channelname{ilabel} = char(chandir);
             end
             
             % labels have to have unique names
-            for ilabel = 1 : length(SpikeRaw_temp{ipart}.(char(chandir)).label)
-                SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel} = char(strcat(SpikeRaw_temp{ipart}.(char(chandir)).label{ilabel},'_',chandir));
-            end
-        end
-        SpikeRaw{ipart}.(char(chandir)) = [];        
-    end % channelname
-    
-    % combine diffrent electrodebundles - very smartly! :-)
-    if ~strcmp(channelname, 'none')
-        try % in case no clusters were selected
-            SpikeRaw{ipart} = SpikeRaw_temp{ipart}.(channelname{1});
-            for chandir = string(channelname(2:end))
-                for field = string(fields(SpikeRaw{ipart}))'
-                    if ~strcmp(field,{'hdr','cfg','trialinfo','trialtime'})
-                        SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_temp{ipart}.(char(chandir)).(field)];
-                    end
-                end
+            for ilabel = 1 : length(SpikeRaw_chan{ipart}.(char(chandir)).label)
+                SpikeRaw_chan{ipart}.(char(chandir)).label{ilabel} = char(strcat(SpikeRaw_chan{ipart}.(char(chandir)).label{ilabel}, '_', chandir));
             end
             
-        catch
+            % make sure to clear
+            SpikeRaw{ipart} = [];
+        end
+    end % channelname
+    
+    % combine different electrode bundles
+    if ~strcmp(channelname, 'none')
+        
+        % check which electrode bundles are not empty
+        f = fields(SpikeRaw_chan{ipart});
+        fn = [];
+        for field = f'
+            disp(field)
+             if ~isempty(SpikeRaw_chan{ipart}.(char(field)))
+                 fn = [fn; field];
+             end
+        end
+        
+        % if none are found
+        if isempty(fn)
+            fprintf('No units found in part %d\n', ipart);
+            continue
+        end
+
+        % start with first electrode bundle...
+        SpikeRaw{ipart} = SpikeRaw_chan{ipart}.(fn{1});
+        
+        % ...then add the rest
+        for chandir = fn{2:end}'
+            for field = string(fields(SpikeRaw{ipart}))'
+                if ~strcmp(field,{'hdr', 'cfg', 'trialinfo', 'trialtime'}) & ~contains(field, 'dimord')
+                    SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_chan{ipart}.(char(chandir)).(field)];
+                end
+            end
         end
     end
     
