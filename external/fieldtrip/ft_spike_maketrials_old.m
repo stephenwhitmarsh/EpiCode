@@ -255,7 +255,7 @@ elseif strcmp(cfg.trlunit,'samples')
       
       spike.time{iUnit}         = [spike.time{iUnit} tTrial(:)'];
       spike.trial{iUnit}        = [spike.trial{iUnit} trialNum];
-      spike.sample{iUnit}       = sample;
+%       spike.sample{iUnit}       = sample;
       
       if iUnit==1,
         spike.trialtime(iTrial,:) = [offset offset+trialDur];
