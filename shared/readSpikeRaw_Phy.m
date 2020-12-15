@@ -282,7 +282,7 @@ for ipart = cfg.circus.part_list
         SpikeRaw{ipart} = SpikeRaw_chan{ipart}.(fn{1});
         
         % ...then add the rest
-        for chandir = fn{2:end}'
+        for chandir = string(fn(2:end))'
             for field = string(fields(SpikeRaw{ipart}))'
                 if ~strcmp(field,{'hdr', 'cfg', 'trialinfo', 'trialtime'}) & ~contains(field, 'dimord')
                     SpikeRaw{ipart}.(field) = [SpikeRaw{ipart}.(field), SpikeRaw_chan{ipart}.(char(chandir)).(field)];
