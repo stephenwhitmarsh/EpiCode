@@ -42,7 +42,7 @@ seizures = readtable('\\lexport\iss01.charpier\analyses\vn_pnh\Seizure_descripti
 
 
     
-for ipatient = 1:3
+for ipatient = [1,3]
     
     % select seizure from a single patient
     sel = seizures(seizures.patientnr == ipatient, :);
@@ -65,7 +65,7 @@ for ipatient = 1:3
     end
     
     % read muse markers
-    [MuseStruct{ipatient}] = readMuseMarkers(config{ipatient}, true);
+    [MuseStruct{ipatient}] = readMuseMarkers(config{ipatient}, false);
     
     % read LFP data
     LFP{ipatient} = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
@@ -80,15 +80,31 @@ for ipatient = 1:3
     cfg                         = [];
     cfg.trials                  = find(~ind);
     LFP{ipatient}{1}.seizure    = ft_selectdata(cfg, LFP{ipatient}{1}.seizure);
-
+    
+    % remove noisy seizures
+    if ipatient == 1
+        cfg = [];
+        cfg.trials = 1:size(LFP{1}{1}.seizure.trial, 2);
+        cfg.trials(18:19) = [];
+        LFP{1}{1}.seizure = ft_selectdata(cfg, LFP{1}{1}.seizure);
+    end
+    if ipatient == 3
+        cfg = [];
+        cfg.trials = 1:size(LFP{3}{1}.seizure.trial, 2);
+        cfg.trials(6) = [];
+        LFP{3}{1}.seizure = ft_selectdata(cfg, LFP{3}{1}.seizure);
+    end
+    
     % calculate TFR for all seizures
     TFR{ipatient} = TFR_seizures(config{ipatient}, LFP{ipatient}, true);
-end
-
-for ipatient = 2:3
-
+    
     % plot overview of seizures, per channel of onset
     plotTimeCourses_seizures(config{ipatient}, LFP{ipatient}, TFR{ipatient});
+    
+end
+
+for ipatient = 1:3
+
     
 end
 
