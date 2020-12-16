@@ -77,3 +77,6 @@ config{3}                           = config{1};
 config{3}.prefix                    = '2689-seizures-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
 config{3}.LFP.channel               = {'_TNmg_1', '_TNmi_1'};
+
+%% Data
+
