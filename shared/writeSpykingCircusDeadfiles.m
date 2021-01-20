@@ -1,4 +1,4 @@
-function [artefacts] = writeSpykingCircusDeadfilesMultichannel(cfg, MuseStruct, force, suffix)
+function [artefacts] = writeSpykingCircusDeadfiles(cfg, MuseStruct, force, suffix)
 
 % WRITESPYKINGCIRCUS_DEADFILES creates artefact files (deadtime) for
 % SpykingCircus in data directories for spike analysis
@@ -46,11 +46,20 @@ for ipart = 1 : size(cfg.directorylist, 2)
     % write deadtime, i.e. artefact file for Spyking-Circus
     deadfile_ms         = [];
     deadfile_samples    = [];
+    deadfile_idir       = [];
     last_ms             = 0;
     last_samples        = 0;
     dirlist{ipart}      = [];
     
     for idir = 1 : size(cfg.directorylist{ipart}, 2)
+        temp                            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}, '.ncs']));
+        hdr                             = ft_read_header(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name));
+        
+        if idir > 1
+            last_samples                    = last_samples  + hdr.nSamples;
+            last_ms                         = last_ms       + hdr.nSamples/hdr.Fs * 1000;
+        end
+        
         if ~isfield(MuseStruct{ipart}{idir}, 'markers')
             continue
         end
@@ -67,12 +76,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
         if size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)-size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime, 2) == 0
             fprintf('Great, recovered same number of start and end markers \n')
             
-            temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}, '.ncs']));
-            hdr                 = ft_read_header(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name));
-            deadfile_ms         = [deadfile_ms;      MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*1000+last_ms,        MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*1000+last_ms];
-            deadfile_samples    = [deadfile_samples; MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*hdr.Fs+last_samples, MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*hdr.Fs+last_samples];
-            last_samples        = last_samples  + hdr.nSamples;
-            last_ms             = last_ms       + hdr.nSamples/hdr.Fs * 1000;
+            artefacts.ms{ipart}{idir}       = [MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*1000+last_ms,         MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*1000+last_ms];
+            artefacts.samples{ipart}{idir}  = [MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*hdr.Fs+last_samples,  MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*hdr.Fs+last_samples];
+            deadfile_ms                     = [deadfile_ms; artefacts.ms{ipart}{idir}];
+            deadfile_samples                = [deadfile_samples; artefacts.samples{ipart}{idir} ];
+            deadfile_idir                   = [deadfile_idir; ones(size(artefacts.ms{ipart}{idir}))*idir];
             
         elseif size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2) - size(MuseStruct{ipart}{idir}.markers.BAD__END__.synctime, 2) > 0
             fprintf('ERROR! more start than end found in %s \n', MuseStruct{ipart}{idir}.directory);
@@ -90,11 +98,11 @@ for ipart = 1 : size(cfg.directorylist, 2)
                     MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(x) = [];
                 end
             end
-            
-            deadfile_ms         = [deadfile_ms;      MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*1000+last_ms,        MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*1000+last_ms];
-            deadfile_samples    = [deadfile_samples; MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*hdr.Fs+last_samples, MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*hdr.Fs+last_samples];
-            last_samples        = last_samples + hdr.nSamples;
-            last_ms             = last_ms + hdr.nSamples/hdr.Fs * 1000;
+            artefacts.ms{ipart}{idir}       = [MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*1000+last_ms,         MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*1000+last_ms];
+            artefacts.samples{ipart}{idir}  = [MuseStruct{ipart}{idir}.markers.BAD__START__.synctime'*hdr.Fs+last_samples,  MuseStruct{ipart}{idir}.markers.BAD__END__.synctime'*hdr.Fs+last_samples];
+            deadfile_ms                     = [deadfile_ms; artefacts.ms{ipart}{idir}];
+            deadfile_samples                = [deadfile_samples; artefacts.samples{ipart}{idir} ];       
+            deadfile_idir                   = [deadfile_idir; ones(size(artefacts.ms{ipart}{idir}))*idir];
         end
         dirlist{ipart} = [dirlist{ipart}; MuseStruct{ipart}{idir}.directory];
         fprintf('%d\n', idir);
@@ -145,5 +153,6 @@ for ipart = 1 : size(cfg.directorylist, 2)
     % return info
     artefacts.deadfile_ms{ipart}         = deadfile_ms;
     artefacts.deadfile_samples{ipart}    = deadfile_samples;
-    
+    artefacts.idir{ipart}                = deadfile_idir;
+ 
 end
