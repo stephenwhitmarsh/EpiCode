@@ -5,44 +5,31 @@
 % requires bandpassFilter.m from Mario
 % requires releaseDec2015 from Neuralynx website
 
-%% Add path
+restoredefaultpath
+addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
+addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/pnh/
+addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip/
+ft_defaults
 
-if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
-end
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
-end
+restoredefaultpath
+addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
+addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\pnh
+addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
 ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
-
-% load settings
-config = pnh_setparams;
-
-% read muse markers
-[MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
-
-
-
+% maxNumCompThreads(4)
+dbstop if error
 
 %% General analyses
 
 
 for ipatient =  1 : 3
     
+    config = pnh_setparams([]);
+    
+    % read muse markers
+    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
