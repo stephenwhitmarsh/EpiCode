@@ -42,7 +42,11 @@ for ipart = 1 : size(Trialdata,2)
         cfgtemp.toi                     = cfg.TFR.toi;
         cfgtemp.feedback                = 'off';
         TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp,Trialdata{ipart}.(markername));
-        TFR{ipart}                      = rmfield(TFR{ipart}, 'cfg');
+        
+        try
+            TFR{ipart}                      = rmfield(TFR{ipart}, 'cfg');
+        catch
+        end
         
     end % markername
 end % ipart
