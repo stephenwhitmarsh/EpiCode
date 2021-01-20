@@ -50,7 +50,6 @@ cfg.circus.part_list        = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.paramfile        = ft_getopt(cfg.circus, 'paramfile', []);
 cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
 
-
 % add external/iniconfig path if not already
 mfile_name = mfilename('fullpath');
 pathstr    = fileparts(fileparts(mfile_name));
@@ -105,7 +104,7 @@ for ipart = cfg.circus.part_list
     % there should be a better way to do this that removes double code...
     if isempty(cfg.circus.channelname)
         nb_channels     = size(cfg.circus.channel,2);
-
+        
         % adjust parameters common to all
         fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
         h1 = ini.SetValues('data', {'file_format','stream_mode','mapping','suffix','overwrite','output_dir'}, {'neuralynx','None', fname_prb, '','False','SpykingCircus'});
@@ -121,8 +120,8 @@ for ipart = cfg.circus.part_list
         else
             h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
         end
-        if any([h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end
-
+        if any([h0; h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end            
+        
         % replace settings with those defined in cfg.circus.params
         if isfield(cfg.circus, 'params')
             if ~isempty(cfg.circus.params)
@@ -135,7 +134,12 @@ for ipart = cfg.circus.part_list
                 end
             end
         end
-
+        
+        if nb_channels == 1
+            h0 = ini.SetValues('filtering', {'remove_median'}, {'False'});
+            if h0 ~= 1, error('Something went wrong with adjusting parameters'); end
+        end
+        
         filename        = [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{1}, '.params'];
         fname_params    = fullfile(cfg.datasavedir, subjdir, partdir, filename);
         status          = ini.WriteFile(fname_params);
@@ -178,6 +182,11 @@ for ipart = cfg.circus.part_list
                         end
                     end
                 end
+            end
+              
+            if nb_channels == 1
+                h0 = ini.SetValues('filtering', {'remove_median'}, {'False'});
+                if h0 ~= 1, error('Something went wrong with adjusting parameters'); end
             end
 
             filename        = strcat(cfg.prefix, 'p', num2str(ipart), '-multifile-', firstchan, '.params');
