@@ -13,28 +13,20 @@ restoredefaultpath
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-%     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    
-%     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
-%     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
-%     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13
 end
 
 if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-%     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    
-%     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
-%     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
 end
 
@@ -54,16 +46,16 @@ config                                                                  = hspike
 [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]    = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
 
 % update to any new artefacts
-% [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, true);
-% for ipart = 1 : 3
-%     for idir = 1 : size(MuseStruct_template{ipatient}{ipart}, 2)
-%         try
-%             MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__START__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__START__;
-%             MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
-%         catch
-%         end
-%     end
-% end
+[MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, true);
+for ipart = 1 : 3
+    for idir = 1 : size(MuseStruct_template{ipatient}{ipart}, 2)
+        try
+            MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__START__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__START__;
+            MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
+        catch
+        end
+    end
+end
 
 switch ipatient
     case 1
@@ -112,9 +104,9 @@ for markername = string(markernames)
     itemp = itemp + 1;
 end
 
-[marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, false);
-[LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
-[TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, false);
+[marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, true);
+[LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, true);
+[TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, true);
 
 % trim files to only those within a hypnogram
 MuseStruct_trimmed  = MuseStruct_combined;
@@ -134,29 +126,21 @@ for ipart = 1 : 3
 end
 
 % read spike data from Phy as one continuous trial
-SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config_trimmed{ipatient}, true);
+SpikeRaw{ipatient}                  = readSpikeRaw_Phy(config_trimmed{ipatient}, true);
 
 if ipatient == 3
     SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
 end
 
-% SpikeWaveforms_fromRaw{ipatient}              = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-
 % segment into trials based on IED markers
-SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
+SpikeTrials_timelocked{ipatient}    = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
 
 % segment into equal periods
-SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
-SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
-
-
-SpikeWaveforms{ipatient}  = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-
-% plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
-%     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
-%     SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});
+SpikeTrials_windowed{ipatient}      = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+SpikeStats_windowed{ipatient}       = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
+SpikeWaveforms{ipatient}            = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
+% SpikeWaveforms{ipatient}            = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, false);
 
 plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...

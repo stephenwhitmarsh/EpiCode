@@ -124,4 +124,5 @@ end
 % write data and parameters for spyking circus
 writeSpykingCircusDeadfiles(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true);
 writeSpykingCircusParameters(config_trimmed{ipatient})
-% writeSpykingCircus(config_trimmed{ipatient}, true);
+writeSpykingCircus(config_trimmed{ipatient}, true);
+

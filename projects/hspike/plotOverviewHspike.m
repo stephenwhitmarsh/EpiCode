@@ -354,31 +354,31 @@ for ipart = 1 : size(cfg.directorylist,2)
             xlabel('Time (ms)'); ylabel('Spikecount');
 
             %% autocorr windowed
-%             subplot(9,7, 54); hold on;
-%             title('Autocorrelation');
-%             bar(SpikeStats_windowed{ipart}.window{itemp}.xcorr_time * 1000, squeeze(SpikeStats_windowed{ipart}.window{itemp}.xcorr(itemp, itemp, :)), 1, 'facecolor', [0 0 0], 'edgecolor', 'none');
-%             axis tight;
-%             ax = axis;
-%             patch([-2 2 2 -2], [ax(3), ax(3), ax(4)*1.1, ax(4)*1.1], [1 0 0], 'edgecolor', 'none');
-%             set(gca,'children',flipud(get(gca,'children')))
-%
-%             xlim([-0.025, 0.025] * 1000);
-%             set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
-%             ylabel('Correlation');
+            subplot(9,7, 54); hold on;
+            title('Autocorrelation');
+            bar(SpikeStats_windowed{ipart}.window{itemp}.xcorr_time * 1000, squeeze(SpikeStats_windowed{ipart}.window{itemp}.xcorr(itemp, itemp, :)), 1, 'facecolor', [0 0 0], 'edgecolor', 'none');
+            axis tight;
+            ax = axis;
+            patch([-2 2 2 -2], [ax(3), ax(3), ax(4)*1.1, ax(4)*1.1], [1 0 0], 'edgecolor', 'none');
+            set(gca,'children',flipud(get(gca,'children')))
+
+            xlim([-0.025, 0.025] * 1000);
+            set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
+            ylabel('Correlation');
 
             %% autocorr per sleepstage
-%             subplot(9,7, 61); hold on;
-%             title('Autocorrelation x Sleep Stage');
-%             for hyplabel = hyplabels(end:-1:1)
-%                 colloc = hyplabel == labelorder;
-%                 x = SpikeStats_windowed{ipart}.window{itemp}.xcorr_time * 1000;
-%                 y = squeeze(SpikeStats_windowed{ipart}.window{itemp}.(hyplabel).xcorr(itemp, itemp, :));
-%                 bar(x, y, 1, 'facecolor', cm(colloc,:), 'edgecolor', 'none', 'facealpha', 0.5);
-%             end
-%             axis tight
-%             xlim([-0.025, 0.025]  * 1000);
-%             set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
-%             xlabel('Time (ms)'); ylabel('Correlation');
+            subplot(9,7, 61); hold on;
+            title('Autocorrelation x Sleep Stage');
+            for hyplabel = hyplabels(end:-1:1)
+                colloc = hyplabel == labelorder;
+                x = SpikeStats_windowed{ipart}.window{itemp}.xcorr_time * 1000;
+                y = squeeze(SpikeStats_windowed{ipart}.window{itemp}.(hyplabel).xcorr(itemp, itemp, :));
+                bar(x, y, 1, 'facecolor', cm(colloc,:), 'edgecolor', 'none', 'facealpha', 0.5);
+            end
+            axis tight
+            xlim([-0.025, 0.025]  * 1000);
+            set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
+            xlabel('Time (ms)'); ylabel('Correlation');
 
             %% FR x IED rate
             disp('Firing rate x IED rate')
@@ -439,30 +439,30 @@ for ipart = 1 : size(cfg.directorylist,2)
             xl = xlim;
 
             %% Time per sleep stage
-%             disp('Time per sleep stage')
-%             subplot(9,7,7); hold on;
-%             title('Time per sleep stage (hrs.)');
-%             m = -inf;
-%             for hyplabel = hyplabels
-%                 barloc      = find(hyplabel ==labelorder);
-%                 y           = hypmusestat{ipart}.(char(markername)).duration.(hyplabel);
-%                 hb          = bar(barloc, y, 1);
-%                 l{barloc}   = sprintf('%s=%0.2fhrs', hyplabel, y);
-%                 m           = max(m, y);
-%                 set(hb, 'FaceColor', cm(barloc,:));
-%             end
-% 
-%             xlim([0.5, 5.5]); ylim([0, m * 1.1]);
-%             set(gca,'TickLength',[0 0], 'Xticklabels', [], 'TickLabelInterpreter', 'none', 'XGrid', 'off', 'YGrid', 'on', 'box', 'off', 'TickDir', 'out');
-%             clear p
-%             for ii = 1:size(cm,1)
-%                 p(ii) = patch(NaN, NaN, cm(ii,:));
-%             end
-% 
-%             hl = legend(p, l, 'location', 'eastoutside', 'Interpreter', 'none');
-%             pos_legend = get(hl, 'position');
-%             pos_legend(1) = 0.92;
-%             set(hl, 'position', pos_legend);
+            disp('Time per sleep stage')
+            subplot(9,7,7); hold on;
+            title('Time per sleep stage (hrs.)');
+            m = -inf;
+            for hyplabel = hyplabels
+                barloc      = find(hyplabel ==labelorder);
+                y           = hypmusestat{ipart}.(char(markername)).duration.(hyplabel);
+                hb          = bar(barloc, y, 1);
+                l{barloc}   = sprintf('%s=%0.2fhrs', hyplabel, y);
+                m           = max(m, y);
+                set(hb, 'FaceColor', cm(barloc,:));
+            end
+
+            xlim([0.5, 5.5]); ylim([0, m * 1.1]);
+            set(gca,'TickLength',[0 0], 'Xticklabels', [], 'TickLabelInterpreter', 'none', 'XGrid', 'off', 'YGrid', 'on', 'box', 'off', 'TickDir', 'out');
+            clear p
+            for ii = 1:size(cm,1)
+                p(ii) = patch(NaN, NaN, cm(ii,:));
+            end
+
+            hl = legend(p, l, 'location', 'eastoutside', 'Interpreter', 'none');
+            pos_legend = get(hl, 'position');
+            pos_legend(1) = 0.92;
+            set(hl, 'position', pos_legend);
 
             %% IED rate over time
             disp('IED rate')

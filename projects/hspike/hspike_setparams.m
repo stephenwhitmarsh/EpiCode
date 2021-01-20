@@ -130,7 +130,7 @@ config{1}.spike.resamplefs.combined3 = 1000;
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
-config{1}.spike.ISIbins             = [0 : 0.003 : 0.150]; %in s
+config{1}.spike.ISIbins             = [0 : 0.0005 : 0.150]; %in s
 config{1}.spike.nrsdfbins           = 100;
 
 config{1}.spikewin.windowsize       = 60;
@@ -206,13 +206,13 @@ config{4}.cluster.refmethod         = 'bipolar';
 config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
-config{4}.circus.channel            = {'mAmT2_2','mAmT2_3','mAmT2_4','mAmT2_5','mAmT2_6','mAmT2_7','mHaT2_2','mHaT2_3','mHaT2_5'}; % might just as well remove amygdata electrodes as they are too noisy
-config{4}.circus.channelname        = {'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mAmT2'  ,'mHaT2'  ,'mHaT2'  ,'mHaT2'};
+config{4}.circus.channel            = {'mHaT2_3','mHaT2_5','mHaT2_7'}; % might just as well remove amygdata electrodes as they are too noisy
 config{4}.circus.params.detection.spike_thresh  = '6';
 config{4}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
 config{4}.circus.params.filtering.remove_median = 'True';
 
 %% Patient 5
+% some clear cases for merging in mLMI1 & mLMS2
 config{5}                           = config{1};
 config{5}.prefix                    = '2689-';
 config{5}.rawdir                    = fullfile(rootpath_data,'pat_02689_1168', 'eeg');
@@ -226,14 +226,15 @@ config{5}.cluster.refmethod         = 'bipolar';
 config{5}.template.threshold        = 3;
 config{5}.template.reref            = 'yes';
 config{5}.template.refmethod        = 'bipolar';
-config{5}.circus.channel            = {'mLMS2_2','mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7','mHmT3_4','mHmT3_5','mHmT3_7'};
+config{5}.circus.channel            = {'mHmT3_4','mHmT3_5','mHmT3_7', 'mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7', 'mLMS2_2'};
+config{5}.circus.channelname        = {'mHmT3',  'mHmT3',  'mHmT3',   'mLMI1',  'mLMI1',  'mLMI1',  'mLMI1',   'mLMS2'};
 config{5}.circus.params.detection.spike_thresh  = '6';
 config{5}.circus.params.filtering.remove_median = 'True';
-config{5}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
+config{5}.circus.params.detection.peaks         = 'negative';
 
 %% Patient 6
 config{6}                           = config{1};
-config{6}.prefix                    = '2651-';
+config{6}.prefix                    = '2651-'; %% REDO SPYKING CIRCUS AFTER REDOING ARTEFACTS
 config{6}.rawdir                    = fullfile(rootpath_data,'pat_02651_1127', 'eeg');
 config{6}.hyp.micromedchannel       = 'HmT21';
 config{6}.LFP.channel               = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -245,7 +246,11 @@ config{6}.template.threshold        = 3.2;
 config{6}.template.threshold        = 3;
 config{6}.template.reref            = 'no';
 config{6}.template.refmethod        = 'bipolar';
-config{6}.circus.channel            = {'mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6','mHaT2_6','mHaT2_7','mHaT2_8'};
+config{6}.circus.channel            = {'mHaT2_6','mHaT2_7','mHaT2_8','mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6'};
+config{6}.circus.channelname        = {'mHaT2','mHaT2','mHaT2','mHmT2','mHmT2','mHmT2','mHmT2'};
+config{6}.circus.params.detection.spike_thresh  = '6';
+config{6}.circus.params.detection.peaks         = 'negative'; 
+config{6}.circus.params.filtering.remove_median = 'False';
 
 %% Patient 7
 config{7}                           = config{1};
@@ -447,14 +452,14 @@ config{4}.directorylist{1}          = { '02680_2019-01-15_12-45'...
 config{4}.directorylist{2}          = { '02680_2019-01-16_13-32'...
                                         '02680_2019-01-16_15-32'...
                                         '02680_2019-01-16_17-32'...
-                                        '02680_2019-01-16_19-32'...
-                                        '02680_2019-01-16_21-32'...
-                                        '02680_2019-01-16_23-32'...
-                                        '02680_2019-01-17_01-32'...
-                                        '02680_2019-01-17_03-32'...
-                                        '02680_2019-01-17_05-32'...
-                                        '02680_2019-01-17_07-32'...
-                                        '02680_2019-01-17_09-32'...
+                                        '02680_2019-01-16_19-32'... % ends in noise
+                                        '02680_2019-01-16_21-32'... % full noise then loose signal (flatline)
+                                        '02680_2019-01-16_23-32'... % no signal - flatline - looks hp filtered
+                                        '02680_2019-01-17_01-32'... % no signal - flatline - looks hp filtered
+                                        '02680_2019-01-17_03-32'... % no signal - flatline - looks hp filtered
+                                        '02680_2019-01-17_05-32'... % no signal - flatline - looks hp filtered
+                                        '02680_2019-01-17_07-32'... % no signal - flatline - looks hp filtered
+                                        '02680_2019-01-17_09-32'... % signal back?
                                         '02680_2019-01-17_10-09'...
                                         '02680_2019-01-17_12-01'...
                                         '02680_2019-01-17_14-01'};
@@ -530,7 +535,7 @@ config{6}.directorylist{1}          = { '02651_2018-10-16_15-31'...
                                         '02651_2018-10-17_11-46'...
                                         '02651_2018-10-17_13-46'};  % very regular clipping in mHaT2
 config{6}.directorylist{2}          = { '02651_2018-10-17_15-46'...
-                                        '02651_2018-10-17_17-46'...
+                                        '02651_2018-10-17_17-46'... % fully artefacted
                                         '02651_2018-10-17_19-46'...
                                         '02651_2018-10-17_21-46'...
                                         '02651_2018-10-17_23-46'...

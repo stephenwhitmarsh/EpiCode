@@ -6,31 +6,23 @@
 %% Add path
 
 if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/DBSCAN/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries'));
-    %     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
 end
 
 if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\development
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\DBSCAN\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 % to read neuralynx files faster
-    %     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
+    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
 end
-
 ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
@@ -42,28 +34,24 @@ config = hspike_setparams;
 
 for ipatient = 1:7
     
-    [MuseStruct_orig{ipatient}]                                                                     = readMuseMarkers(config{ipatient}, false);
-    [MuseStruct_aligned{ipatient}]                                                                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
-    %     [clusterindx{ipatient}, LFP_cluster{ipatient}]                                                  = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
-    % [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
-    [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, [], false);
+    [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, false);
+    [MuseStruct_aligned{ipatient}]                                          = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
+    %
+    % config{ipatient}.LFP.write = false;
+    % [LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+    
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                          = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+    [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]    = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     
     % update to any new artefacts
-    [MuseStruct_orig{ipatient}]                                                                     = readMuseMarkers(config{ipatient}, true);
-    
+    [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, true);
     for ipart = 1 : 3
         for idir = 1 : size(MuseStruct_template{ipatient}{ipart}, 2)
             try
                 MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__START__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__START__;
                 MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
-                
             catch
             end
-            if MuseStruct_template{ipatient}{ipart}{idir}.starttime ~= MuseStruct_orig{ipatient}{ipart}{idir}.starttime
-                disp('OD');
-            end
-            MuseStruct_template{ipatient}{ipart}{idir}.nSamples = MuseStruct_orig{ipatient}{ipart}{idir}.nSamples;
-            MuseStruct_template{ipatient}{ipart}{idir}.Fs = MuseStruct_orig{ipatient}{ipart}{idir}.Fs;
         end
     end
     
@@ -92,7 +80,7 @@ for ipatient = 1:7
     end
     
     MuseStruct_combined{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
-
+    
     % focus time period a bit more
     config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
     config{ipatient}.epoch.pad.Hspike           = 0.5;
@@ -104,7 +92,7 @@ for ipatient = 1:7
     for markername = string(markernames)
         config{ipatient}.name{itemp}                      = markername;
         config{ipatient}.muse.startmarker.(markername)    = markername;
-        config{ipatient}.muse.endmarker.(markername)      = markername;   
+        config{ipatient}.muse.endmarker.(markername)      = markername;
         config{ipatient}.epoch.toi.(markername)           = [-0.2  0.8];
         config{ipatient}.epoch.pad.(markername)           = 0.5;
         config{ipatient}.LFP.baselinewindow.(markername)  = [-0.2  0.8];
@@ -113,15 +101,13 @@ for ipatient = 1:7
         config{ipatient}.hyp.markers{itemp}               = markername;
         itemp = itemp + 1;
     end
-
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, true);    
     
+    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, false);
     [LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
     [TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, false);
-
+    
     % trim files to only those within a hypnogram
     MuseStruct_trimmed  = MuseStruct_combined;
-%     MuseStruct_trimmed  = MuseStruct_orig;
     config_trimmed      = config;
     for ipart = 1 : 3
         sel     = hypnogram{ipatient}.directory(hypnogram{ipatient}.part == ipart);
@@ -129,41 +115,44 @@ for ipatient = 1:7
         last    = find(strcmp(config{ipatient}.directorylist{ipart}, sel(end)));
         config_trimmed{ipatient}.directorylist{ipart}   = config{ipatient}.directorylist{ipart}(first:last);
         MuseStruct_trimmed{ipatient}{ipart}             = MuseStruct_combined{ipatient}{ipart}(first:last);
-       
+        
         % if still more than 7, cut off the beginning
         if size(config_trimmed{ipatient}.directorylist{ipart}, 2) > 7
             config_trimmed{ipatient}.directorylist{ipart}   = config_trimmed{ipatient}.directorylist{ipart}(end-6:end);
-            MuseStruct_trimmed{ipatient}{ipart}             = MuseStruct_trimmed{ipatient}{ipart}(end-6:end);           
+            MuseStruct_trimmed{ipatient}{ipart}             = MuseStruct_trimmed{ipatient}{ipart}(end-6:end);
         end
-    end 
+    end
     
-    % write data concatinated for SC, artefacts, and output sampleinfo per file
-    cfg = writeSpykingCircusMultichannel(config_trimmed{ipatient}, true);
-    
-
-    sampleinfo = writeSpykingCircus(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true, true);
-    % write parameters for spyking circus
-%     writeSpykingCircusParameters(config_trimmed{ipatient})
-%     writeSpykingCircusParameters_new(config_trimmed{ipatient})
-%     [artefacts] = writeSpykingCircus_deadfiles(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, true);
-
     % read spike data from Phy as one continuous trial
     SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config_trimmed{ipatient}, false);
     
-    % segment into equal periods
-    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
+    if ipatient == 3
+        SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
+    end
     
+    % SpikeWaveforms_fromRaw{ipatient}              = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, true);
     
     % segment into trials based on IED markers
-    SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+    SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
     SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
-
-    SpikeWaveforms{ipatient}              = readSpikeWaveforms_new(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
+    
+    % segment into equal periods
+    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
+    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
+    SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, false);
+    
+    
+%     SpikeWaveforms{ipatient}  = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, false);
+    
+    % plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
+    %     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
+    %     SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});
     
     plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
         SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
         SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});
+    
+    
 end
 
 %% collect behavioural for overview
@@ -260,7 +249,7 @@ config{1}.epoch.toi.combined2 = [-0.2  0.8];
 
 %% Create slurm job list
 config              = hspike_setparams;
-fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list3.txt');
+fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list.txt');
 delete(fname_slurm_joblist);
 for ipatient = 1:7
     for ipart = 1 : size(config{ipatient}.directorylist, 2)
