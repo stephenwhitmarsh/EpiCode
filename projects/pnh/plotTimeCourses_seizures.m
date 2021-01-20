@@ -22,23 +22,28 @@ for ipart = 1 : size(LFP, 2)
             ind = contains(LFP{ipart}.(markername).trialinfo.chan1, chanlist{ichan});
 %             contlist(ichan) = unique(LFP{ipart}.(markername).trialinfo.control(ind)); % so that it will break if there are more than 1 control channels
             contlist(ichan) = string(LFP{ipart}.(markername).trialinfo.control{find(ind,1,'first')}); % so that it will break if there are more than 1 control channels
+            typelist(ichan) = string(LFP{ipart}.(markername).trialinfo.type{find(ind,1,'first')}); % so that it will break if there are more than 1 control channels
 
         end
 
         % get max range of timecourses in dataset
+        cfgtemp         = [];
+        cfgtemp.latency = [-0.5 10];
+        sel             = ft_selectdata(cfgtemp, LFP{ipart}.(markername));
+        
         maxrange = 0;
         maxtrials = 0;
         for ichan = 1: size(chanlist, 1)
-            trials      = find(strcmp(LFP{ipart}.(markername).trialinfo.chan1, chanlist{ichan}));
+            trials      = find(strcmp(sel.trialinfo.chan1, chanlist{ichan}));
             maxtrials   = max([maxtrials, length(trials)]);
-            channel     = strcmp(string(LFP{ipart}.(markername).label), strcat('_', chanlist{ichan}));
+            channel     = strcmp(string(sel.label), strcat('_', chanlist{ichan}));
             for itrial = trials'
-                y           = max(abs(LFP{ipart}.(markername).trial{itrial}(channel,:)));
+                y           = max(abs(sel.trial{itrial}(channel,:)));
                 maxrange    = max(abs([maxrange, y]));
             end
         end
         
-%       maxrange = maxrange / 2; % extra scaling if needed
+        maxrange = maxrange / 2; % extra scaling if needed
         ymax = maxrange * (maxtrials-1) + maxrange/2;
         ymin = -maxrange/2;
         
@@ -106,7 +111,7 @@ for ipart = 1 : size(LFP, 2)
             ylabel('Seizure');
             axis tight;
             set(gca, 'YDir','reverse')
-            title(strcat('Channel:'," ", chanlist{ichan}),'interpreter', 'none');            
+            title(strcat('Channel:'," ", chanlist{ichan}, '(', typelist{ichan}, ')'),'interpreter', 'none');            
             %             xlim([cfg.epoch.toi.(markername)(1), cfg.epoch.toi.(markername)(2)]);
             xlim([-0.5, 10]);
             ylim([-maxrange, ymax]);
@@ -209,8 +214,8 @@ for ipart = 1 : size(LFP, 2)
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'channel_' ,chanlist{ichan})),'-r300');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'channel_' ,chanlist{ichan})),'-r300');
+            print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'channel_' ,chanlist{ichan},'_bipolar')), '-r300');
+            print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'channel_' ,chanlist{ichan},'_bipolar')), '-r300');
             
             close all
         end % ichan

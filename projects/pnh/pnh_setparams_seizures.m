@@ -52,10 +52,16 @@ config{1}.LFP.name                      = 'seizure';
 config{1}.LFP.hpfilter                  = 'no';
 config{1}.LFP.hpfreq                    = 1;
 config{1}.LFP.resamplefs                = 1000;
+config{1}.LFP.rerefmethod               = 'bipolar';
 config{1}.LFP.baseline                  = 'yes';
 config{1}.LFP.baselinewindow.seizure    = [-1, -0.5];
 config{1}.LFP.slidestep                 = [0.01, 0.01, 0.01];
 config{1}.LFP.channel                   = {'_2pNi_1', '_1pNs_1', '_1pHe_1'};
+
+config{1}.LFP.reref                     = 'yes';
+%   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
+% config{1}.refmethod                     = 'bipolar';
+
 
 config{1}.epoch.toi.seizure             = [-1  10];
 config{1}.epoch.pad.seizure             = 0.5;
@@ -78,5 +84,4 @@ config{3}.prefix                    = '2689-seizures-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
 config{3}.LFP.channel               = {'_TNmg_1', '_TNmi_1'};
 
-%% Data
 
