@@ -44,19 +44,20 @@ for ipart = 1 : size(SpikeTrials, 2)
         % ISI over conditions
         cfgtemp                                     = [];
         cfgtemp.outputunit                          = 'spikecount';
-        cfgtemp.bins                                =  cfg.spike.ISIbins;%0 : 0.0005 : 0.200;   % use bins of 0.5 milliseconds
+        cfgtemp.bins                                = cfg.spike.ISIbins;%0 : 0.0005 : 0.200;   % use bins of 0.5 milliseconds
         cfgtemp.param                               = 'coeffvar';         % compute the coefficient of variation (sd/mn of isi)
         isi_temp                                    = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
         
 %         % Xcorr over conditions
-%         cfgtemp                                     = [];
-%         cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
-%         cfgtemp.maxlag                              = 0.200;
-%         cfgtemp.outputunit                          = 'proportion';        
-%         xcorr_temp                                  = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
+        cfgtemp                                     = [];
+        cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
+        cfgtemp.maxlag                              = 0.200;
+        cfgtemp.outputunit                          = 'proportion';   
+        cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];
+        xcorr_temp                                  = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
         
-        % because cfg.keeptrials doesn't work:
-        if  isfield(SpikeTrials{ipart}.(markername).trialinfo, 'hyplabel')
+        % get them now because cfg.keeptrials in the nextloop doesn't work:
+        if any(ismember(SpikeTrials{ipart}.(markername).trialinfo.Properties.VariableNames, 'hyplabel'))
             for hyplabel = hyplabels
                 
                 trials = SpikeTrials{ipart}.(markername).trialinfo.hyplabel == hyplabel;
@@ -69,12 +70,13 @@ for ipart = 1 : size(SpikeTrials, 2)
                 cfgtemp.trials                              = trials;
                 isi_hyp_temp.(hyplabel)                     = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
                 
-                %             % Xcorr per condition
-                %             cfgtemp                                     = [];
-                %             cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
-                %             cfgtemp.maxlag                              = 0.200;
-                %             cfgtemp.trials                              = trials;
-                %             xcorr_hyp_temp.(hyplabel)                   = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
+                % Xcorr per condition
+                cfgtemp                                     = [];
+                cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
+                cfgtemp.maxlag                              = 0.200;
+                cfgtemp.trials                              = trials;
+                cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];         
+                xcorr_hyp_temp.(hyplabel)                   = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
             end
         end
         
@@ -94,17 +96,17 @@ for ipart = 1 : size(SpikeTrials, 2)
             spike_temp           = ft_spike_select(cfgtemp,SpikeTrials{ipart}.(markername));
             stats{ipart}.(markername){itemp}.autocorr   = ft_spike_xcorr(cfgtemp, spike_temp);
             stats{ipart}.(markername){itemp}.autocorr   = rmfield(stats{ipart}.(markername){itemp}.autocorr, 'cfg');
-            %             stats{ipart}.(markername){itemp}.xcorr          = xcorr_temp.xcorr;
-            %             stats{ipart}.(markername){itemp}.xcorr_time     = xcorr_temp.time;
+            stats{ipart}.(markername){itemp}.xcorr      = xcorr_temp.xcorr;
+            stats{ipart}.(markername){itemp}.xcorr_time = xcorr_temp.time;
             
-            if isfield(SpikeTrials{ipart}.(markername).trialinfo, 'hyplabel')
+            if any(ismember(SpikeTrials{ipart}.(markername).trialinfo.Properties.VariableNames, 'hyplabel'))
                 for hyplabel = hyplabels
                     stats{ipart}.(markername){itemp}.(hyplabel).isi            = isi_hyp_temp.(hyplabel).isi{itemp};
                     stats{ipart}.(markername){itemp}.(hyplabel).isi_avg        = isi_hyp_temp.(hyplabel).avg(itemp, :);
                     stats{ipart}.(markername){itemp}.(hyplabel).isi_avg_time   = isi_hyp_temp.(hyplabel).time;
                     stats{ipart}.(markername){itemp}.(hyplabel).label          = isi_hyp_temp.(hyplabel).label{itemp};
-                    %                 stats{ipart}.(markername){itemp}.(hyplabel).xcorr          = xcorr_hyp_temp.(hyplabel).xcorr;
-                    %                 stats{ipart}.(markername){itemp}.(hyplabel).xcorr_time     = xcorr_hyp_temp.(hyplabel).time;
+                    stats{ipart}.(markername){itemp}.(hyplabel).xcorr          = xcorr_hyp_temp.(hyplabel).xcorr;
+                    stats{ipart}.(markername){itemp}.(hyplabel).xcorr_time     = xcorr_hyp_temp.(hyplabel).time;
                 end
             end
             
