@@ -51,8 +51,11 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-write     = ft_getopt(cfg.LFP, 'write', true);
-keepcfg   = ft_getopt(cfg.LFP, 'keepcfg', true);
+write               = ft_getopt(cfg.LFP, 'write', true);
+keepcfg             = ft_getopt(cfg.LFP, 'keepcfg', true);
+cfg.LFP.reref       = ft_getopt(cfg.LFP, 'reref', 'no');
+cfg.LFP.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
+cfg.LFP.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -126,20 +129,28 @@ for markername = string(cfg.LFP.name)
                 %load data
                 if isNeuralynx
                     temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.LFP.channel{ifile}, '.ncs']));
-                    fname{1}            = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
-                    dat                 = ft_read_neuralynx_interp(fname);
+                    cfgtemp             = [];
+                    cfgtemp.dataset     = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                    dat                 = ft_preprocessing(cfgtemp);
+                    
+                    % rereferencing            
+                    if strcmp(cfg.LFP.reref, 'yes') && strcmp(cfg.LFP.rerefmethod, 'bipolar') 
+                        b               = cfg.LFP.channel{ifile}(1:end-1);
+                        n               = num2str(str2double(cfg.LFP.channel{ifile}(end)) + 1);
+                        temp            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', b, n, '.ncs']));
+                        cfgtemp         = [];
+                        cfgtemp.dataset = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                        refdat          = ft_preprocessing(cfgtemp);
+                        dat.trial{1}    = dat.trial{1} - refdat.trial{1};
+                        clear refdat
+                    end
+        
                 else
+                    cfgtemp             = [];
                     cfgtemp.dataset     = fname;
                     cfgtemp.channel     = cfg.labels.macro';
                     dat                 = ft_preprocessing(cfgtemp);
                 end
-
-                %rereferencing
-                cfgtemp = [];
-                cfgtemp.reref             = ft_getopt(cfg.LFP, 'reref', 'no');
-                cfgtemp.rerefmethod       = ft_getopt(cfg.LFP, 'rerefmethod', []);
-                cfgtemp.refchannel        = ft_getopt(cfg.LFP, 'refchannel', []);
-                dat                       = ft_preprocessing(cfgtemp, dat);
 
                 % filtering
                 cfgtemp                 = [];
