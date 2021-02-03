@@ -24,15 +24,16 @@ function [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-datapath = fullfile(cfg.rawdir,cfg.directorylist{1}{1});
+datapath = fullfile(cfg.rawdir, cfg.directorylist{1}{1});
 listing = dir(datapath);
+
 % in some cases cfg.directorylist is list of files and not folders. To fix that :
 if isempty(listing)
     datapath = cfg.rawdir;
     listing = dir(datapath);
 end
 if isempty(listing)
-    error('No file detected in %s or in %s',fullfile(cfg.rawdir,cfg.directorylist{1}{1}), cfg.rawdir);
+    error('No file detected in %s or in %s', fullfile(cfg.rawdir,cfg.directorylist{1}{1}), cfg.rawdir);
 end
 
 isNeuralynx         = 0;
