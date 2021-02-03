@@ -158,6 +158,8 @@ for markername = string(cfg.LFP.name)
                 cfgtemp.hpfilter        = ft_getopt(cfg.LFP, 'hpfilter', 'no');
                 cfgtemp.bpfilter        = ft_getopt(cfg.LFP, 'bpfilter', 'no');
                 cfgtemp.bsfilter        = ft_getopt(cfg.LFP, 'bsfilter', 'no');
+                cfgtemp.dftfilter       = ft_getopt(cfg.LFP, 'dftfilter', 'no');
+
                 cfgtemp.lpfreq          = ft_getopt(cfg.LFP, 'lpfreq', []);
                 cfgtemp.hpfreq          = ft_getopt(cfg.LFP, 'hpfreq', []);
                 cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
