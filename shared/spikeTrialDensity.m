@@ -30,7 +30,18 @@ end
 fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikeTrialDensity.mat']);
 if exist(fname, 'file') && force == false
     fprintf('Loading %s\n', fname);
-    load(fname, 'stats');
+    
+    count = 0;
+    err_count = 0;
+    while count == err_count
+        try
+            load(fname, 'stats');
+        catch ME
+            err_count = err_count + 1;
+        end
+        count = count + 1;
+    end
+    
     return
 end
 

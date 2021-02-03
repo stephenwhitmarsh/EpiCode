@@ -37,8 +37,21 @@ fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct
 
 if exist(fname_out,'file') && force == false
     fprintf('Loading results template detection\n');
-    load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
+    
+    % repeat to deal with load errors
+    count = 0;
+    err_count = 0;
+    while count == err_count
+        try
+            load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
+        catch ME
+            err_count = err_count + 1;
+        end
+        count = count + 1;
+    end
+    
     return
+    
 end
 
 fprintf('Detecting spikes\n');
@@ -81,11 +94,13 @@ for ipart = 1 :  size(cfg.directorylist,2)
 
         % concatinate channels
         for ifile = 1 : nfile
+            cfgtemp             = [];
+            
             if isNeuralynx
                 temp                = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.cluster.channel{ifile},'.ncs']));
-                fname{1}            = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
-                filedat{ifile}      = ft_read_neuralynx_interp(fname);
-
+                cfgtemp.dataset     = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, temp.name);
+                filedat{ifile}      = ft_preprocessing(cfgtemp);
+                
                 % labels have to be the same to append over directories
                 temp                    = strsplit(filedat{ifile}.label{1},'_');
                 filedat{ifile}.label{1} = strcat(temp{end-1},'_',temp{end});
@@ -95,7 +110,7 @@ for ipart = 1 :  size(cfg.directorylist,2)
                 filedat{ifile}      = ft_preprocessing(cfgtemp);
             end
         end
-
+        
         cfgtemp                     = [];
         cfgtemp.keepsampleinfo      = 'no';
         dirdat{idir}                = ft_appenddata(cfgtemp,filedat{:});

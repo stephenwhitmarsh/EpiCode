@@ -29,9 +29,10 @@ function [SpikeTrials] = readSpikeTrials_MuseMarkers(cfg, MuseStruct, SpikeRaw, 
 
 
 % get the default cfg options
-cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
-cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
-cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
+cfg.circus.postfix      = ft_getopt(cfg.circus, 'postfix', []);
+cfg.circus.part_list    = ft_getopt(cfg.circus, 'part_list', 'all');
+cfg.circus.channelname  = ft_getopt(cfg.circus, 'channelname', []);
+cfg.spike.pad           = ft_getopt(cfg.spike, 'pad', []);
 
 if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
@@ -40,8 +41,19 @@ end
 fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_Timelocked.mat']);
 if exist(fname, 'file') && force == false
     fprintf('Loading %s\n', fname);
-    load(fname, 'SpikeTrials');
-    return;
+    
+    % repeat to deal with load errors
+    count = 0;
+    err_count = 0;
+    while count == err_count
+        try
+            load(fname, 'SpikeTrials');
+        catch ME
+            err_count = err_count + 1;
+        end
+        count = count + 1;
+    end
+    return
 else
     fprintf('(re-)computing SpikeTrials_MuseMarkers for %s\n', cfg.prefix);
 end
@@ -80,7 +92,8 @@ for ipart = cfg.circus.part_list
     for markername = string(cfg.name)
 
         SpikeTrials{ipart}.(markername) = []; %initialize to avoid bug in case no marker are found and need to output empty structure
-
+        cfg.spike.pad.(markername)      = ft_getopt(cfg.spike.pad, markername, 0);
+        
         % clock time of each event
         clocktimes = [];
         for ifile = 1 : size(MuseStruct{ipart}, 2)
@@ -156,8 +169,8 @@ for ipart = cfg.circus.part_list
                     continue
                 end
 
-                Startsample     = [Startsample; ss + cfg.spike.toi.(markername)(1) * hdr.Fs + dirOnset(idir)];
-                Endsample       = [Endsample;   es + cfg.spike.toi.(markername)(2) * hdr.Fs + dirOnset(idir)];
+                Startsample     = [Startsample; ss + (cfg.spike.toi.(markername)(1) + cfg.spike.pad.(markername)) * hdr.Fs + dirOnset(idir)];
+                Endsample       = [Endsample;   es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr.Fs + dirOnset(idir)];
                 Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
                 Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx) + seconds(cfg.spike.toi.(markername)(2))];
                 Offset          = [Offset;      cfg.spike.toi.(markername)(1) * hdr.Fs];
