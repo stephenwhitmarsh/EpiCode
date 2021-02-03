@@ -1,4 +1,4 @@
-function writeSpykingCircusParametersMultichannel(cfg)
+function writeSpykingCircusParameters(cfg)
 
 % WRITESPYKINGCIRCUSPARAMETERS writes .params and .prb file for Spyking Circus
 %
@@ -120,7 +120,6 @@ for ipart = cfg.circus.part_list
         else
             h3 = ini.SetValues('triggers', {'dead_file','dead_unit','ignore_times'}, {'SpykingCircus_artefacts_samples.dead','timestep','True'});
         end
-        if any([h0; h1; h2; h3] ~= 1), error('Something went wrong with adjusting parameters'); end            
         
         % replace settings with those defined in cfg.circus.params
         if isfield(cfg.circus, 'params')
