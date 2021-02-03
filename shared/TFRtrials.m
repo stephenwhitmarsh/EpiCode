@@ -1,4 +1,4 @@
-function [TFR] = TFRtrials(cfg, Trialdata, force)
+function [TFR] = TFRtrials(cfg, LFP, force)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -16,19 +16,19 @@ function [TFR] = TFRtrials(cfg, Trialdata, force)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-fname_out = fullfile(cfg.datasavedir,[cfg.prefix,'TFRtrials.mat']);
+fname_out = fullfile(cfg.datasavedir,[cfg.prefix, 'TFRtrials.mat']);
 
-if exist(fname_out,'file') && force == false
+if exist(fname_out, 'file') && force == false
     fprintf('Loading TFR\n');
-    load(fname_out,'TFR');
+    load(fname_out, 'TFR');
     return
 end
 
 fprintf('Computing TFR\n');
 
-for ipart = 1 : size(Trialdata,2)
+for ipart = 1 : size(LFP, 2)
     
-    for markername = string(fields(Trialdata{ipart}))'
+    for markername = string(fields(LFP{ipart}))'
         
         cfgtemp                         = [];
         cfgtemp.channel                 = 'all'; 
@@ -36,20 +36,21 @@ for ipart = 1 : size(Trialdata,2)
         cfgtemp.output                  = 'pow';
         cfgtemp.taper                   = 'hanning';
         cfgtemp.pad                     = 'nextpow2'; 
-        cfgtemp.keeptrials              = 'yes';
-        cfgtemp.foi                     = cfg.TFR.foi;
-        cfgtemp.t_ftimwin               = cfg.TFR.t_ftimwin;
-        cfgtemp.toi                     = cfg.TFR.toi;
+        cfgtemp.keeptrials              = cfg.TFR.keeptrials;
+        cfgtemp.foi                     = cfg.TFR.foi.(markername);
+        cfgtemp.t_ftimwin               = cfg.TFR.t_ftimwin.(markername);
+        cfgtemp.toi                     = cfg.TFR.toi.(markername);
         cfgtemp.feedback                = 'off';
-        TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp,Trialdata{ipart}.(markername));
+        TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
         
+        % to save memory, remove if not already done
         try
-            TFR{ipart}                      = rmfield(TFR{ipart}, 'cfg');
+            TFR{ipart}                  = rmfield(TFR{ipart}, 'cfg');
         catch
         end
         
     end % markername
 end % ipart
     
-save(fname_out,'TFR','-v7.3');
+save(fname_out, 'TFR', '-v7.3');
 
