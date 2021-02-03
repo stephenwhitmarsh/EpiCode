@@ -1,4 +1,4 @@
-function [MuseStruct] = alignMuseMarkers(cfg, varargin)
+function [MuseStruct] = alignMuseMarkersPeaks(cfg, varargin)
 
 % ALIGNMUSEMARKERS aligns MUSE markers according to morphological features
 %
@@ -23,10 +23,10 @@ function [MuseStruct] = alignMuseMarkers(cfg, varargin)
 % cfg.align.channel             = e.g.: {'_HaT2_1','_HaT2_1'};                                   % pattern to identify channel on which to based peak detection                                                                        % peak threshold: fraction (0:inf) of mean peak amplitude in baseline period
 % cfg.align.abs                 = e.g.: {'no','no'};                                             % whether to determine peaks on absolute (both max and min)
 % cfg.align.method              = e.g.: {'crawlback','min'};                                     % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-% cfg.align.maxtimeshift.(markername)        = e.g.: {0.05,0.05};                                             % reject the trial as artefact if timeshift is bigger than this value (in seconds)
+% cfg.align.maxtimeshift.(markername)        = e.g.: {0.05,0.05};                                % reject the trial as artefact if timeshift is bigger than this value (in seconds)
 % cfg.align.filter              = e.g.: {'bp','bp'};                                             % what filter to use (bp,hp,lp)
 % cfg.align.freq                = e.g.: {[1, 10],[1, 40]};                                       % lowpass filter freq to smooth peak detection (Hz)
-% cfg.align.demean.(markername)              = e.g.: {'yes', 'yes'}                                           % whether to apply baseline correction (usefull for detecting begining of event)
+% cfg.align.demean.(markername)              = e.g.: {'yes', 'yes'}                              % whether to apply baseline correction (usefull for detecting begining of event)
 % cfg.align.hilbert             = e.g.: {'no','no'};                                             % whether to first create a hilbert transform (to determine peak of frequency response rather than timecourse
 % cfg.align.thresh.method       = e.g.: {'trial','trial'}                                        % which peak baseline value is selected for thresholding : 'trial' 'medianbl','both'
 % cfg.align.thresh.value        = e.g.: [1, 0];                                                  % only peaks that are more than x percent above threshold, 0 to disable
@@ -74,7 +74,7 @@ end
 
 if exist(fname,'file') && force == false
     fprintf('Loading results alignment\n');
-    load(fname,'MuseStruct');
+    load(fname, 'MuseStruct');
     continue
 end
 
@@ -96,9 +96,9 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfg.align.findbegin                 = ft_getopt(cfg.align, 'findbegin', []);
         cfg.align.findbegin.(markername)    = ft_getopt(cfg.align.findbegin, convertStringsToChars(markername), 'no');
         cfg.align.hilbert                   = ft_getopt(cfg.align,'hilbert',[]);
-        cfg.align.hilbert.(markername)      = ft_getopt(cfg.align.hilbert,convertStringsToChars(markername),'no');
+        cfg.align.hilbert.(markername)      = ft_getopt(cfg.align.hilbert, convertStringsToChars(markername), 'no');
         cfg.align.demean                    = ft_getopt(cfg.align,'demean',[]);
-        cfg.align.demean.(markername)       = ft_getopt(cfg.align.demean,convertStringsToChars(markername),'no');
+        cfg.align.demean.(markername)       = ft_getopt(cfg.align.demean, convertStringsToChars(markername), 'no');
         cfg.align.reref                     = ft_getopt(cfg.align,'reref','no');
         cfg.align.notch                     = ft_getopt(cfg.align,'notch','no');
 
@@ -244,10 +244,10 @@ for ipart = 1 : size(cfg.directorylist,2)
             for itrial = 1 : size(dat_filt_trl.trial,2)
 
                 % time indexes for baseline and active period
-                t1_bl_indx(itrial)                 = find(dat_filt_trl.time{itrial} > cfg.align.toibaseline.(markername)(1),1,'first');
-                t2_bl_indx(itrial)                 = find(dat_filt_trl.time{itrial} < cfg.align.toibaseline.(markername)(2),1,'last');
-                t1_ac_indx(itrial)                 = find(dat_filt_trl.time{itrial} > cfg.align.toiactive.(markername)(1),1,'first');
-                t2_ac_indx(itrial)                 = find(dat_filt_trl.time{itrial} < cfg.align.toiactive.(markername)(2),1,'last');
+                t1_bl_indx(itrial)                 = find(dat_filt_trl.time{itrial} > cfg.align.toibaseline.(markername)(1), 1, 'first');
+                t2_bl_indx(itrial)                 = find(dat_filt_trl.time{itrial} < cfg.align.toibaseline.(markername)(2), 1, 'last');
+                t1_ac_indx(itrial)                 = find(dat_filt_trl.time{itrial} > cfg.align.toiactive.(markername)(1), 1, 'first');
+                t2_ac_indx(itrial)                 = find(dat_filt_trl.time{itrial} < cfg.align.toiactive.(markername)(2), 1, 'last');
 
                 % find peaks in active period
                 [peaks_ac{itrial},locs_ac{itrial}] = findpeaks(dat_filt_trl.trial{itrial}(t1_ac_indx(itrial):t2_ac_indx(itrial)));
@@ -259,7 +259,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                 end
 
                 % select maximum peak in baseline
-                max_peaks_bl(itrial)           = max(peaks_bl{itrial});
+                max_peaks_bl(itrial)               = max(peaks_bl{itrial});
 
             end
 
@@ -269,17 +269,17 @@ for ipart = 1 : size(cfg.directorylist,2)
 
             for itrial = 1 : size(dat_filt_trl.trial,2)
 
-                if strcmp(cfg.align.thresh.method.(markername),'medianbl')
+                if strcmp(cfg.align.thresh.method.(markername), 'medianbl')
                     % threshold based on median of max peaks in all baseline periods
                     peaks_sel               = peaks_ac{itrial} > nanmedian(max_peaks_bl) * cfg.align.thresh.value.(markername);
                     peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
                     locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
-                elseif strcmp(cfg.align.thresh.method.(markername),'trial')
+                elseif strcmp(cfg.align.thresh.method.(markername), 'trial')
                     % threshold based on max peak in trial-by-trial baseline
                     peaks_sel               = peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh.value.(markername);
                     peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
                     locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
-                elseif strcmp(cfg.align.thresh.method.(markername),'both')
+                elseif strcmp(cfg.align.thresh.method.(markername), 'both')
                     peaks_sel               = (peaks_ac{itrial} > nanmedian(max_peaks_bl) * cfg.align.thresh.value.(markername) && peaks_ac{itrial} > max(peaks_bl{itrial}) * cfg.align.thresh.value.(markername));
                     peaks_ac_sel{itrial}    = peaks_ac{itrial}(peaks_sel);
                     locs_ac_sel{itrial}     = locs_ac{itrial}(peaks_sel);
@@ -293,9 +293,9 @@ for ipart = 1 : size(cfg.directorylist,2)
                 end
             end
 
-            dat_sel_aligned = dat_sel_trl;
-            dat_filt_aligned = dat_filt_trl; %for plot
-            n_haspeak = 0;
+            dat_sel_aligned     = dat_sel_trl;
+            dat_filt_aligned    = dat_filt_trl; %for plot
+            n_haspeak           = 0;
 
             if strcmp(cfg.align.findbegin.(markername),'yes')
 
@@ -337,13 +337,13 @@ for ipart = 1 : size(cfg.directorylist,2)
 
                     elseif strcmp(cfg.align.method.(markername),'crawlback')
                         % start at max in search window
-                        [~, indx1]              = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));
-                        [~, indx2]              = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel{itrial}(indx1)+t1_ac_indx(itrial)-50));
-                        indx2                   = indx2(end);
-                        ip(itrial)              = 1;
+                        [~, indx1]          = max(dat_filt_trl.trial{itrial}(locs_ac_sel{itrial}+t1_ac_indx(itrial)-1));
+                        [~, indx2]          = findpeaks(-dat_filt40_trl.trial{itrial}(1:locs_ac_sel{itrial}(indx1)+t1_ac_indx(itrial)-50));
+                        indx2               = indx2(end);
+                        ip(itrial)          = 1;
                         locs_ac_sel{itrial} = indx2 - t1_ac_indx(itrial);
                     end
-                    timeshift                       = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
+                    timeshift               = dat_filt_trl.time{itrial}(locs_ac_sel{itrial}(ip(itrial))+t1_ac_indx(itrial)-1);
 
                     %align to the begin of the event if asked
                     if strcmp(cfg.align.findbegin.(markername),'yes')
@@ -358,8 +358,8 @@ for ipart = 1 : size(cfg.directorylist,2)
                         [x_intersect{itrial}, y_intersect{itrial}] = intersections(x1,y1,x2,y2,true);
 
                         if ~isempty(x_intersect{itrial})
-                            x_intersect{itrial}              = x_intersect{itrial}(end);
-                            timeshift                        = x_intersect{itrial};
+                            x_intersect{itrial} = x_intersect{itrial}(end);
+                            timeshift           = x_intersect{itrial};
 
                             %remove bad detection (assuming that marker is put after wave begining)
                             if timeshift > 0
@@ -378,9 +378,9 @@ for ipart = 1 : size(cfg.directorylist,2)
                         hasartefact(itrial) = true;
                     end
 
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(itrial)      = timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(itrial)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(itrial) + timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(itrial)          = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(itrial) + seconds(timeshift);
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(itrial) = timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(itrial)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(itrial) + timeshift;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(itrial)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(itrial) + seconds(timeshift);
                 end
             end
 
