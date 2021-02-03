@@ -256,7 +256,7 @@ config{2}.datasavedir               = fullfile(rootpath_analysis, 'data', 'pnh')
 config{2}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'pnh');       % where to print images
 
 config{2}.directory_searchstring    = '02614_2018-06-*';
-config{2}.labels.micro              = {'mCasd_1','mCasd_2','mCasd_3','mCasd_4','mCasd_5','mCasd_6','mCasd_7'};
+config{2}.labels.micro              = 
 config{2}.labels.macro              = {'_Casd_1','_Casd_2','_Casd_3','_Casd_4','_Casd_5','_Casd_6','_Casd_7','_Casd_8'};
 
 config{2}.muse.startend             = {'H02614_01__START__','H02614_01__END__';'H02614_04__START__','H02614_04__END__';'H02614_02','H02614_02'};   % start and end Muse marker
