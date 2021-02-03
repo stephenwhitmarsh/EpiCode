@@ -5,7 +5,6 @@ function hspike_cluster(ipatient)
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
 
-
 %% Add path
 
 restoredefaultpath
@@ -38,50 +37,19 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 config                                                                  = hspike_setparams;
 [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, false);
 [MuseStruct_aligned{ipatient}]                                          = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
-% 
+%
 % config{ipatient}.LFP.write = false;
-% [LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+[LFP{ipatient}]                                                         = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
 
 [clusterindx{ipatient}, LFP_cluster{ipatient}]                          = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+
 [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]    = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
 
-% update to any new artefacts
-[MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, true);
-for ipart = 1 : 3
-    for idir = 1 : size(MuseStruct_template{ipatient}{ipart}, 2)
-        try
-            MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__START__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__START__;
-            MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
-        catch
-        end
-    end
-end
+% update - add any new artefacts
+MuseStruct_template{ipatient}                                           = updateBadMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
 
-switch ipatient
-    case 1
-        markernames = {'combined1', 'combined2'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined1'; 'template5', 'combined2'; 'template6', 'combined2'};
-    case 2
-        markernames = {'combined1'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template4', 'combined1'; 'template6', 'combined1'};
-    case 3
-        markernames = {'combined1', 'combined2'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined2'; 'template4', 'combined1'; 'template5', 'combined1'; 'template6', 'combined1'};
-    case 4
-        markernames = {'combined1', 'combined2', 'combined3'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined2'; 'template4', 'combined2'; 'template5', 'combined2'; 'template6', 'combined3'};
-    case 5
-        markernames = {'combined1', 'combined2', 'combined3'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined3'; 'template5', 'combined2'; };
-    case 6
-        markernames = {'combined1'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined1'; 'template4', 'combined1'; 'template5', 'combined1'; 'template6', 'combined1'};
-    case 7
-        markernames = {'combined1', 'combined2'};
-        config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined2'; 'template4', 'combined2'; 'template5', 'combined1'; 'template6', 'combined2'};
-end
-
-MuseStruct_combined{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
+% rename markers to combined markers (see config)
+MuseStruct_combined{ipatient}                                           = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
 
 % focus time period a bit more
 config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
@@ -91,7 +59,7 @@ config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
 
 % from now on work on manual and combined templates
 itemp = 1;
-for markername = string(markernames)
+for markername = string(unique(config{ipatient}.editmarkerfile.torename(:,2)))'
     config{ipatient}.name{itemp}                      = markername;
     config{ipatient}.muse.startmarker.(markername)    = markername;
     config{ipatient}.muse.endmarker.(markername)      = markername;
@@ -104,9 +72,9 @@ for markername = string(markernames)
     itemp = itemp + 1;
 end
 
-[marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, true);
-[LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, true);
-[TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, true);
+[marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, false);
+[LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
+[TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, false);
 
 % trim files to only those within a hypnogram
 MuseStruct_trimmed  = MuseStruct_combined;
@@ -139,8 +107,7 @@ SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config_trimmed{ipatient}
 % segment into equal periods
 SpikeTrials_windowed{ipatient}      = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
 SpikeStats_windowed{ipatient}       = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
-SpikeWaveforms{ipatient}            = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
-% SpikeWaveforms{ipatient}            = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, false);
+SpikeWaveforms{ipatient}            = readSpikeWaveforms(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
 
 plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...

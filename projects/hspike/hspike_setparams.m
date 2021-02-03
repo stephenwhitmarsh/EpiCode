@@ -31,12 +31,11 @@ end
 if pc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
     rootpath_data       = '\\lexport\iss01.epimicro\patients\raw';
-%     rootpath_data       = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
-
+    rootpath_epiloc   	= '\\lexport\iss01.epimicro\patients\epiloc\analyse';       
 else
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
     rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
-%     rootpath_data       = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+    rootpath_epiloc     = '/network/lustre/iss01/epimicro/patients/epiloc/analyse';
 end
 
 
@@ -46,6 +45,7 @@ config{1}.prefix                    = '2711-';
 config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
 config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');
 config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');
+config{1}.locfile                   = fullfile(rootpath_epiloc,   'pat_02711_1193', 'pat_02711_1193_anatomical_localizations.csv');
 config{1}.visible                   = 'on';
 
 config{1}.name                      = {'Hspike'};
@@ -82,7 +82,7 @@ config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.align.reref               = 'yes';
 config{1}.align.refmethod           = 'bipolar';
-config{1}.align.latency             = [-0.1 0.4];
+config{1}.align.latency.Hspike      = [-0.1 0.4];
 
 config{1}.cluster.name              = {'Hspike'};
 config{1}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'}; % CHECK REFERENCE
@@ -119,14 +119,13 @@ config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
 config{1}.spike.toi.combined1       = [-0.5, 1.5];           % for plotting spikerate
 config{1}.spike.toi.combined2       = [-0.5, 1.5];           % for p200mslotting spikerate
 config{1}.spike.toi.combined3       = [-0.5, 1.5];      % for plotting spikerate
+config{1}.spike.pad                 = 0.1;
 config{1}.spike.bl.combined1        = [-0.5, -0.2];
 config{1}.spike.bl.combined2        = [-0.5, -0.2];
 config{1}.spike.bl.combined3        = [-0.5, -0.2];
-
 config{1}.spike.resamplefs.combined1 = 1000;
 config{1}.spike.resamplefs.combined2 = 1000;
 config{1}.spike.resamplefs.combined3 = 1000;
-
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
@@ -144,6 +143,11 @@ config{1}.stats.bl.combined2        = [-0.5 -0.2];
 config{1}.stats.bl.combined3        = [-0.5 -0.2];
 config{1}.stats.alpha               = 0.025;
 
+config{1}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined2';
+                                        'template3', 'combined1';
+                                        'template5', 'combined2';
+                                        'template6', 'combined2'};
 
 %% Patient 2
 % Patterns more clear in bipolar reference. Consider this for template
@@ -151,6 +155,7 @@ config{1}.stats.alpha               = 0.025;
 config{2}                           = config{1};
 config{2}.prefix                    = '2718-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02718_1201', 'eeg');
+config{2}.locfile                   = fullfile(rootpath_epiloc, 'pat_02718_1201', 'pat_02718_1201_anatomical_localizations.csv');
 config{2}.hyp.micromedchannel       = 'HaT11';
 config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{2}.align.channel             = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
@@ -164,12 +169,18 @@ config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
 config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
-config{2}.circus.params.detection.spike_thresh  = '5.5';
-
+config{2}.circus.params.detection.spike_thresh  = '6';
+config{2}.circus.params.detection.peaks         = 'negative';
+config{2}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined1';
+                                        'template4', 'combined1';
+                                        'template6', 'combined1'};
+                                    
 %% Patient 3
 config{3}                           = config{1};
 config{3}.prefix                    = '2660-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02660_1136', 'eeg');
+config{3}.locfile                   = fullfile(rootpath_epiloc, 'pat_02660_1136', 'pat_02660_1136_anatomical_localizations.csv');
 config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.LFP.channel               = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
@@ -189,12 +200,20 @@ config{3}.circus.channelname        = {'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g',  '
 config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
 config{3}.circus.params.detection.peaks         = 'positive'; % two different bundles end up having AP peaks in different direction
 config{3}.circus.params.filtering.remove_median = 'True';
-config{3}.circus.version = 'fieldtrip';
+config{3}.circus.version                        = 'fieldtrip';
 
+config{3}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined1';
+                                        'template3', 'combined2';
+                                        'template4', 'combined1';
+                                        'template5', 'combined1';
+                                        'template6', 'combined1'};
+                                    
 %% Patient 4
 config{4}                           = config{1};
 config{4}.prefix                    = '2680-';
-config{4}.rawdir                    = fullfile(rootpath_data,'pat_02680_1158', 'eeg');
+config{4}.rawdir                    = fullfile(rootpath_data, 'pat_02680_1158', 'eeg');
+config{4}.locfile                   = fullfile(rootpath_epiloc, 'pat_02680_1158', 'pat_02680_1158_anatomical_localizations.csv');
 config{4}.hyp.micromedchannel       = 'HaT21';
 config{4}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
@@ -211,11 +230,19 @@ config{4}.circus.params.detection.spike_thresh  = '6';
 config{4}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
 config{4}.circus.params.filtering.remove_median = 'True';
 
+config{4}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined2';
+                                        'template3', 'combined2';
+                                        'template4', 'combined2';
+                                        'template5', 'combined2';
+                                        'template6', 'combined3'};
+
 %% Patient 5
 % some clear cases for merging in mLMI1 & mLMS2
 config{5}                           = config{1};
 config{5}.prefix                    = '2689-';
-config{5}.rawdir                    = fullfile(rootpath_data,'pat_02689_1168', 'eeg');
+config{5}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
+config{5}.locfile                   = fullfile(rootpath_epiloc, 'pat_02689_1168', 'pat_02689_1168_anatomical_localizations.csv');
 config{5}.hyp.micromedchannel       = 'HmT31';
 config{5}.LFP.channel               = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','_HmT3_5','_HpNI_1','_HpNI_2','_HpNI_3','_HpNI_4','_HpNI_5'};
 config{5}.align.channel             = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','_HmT3_5','_HpNI_1','_HpNI_2','_HpNI_3','_HpNI_4','_HpNI_5'};
@@ -231,11 +258,16 @@ config{5}.circus.channelname        = {'mHmT3',  'mHmT3',  'mHmT3',   'mLMI1',  
 config{5}.circus.params.detection.spike_thresh  = '6';
 config{5}.circus.params.filtering.remove_median = 'True';
 config{5}.circus.params.detection.peaks         = 'negative';
-
+config{5}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined2';
+                                        'template3', 'combined3';
+                                        'template5', 'combined2'; };
+                                    
 %% Patient 6
 config{6}                           = config{1};
 config{6}.prefix                    = '2651-'; %% REDO SPYKING CIRCUS AFTER REDOING ARTEFACTS
-config{6}.rawdir                    = fullfile(rootpath_data,'pat_02651_1127', 'eeg');
+config{6}.rawdir                    = fullfile(rootpath_data, 'pat_02651_1127', 'eeg');
+config{6}.locfile                   = fullfile(rootpath_epiloc, 'pat_02651_1127', 'pat_02651_1127_anatomical_localizations.csv');
 config{6}.hyp.micromedchannel       = 'HmT21';
 config{6}.LFP.channel               = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{6}.align.channel             = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -249,13 +281,20 @@ config{6}.template.refmethod        = 'bipolar';
 config{6}.circus.channel            = {'mHaT2_6','mHaT2_7','mHaT2_8','mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6'};
 config{6}.circus.channelname        = {'mHaT2','mHaT2','mHaT2','mHmT2','mHmT2','mHmT2','mHmT2'};
 config{6}.circus.params.detection.spike_thresh  = '6';
-config{6}.circus.params.detection.peaks         = 'negative'; 
+config{6}.circus.params.detection.peaks         = 'negative';
 config{6}.circus.params.filtering.remove_median = 'False';
-
+config{6}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined1';
+                                        'template3', 'combined1';
+                                        'template4', 'combined1';
+                                        'template5', 'combined1';
+                                        'template6', 'combined1'};
+                                    
 %% Patient 7
 config{7}                           = config{1};
 config{7}.prefix                    = '2619-';
-config{7}.rawdir                    = fullfile(rootpath_data,'pat_02619_1078', 'eeg');
+config{7}.rawdir                    = fullfile(rootpath_data, 'pat_02619_1078', 'eeg');
+config{7}.locfile                   = fullfile(rootpath_epiloc, 'pat_02619_1078', 'pat_02619_1078_anatomical_localizations.csv');
 config{7}.hyp.micromedchannel       = 'HaTB1';
 config{7}.LFP.channel               = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
 config{7}.align.channel             = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
@@ -270,40 +309,50 @@ config{7}.circus.reref              = 'no';
 config{7}.circus.params.detection.spike_thresh  = '7';
 config{7}.circus.params.detection.peaks         = 'negative'; %SURE???
 config{7}.circus.params.filtering.remove_median = 'True';
+config{7}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined1';
+                                        'template3', 'combined2';
+                                        'template4', 'combined2';
+                                        'template5', 'combined1';
+                                        'template6', 'combined2'};
 
 %% Patient NO MUA ON FIRST DAY - ONLY HYPNOGRAM ON FIRST DAY
 config{8}                           = config{1};
 config{8}.prefix                    = '2578-';
-config{8}.rawdir                    = fullfile(rootpath_data,'pat_02578_1036', 'eeg');
+config{8}.rawdir                    = fullfile(rootpath_data, 'pat_02578_1036', 'eeg');
+config{8}.epilocdir                 = fullfile(rootpath_epiloc, 'pat_02578_1036', 'pat_02578_1036_anatomical_localizations.csv');
 config{8}.hyp.micromedchannel       = 'HaTB1';
-config{8}.LFP.channel               = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
-config{8}.align.channel             = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
-config{8}.cluster.channel           = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
+config{8}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT1_1','_HmT1_2','_HmT1_3','_HmT1_4'};
+config{8}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4'};
+config{8}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT1_1','_HmT1_2','_HmT1_3','_HmT1_4'};
 config{8}.cluster.reref             = 'no';
 config{8}.cluster.refmethod         = 'bipolar';
-config{8}.template.threshold        = 5;
+config{8}.template.threshold        = 3;
 config{8}.template.reref            = 'no';
 config{8}.template.refmethod        = 'bipolar';
-config{8}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','mAmT2_6'};
+config{8}.circus.channel            = {'mAmT2_3'};
 config{8}.circus.reref              = 'no';
-
+config{8}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined2';
+                                        'template4', 'combined2';
+                                        'template5', 'combined1'};
 
 % %% Patient NO HYPNOGRAM
-% config{8}                           = config{1};
-% config{8}.prefix                    = '2599-';
-% config{8}.rawdir                    = fullfile(rootpath_data,'pat_02599_1057', 'eeg');
-% config{8}.hyp.micromedchannel       = 'HaT2';
-% config{8}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
-% config{8}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
-% config{8}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
-% config{8}.template.threshold        = 6;
-% config{8}.circus.channel            = {'mHaT2_6'};
-% config{8}.circus.reref              = 'no';
-% config{8}.cluster.reref             = 'no';
-% config{8}.cluster.refmethod         = 'bipolar';
-% config{8}.template.threshold        = 2.8;
-% config{8}.template.reref            = 'no';
-% config{8}.template.refmethod        = 'bipolar';
+% config{}                           = config{1};
+% config{}.prefix                    = '2599-';
+% config{}.rawdir                    = fullfile(rootpath_data,'pat_02599_1057', 'eeg');
+% config{}.hyp.micromedchannel       = 'HaT2';
+% config{}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
+% config{}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
+% config{}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HpT2_1','_HpT2_2','_HpT2_3','_HpT2_4'};
+% config{}.template.threshold        = 6;
+% config{}.circus.channel            = {'mHaT2_6'};
+% config{}.circus.reref              = 'no';
+% config{}.cluster.reref             = 'no';
+% config{}.cluster.refmethod         = 'bipolar';
+% config{}.template.threshold        = 2.8;
+% config{}.template.reref            = 'no';
+% config{}.template.refmethod        = 'bipolar';
 
 %% DATA
 
@@ -418,7 +467,7 @@ config{3}.directorylist{2}          = { '02660_2018-11-14_17-51',...
                                         '02660_2018-11-15_11-39',...
                                         '02660_2018-11-15_13-41',...
                                         '02660_2018-11-15_15-41'};
-config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',...
+config{3}.directorylist{3}          = { '02660_2018-11-15_17-41',... %% LARGELY ARTEFACTED
                                         '02660_2018-11-15_19-41',...
                                         '02660_2018-11-15_21-41',...
                                         '02660_2018-11-15_23-41',... % missing data ShortITS
@@ -602,8 +651,55 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
                                         '02619_2018-07-06_14-30'...
                                         '02619_2018-07-06_16-30'};
 
-% config{8}.directorylist             = [];
-% config{8}.directorylist{1}          = { '02599_2018-04-24_12-36'...
+config{8}.directorylist{1}          = { '02578_2018-02-13_12-11'...
+                                        '02578_2018-02-13_14-11'...
+                                        '02578_2018-02-13_16-11'...
+                                        '02578_2018-02-13_18-11'...
+                                        '02578_2018-02-13_20-11'...
+                                        '02578_2018-02-13_22-11'...
+                                        '02578_2018-02-14_00-11'...
+                                        '02578_2018-02-14_02-11'...
+                                        '02578_2018-02-14_04-11'...
+                                        '02578_2018-02-14_06-11'...
+                                        '02578_2018-02-14_08-11'...
+                                        '02578_2018-02-14_09-24'...
+                                        '02578_2018-02-14_09-41'...
+                                        '02578_2018-02-14_09-56'...
+                                        '02578_2018-02-14_11-56'};
+                                        
+config{8}.directorylist{2}          = { '02578_2018-02-14_13-56'...
+                                        '02578_2018-02-14_15-56'...
+                                        '02578_2018-02-14_17-56'...
+                                        '02578_2018-02-14_19-56'...
+                                        '02578_2018-02-14_21-56'...
+                                        '02578_2018-02-14_23-56'...
+                                        '02578_2018-02-15_01-56'...
+                                        '02578_2018-02-15_03-56'...
+                                        '02578_2018-02-15_05-56'...
+                                        '02578_2018-02-15_07-56'...
+                                        '02578_2018-02-15_09-56'...
+                                        '02578_2018-02-15_10-29'...
+                                        '02578_2018-02-15_10-52'...
+                                        '02578_2018-02-15_11-51'};
+                                        
+config{8}.directorylist{3}          = { '02578_2018-02-15_13-51'...
+                                        '02578_2018-02-15_15-51'...
+                                        '02578_2018-02-15_17-51'...
+                                        '02578_2018-02-15_19-51'...
+                                        '02578_2018-02-15_21-51'...
+                                        '02578_2018-02-15_23-51'...
+                                        '02578_2018-02-16_01-51'...
+                                        '02578_2018-02-16_03-51'...
+                                        '02578_2018-02-16_05-51'...
+                                        '02578_2018-02-16_07-51'...
+                                        '02578_2018-02-16_09-51'...
+                                        '02578_2018-02-16_10-45'...
+                                        '02578_2018-02-16_10-58'...
+                                        '02578_2018-02-16_12-58'};
+                                    
+                                    
+% config{}.directorylist             = [];
+% config{}.directorylist{1}          = { '02599_2018-04-24_12-36'...
 %                                         '02599_2018-04-24_14-36'...
 %                                         '02599_2018-04-24_16-36'...
 %                                         '02599_2018-04-24_18-36'...
@@ -617,7 +713,7 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 %                                         '02599_2018-04-25_09-24'...
 %                                         '02599_2018-04-25_11-24'...
 %                                         '02599_2018-04-25_13-24'};
-% config{8}.directorylist{2}          = { '02599_2018-04-25_15-24'...
+% config{}.directorylist{2}          = { '02599_2018-04-25_15-24'...
 %                                         '02599_2018-04-25_17-24'...
 %                                         '02599_2018-04-25_19-24'...
 %                                         '02599_2018-04-25_21-24'...
@@ -630,7 +726,7 @@ config{7}.directorylist{3}          = { '02619_2018-07-05_18-13'...
 %                                         '02599_2018-04-26_09-32'...
 %                                         '02599_2018-04-26_11-32'...
 %                                         '02599_2018-04-26_13-32'};
-% config{8}.directorylist{3}          = { '02599_2018-04-26_14-13'...
+% config{}.directorylist{3}          = { '02599_2018-04-26_14-13'...
 %                                         '02599_2018-04-26_14-53'...
 %                                         '02599_2018-04-26_16-53'...
 %                                         '02599_2018-04-26_18-53'...

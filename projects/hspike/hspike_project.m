@@ -35,61 +35,26 @@ config = hspike_setparams;
 for ipatient = 1:7
     
     [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, false);
-    [MuseStruct_aligned{ipatient}]                                          = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
-    %
-    % config{ipatient}.LFP.write = false;
-    % [LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
-    
+    [MuseStruct_aligned{ipatient}]                                          = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);    
     [clusterindx{ipatient}, LFP_cluster{ipatient}]                          = clusterLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
     [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]    = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     
-    % update to any new artefacts
-    [MuseStruct_orig{ipatient}]                                             = readMuseMarkers(config{ipatient}, true);
-    for ipart = 1 : 3
-        for idir = 1 : size(MuseStruct_template{ipatient}{ipart}, 2)
-            try
-                MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__START__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__START__;
-                MuseStruct_template{ipatient}{ipart}{idir}.markers.BAD__END__ = MuseStruct_orig{ipatient}{ipart}{idir}.markers.BAD__END__;
-            catch
-            end
-        end
-    end
-    
-    switch ipatient
-        case 1
-            markernames = {'combined1', 'combined2'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined1'; 'template5', 'combined2'; 'template6', 'combined2'};
-        case 2
-            markernames = {'combined1'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template4', 'combined1'; 'template6', 'combined1'};
-        case 3
-            markernames = {'combined1', 'combined2'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined2'; 'template4', 'combined1'; 'template5', 'combined1'; 'template6', 'combined1'};
-        case 4
-            markernames = {'combined1', 'combined2', 'combined3'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined2'; 'template4', 'combined2'; 'template5', 'combined2'; 'template6', 'combined3'};
-        case 5
-            markernames = {'combined1', 'combined2', 'combined3'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined2'; 'template3', 'combined3'; 'template5', 'combined2'; };
-        case 6
-            markernames = {'combined1'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined1'; 'template4', 'combined1'; 'template5', 'combined1'; 'template6', 'combined1'};
-        case 7
-            markernames = {'combined1', 'combined2'};
-            config{ipatient}.editmarkerfile.torename = {'template1', 'combined1'; 'template2', 'combined1'; 'template3', 'combined2'; 'template4', 'combined2'; 'template5', 'combined1'; 'template6', 'combined2'};
-    end
-    
-    MuseStruct_combined{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
+    % update - add any new artefacts
+    MuseStruct_template{ipatient}                                           = updateBadMuseMarkers(config{ipatient}, MuseStruct_template{ipatient} );
+        
+    % rename markers to combined markers (see config)
+    MuseStruct_combined{ipatient}                                           = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
     
     % focus time period a bit more
-    config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
-    config{ipatient}.epoch.pad.Hspike           = 0.5;
-    config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
-    config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
-    
+%     config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
+%     config{ipatient}.epoch.pad.Hspike           = 0.5;
+%     config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
+%     config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
+%     
     % from now on work on manual and combined templates
     itemp = 1;
-    for markername = string(markernames)
+    config{ipatient}.name = [];
+    for markername = string(unique(config{ipatient}.editmarkerfile.torename(:, 2))')
         config{ipatient}.name{itemp}                      = markername;
         config{ipatient}.muse.startmarker.(markername)    = markername;
         config{ipatient}.muse.endmarker.(markername)      = markername;
@@ -137,12 +102,11 @@ for ipatient = 1:7
     SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
     
     % segment into equal periods
-    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
+    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
     SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
-    SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, false);
+    SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
     
     
-%     SpikeWaveforms{ipatient}  = readSpikeWaveforms_fromRaw(config_trimmed{ipatient}, SpikeRaw{ipatient}, false);
     
     % plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
     %     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
@@ -156,6 +120,7 @@ for ipatient = 1:7
 end
 
 %% collect behavioural for overview
+config = hspike_setparams;
 
 % hypnogram labels to use
 hyplabels   = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE"];
@@ -163,12 +128,14 @@ hyplabels   = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE"];
 % order of plots and colors
 labelorder  = ["REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"];
 
-for ipatient = 1:7
+for ipatient = 5:7
     [MuseStruct_orig{ipatient}]                                                                     = readMuseMarkers(config{ipatient}, false);
     [MuseStruct_aligned{ipatient}]                                                                  = alignMuseMarkersXcorr(config{ipatient}, MuseStruct_orig{ipatient}, false);
     [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]                            = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, [], false);
     [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_aligned{ipatient}, false);
 end
+fname = fullfile(config{1}.datasavedir, 'compilation');
+save(fname, '-v7.3')
 
 y       = zeros(7,5);
 name    = [];
@@ -230,21 +197,59 @@ close all
 %% collect spikes for overview
 
 config = hspike_setparams;
-% 3 = 2660;
 
-for ipatient = [1 5 6]
-%     SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers2(config{ipatient}, [], [], false);
-%     SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config{ipatient}, [], false);
-    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, [], false, 'windowed');
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, [], false);    
-
+for ipatient = 1 : 7
+    itemp = 1;
+    config{ipatient}.name = [];
+    for markername = string(unique(config{ipatient}.editmarkerfile.torename(:, 2))')
+        config{ipatient}.name{itemp}                      = markername;
+        config{ipatient}.muse.startmarker.(markername)    = markername;
+        config{ipatient}.muse.endmarker.(markername)      = markername;
+        config{ipatient}.epoch.toi.(markername)           = [-0.2  0.8];
+        config{ipatient}.epoch.pad.(markername)           = 0.5;
+        config{ipatient}.LFP.baselinewindow.(markername)  = [-0.2  0.8];
+        config{ipatient}.LFP.baselinewindow.(markername)  = [-0.2  0.8];
+        config{ipatient}.LFP.name{itemp}                  = markername;
+        config{ipatient}.hyp.markers{itemp}               = markername;
+        itemp = itemp + 1;
+    end
 end
-config{1}.epoch.toi.combined1 = [-0.2  0.8];
-config{1}.epoch.toi.combined2 = [-0.2  0.8];
-config{1}.epoch.toi.combined2 = [-0.2  0.8];
+config = config(1 : 7);
 
-[GA, stats] = spikeTrialStats_GrandAverage(config, SpikeTrials_timelocked, SpikeDensity_timelocked);
-  
+% load average LFPs
+for ipatient = 1 : 7
+    
+    for markername = string(unique(config{ipatient}.editmarkerfile.torename(:, 2))')
+        
+        fname = fullfile(config{ipatient}.datasavedir, strcat(config{ipatient}.prefix, 'LFP_', markername, '.mat'));
+        
+        if ~exist(fname,'file')
+            continue
+        end
+        % repeat to deal with load errors
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            fprintf('Loading %s\n', fname);
+            try
+                temp = load(fname);
+                for ipart = 1 : 3
+                    LFP{ipatient}{ipart}.(markername) = temp.LFP{ipart}.(markername);
+                end
+                clear temp
+            catch ME
+                err_count = err_count + 1;
+            end
+            count = count + 1;
+        end
+    end
+end
+
+
+[dat, dat_hyp, trialinfo] = Trials2GrandAverage(config, true);
+
+plotGrandAverage(config, LFP, dat, dat_hyp, trialinfo);
+
 
 
 %% Create slurm job list
@@ -303,11 +308,104 @@ for itemp = 1 : 6
     config{ipatient}.hyp.markers{itemp}              = markername;
 end
 
+
+%% BrainNetViewer
+addpath '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\BrainNetViewer_20191031'
+
+config  = hspike_setparams;
+nodes_all = [];
+
+% Separate per patient
+for ipatient = 1 : 7
+    
+    cfg     = config{ipatient};
+    fname   = cfg.locfile;
+    fid     = fopen(fname);
+    dat     = textscan(fid, '%s%d%s%f%f%f%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s', 'Headerlines', 4, 'delimiter', ';');
+    fclose(fid);
+    
+    clear elec
+    toclear = [];
+    
+    for i = 1 : size(dat{1}, 1)
+        elec(i).name = string(dat{1}{i});
+        if isempty(dat{1}{i})
+            elec(i).name = elec(i-1).name;
+        end
+        elec(i).plotnr = dat{2}(i);
+        elec(i).MNI_x = dat{4}(i);
+        elec(i).MNI_y = dat{5}(i);
+        elec(i).MNI_z = dat{6}(i);
+        elec(i).name_cat = strcat('_', elec(i).name, '_',  num2str(elec(i).plotnr));
+        elec(i).color = 0;
+        
+        for name = string(cfg.LFP.channel)
+            if contains(name, elec(i).name_cat)
+                elec(i).color = 1;
+            end
+        end
+        
+        if elec(i).plotnr == 0
+            toclear = [toclear, i];
+        end
+    end
+    elec(toclear) = [];
+    
+    clear nodes
+    for i = 1 : size(elec, 2)
+        nodes(i, :) = [elec(i).MNI_x, elec(i).MNI_y, elec(i).MNI_z, elec(i).color, 3, ipatient];
+    end
+
+    fname_node  = fullfile(cfg.datasavedir, [cfg.prefix, 'brainnet.node']);
+    fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
+    fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
+    fname_image = fullfile(cfg.imagesavedir, [cfg.prefix, 'brainnet.jpg']);
+    
+    dlmwrite(fname_node, nodes, '\t');
+    
+    % concatinate over patients
+    nodes_all   = [nodes_all; nodes];
+    
+    BrainNet_MapCfg(fname_node, fname_surf, fname_cfg, fname_image); 
+end
+
+fname_nodes_all = fullfile(cfg.datasavedir, 'brainnet_all.node');
+fname_image_all = fullfile(cfg.imagesavedir, 'brainnet_all.jpg');
+
+% resize nodes that are not analyzed
+nodes_all(nodes_all(:, 4) == 0, 5) = 1;
+
+dlmwrite(fname_nodes_all, nodes_all, '\t');
+BrainNet_MapCfg(fname_nodes_all, fname_surf, fname_cfg, fname_image_all);
+
+
+
+% https://www.nitrc.org/docman/view.php/504/1190/BrainNet%20Viewer%20Manual%201.41.pdf
+% The node file is defined as an ASCII text file with the suffix ‘node’. In the node file, there
+% are 6 columns: columns 1-3 represent node coordinates, column 4 represents node
+% colors, column 5 represents node sizes, and the last column represents node labels.
+% Please note, a symbol ‘-‘(no ‘’) in column 6 means no labels. The user may put the
+% modular information of the nodes into column 4, like ‘1, 2, 3…’ or other information to
+% be shown by color. Column 5 could be set as nodal degree, centrality, T-value, etc. to
+% emphasize nodal differences by size. You can generate your nodal file according to the
+% requirements.
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% TODO
 % Authomatically determine template matching threshold by
 % iteration/minimizing/maximizing sensitivity and selectivity compared to
 % manual annotation
-% demean before clustering
 % use Amygdala as well? often micro + nice SWDs, e.g. in patient 7
 % REDO AND CHECK HYPNOGRAM 02718-15_04-31 and 02680_2019-01-16_01-31
 % extract spike-by-spike paramewters: EOC, amplitude, durations, etc. to
