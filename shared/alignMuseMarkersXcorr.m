@@ -1,4 +1,4 @@
-function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force, varargin)
+function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 
 % ALIGNMUSEMARKERSXCORR determines timing shift of MUSE markers according
 % to crosscorrelation with average
@@ -14,16 +14,13 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force, varargin)
 %
 % Necessary fields (as defined in _setparams function):
 %
-% cfg.epoch.toi{1}            = [-0.5  1];
-% cfg.epoch.toi{2}            = [-0.5  1];
-% cfg.epoch.pad               = {0.5, 0.5, 0.5};
-% cfg.align.name              = e.g.: {'Hspike','SpikeDetect'};                               % Name of markers/patterns to align
-% cfg.align.channel           = e.g.: {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};    % Channels to use for alignment
-% cfg.align.demean            = e.g.: 'yes';
-% cfg.align.baselinewindow    = e.g.: [-0.2 -0.1];
-% cfg.align.reref             = e.g.: 'yes';
-% cfg.align.refmethod         = e.g.: 'bipolar';
-% cfg.align.latency           = e.g.: [-0.1, 0.2];                                            % timeperiod to use for crosscorrelation
+% config{1}.align.name        = e.g.: {'PSW','FA','ES'}; % names of patterns to align
+% config{1}.align.channel     = e.g.: {'m1pNs_1', 'm1pNs_2', 'm1pNs_4', 'm1pNs_6', 'm1pNs_7', 'm1pNs_8'}; % channels to use for alignment
+% config{1}.align.reref       = e.g.: 'no'; 
+% config{1}.align.refmethod   = e.g.: 'bipolar';
+% config{1}.align.latency.PSW = e.g.: [-0.1 2]; % time period to use for alignment
+% config{1}.align.latency.FA  = e.g.: [-0.1 0.4];
+% config{1}.align.latency.ES  = e.g.: [-0.1 0.4];
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -41,24 +38,12 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+% default settings
+write       = ft_getopt(cfg.align, 'write', true);
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 
-if nargin == 3
-    postfix = '';
-elseif nargin == 4
-    postfix = varargin{1};
-else
-    error('Not the right amount of input arguments');
-end
-
-
-% check if results exist
-fname = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr', postfix, '.mat']);
-
-% default settings
-write   = ft_getopt(cfg.align, 'write', false);
-latency = ft_getopt(cfg.align, 'latency', 'all');
-
+% load results if requested (force = false) and result file exist
+fname = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr.mat']);
 if exist(fname,'file') && force == false
     fprintf('Loading results xcorr alignment\n');
     load(fname,'MuseStruct');
@@ -67,15 +52,22 @@ end
 
 fprintf('Aligning with xcorr\n');
 
+% read LFP - based on epoch latency for plotting later
 cfgtemp                 = rmfield(cfg, 'LFP');
 cfgtemp.LFP.name        = cfg.align.name;
 cfgtemp.LFP.channel     = cfg.align.channel;
 cfgtemp.LFP.write       = false;
-[LFP]                   = readLFP(cfgtemp, MuseStruct, true);
+cfgtemp.LFP.lpfilter    = ft_getopt(cfg.align, 'lpfilter', 'no');
+cfgtemp.LFP.lpfreq      = ft_getopt(cfg.align, 'lpfreq', '');
+
+for markername = string(cfg.align.name)
+    cfgtemp.epoch.pad.(markername) = 0;
+end
+LFP                     = readLFP(cfgtemp, MuseStruct, true);
 
 for ipart = 1 : size(cfg.directorylist,2)
 
-    for markername = string(cfg.LFP.name)
+    for markername = string(cfg.align.name)
 
         if isempty(LFP{ipart}.(markername))
             continue
@@ -83,16 +75,19 @@ for ipart = 1 : size(cfg.directorylist,2)
 
         % baseline correct & bipolar rereferencing
         cfgtemp                 = [];
-        cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'no');
-        cfgtemp.baselinewindow  = ft_getopt(cfg.align, 'baselinewindow', 'no');
+        cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'yes');
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
         dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
+
+        % clear LFP for memory
         LFP{ipart}.(markername) = [];
 
         % select data
-        if strcmp('latency', 'all')
+        if strcmp(cfg.align.latency.(markername), 'all')
             latency = [dat.time{1}(1), dat.time{1}(end)];
+        else
+            latency = cfg.align.latency.(markername);
         end
 
         cfgtemp                 = [];
@@ -127,7 +122,12 @@ for ipart = 1 : size(cfg.directorylist,2)
         end
         dat_avg_shifted     = ft_timelockanalysis([], dat_shifted);
 
-        % draw figure
+        % remove rejected trials of non-shifted for plotting later
+        cfgtemp             = [];
+        cfgtemp.trials      = find(~rejected);
+        dat                 = ft_selectdata(cfgtemp, dat);
+        
+        %% Plot alignment
         fig = figure('visible', cfg.visible);
         fig.Renderer = 'Painters';
 
@@ -150,31 +150,93 @@ for ipart = 1 : size(cfg.directorylist,2)
 
         subplot(2, 5, [4 5]); hold
         plot(dat_avg_orig.time, dat_avg_orig.avg');
+        axis tight;
         ax = axis;
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
+        patch([latency(1), latency(2), latency(2), latency(1)], [ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
         title('Original');
-        axis tight
         xlim([dat.time{1}(1), dat.time{1}(end)]);
 
         subplot(2,5,[9 10]); hold
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
-        ax = axis;
-        patch([latency(1), latency(2), latency(2), latency(1)],[ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
-        title('Aligned');
         axis tight
+        ax = axis;
+        patch([latency(1), latency(2), latency(2), latency(1)], [ax(3), ax(3), ax(4), ax(4)], 'r', 'facealpha', 0.1, 'edgecolor', 'none');
+        title('Aligned');
         xlim([dat.time{1}(1), dat.time{1}(end)]);
 
         set(fig,'Renderer','Painters');
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','normalized');
         set(fig,'PaperPosition', [0 0 1 1]);
-        print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png')));
-        print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.pdf')));
-
+        
+        % if it doesnt exist, create directory
+        if ~exist(cfg.imagesavedir, 'dir')
+            sprintf('Creating directory %s', cfg.imagesavedir);
+            mkdir(cfg.imagesavedir);
+        end
+        if ~exist(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)), 'dir')
+            sprintf('Creating directory %s', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
+            mkdir(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
+        end
+        
+        print(fig, '-dpng', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1), strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png')));
+        print(fig, '-dpdf', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1), strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.pdf'))); 
         close all
-        clear shifted shifted_clear shifted_clean_z
+  
+        %% Plot alignment
+        nrchan  = size(dat_shifted.label, 1);
+        nrtrial = size(dat_shifted.trial,2);
+        nrpage  = ceil(nrtrial / 100);
+        
+        for ipage = 1 : nrpage
+            
+            % get scaling parameter for all channels
+            maxrange = [];
+            for  ichan = 1 : size(dat_shifted.label, 1)
+                for itrial = 1 : size(dat_shifted.trial, 2)
+                    y           = dat_shifted.trial{itrial}(ichan,:);
+                    maxrange    = max(abs([maxrange, y]));
+                end
+            end
+            maxrange = maxrange / 4;
+            
+            fig             = figure;
+            fig.Renderer    = 'Painters'; % Else pdf is saved to bitmap
+            
+            for ichan = 1 : size(dat_shifted.label, 1)
+                
+                subplot(4, nrchan, [ichan ichan+nrchan ichan+nrchan*2 ichan+nrchan*3]); hold;
+                
+                i = 0;
+                for itrial = 1+(ipage-1)*100 : min(nrtrial, 100+(ipage-1)*100)
+                    plot(dat.time{itrial}, dat.trial{itrial}(ichan, :) + maxrange * i, 'color', [0.5, 0.5, 0.5]);
+                    plot(dat_shifted.time{itrial}, dat_shifted.trial{itrial}(ichan, :) + maxrange * i, 'k');
+                    i = i + 1;
+                end
+                
+                axis tight
+                plot([0, 0], [0, maxrange * 100], 'b:');
+%                 set(gca,'children',flipud(get(gca,'children')));
+                set(gca,'Yticklabels','')
+                xlabel('time (s)');
+                if ichan == 1
+                    ylabel('trials');
+                end
+                title(dat_shifted.label{ichan}, 'interpreter', 'none');
 
-        % correct MuseStruct
+            end
+            set(findall(fig, '-property', 'fontsize'), 'fontsize', 8);
+            set(fig,'Renderer','Painters');
+            set(fig,'PaperOrientation','landscape');
+            set(fig,'PaperUnits','normalized');
+            set(fig,'PaperPosition', [0 0 1 1]);
+
+            print(fig, '-dpng', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1), strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr_page', num2str(ipage), '.png')), '-r600');
+            print(fig, '-dpdf', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1), strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr_page', num2str(ipage), '.pdf')));
+            
+        end
+        
+        %% correct MuseStruct
         i = 1;
         for idir = 1 : length(MuseStruct{ipart})
             if ~isfield(MuseStruct{ipart}{idir},'markers')
@@ -206,8 +268,13 @@ for ipart = 1 : size(cfg.directorylist,2)
             end
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(todelete) = [];
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(todelete)    = [];
+            
         end % idir
+        clear shifted shifted_clear shifted_clean_z dat dat_shifted
+        close all
+        
     end % imarker
+    
 end % ipart
 
 % save data
