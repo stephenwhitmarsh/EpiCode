@@ -36,40 +36,40 @@ for ipart = 1 : size(MuseStruct,2)
 
     % loop over directories
     for idir = 1 : size(MuseStruct{ipart},2)
-
+        
         fprintf('Working on directory %d of %d, part %d\n', idir, size(MuseStruct{ipart},2), ipart);
         for markername = [string(cfg.hyp.markers), hyplabels]
-
+            
             % if marker field doesn't exist yet, create it
             if ~isfield(MuseStruct_append{ipart}.markers, markername)
                 MuseStruct_append{ipart}.markers.(markername) = [];
             end
-
+            
             % if marker.clock field doesn't exist yet, create it
             if ~isfield(MuseStruct_append{ipart}.markers.(markername), 'clock')
                 MuseStruct_append{ipart}.markers.(markername).clock = [];
             end
-
+            
             % add directory
             if ~isfield(MuseStruct_append{ipart}.markers.(markername), 'directory')
                 MuseStruct_append{ipart}.markers.(markername).directory = [];
             end
-
-            if isfield(MuseStruct{ipart}{idir}.markers, markername)
-
-                % append clock field
-                if isfield(MuseStruct{ipart}{idir}.markers.(markername), 'clock')
-                    MuseStruct_append{ipart}.markers.(markername).clock = ...
-                        [MuseStruct_append{ipart}.markers.(markername).clock, ...
-                        MuseStruct{ipart}{idir}.markers.(markername).clock];
-
-                    % add directory
-                    MuseStruct_append{ipart}.markers.(markername).directory = ...
-                        [MuseStruct_append{ipart}.markers.(markername).directory; ...
-                        repmat({MuseStruct{ipart}{idir}.directory}, size(MuseStruct{ipart}{idir}.markers.(markername).clock,2), 1)];
-
-                    fprintf('Concatinated %d markers: %s\n', size(MuseStruct{ipart}{idir}.markers.(markername).clock, 2), markername);
-                end
+            
+            if ~isfield(MuseStruct{ipart}{idir}.markers, markername)
+                continue
+            end
+            % append clock field
+            if isfield(MuseStruct{ipart}{idir}.markers.(markername), 'clock')
+                MuseStruct_append{ipart}.markers.(markername).clock = ...
+                    [MuseStruct_append{ipart}.markers.(markername).clock, ...
+                    MuseStruct{ipart}{idir}.markers.(markername).clock];
+                
+                % add directory
+                MuseStruct_append{ipart}.markers.(markername).directory = ...
+                    [MuseStruct_append{ipart}.markers.(markername).directory; ...
+                    repmat({MuseStruct{ipart}{idir}.directory}, size(MuseStruct{ipart}{idir}.markers.(markername).clock,2), 1)];
+                
+                fprintf('Concatinated %d markers: %s\n', size(MuseStruct{ipart}{idir}.markers.(markername).clock, 2), markername);
             end
         end
     end
@@ -111,11 +111,12 @@ for ipart = 1 : size(MuseStruct,2)
             indx                = find(contains(t.markerlabel,strcat(t.markerlabel{i}(1:end-9),'__END__')));
             endindx             = find(t.starttime(indx) > t.starttime(i),1,'first');
             if isempty(endindx)
-                disp('sdf')
+                fprintf('Could not find end marker for %s!!! at %s\n', t.markerlabel(i), t.starttime(i))
+            else
+                t.markerlabel(i)    = t.markerlabel{i}(1:end-9);
+                t.endtime(i)        = t.starttime(indx(endindx));
+                t.duration(i)       = t.endtime(i) - t.starttime(indx(endindx));
             end
-            t.markerlabel(i)    = t.markerlabel{i}(1:end-9);
-            t.endtime(i)        = t.starttime(indx(endindx));
-            t.duration(i)       = t.endtime(i) - t.starttime(indx(endindx));
             t(indx(endindx),:)  = [];
         end
         i = i + 1;
