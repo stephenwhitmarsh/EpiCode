@@ -55,36 +55,38 @@ else
 
                 % get filename to read
                 clear fname
-                temp     = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
-                fname{1} = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+                temp  = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan}, '.ncs']));
+                fname = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
 
-                % use updated fieldtrip MATLAB function
+                % use Fieldtrip MATLAB function to read data
                 if strcmp(cfg.circus.version, 'fieldtrip')
 
-                    fprintf('Loading %s using Fieldtrip\n', fname{1});
-                    fprintf('***************************************');
-                    fprintf('*** CHECK POLARITY AS IT IS IGNORED ***');
-                    fprintf('***************************************');
+                    fprintf('Loading %s using Fieldtrip\n', fname);
+                    fprintf('***************************************\n');
+                    fprintf('*** CHECK POLARITY AS IT IS IGNORED ***\n');
+                    fprintf('***************************************\n');
 
-                    cfgtemp                         = [];
-                    dirdat{idir}                    = ft_read_neuralynx_interp(fname);
+                    cfgtemp         = [];
+                    cfgtemp.dataset = fname;
+                    dirdat{idir}    = ft_preprocessing(cfgtemp);
 
                     if strcmp(cfg.circus.reref, 'yes')
-                        temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan,'.ncs']));
-                        fname_ref{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
-                        fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
-                        refdat                      = ft_read_neuralynx_interp(fname_ref);
-                        dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
+                        temp                    = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir}, ['*', cfg.circus.refchan ,'.ncs']));
+                        cfgtemp                 = [];
+                        cfgtemp.dataset         = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                        fprintf('LOADING (reference): %s\n', cfgtemp.dataset);
+                        refdat                  = ft_preprocessing(cfgtemp);
+                        dirdat{idir}.trial{1}   = dirdat{idir}.trial{1} - refdat.trial{1};
                         clear refdat
                     end
 
                 % use NeuraLynx MEX file
                 elseif strcmp(cfg.circus.version, 'mex')
 
-                    fprintf('Loading %s using NeuraLynx MEX\n', fname{1});
-                    fprintf('****************************************************');
-                    fprintf('*** CHECK POLARITY AS IT IS CORRECTED IF FLIPPED ***');
-                    fprintf('****************************************************');
+                    fprintf('Loading %s using NeuraLynx MEX\n', fname);
+                    fprintf('****************************************************\n');
+                    fprintf('*** CHECK POLARITY AS IT IS CORRECTED IF FLIPPED ***\n');
+                    fprintf('****************************************************\n');
 
                     st_FieldSelection(1) = 1; %timestamps
                     st_FieldSelection(2) = 1; %Channel Numbers
@@ -100,19 +102,19 @@ else
                     v_ExportModeVector   = [];
 
                     if ispc
-                        [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}.trial{1}, st_Header] = Nlx2MatCSC(fname{1}, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                        [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}.trial{1}, st_Header] = Nlx2MatCSC(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
                     else
-                        [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}.trial{1}, st_Header] = Nlx2MatCSC_v3(fname{1}, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                        [v_Timestamp{idir}, v_ChanNum, v_SampleFrequency, v_NumValSamples, dirdat{idir}.trial{1}, st_Header] = Nlx2MatCSC_v3(fname, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
                     end
 
                     if strcmp(cfg.circus.reref, 'yes')
-                        temp                        = dir(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},['*',cfg.circus.refchan,'.ncs']));
-                        fname_ref{1}                = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
-                        fprintf('LOADING (reference): %s\n',cfgtemp.dataset);
+                        temp      = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.refchan, '.ncs']));
+                        fname_ref = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
+                        fprintf('LOADING (reference): %s\n', cfgtemp.dataset);
                         if ispc
-                            [~, ~, ~, ~, refdat.trial{1}, ~] = Nlx2MatCSC(fname{1}, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                            [~, ~, ~, ~, refdat.trial{1}, ~] = Nlx2MatCSC(fname_ref, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
                         else
-                            [~, ~, ~, ~, refdat.trial{1}, ~] = Nlx2MatCSC_v3(fname{1}, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
+                            [~, ~, ~, ~, refdat.trial{1}, ~] = Nlx2MatCSC_v3(fname_ref, st_FieldSelection(1:5), s_ExtractHeader, s_ExtractMode, v_ModeArray);
                         end
                         dirdat{idir}.trial{1}       = dirdat{idir}.trial{1} - refdat.trial{1};
                         clear refdat
