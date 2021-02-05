@@ -4,7 +4,9 @@ function [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 %
 % use as
 %   [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
-
+% or, if need to only load precomputed data :
+%   [stats] = spikeTrialDensity(cfg)
+% 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -21,13 +23,20 @@ function [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-cfg.spike.part_list     = ft_getopt(cfg.spike, 'part_list', 'all');
+fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikeTrialDensity.mat']);
 
-if strcmp(cfg.spike.part_list, 'all')
-    cfg.spike.part_list = 1:size(cfg.directorylist, 2);
+if nargin == 1
+    if exist(fname, 'file')
+        fprintf('Reading %s\n', fname);
+        load(fname, 'stats');
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        stats = {};
+        return
+    end
 end
 
-fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikeTrialDensity.mat']);
 if exist(fname, 'file') && force == false
     fprintf('Loading %s\n', fname);
     
@@ -45,6 +54,11 @@ if exist(fname, 'file') && force == false
     return
 end
 
+cfg.spike.part_list     = ft_getopt(cfg.spike, 'part_list', 'all');
+
+if strcmp(cfg.spike.part_list, 'all')
+    cfg.spike.part_list = 1:size(cfg.directorylist, 2);
+end
 stats = {};
 
 for ipart = cfg.spike.part_list
