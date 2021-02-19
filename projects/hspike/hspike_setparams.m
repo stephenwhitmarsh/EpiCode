@@ -119,10 +119,12 @@ config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
 config{1}.spike.toi.combined1       = [-0.5, 1.5];           % for plotting spikerate
 config{1}.spike.toi.combined2       = [-0.5, 1.5];           % for p200mslotting spikerate
 config{1}.spike.toi.combined3       = [-0.5, 1.5];      % for plotting spikerate
-config{1}.spike.pad                 = 0.1;
 config{1}.spike.bl.combined1        = [-0.5, -0.2];
 config{1}.spike.bl.combined2        = [-0.5, -0.2];
 config{1}.spike.bl.combined3        = [-0.5, -0.2];
+config{1}.spike.pad.combined1        = 0.1;
+config{1}.spike.pad.combined2        = 0.1;
+config{1}.spike.pad.combined3        = 0.1;
 config{1}.spike.resamplefs.combined1 = 1000;
 config{1}.spike.resamplefs.combined2 = 1000;
 config{1}.spike.resamplefs.combined3 = 1000;
@@ -337,6 +339,16 @@ config{8}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template4', 'combined2';
                                         'template5', 'combined1'};
 
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
 % %% Patient NO HYPNOGRAM
 % config{}                           = config{1};
 % config{}.prefix                    = '2599-';

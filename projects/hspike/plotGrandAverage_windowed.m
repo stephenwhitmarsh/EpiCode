@@ -1,6 +1,40 @@
-function plotGrandAverageTimelocked(cfg, LFP, dat, dat_hyp, trialinfo)
+function plotGrandAverage_windowed(cfg, LFP, dat, dat_hyp, trialinfo)
 
 hyplabels   = ["REM",  "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 % baseline correction
 clear dat_bl

@@ -73,8 +73,8 @@ for markername = string(unique(config{ipatient}.editmarkerfile.torename(:,2)))'
 end
 
 [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct_combined{ipatient}, false);
-[LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
-[TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, false);
+% [LFP{ipatient}]                                                = readLFP(config{ipatient}, MuseStruct_combined{ipatient}, false);
+% [TFR{ipatient}]                                                = TFRtrials(config{ipatient}, LFP{ipatient}, false);
 
 % trim files to only those within a hypnogram
 MuseStruct_trimmed  = MuseStruct_combined;
@@ -94,7 +94,7 @@ for ipart = 1 : 3
 end
 
 % read spike data from Phy as one continuous trial
-SpikeRaw{ipatient}                  = readSpikeRaw_Phy(config_trimmed{ipatient}, true);
+SpikeRaw{ipatient}                  = readSpikeRaw_Phy(config_trimmed{ipatient}, false);
 
 if ipatient == 3
     SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
@@ -104,11 +104,11 @@ end
 SpikeTrials_timelocked{ipatient}    = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
 SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
 
-% segment into equal periods
-SpikeTrials_windowed{ipatient}      = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-SpikeStats_windowed{ipatient}       = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
-SpikeWaveforms{ipatient}            = readSpikeWaveforms(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
-
-plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
-    SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
-    SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});
+% % segment into equal periods
+% SpikeTrials_windowed{ipatient}      = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
+% SpikeStats_windowed{ipatient}       = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
+% SpikeWaveforms{ipatient}            = readSpikeWaveforms(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
+% 
+% plotOverviewHspike(config{ipatient}, marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}, ...
+%     SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
+%     SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});

@@ -126,3 +126,7 @@ writeSpykingCircusDeadfiles(config_trimmed{ipatient}, MuseStruct_trimmed{ipatien
 writeSpykingCircusParameters(config_trimmed{ipatient})
 writeSpykingCircus(config_trimmed{ipatient}, true);
 
+writeSpykingCircusFileList(config_trimmed{ipatient}, true);
+
+writeSpykingCircus(config{ipatient}, true);
+

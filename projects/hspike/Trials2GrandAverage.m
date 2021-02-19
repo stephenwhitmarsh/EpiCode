@@ -29,8 +29,8 @@ trialinfo = table;
 
 for ipatient = 1 : size(cfg, 2)
     
-    SpikeTrials_timelocked  = readSpikeTrials_MuseMarkers(cfg{ipatient}, [], [], false);
-    SpikeDensity_timelocked = spikeTrialDensity(cfg{ipatient}, [], false);
+    SpikeTrials_timelocked  = readSpikeTrials_MuseMarkers(cfg{ipatient});
+    SpikeDensity_timelocked = spikeTrialDensity(cfg{ipatient});
     
     if isempty(SpikeDensity_timelocked)
         continue

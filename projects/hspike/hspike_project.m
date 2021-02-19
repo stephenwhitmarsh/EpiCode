@@ -28,6 +28,7 @@ ft_defaults
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
 config = hspike_setparams;
+labels = ["BAD__START__", "BAD__END__", "PHASE_1__START__", "PHASE_1__END__", "PHASE_2__START__", "PHASE_2__END__", "PHASE_3__START__", "PHASE_3__END__", "REM__START__", "REM__END__", "AWAKE__START__", "AWAKE__END__", "NO_SCORE__START__", "NO_SCORE__END__"];
 
 %% General analyses, looping over patients
 %      exportHypnogram(config{ipatient})
@@ -40,17 +41,17 @@ for ipatient = 1:7
     [MuseStruct_template{ipatient}, ~,~, LFP_cluster_detected{ipatient}]    = detectTemplate(config{ipatient}, MuseStruct_aligned{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     
     % update - add any new artefacts
-    MuseStruct_template{ipatient}                                           = updateBadMuseMarkers(config{ipatient}, MuseStruct_template{ipatient} );
+    MuseStruct_template{ipatient}                                          = updateMarkers(config{ipatient}, MuseStruct_template{ipatient}, labels);
         
     % rename markers to combined markers (see config)
-    MuseStruct_combined{ipatient}                                           = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
+    MuseStruct_combined{ipatient}                                          = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});
     
     % focus time period a bit more
-%     config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
-%     config{ipatient}.epoch.pad.Hspike           = 0.5;
-%     config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
-%     config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
-%     
+    config{ipatient}.epoch.toi.Hspike           = [-0.2  0.8];
+    config{ipatient}.epoch.pad.Hspike           = 0.5;
+    config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
+    config{ipatient}.LFP.baselinewindow.Hspike  = [-0.2  0.8];
+    
     % from now on work on manual and combined templates
     itemp = 1;
     config{ipatient}.name = [];
@@ -99,11 +100,11 @@ for ipatient = 1:7
     
     % segment into trials based on IED markers
     SpikeTrials_timelocked{ipatient}      = readSpikeTrials_MuseMarkers(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, false);
-    SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, true);
+    SpikeDensity_timelocked{ipatient}     = spikeTrialDensity(config_trimmed{ipatient}, SpikeTrials_timelocked{ipatient}, false);
     
     % segment into equal periods
     SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, 'windowed');
+    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true, '-windowed');
     SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
     
     
@@ -116,7 +117,7 @@ for ipatient = 1:7
         SpikeTrials_timelocked{ipatient}, SpikeTrials_windowed{ipatient}, SpikeStats_windowed{ipatient}, ...
         SpikeDensity_timelocked{ipatient}, LFP{ipatient}, TFR{ipatient}, SpikeWaveforms{ipatient});
     
-    
+    plotGrandAverageAll(config);
 end
 
 %% collect behavioural for overview
@@ -195,7 +196,6 @@ close all
 
 
 %% collect spikes for overview
-
 config = hspike_setparams;
 
 for ipatient = 1 : 7
@@ -248,9 +248,30 @@ end
 
 [dat, dat_hyp, trialinfo] = Trials2GrandAverage(config, true);
 
-plotGrandAverage(config, LFP, dat, dat_hyp, trialinfo);
+plotGrandAverage_timelocked(config, LFP, dat, dat_hyp, trialinfo);
 
 
+
+%% load windowed data
+config = hspike_setparams;
+
+for ipatient = 1 : 7
+    
+    fname = fullfile(config{ipatient}.datasavedir, [config{ipatient}.prefix, 'SpikeTrials_Windowed.mat']);
+    load(fname);
+    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config{ipatient});
+    
+    config{ipatient}.postfix              = '-windowed';
+    SpikeStats_windowed{ipatient}         = spikeTrialStats(config{ipatient});
+    
+    SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
+    
+end
+
+
+
+
+plotGrandAverage_windowed(config, []);
 
 %% Create slurm job list
 config              = hspike_setparams;

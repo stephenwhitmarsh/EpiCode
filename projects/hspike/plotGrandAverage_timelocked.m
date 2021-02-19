@@ -1,4 +1,4 @@
-function plotGrandAverageTimelocked(cfg, LFP, dat, dat_hyp, trialinfo)
+function plotGrandAverage_timelocked(cfg, LFP, dat, dat_hyp, trialinfo)
 
 hyplabels   = ["REM",  "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"];
 
