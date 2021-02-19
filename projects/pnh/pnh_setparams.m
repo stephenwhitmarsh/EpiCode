@@ -31,7 +31,7 @@ end
 if ispc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\vn_pnh';
     rootpath_data       = '\\lexport\iss01.epimicro\patients\raw';
-else       
+else
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/vn_pnh';
     rootpath_data       = '/network/lustre/iss01/epimicro/patients/raw';
 end
@@ -70,15 +70,28 @@ config{1}.TFR.keeptrials            = 'no';
 config{1}.TFR.foi.PSW               = [10:200];
 config{1}.TFR.foi.FA                = [10:200];
 config{1}.TFR.foi.ES                = [10:200];
-config{1}.TFR.t_ftimwin.PSW         = 7 ./ config{1}.TFR.foi.PSW;
-config{1}.TFR.t_ftimwin.FA          = 7 ./ config{1}.TFR.foi.FA;
-config{1}.TFR.t_ftimwin.ES          = 7 ./ config{1}.TFR.foi.ES;
+config{1}.TFR.t_ftimwin.PSW         = 10 ./ config{1}.TFR.foi.PSW;
+config{1}.TFR.t_ftimwin.FA          = 10 ./ config{1}.TFR.foi.FA;
+config{1}.TFR.t_ftimwin.ES          = 10 ./ config{1}.TFR.foi.ES;
 config{1}.TFR.toi.PSW               = [-2 : 0.005 : 2];
 config{1}.TFR.toi.FA                = [-2 : 0.005 : 2];
 config{1}.TFR.toi.ES                = [-1 : 0.005 : 1];
-config{1}.TFR.bl.PSW               =  [-1.5, -1];
-config{1}.TFR.bl.FA                =  [-1.5, -1];
-config{1}.TFR.bl.ES                =  [-1, -0.5];
+config{1}.TFR.bl.PSW                = [-1.5, -1];
+config{1}.TFR.bl.FA                 = [-1.5, -1];
+config{1}.TFR.bl.ES                 = [-1, -0.5];
+
+config{1}.circus.channel                        = {'m1pNs_1','m1pNs_2','m1pNs_6','m1pNs_7','m1pNs_8'};
+config{1}.circus.reref                          = 'no';
+config{1}.circus.refchan                        = '';
+config{1}.circus.outputdir                      = 'SpykingCircus';
+config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'data', 'pnh', 'SpykingCircus.params');
+config{1}.circus.params.detection.spike_thresh  = '6';
+config{1}.circus.params.filtering.cut_off       = '300, auto';
+config{1}.circus.params.filtering.remove_median = 'True';
+config{1}.circus.params.clustering.max_elts     = '20000';
+config{1}.circus.params.detection.peaks         = 'negative';
+config{1}.circus.params.data.stream_mode        = 'mapping-file';
+config{1}.circus.params.data.mapping_file       = 'filelist.txt';
 
 % Patient 2, first nodule
 config{2}                           = config{1};
@@ -94,6 +107,8 @@ config{2}.muse.startmarker.FA       = "p02614_07__START__";
 config{2}.muse.endmarker.FA         = "p02614_07__START__";
 config{2}.muse.startmarker.ES       = "p02614_09";
 config{2}.muse.endmarker.ES         = "p02614_09";
+config{2}.circus.channel            = {'mTNmi_2','mTNmi_3','mTNmi_5','mTNmi_6','mTNmi_7','mTNmi_8'}; % redo within 1st and 4th electrode - now removed
+config{2}.circus.params.detection.spike_thresh  = '5.5';
 
 
 % Patient 2, second nodule
@@ -113,8 +128,9 @@ config{3}.muse.startmarker.FA       = "p02614_04__START__";
 config{3}.muse.endmarker.FA         = "p02614_04__START__";
 config{3}.muse.startmarker.ES       = "p02614_02";
 config{3}.muse.endmarker.ES         = "p02614_02";
-                              
-                                      
+config{3}.circus.channel            = {'mCasd_1','mCasd_2','mCasd_3','mCasd_4','mCasd_5','mCasd_6','mCasd_7'};
+
+
 % Patient 3 %
 config{4}                           = config{1};
 config{4}.prefix                    = '2689-';
@@ -122,6 +138,9 @@ config{4}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 
 config{4}.align.channel             = {'mLMI1_3','mLMI1_2','mLMI1_4','mLMI1_5','mLMI1_7'};
 config{4}.align.lpfilter            = 'yes';
 config{4}.align.lpfreq              = 40;
+config{4}.align.latency.PSW         = [-0.2, 5];
+config{4}.epoch.toi.PSW             = [-2, 5];
+config{4}.TFR.toi.PSW               = [-2 : 0.005 : 5];
 config{4}.LFP.channel               = {'mLMI1_3','mLMI1_2','mLMI1_4','mLMI1_5','mLMI1_7'};
 config{4}.muse.name                 = {'PSW','FA','ES'};
 config{4}.muse.startmarker.PSW      = "Marker1__START__";
@@ -130,7 +149,8 @@ config{4}.muse.startmarker.FA       = "Marker3__START__";
 config{4}.muse.endmarker.FA         = "Marker3__START__";
 config{4}.muse.startmarker.ES       = "Marker2";
 config{4}.muse.endmarker.ES         = "Marker2";
-                              
+config{4}.circus.channel            = {'mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7'};
+
 % DATA
 
 config{1}.directorylist             = [];
@@ -148,12 +168,12 @@ config{1}.directorylist{1}          =  {'02230_2015-02-25_12-36'...
                                         '02230_2015-02-26_09-16'...
                                         '02230_2015-02-26_10-03'...
                                         '02230_2015-02-26_10-31'};
-     
+
 config{2}.directorylist             = [];
 config{2}.directorylist{1}          =  {'02614_2018-06-12_15-23'...
                                         '02614_2018-06-12_17-23'...
                                         '02614_2018-06-12_21-23'};
-                                     
+
 config{3}.directorylist             = [];
 config{3}.directorylist{1}          =  {'02614_2018-06-12_15-23'...
                                         '02614_2018-06-12_17-23'...
@@ -166,4 +186,3 @@ config{4}.directorylist{1}          =  {'02689_2019-02-14_16-25'...
                                         '02689_2019-02-14_22-25'...
                                         '02689_2019-02-15_00-25'...
                                         '02689_2019-02-15_02-25'};
-                                                                        

@@ -16,7 +16,7 @@ if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/pnh/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries'));
 end
 
 if ispc
@@ -45,41 +45,50 @@ if ispc
 end
 
 ft_defaults
-feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
 %%
 
-ipatient = 4;
-
-% load settings
-config = pnh_setparams;
-
-% read muse markers
-[MuseStruct{ipatient}] = readMuseMarkers(config{ipatient}, true);
-
-% align markers
-[MuseStruct_aligned{ipatient}]          = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, true);
-
-% read LFP data (trial-by-trial)
-LFP{ipatient} = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, true);
-
-% make TFR
-TFR{ipatient} = TFRtrials(config{ipatient}, LFP{ipatient}, true);
-
-
-%% some plotting
 for ipatient = 1 : 4
     
-    LFPavg_PSW{ipatient} = ft_timelockanalysis([], LFP{ipatient}{1}.PSW);
-    LFPavg_FA{ipatient} = ft_timelockanalysis([], LFP{ipatient}{1}.FA);
-    LFPavg_ES{ipatient}   = ft_timelockanalysis([], LFP{ipatient}{1}.ES);
+    % load settings
+    config = pnh_setparams;
+    
+    % read muse markers
+    [MuseStruct{ipatient}] = readMuseMarkers(config{ipatient}, false);
+    
+    % align markers
+    [MuseStruct_aligned{ipatient}{ipatient}] = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);   
+    
+    % % read LFP data (trial-by-trial)
+    LFP{ipatient} = readLFP(config{ipatient}, MuseStruct_aligned{ipatient}, false);
+     
+    % % make TFR
+    TFR{ipatient} = TFRtrials(config{ipatient}, LFP{ipatient}, false);
+
+    % write parameters for spyking circus
+    [MuseStruct_aligned{ipatient}] = updateBadMuseMarkers(config{ipatient}, MuseStruct_aligned{ipatient});   
+    writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct_aligned{ipatient}, true);
+    writeSpykingCircusParameters_new(config{ipatient});
+    writeSpykingCircusFileList(config{ipatient}, true);
+    
 end
 
 
-for ipatient = 1 : 3
+%% Plotting of the overview
+
+% TODO: plot LFPs vertically
+
+% average the trials per pattern 
+for ipatient = 1 : 4
+    try LFPavg_PSW{ipatient}    = ft_timelockanalysis([], LFP{ipatient}{1}.PSW); catch end
+    try LFPavg_FA{ipatient}     = ft_timelockanalysis([], LFP{ipatient}{1}.FA);  catch end
+    try LFPavg_ES{ipatient}     = ft_timelockanalysis([], LFP{ipatient}{1}.ES);  catch end
+end
+
+% plotting of overview
+for ipatient = 1 : 4
     
-    fig = figure;
-    
+    fig                 = figure; 
     cfg                 = [];
     cfg.channel         = 1;
     cfg.colorbar        = 'no';
@@ -89,14 +98,15 @@ for ipatient = 1 : 3
     cfg.interactive     = 'no';
     
     if isfield(LFP{ipatient}{1}, 'PSW')
-        
-        
+           
+        % plot LFP
         subplot(2,3,1);
         plot(LFPavg_PSW{ipatient}.time, LFPavg_PSW{ipatient}.avg');
         xlim(config{ipatient}.epoch.toi.PSW);
         legend(LFPavg_PSW{ipatient}.label, 'interpreter', 'none', 'location', 'northwest', 'FontSize',6);
         title('PSW');
 
+        % plot TFR
         h                   = subplot(2,3,4);
         cfg.figure          = h;   
         cfg.baseline        = config{ipatient}.TFR.bl.PSW;
@@ -163,6 +173,86 @@ for ipatient = 1 : 3
     print(fig, '-dpng', fullfile(config{ipatient}.imagesavedir, [config{ipatient}.prefix, 'Fig_2']));
     
 end
+
+
+%% Create slurm job list
+config = pnh_setparams;
+
+fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list.txt');
+delete(fname_slurm_joblist);
+for ipatient = 1:4
+    for ipart = 1 : size(config{ipatient}.directorylist, 2)
+        subjdir     = config{ipatient}.prefix(1:end-1);
+        partdir     = ['p', num2str(ipart)];
+        if ~isfield(config{ipatient}.circus, 'channelname')
+            fid = fopen(fname_slurm_joblist, 'a');
+            if fid == -1
+                error('Could not create/open %s', fname_slurm_joblist);
+            end
+            dirname     = fullfile(config{1}.datasavedir, subjdir, partdir);
+            fprintf(fid,'cd %s; ~/.local/bin/spyking-circus spyking-circus.params -c 28; ~/.local/bin/spyking-circus spyking-circus.params -m converting -c 28; echo DONE!!! \n', dirname);
+            fclose(fid);  
+        else
+            for chandir = unique(config{ipatient}.circus.channelname)
+                fid = fopen(fname_slurm_joblist, 'a');
+                if fid == -1
+                    error('Could not create/open %s', fname_slurm_joblist);
+                end
+                temp        = strcmp(config{ipatient}.circus.channelname, chandir);
+                firstchan   = string(config{ipatient}.circus.channel(find(temp,1,'first')));
+                dirname     = fullfile(config{1}.datasavedir, subjdir, partdir, chandir);
+                fprintf(fid,'cd %s; /.local/bin/spyking-circus spyking-circus.params -c 28; /.local/bin/spyking-circus spyking-circus.params -m converting -c 28; echo DONE!!! \n', dirname);
+                fclose(fid);
+            end
+        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         % put LFP in single matrix with
         cfg = [];
