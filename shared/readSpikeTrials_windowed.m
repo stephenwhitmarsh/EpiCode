@@ -25,7 +25,29 @@ function [SpikeTrials] = readSpikeTrials_windowed(cfg, MuseStruct, SpikeRaw, for
 % SpikeTrials           = spike data epoched in FieldTrip trial data structure
 %
 
-% FIXME Remove the need for MuseStruct
+fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_Windowed.mat']);
+
+if nargin == 1
+    if exist(fname, 'file')
+        fprintf('Reading %s\n', fname);
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname, 'SpikeTrials');
+            catch ME
+                err_count = err_count + 1;
+            end
+            count = count + 1;
+        end
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        SpikeTrials = {};
+        return
+    end
+end
+
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
@@ -36,7 +58,6 @@ if strcmp(cfg.circus.part_list, 'all')
     cfg.circus.part_list = 1:size(cfg.directorylist, 2);
 end
 
-fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeTrials_Windowed.mat']);
 if exist(fname, 'file') && force == false
     fprintf('Loading %s\n', fname);
     load(fname, 'SpikeTrials');

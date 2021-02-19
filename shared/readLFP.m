@@ -20,7 +20,7 @@ function [LFP] = readLFP(cfg, MuseStruct, force)
 % cfg.epoch.toi{2}            = [-0.5  1];
 % cfg.epoch.pad               = {0.5, 0.5, 0.5};
 %
-% Optional fields (with example, defaults = false):
+% Optional fields (with example, defaults = false): 
 % cfg.LFP.lpfilter            = 'yes';
 % cfg.LFP.hpfilter            = 'no';
 % cfg.LFP.bpfilter            = 'no';
@@ -56,6 +56,31 @@ keepcfg             = ft_getopt(cfg.LFP, 'keepcfg', true);
 cfg.LFP.reref       = ft_getopt(cfg.LFP, 'reref', 'no');
 cfg.LFP.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
 cfg.LFP.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
+
+if nargin == 1
+    for markername = string(cfg.LFP.name)
+        fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, '.mat'));
+        if exist(fname, 'file')
+            fprintf('Reading %s\n', fname);
+            count = 0;
+            err_count = 0;
+            while count == err_count
+                try
+                    temp = load(fname);
+                    for ipart = 1 : size(cfg.directorylist, 2)
+                        LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
+                    end
+                catch ME
+                    err_count = err_count + 1;
+                end
+                count = count + 1;
+            end
+        else
+            fprintf('(re-) computing LFP data for %s\n', markername);
+        end
+    end
+    return
+end
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
@@ -308,17 +333,20 @@ for markername = string(cfg.LFP.name)
                 end
 
                 filedat{ifile}                      = ft_redefinetrial(cfgtemp, dat);
-                filedat{ifile}.trialinfo            = table;
-                filedat{ifile}.trialinfo.begsample  = Startsample(full_trial)';
-                filedat{ifile}.trialinfo.endsample  = Endsample(full_trial)';
-                filedat{ifile}.trialinfo.offset     = Offset(full_trial)';
-                filedat{ifile}.trialinfo.trialnr    = trialnr(full_trial)';
-                filedat{ifile}.trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
-                filedat{ifile}.trialinfo.hyplabel   = hyplabels_trl(full_trial)';
-                filedat{ifile}.trialinfo.starttime  = Starttime(full_trial)';
-                filedat{ifile}.trialinfo.endtime    = Endtime(full_trial)';
-                filedat{ifile}.trialinfo.directory  = repmat(cfg.directorylist{ipart}{idir}, height(filedat{ifile}.trialinfo), 1);
-
+                
+                if ifile == 1
+                    trialinfo            = table;
+                    trialinfo.begsample  = Startsample(full_trial)';
+                    trialinfo.endsample  = Endsample(full_trial)';
+                    trialinfo.offset     = Offset(full_trial)';
+                    trialinfo.trialnr    = trialnr(full_trial)';
+                    trialinfo.idir       = idir*ones(size(Startsample(full_trial)'));
+                    trialinfo.hyplabel   = hyplabels_trl(full_trial)';
+                    trialinfo.starttime  = Starttime(full_trial)';
+                    trialinfo.endtime    = Endtime(full_trial)';
+                    trialinfo.directory  = repmat(cfg.directorylist{ipart}{idir}, size(trialinfo, 1), 1);
+                end
+                
                 clear dat
 
                 if isNeuralynx
@@ -340,6 +368,9 @@ for markername = string(cfg.LFP.name)
             else % if there are no events at all in this directory
                 dirdat{idir} = [];
             end
+            
+            % additional trialinfo
+            dirdat{idir}.trialinfo = trialinfo;
 
         end % idir
 

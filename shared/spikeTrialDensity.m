@@ -28,7 +28,16 @@ fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikeTrialDensity.mat']);
 if nargin == 1
     if exist(fname, 'file')
         fprintf('Reading %s\n', fname);
-        load(fname, 'stats');
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname, 'stats');
+            catch ME
+                err_count = err_count + 1;
+            end
+            count = count + 1;
+        end
         return;
     else
         warning('No precomputed data is found, not enough input arguments to compute data');
@@ -50,7 +59,6 @@ if exist(fname, 'file') && force == false
         end
         count = count + 1;
     end
-    
     return
 end
 
@@ -82,12 +90,14 @@ for ipart = cfg.spike.part_list
             cfgtemp.binsize             = cfg.spike.psthbin.(markername);
         end
         cfgtemp.keeptrials              = 'yes';
+%         cfgtemp.trials                  = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;        
         psth_event                      = ft_spike_psth(cfgtemp,SpikeTrials{ipart}.(markername));
         stats{ipart}.psth.(markername)  = psth_event;
         
         % spike density function, with smoothed version
         cfgtemp                         = [];
         cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);   % sample at 1000 hz
+%         cfgtemp.trials                  = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;
         cfgtemp.keeptrials              = 'yes';
         if isfield(cfg.spike, 'sdftimwin')
             cfgtemp.timwin              = cfg.spike.sdftimwin.(markername);
@@ -115,8 +125,8 @@ for ipart = cfg.spike.part_list
         sdf_bar{ipart}.avg                  = squeeze(mean(sdf_bar{ipart}.trial, 1));
         
         % contain spike density in stat data
-        stats{ipart}.sdf_bar.(markername)       = sdf_bar{ipart};
-        stats{ipart}.sdf_lin.(markername)       = sdf_line{ipart};
+        stats{ipart}.sdf_bar.(markername)   = sdf_bar{ipart};
+        stats{ipart}.sdf_lin.(markername)   = sdf_line{ipart};
         
         % calculate baseline for dummy stats
         slim(1)                             = find(sdf_bar{ipart}.time > cfg.stats.bl.(markername)(1), 1, 'first');
@@ -141,14 +151,22 @@ for ipart = cfg.spike.part_list
             cfgtemp.latency                                 = [cfg.stats.bl.(markername)(2) sdf_bar{ipart}.time(end)]; % active perio starts after baseline
             cfgtemp.ivar                                    = 1;
             cfgtemp.uvar                                    = 2;
-            cfgtemp.design(1, :)                            = [ones(1, size(sdf_bar{ipart}.trial, 1)) ones(1, size(sdf_bar{ipart}.trial, 1)) *2];
-            cfgtemp.design(2, :)                            = [1 : size(sdf_bar{ipart}.trial, 1) 1 : size(sdf_bar{ipart}.trial, 1)];
-            cfgtemp.numrandomization                        = 1000;
-            stats{ipart}.stat.(markername){itemp}           = ft_timelockstatistics(cfgtemp, sdf_bar{ipart}, sdf_bar_bl{ipart});
-            stats{ipart}.stat.(markername){itemp}.baseline  = bl;
             
-        end
-        
+            % do stats on data without artefacts
+            cleanindx                                       = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;
+            trialcount                                      = sum(cleanindx);
+            cfgtemp.design(:, 1)                            = [ones(1, trialcount) ones(1, trialcount) * 2];
+            cfgtemp.design(:, 2)                            = [1 : trialcount 1 : trialcount];
+            cfgtemp.numrandomization                        = 1000;
+            dat_sel                                         = sdf_bar{ipart};
+            dat_sel.trial                                   = dat_sel.trial(cleanindx, :, :);
+            dat_bl_sel                                      = sdf_bar_bl{ipart};
+            dat_bl_sel.trial                                = sdf_bar_bl{ipart}.trial(cleanindx, :, :);
+
+            stats{ipart}.stat.(markername){itemp}           = ft_timelockstatistics(cfgtemp, dat_sel, dat_bl_sel);
+            stats{ipart}.stat.(markername){itemp}.baseline  = bl;
+            clear dat_sel dat_bl_sel
+        end 
     end
 end
 

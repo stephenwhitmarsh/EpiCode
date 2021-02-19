@@ -25,10 +25,25 @@ warning('off', 'all');
 
 fname = fullfile(cfg.datasavedir, sprintf('%shypnogramStats.mat', cfg.prefix));
 
-if exist(fname, 'file') && force == false
-    fprintf('loading precomputed stats\n');
-    load(fname, 'stats', 'marker', 'hypnogram');
-    return
+if nargin == 1
+    if exist(fname, 'file')
+        fprintf('Reading %s\n', fname);
+        % repeat to deal with load errors
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname, 'stats', 'marker', 'hypnogram');
+            catch ME
+                err_count = err_count + 1;
+            end
+            count = count + 1;
+        end
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        return
+    end
 end
 
 fprintf('Calculating stats\n');
@@ -145,9 +160,9 @@ for markername = string(cfg.hyp.markers)
         s = 0;
         for hyplabel = hyplabels
             stats{ipart}.(markername).duration.(hyplabel)   = hours(sum(hypnogram.duration(hypnogram.hyplabel == hyplabel & hypnogram.part == ipart)));
-            stats{ipart}.(markername).sum.(hyplabel)        = sum(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
-            stats{ipart}.(markername).avg.(hyplabel)  = mean(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
-            stats{ipart}.(markername).std.(hyplabel)  = std(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+            stats{ipart}.(markername).sum.(hyplabel)        =  sum(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+%             stats{ipart}.(markername).avg.(hyplabel)        = mean(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+            stats{ipart}.(markername).std.(hyplabel)        =  std(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
             s = s + stats{ipart}.(markername).sum.(hyplabel);
         end
         for hyplabel = hyplabels
