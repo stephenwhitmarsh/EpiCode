@@ -66,9 +66,9 @@ else
         
         for itemp = unique(clusternr)'
             % read spike timings (in samples)
-            SpikeRaw.samples{itemp} = spiketimes_indx(clusternr==itemp);
+            SpikeRaw.sample{itemp} = spiketimes_indx(clusternr==itemp);
             % convert to timestamps (for Fieldtrip when epoching raw data)            
-            SpikeRaw.timestamp{itemp} = SpikeRaw.samples{itemp} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);         
+            SpikeRaw.timestamp{itemp} = SpikeRaw.sample{itemp} * hdr.TimeStampPerSample + double(hdr.FirstTimeStamp);         
 
             [~,i] = max(mean(abs(SpikeRaw.template(itemp,:,:)),2));
             SpikeRaw.template_maxchan(itemp) = i;

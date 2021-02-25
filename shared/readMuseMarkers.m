@@ -33,19 +33,28 @@ fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
 write = ft_getopt(cfg.muse, 'write', true);
 
 if exist(fname,'file') && force == false
-    fprintf('************************************\n');
-    fprintf('** loading precomputed MuseStruct **\n');
-    fprintf('************************************\n\n');
+    fprintf('Loading precomputed MuseStruct\n');
     load(fname,'MuseStruct');
     return
 else
-    fprintf('*************************\n');
-    fprintf('** creating MuseStruct **\n');
-    fprintf('*************************\n\n');
+    fprintf('Creating MuseStruct\n');
+end
+
+% add utilities path if not already
+mfile_name          = mfilename('fullpath');
+[pathstr, name, ~]  = fileparts(mfile_name);
+pathCell            = regexp(path, pathsep, 'split');
+
+if ispc  % Windows is not case-sensitive
+    onPath = any(strcmpi(fullfile(pathstr, 'utilities'), pathCell));
+else
+    onPath = any(strcmp(fullfile(pathstr, 'utilities'), pathCell));
+end
+if ~onPath
+    addpath(fullfile(pathstr, 'utilities'));
 end
 
 %get format to adapt script for each format
-%specificities :
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
 
 % Go through different parts
@@ -54,23 +63,23 @@ for ipart = 1 : size(cfg.directorylist, 2)
     % Go through directory list
     for idir = 1 : size(cfg.directorylist{ipart}, 2)
 
-        fprintf('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
+        ft_info('Extracting artefact timings from  %s \n',cfg.directorylist{ipart}{idir});
 
         % find muse event file and read header if neaded
         if isNeuralynx
-            temp        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir},'*.mrk'));
-            name_mrk    = fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp.name);
+            temp        = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, '*.mrk'));
+            name_mrk    = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
         elseif isMicromed
             name_mrk    = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.mrk']);
         elseif isBrainvision
             name_mrk    = fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.vmrk']);
-            load(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '_header']), 'header'); %header create by Paul's script during the conversion from Deltamed to Brainvision
+            load(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '_header.mat']), 'header'); %header create by Paul's script during the conversion from Deltamed to Brainvision
         end
 
         if ~exist(name_mrk,'file')
             error('%s not found', name_mrk);
         else
-            fprintf('Found markerfile: %s \n',name_mrk);
+            ft_info('Found markerfile: %s \n',name_mrk);
         end
 
         % read muse event file
@@ -87,7 +96,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
         fclose(f);
 
         if isempty(markfile)
-            fprintf('\n\n %s is empty!!! \n\n', name_mrk);
+            ft_info('\n\n %s is empty!!! \n\n', name_mrk);
             continue
         end
 
@@ -109,7 +118,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
             for i = 1:length(nrEvents)
                 if nrEvents(i) > 0
-                    fprintf('found %d occurances of %s \n', nrEvents(i), name{i});
+                    ft_info('found %d occurances of %s \n', nrEvents(i), name{i});
                 end
             end
 
@@ -133,6 +142,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             nmarkers             = length(name_temp);
 
             for imarker = 1 : nmarkers
+                %if isempty(name_temp{imarker}), continue, end
                 name_temp{imarker}        = split(name_temp{imarker});
                 name{imarker}             = name_temp{imarker}{2};
                 classgroupid{imarker}     = [];
@@ -168,7 +178,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             for imarker = 1:nmarkers
                 nrEvents(imarker)        = size(marks{imarker},1);
                 if nrEvents(imarker)>0
-                    fprintf('found %d occurances of %s \n', size(marks{imarker},1), name{imarker});
+                    ft_info('found %d occurances of %s \n', size(marks{imarker},1), name{imarker});
                 end
             end
         end
@@ -181,7 +191,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
             hdr         = ft_read_header(fullfile(cfg.rawdir,cfg.directorylist{ipart}{idir},temp(1).name));
             f           = fopen(fullfile(temp(1).folder,[f,'.txt']));
             clear timestring
-            
+
             if f >= 0
             % depending on amplifier, there are somewhat different
             % formats of the txt file
@@ -196,7 +206,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                         if strcmp(tline(1:length(searchstring1)),searchstring1)
                             timestring = tline;
                             ftype = 1;
-                            disp('Great, found timestamp in header file - Type 1');
+                            ft_info('Great, found timestamp in header file - Type 1');
                             break
                         end
                     end
@@ -204,7 +214,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                         if strcmp(tline(1:length(searchstring2)),searchstring2)
                             timestring = tline;
                             ftype = 2;
-                            disp('Great, found timestamp in header file - Type 2');
+                            ft_info('Great, found timestamp in header file - Type 2');
                             break
                         end
                     end
@@ -213,7 +223,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 end
             end
             fclose(f);
-            
+
             % add real time of onset of file
             timestring = strsplit(timestring);
             switch ftype
@@ -226,7 +236,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                     headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
                     MuseStruct{ipart}{idir}.starttime  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
             end
-            
+
             else %error while loading katia text file header
                 warning('Clock time not found, they will be ignored');
                 MuseStruct{ipart}{idir}.starttime  = datetime.empty;
@@ -286,10 +296,14 @@ for ipart = 1 : size(cfg.directorylist, 2)
 
         MuseStruct{ipart}{idir}.directory  = cfg.directorylist{ipart}{idir};
         MuseStruct{ipart}{idir}.endtime    = MuseStruct{ipart}{idir}.starttime + seconds(hdr.nSamples / hdr.Fs - hdr.nSamplesPre / hdr.Fs);
+        % MuseStruct{ipart}{idir}.nSamples   = hdr.nSamples;
+        % MuseStruct{ipart}{idir}.Fs         = hdr.Fs;
 
         % create markers details in MuseStruct
         for imarker = 1 : nmarkers
             name{imarker} = strrep(name{imarker},'-','_'); % cant make fieldnames with minusses
+            name{imarker} = strrep(name{imarker},':',''); % cant make fieldnames with ':'
+            name{imarker} = strrep(name{imarker},'.',''); % cant make fieldnames with '.'
             MuseStruct{ipart}{idir}.markers.(name{imarker}).events         = nrEvents(imarker);
             MuseStruct{ipart}{idir}.markers.(name{imarker}).comment        = comment{imarker};
             MuseStruct{ipart}{idir}.markers.(name{imarker}).color          = color{imarker};
@@ -307,14 +321,12 @@ for ipart = 1 : size(cfg.directorylist, 2)
             end
         end
     end
-    
 
     % check if data directory exists, if not create it
     if ~isfolder(cfg.datasavedir)
         ft_notice('creating directory %s', cfg.datasavedir);
         mkdir(cfg.datasavedir);
     end
-
 end
 
 if write

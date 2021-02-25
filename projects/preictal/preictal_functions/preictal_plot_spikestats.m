@@ -36,11 +36,11 @@ for ipart = 1:size(spikedata,2)
             fig = figure;
             phy_channr      = spikedata{ipart}.(markername).template_maxchan(i_unit);
             nlx_channame    = cfg.circus.channel{phy_channr+1}; %+1 because phy_channr starts at zero
-            sgtitle(sprintf('Electrode n°%d %s : %s %s',phy_channr,nlx_channame, spikedata{ipart}.(markername).label{i_unit}, cfg.statstime.plot.suffix), 'Fontsize', 22, 'Interpreter', 'none', 'FontWeight', 'bold');
+            sgtitle(sprintf('Electrode nï¿½%d %s : %s %s',phy_channr,nlx_channame, spikedata{ipart}.(markername).label{i_unit}, cfg.statstime.plot.suffix), 'Fontsize', 22, 'Interpreter', 'none', 'FontWeight', 'bold');
             
             %% plot ISI
             subplot(4,4,2);hold;
-            stats{ipart}.(markername).isi{i_unit} = diff(double(spikedata{ipart}.(markername).samples{i_unit})) / spikedata{ipart}.(markername).hdr.Fs ;
+            stats{ipart}.(markername).isi{i_unit} = diff(double(spikedata{ipart}.(markername).sample{i_unit})) / spikedata{ipart}.(markername).hdr.Fs ;
             histogram(stats{ipart}.(markername).isi{i_unit},cfg.spike.ISIbins,'EdgeColor','none');
             
             yticklabels(yticks);
@@ -59,7 +59,7 @@ for ipart = 1:size(spikedata,2)
             meanbi          = nanmean(cell2mat(stats{ipart}.(markername).burstindex{i_unit}));
             meancv          = nanmean(cell2mat(stats{ipart}.(markername).cv{i_unit}));
             
-            disp_text = sprintf('%d spikes \n\nMean values on all the data : \n- Amplitude = %.2f µV \n- RPV = %.2f %% \n- Freq = %.2f Hz \n- CV2 = %.2f \n- Fano Factor = %.2f \n- CV = %.2f \n- Burst index = %.2f', size(spikedata{ipart}.(markername).samples{i_unit},2), meanamplitude, RPV, meanfreq, meancv2, meanff, meancv, meanbi);
+            disp_text = sprintf('%d spikes \n\nMean values on all the data : \n- Amplitude = %.2f ï¿½V \n- RPV = %.2f %% \n- Freq = %.2f Hz \n- CV2 = %.2f \n- Fano Factor = %.2f \n- CV = %.2f \n- Burst index = %.2f', size(spikedata{ipart}.(markername).sample{i_unit},2), meanamplitude, RPV, meanfreq, meancv2, meanff, meancv, meanbi);
             
             text(0,1,disp_text,'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'FontWeight', 'bold','FontSize',7);
             axis off
@@ -105,7 +105,7 @@ for ipart = 1:size(spikedata,2)
             [halfwidth, peaktrough, troughpeak] = plot_morpho(cfgtemp,template);
             
             title([]);
-            ylabel('Template (µV)');
+            ylabel('Template (ï¿½V)');
             xlabel('Time (ms)');
             xticklabels(xticks*1000);
             set(gca,'FontWeight','bold','TickDir','out');
@@ -135,7 +135,7 @@ for ipart = 1:size(spikedata,2)
                     
                     xlabel('Time (ms)');
                     xticklabels(xticks*1000); %convert in ms
-                    ylabel('Spike waveform (µV)');
+                    ylabel('Spike waveform (ï¿½V)');
                     title([]);
                     set(gca,'FontWeight','bold','TickDir','out');
                     

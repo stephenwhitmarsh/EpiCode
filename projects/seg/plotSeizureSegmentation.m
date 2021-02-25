@@ -24,12 +24,12 @@ for idir = 1 : size(MuseStruct,2)
             end
             
             if ~isfield(MuseStruct_append.markers.(mrknames{imarker}),'samples')
-                MuseStruct_append.markers.(mrknames{imarker}).samples = [];
+                MuseStruct_append.markers.(mrknames{imarker}).sample = [];
             end
             if isfield(MuseStruct{idir}.markers.(mrknames{imarker}).events,'sample')
                 for ievent = 1 : length(MuseStruct{idir}.markers.(mrknames{imarker}).events)
-                    MuseStruct_append.markers.(mrknames{imarker}).samples = ...
-                        [MuseStruct_append.markers.(mrknames{imarker}).samples, ...
+                    MuseStruct_append.markers.(mrknames{imarker}).sample = ...
+                        [MuseStruct_append.markers.(mrknames{imarker}).sample, ...
                         MuseStruct{idir}.markers.(mrknames{imarker}).events(ievent).sample];
                 end
             end
@@ -51,7 +51,7 @@ end
 % remove empty markers
 fn = fieldnames(MuseStruct_append.markers);
 for imarker = 1 : numel(fn)
-    if isempty(MuseStruct_append.markers.(fn{imarker}).samples)
+    if isempty(MuseStruct_append.markers.(fn{imarker}).sample)
         MuseStruct_append.markers = rmfield(MuseStruct_append.markers,fn{imarker});
     end
 end

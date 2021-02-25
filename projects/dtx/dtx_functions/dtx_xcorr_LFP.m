@@ -103,10 +103,10 @@ if strcmp(cfg.LFP.xcorr.plotdata, 'yes')
     set(fig,'PaperOrientation','landscape');
     set(fig,'PaperUnits','normalized');
     set(fig,'PaperPosition', [0 0 1 1]);
-    print(fig, '-dpdf', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.pdf']),'-r600');
-    print(fig, '-dpng', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.png']),'-r600');
+%     print(fig, '-dpdf', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.pdf']),'-r600');
+%     print(fig, '-dpng', fullfile(cfg.imagesavedir,'xcorrs_lfp',[cfg.prefix,'xcorr_lfp_',cfg.LFP.xcorr.suffix,'.png']),'-r600');
     
-    close all
+%     close all
 end
 
 %end %itrial

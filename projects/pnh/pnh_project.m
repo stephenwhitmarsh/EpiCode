@@ -5,31 +5,44 @@
 % requires bandpassFilter.m from Mario
 % requires releaseDec2015 from Neuralynx website
 
-restoredefaultpath
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/shared/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epilepsy/pnh/
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip/
-ft_defaults
+%% Add path
 
-restoredefaultpath
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\shared
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epilepsy\pnh
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+if isunix
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
+end
+
+if ispc
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
+    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
+end
 ft_defaults
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
-% maxNumCompThreads(4)
-dbstop if error
+
+% load settings
+config = pnh_setparams;
+
+% read muse markers
+[MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
+
+
+
 
 %% General analyses
 
 
 for ipatient =  1 : 3
     
-    config = pnh_setparams([]);
-    
-    % read muse markers
-    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
     
     % align Muse markers according to peaks and detect whether they contain artefacts
     [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
@@ -526,7 +539,7 @@ for itemp = 1 : size(spike_LFP,2)
     % average
     i = 1;
     for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-        if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+        if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
             
             fprintf('Normalizing unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
             
@@ -801,7 +814,7 @@ for ipatient = 1 : 3
         spike_LFP_sel = spike_LFP{itemp};
         i = 1;
         for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-            if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+            if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
                 fprintf('Adding unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
                 spike_LFP_sel.trial{i} = spike_LFP{itemp}.trial{trialnr};
                 i = i + 1;
@@ -1069,7 +1082,7 @@ for ipatient = [1,2]
     clear spike
     i = 1;
     for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-        if size(find(SpikeRaw.samples{itemp} < SpikeRaw.samples{itemp}(trialnr)+w_post & SpikeRaw.samples{itemp} > SpikeRaw.samples{itemp}(trialnr)-w_pre),1) == 1
+        if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
             fprintf('Adding unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
             spike(i,:) = spike_LFP{itemp}.trial{trialnr};
             i = i + 1;
@@ -1290,7 +1303,7 @@ for ipatient = 1 : 3
         
         % ISI
         subplottight(h,2,iplot); hold;
-        isi = diff(SpikeRaw{ipatient}.samples{itemp}) / hdr.Fs * 1000;
+        isi = diff(SpikeRaw{ipatient}.sample{itemp}) / hdr.Fs * 1000;
         histogram(isi,'BinWidth',0.5,'BinLimits',[0,25],'FaceColor',[0,0,0],'EdgeColor',[0,0,0],'FaceAlpha',1);
         %       bar(stats.isi_1s.time*1000,stats.isi_1s.avg(itemp,:),1);
         %       xticks(stats.isi_1s.time*1000);

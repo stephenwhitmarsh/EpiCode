@@ -37,7 +37,7 @@ else
         % ISI on all data
         fig = figure;
         for itemp = 1 : length(SpikeRaw{ipart}.label)
-            stats{ipart}.isi_all_data{itemp} = diff(double(SpikeRaw{ipart}.samples{itemp})) / hdr.Fs;
+            stats{ipart}.isi_all_data{itemp} = diff(double(SpikeRaw{ipart}.sample{itemp})) / hdr.Fs;
             subplot(round(length(SpikeRaw{ipart}.label)/2+0.25),2,itemp);
             histogram(stats{ipart}.isi_all_data{itemp}*1000,'BinWidth',0.5,'BinLimits',[0, 50],'LineStyle','None','FaceColor',[0 0 0]);
             [y,indx] = max(stats{ipart}.isi_all_data{itemp});
