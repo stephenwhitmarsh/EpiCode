@@ -23,7 +23,9 @@ ft_defaults
 
 config = wod_setparams;
 
-for irat = 8  %slurm_task_id
+if slurm_task_id(1) > 0
+
+for irat = slurm_task_id
     
     % loop through different parts
     for ipart = 1 : size(config{irat}.directorylist,2)
@@ -92,7 +94,7 @@ for irat = 8  %slurm_task_id
             copyfile(config{irat}.muse.templatemarker,fullfile(output_datapath,'Events.mrk'));
             
         end % ichan
-    end
-end
-
-end
+    end %ipart
+end %irat
+end %slurm task id
+end %wod_concatenate

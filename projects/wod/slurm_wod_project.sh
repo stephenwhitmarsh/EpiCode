@@ -2,11 +2,11 @@
 
 #SBATCH --job-name=wod
 
-#SBATCH --partition=normal,bigmem
+#SBATCH --partition=normal
 
 #SBATCH --time=99:99:99
 
-#SBATCH --mem=32G
+#SBATCH --mem=100G
 
 #SBATCH --cpus-per-task=2
 
