@@ -1,20 +1,28 @@
-function wod_concatenateLFP(slurm_task_id)
+function wod_concatenateLFP(rat_list, configscript)
 % code copied from writespykingcircus.m
 % Must use a modified version of ft_writedata to give the good channel
 % name to Muse. Each added line in ft_writedata is commented with %Paul.
 
+% configscript : name of the setparams script, ie 'wod_setparams', or
+% 'wod_setparams_32chans';
+
+%retrouver le chemin du dossier EpiCode par rapport à ce script
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
+
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Sofia\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Sofia\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Sofia\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Sofia\EpiCode\projects\wod'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Sofia/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Sofia/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Sofia/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Sofia/EpiCode/projects/wod'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
 end
 
@@ -25,12 +33,11 @@ overwriteMuseMarkerFile = false; %false : do not write a new muse marker if one 
 
 ft_defaults
 
-config = wod_setparams;
+config = eval(configscript);
 
 feature('DefaultCharacterSet', 'CP1252');
-if slurm_task_id(1) > 0
 
-for irat = slurm_task_id
+for irat = rat_list
     
     % loop through different parts
     for ipart = 1 : size(config{irat}.directorylist,2)
@@ -112,7 +119,7 @@ for irat = slurm_task_id
         
         %process events
         for idir = 1 : size(config{irat}.directorylist{ipart},2)
-            temp                                    = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},'*.nev'));
+            temp = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},'*.nev'));
            
             if size(temp,1) > 1
                 error('there should be only one nev file')
@@ -164,5 +171,4 @@ for irat = slurm_task_id
         
     end %ipart
 end %irat
-end %slurm task id
 end %wod_concatenate
