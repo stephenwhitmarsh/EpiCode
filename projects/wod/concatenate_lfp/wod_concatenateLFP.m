@@ -7,13 +7,19 @@ function wod_concatenateLFP(rat_list, configscript)
 % 'wod_setparams_32chans';
 
 %retrouver le chemin du dossier EpiCode par rapport à ce script
-scriptpath = matlab.desktop.editor.getActiveFilename;
-epicodepath = fileparts(fileparts(fileparts(fileparts(scriptpath))));
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
 
 addpath (genpath([epicodepath,'shared']))
 addpath (genpath([epicodepath,'external']))
 addpath (genpath([epicodepath,'templates']))
-addpath (genpath([epicodepath,'projects\wod']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+
 if ispc
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
 elseif isunix
@@ -113,7 +119,7 @@ for irat = rat_list
         
         %process events
         for idir = 1 : size(config{irat}.directorylist{ipart},2)
-            temp                                    = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},'*.nev'));
+            temp = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},'*.nev'));
            
             if size(temp,1) > 1
                 error('there should be only one nev file')

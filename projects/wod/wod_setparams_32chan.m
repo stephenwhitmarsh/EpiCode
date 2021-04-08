@@ -7,10 +7,12 @@ if ismac
 elseif isunix
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/wod';
     rootpath_data       = '/network/lustre/iss01/charpier/raw/rat-wod/Cortex/32_ch/Extra_Neuralynx';
+    rootpath_concatdata = '/network/lustre/iss01/charpier/raw/rat-wod/Cortex/32_ch/concatenated_LFP';
     os                  = 'unix';
 elseif ispc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\wod\';
     rootpath_data       = '\\lexport\iss01.charpier\raw\rat-wod\Cortex\32_ch\Extra_Neuralynx';
+    rootpath_concatdata = '\\lexport\iss01.charpier\raw\rat-wod\Cortex\32_ch\concatenated_LFP';
     os                  = 'windows';
 else
     error('Platform not supported')
@@ -23,6 +25,7 @@ script_path  = mfilename('fullpath');
 script_path  = fileparts(script_path);
 
 %% config common for all patients
+configcommon.concatdata_path = rootpath_concatdata;
 configcommon.muse.templatemarker   = fullfile(datasavedir,'TemplateEventsWOD.mrk');%find the template file to create muse marker file
 
 configcommon.name                  = {'WoD'};
@@ -65,6 +68,7 @@ configcommon.circus.hpfreq       = 0; % even when not using
 configcommon.circus.postfix      = []; % after using circus-gui-matlab's SAVE number
 
 
+
 %% rat 1
 config{1}                     = configcommon;
 config{1}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -75,8 +79,8 @@ config{1}.rawdir              = fullfile(rootpath_data,'2021_03_12_WOD');       
 
 config{1}.directorylist{1}    = {'2021-03-12_14-01', '2021-03-12_15-36', '2021-03-12_17-05'}; %liste de tous les fichiers, tous les protocoles
 %config{1}.LFP.channel         = {[], [], 'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'E07LFP', 'E06LFP', 'E05LFP', 'E04LFP', 'E03LFP','Puff'};
-config{1}.LFP.channel         = {'E31','E30', 'E29', 'E28','E27', 'E26', 'E25', 'E24','E23', 'E22', 'E21', 'E20', 'E19', 'E18','E17','E16', 'E15', 'E14', 'E13', 'E12', 'E11','E10', 'E09', 'E08', 'E07', 'E06', 'E05','E04', 'E03', 'E02', 'E01','Events_0001'};
-config{1}.LFP.rename          = {'E32','E31','E30', 'E29', 'E28','E27', 'E26', 'E25', 'E24','E23', 'E22', 'E21', 'E20', 'E19', 'E18','E17','E16', 'E15', 'E14', 'E13', 'E12', 'E11','E10', 'E09', 'E08', 'E07', 'E06', 'E05','E04', 'E03', 'E02','Events_0001'};
+config{1}.LFP.channel         = {'E31','E30', 'E29', 'E28','E27', 'E26', 'E25', 'E24','E23', 'E22', 'E21', 'E20', 'E19', 'E18','E17','E16', 'E15', 'E14', 'E13', 'E12', 'E11','E10', 'E09', 'E08', 'E07', 'E06', 'E05','E04', 'E03', 'E02', 'E01'};
+config{1}.LFP.rename          = {'E32','E31','E30', 'E29', 'E28','E27', 'E26', 'E25', 'E24','E23', 'E22', 'E21', 'E20', 'E19', 'E18','E17','E16', 'E15', 'E14', 'E13', 'E12', 'E11','E10', 'E09', 'E08', 'E07', 'E06', 'E05','E04', 'E03', 'E02'};
 config{1}.LFP.origin_WoD          = {'E14', 'E14'};
 config{1}.LFP.origin_WoR          = {'E11', 'E11'};
 
