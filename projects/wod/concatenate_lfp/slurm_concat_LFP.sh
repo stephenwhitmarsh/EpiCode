@@ -16,7 +16,7 @@
 
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/wod/slurm-output/error-%j_%a-%x.txt
 
-#SBATCH --array=12-17
+#SBATCH --array=13
 
 module load MATLAB/R2019b
 

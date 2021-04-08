@@ -314,7 +314,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 MuseStruct{ipart}{idir}.markers.(name{imarker}).trialnum                 = marks{imarker}(ievent,1);
                 MuseStruct{ipart}{idir}.markers.(name{imarker}).synctime(ievent)         = marks{imarker}(ievent,2);
                 if isempty(MuseStruct{ipart}{idir}.starttime)
-                    MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) = NaN;
+                    MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent) = NaT;
                 else
                     MuseStruct{ipart}{idir}.markers.(name{imarker}).clock(ievent)            = seconds(marks{imarker}(ievent,2)) + MuseStruct{ipart}{idir}.starttime;
                 end
