@@ -6,6 +6,10 @@ if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
     addpath \\lexport\iss01.charpier\echanges\scripts-paul\Spike2_vers_MATLAB
+    addpath \\lexport\iss01.charpier\analyses\wod\fdr_bh
+  
+
+  
     
 elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
@@ -15,7 +19,8 @@ elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
     addpath /network/lustre/iss01/charpier/echanges/scripts-paul/Spike2_vers_MATLAB
-    
+    addpath /network/lustre/iss01/charpier/analyses/wod/fdr_bh
+
 end
 
 ft_defaults
@@ -57,25 +62,27 @@ clear data DC_timings
 %% Test between depths
 
 %Test start times for both thresholding methods
-
+a=0;
+        
 for ifilt= ["raw" "filt"]
     for ithr= ["baseline" "max_slope"]
+        a=a+1;
         [p,h,stats]=ranksum(Sup_timings.(ifilt).start.(ithr),Dep_timings.(ifilt).start.(ithr));
         Tests.start.(ifilt).(ithr).p=p;
         Tests.start.(ifilt).(ithr).h=h;
         Tests.start.(ifilt).(ithr).stats=stats;
+        P_val(a,1)=p;
         clear p h stats
     end %ithr
     
     %Test other data
-    
     for idata= ["peak" "min_slope" "max_slope" "area"]
-        
         [p,h,stats]=ranksum(Sup_timings.(ifilt).(idata),Dep_timings.(ifilt).(idata));
         Tests.(idata).(ifilt).p=p;
         Tests.(idata).(ifilt).h=h;
         Tests.(idata).(ifilt).stats=stats;
+        P_val(end+1,1)=p;
         clear p h stats
-        
     end %idata
 end %ifilt
+

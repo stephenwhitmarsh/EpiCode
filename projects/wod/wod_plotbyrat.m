@@ -1,33 +1,35 @@
-function wod_plotbyrat(slurm_task_id)
+function wod_plotbyrat(rat_list, configscript)
+
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
+
+addpath (genpath([epicodepath,'development']))
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+addpath (genpath([epicodepath,'projects', filesep, 'dtx']))
 
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/development'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/wod'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
- 
 end
 
 ft_defaults
 
-config = wod_setparams;
+config = eval(configscript);
 
 
 
 ipart = 1; %ipart is always 1 for this project
 
-if slurm_task_id(1) > 0
+
 
 analysis_names = {'timefreq_wod', 'timefreq_wod_timenorm', 'timefreq_recovery','timefreq_wor','timefreq_wor_timenorm', 'timefreq_baseline','timefreq_wod_blcorrected', 'timefreq_wod_timenorm_blcorrected', 'timefreq_recovery_blcorrected','timefreq_wor_blcorrected','timefreq_wor_timenorm_blcorrected', 'timefreq_baseline_blcorrected','log_timefreq_wod', 'log_timefreq_wod_timenorm', 'log_timefreq_recovery','log_timefreq_wor','log_timefreq_wor_timenorm', 'log_timefreq_baseline','log_timefreq_wod_blcorrected', 'log_timefreq_wod_timenorm_blcorrected', 'log_timefreq_recovery_blcorrected','log_timefreq_wor_blcorrected','log_timefreq_wor_timenorm_blcorrected', 'log_timefreq_baseline_blcorrected'};
 
@@ -36,7 +38,7 @@ for idata = 1:size( analysis_names,2)
 %% TFR by chan by rat
     
     
-    for irat = slurm_task_id %size(config,2)
+    for irat = rat_list %size(config,2)
        
         %load data
         fprintf('Load timefreq data for rat %d/%d\n', irat,size(config,2));
@@ -167,4 +169,3 @@ for idata = 1:size( analysis_names,2)
         clear data_temp data_plot
     end %irat
 end %idata
-end %slurm task id

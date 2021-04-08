@@ -57,7 +57,16 @@ for iprot= 1:size(config,2)
     %% Calculate slope detect start times
     for channame= chanlist
         for isignal= ["raw" "filt"]
-        %calculate slope for raw signal and exatrct min slope and max slope
+        
+            
+            
+            
+            
+            %smoothing signal
+        dataprot.(isignal).(channame).trial{1}=movmean(dataprot.(isignal).(channame).trial{1},1000); 
+            
+            
+            %calculate slope for raw signal and exatrct min slope and max slope
         %timings
         dataslope.(isignal).(channame)= dataprot.(isignal).(channame);
         dataslope.(isignal).(channame).trial{1}=ft_preproc_derivative(dataslope.(isignal).(channame).trial{1});
@@ -89,13 +98,19 @@ for iprot= 1:size(config,2)
         AD_slope.(isignal).(channame)= ft_selectdata(cfgtemp,dataslope.(isignal).(channame));
         clear t1 t2 t_sel
         
-        %smoothing slope channel
-        AD_slope.(isignal).(channame).trial{1}=movmean(AD_slope.(isignal).(channame).trial{1},100);
+        
         
         %find indices where data crossing threshold in negative
         idx_slope= find(AD_slope.(isignal).(channame).trial{1}< thr_slopebl);
         idx_start= min(idx_slope);
         time_startbl= AD_slope.(isignal).(channame).time{1}(1,idx_start);
+            
+%         Functions to find intersection points with threshold and/or other curve
+%         x1 = AD_slope.(isignal).(channame).time{1};
+%         y1 = AD_slope.(isignal).(channame).trial{1};
+%         x2 = x1;
+%         y2 = ones(size(y1)) .* thr_slopebl;
+%         [x0,y0] = intersections(x1,y1,x2,y2);
         
         clear idx_slope idx_start
         
@@ -163,7 +178,7 @@ for iprot= 1:size(config,2)
         %% Detection of DC shift peak
         
         t1= t_minslope-20;
-        t2= t_minslope+10;
+        t2= t_minslope+20;
         t_sel= [t1 t2];
         
         cfgtemp=[];

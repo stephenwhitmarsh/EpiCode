@@ -1,27 +1,29 @@
-function wod_grandaverage
+function wod_grandaverage(configscript)
+
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
+
+addpath (genpath([epicodepath,'development']))
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+addpath (genpath([epicodepath,'projects', filesep, 'dtx']))
 
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/development'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/wod'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
-    
 end
 
 ft_defaults
 
-config = wod_setparams;
+config = eval(configscript);
 
 
 

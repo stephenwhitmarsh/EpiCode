@@ -27,47 +27,47 @@ config = DC_setparams;
 chanlist = ["DC", "Vm"];
 
 
-for iprot= 1:size(config,2)
-    datapath = char(fullfile(config{iprot}.rawdir,config{iprot}.directorylist{1}));
-    
-    CEDStruct = readCEDevents(datapath);
-    
-    for channame = chanlist
-        data = readCEDwaveforms(datapath, channame);
-        
-        [folder, file, extension] = fileparts(datapath);
-        Neurlynx_datapath= fullfile(folder,'Neuralynx_data');
-        
-        %Resample channels to have same samplerate for both
-        cfgtemp= [];
-        cfgtemp.resamplefs      = config{iprot}.DC.resamplefs;
-        cfgtemp.detrend         = 'no';
-        data                    = ft_resampledata(cfgtemp,data);
-        
-        
-        
-        header.filename         = fullfile(Neurlynx_datapath, [file,'_', char(channame), '.ncs']);
-        header.date             = CEDStruct.starttime;
-        header.dateEnd          = CEDStruct.endtime;
-        header.nChans           = 1;
-        header.chanunit         = data.chanunit{1};
-        header.chantype         = 'waveform';
-        header.label            = data.label;
-        header.Fs               = data.fsample;
-        header.FirstTimeStamp   = 0;
-        header.TimeStampPerSample = 1;
-        
-        
-        if ~isfolder(Neurlynx_datapath)
-            mkdir(Neurlynx_datapath);
-        end
-        
-        
-        fprintf('\nWriting data in Neuralynx format with Fieldtrip : %s \n',header.filename);
-        ft_write_data(header.filename,data.trial{1},'header',header, 'dataformat','neuralynx_ncs');
-        
-    end %channame
-end %iprot
+% for iprot= 1:size(config,2)
+%     datapath = char(fullfile(config{iprot}.rawdir,config{iprot}.directorylist{1}));
+%     
+%     CEDStruct = readCEDevents(datapath);
+%     
+%     for channame = chanlist
+%         data = readCEDwaveforms(datapath, channame);
+%         
+%         [folder, file, extension] = fileparts(datapath);
+%         Neurlynx_datapath= fullfile(folder,'Neuralynx_data');
+%         
+%         %Resample channels to have same samplerate for both
+%         cfgtemp= [];
+%         cfgtemp.resamplefs      = config{iprot}.DC.resamplefs;
+%         cfgtemp.detrend         = 'no';
+%         data                    = ft_resampledata(cfgtemp,data);
+%         
+%         
+%         
+%         header.filename         = fullfile(Neurlynx_datapath, [file,'_', char(channame), '.ncs']);
+%         header.date             = CEDStruct.starttime;
+%         header.dateEnd          = CEDStruct.endtime;
+%         header.nChans           = 1;
+%         header.chanunit         = data.chanunit{1};
+%         header.chantype         = 'waveform';
+%         header.label            = data.label;
+%         header.Fs               = data.fsample;
+%         header.FirstTimeStamp   = 0;
+%         header.TimeStampPerSample = 1;
+%         
+%         
+%         if ~isfolder(Neurlynx_datapath)
+%             mkdir(Neurlynx_datapath);
+%         end
+%         
+%         
+%         fprintf('\nWriting data in Neuralynx format with Fieldtrip : %s \n',header.filename);
+%         ft_write_data(header.filename,data.trial{1},'header',header, 'dataformat','neuralynx_ncs');
+%         
+%     end %channame
+% end %iprot
 
 
 
@@ -109,7 +109,7 @@ for iprot= 1:size(config,2)
         
         %cut data
         t1=(CEDStruct.markers.VentOff.synctime-5);
-        t2=(CEDStruct.markers.VentOn.synctime+60);
+        t2=(CEDStruct.markers.VentOn.synctime+100);
         
         cfgtemp=[];
         cfgtemp.trials='all';

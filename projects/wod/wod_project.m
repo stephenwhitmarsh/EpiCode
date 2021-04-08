@@ -1,4 +1,4 @@
-function wod_project(slurm_task_id)
+function wod_project(rat_list, configscript)
 
 % time frequency analysis of WOD Neuralynx data
 % parameters are set in wod_setparams.m
@@ -8,26 +8,28 @@ function wod_project(slurm_task_id)
 % slurm_task_id is the number of the rat, as set in wod_setparams.m
 % to compute/plot the average between rats, set slurm_task_id = 0
 
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
+
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/wod'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
 end
 
 ft_defaults
 
-config = wod_setparams;
+config = eval(configscript);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% compute data for each rat %%%
@@ -36,8 +38,7 @@ config = wod_setparams;
 
 ipart = 1; %ipart is always 1 for this project
 
-if slurm_task_id(1)>0
-    for irat = slurm_task_id
+    for irat = rat_list
         %% load data and compute time freq
         %find concatenated LFP (see wod_concatenateLFP.m)
         [~,dir_name]                       = fileparts(config{irat}.rawdir);
@@ -516,5 +517,4 @@ if slurm_task_id(1)>0
         
     end %irat
     
-end %slurm_task_id >0
 end % wod_project
