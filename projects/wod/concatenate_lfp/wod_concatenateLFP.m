@@ -3,21 +3,19 @@ function wod_concatenateLFP(slurm_task_id)
 % Must used a modified version of ft_writedata to give the good channel
 % name to Muse. On added line, which is commented with %Paul.
 
+%retrouver le chemin du dossier EpiCode par rapport à ce script
+scriptpath = matlab.desktop.editor.getActiveFilename;
+epicodepath = fileparts(fileparts(fileparts(fileparts(scriptpath))));
+
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects\wod']))
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\projects\wod'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/projects/wod'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
 end
-
 
 ft_defaults
 
