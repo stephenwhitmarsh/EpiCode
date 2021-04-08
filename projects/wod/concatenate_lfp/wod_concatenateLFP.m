@@ -1,7 +1,10 @@
-function wod_concatenateLFP(slurm_task_id)
+function wod_concatenateLFP(rat_list, configscript)
 % code copied from writespykingcircus.m
 % Must use a modified version of ft_writedata to give the good channel
 % name to Muse. Each added line in ft_writedata is commented with %Paul.
+
+% configscript : name of the setparams script, ie 'wod_setparams', or
+% 'wod_setparams_32chans';
 
 %retrouver le chemin du dossier EpiCode par rapport à ce script
 scriptpath = matlab.desktop.editor.getActiveFilename;
@@ -24,12 +27,11 @@ overwriteMuseMarkerFile = false; %false : do not write a new muse marker if one 
 
 ft_defaults
 
-config = wod_setparams;
+config = eval(configscript);
 
 feature('DefaultCharacterSet', 'CP1252');
-if slurm_task_id(1) > 0
 
-for irat = slurm_task_id
+for irat = rat_list
     
     % loop through different parts
     for ipart = 1 : size(config{irat}.directorylist,2)
@@ -163,5 +165,4 @@ for irat = slurm_task_id
         
     end %ipart
 end %irat
-end %slurm task id
 end %wod_concatenate

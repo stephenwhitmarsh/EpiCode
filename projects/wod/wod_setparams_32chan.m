@@ -1,4 +1,4 @@
-function [config] = wod_setparams
+function [config] = wod_setparams_32chan
 
 disp('setting parameters');
 
@@ -42,7 +42,7 @@ configcommon.LFP.wod_toisearch                  = [-1 50]; %s, were to find wod 
 configcommon.LFP.wor_toisearch                  = [-1 25]; %s, were to find wor positive peak relative to the muse marker
 configcommon.LFP.hpfilter_wod_exclusion         = 1; %Hz
 
-configcommon.timefreq.foi          = [1:2:100];%[1:2:100] is ritght value
+configcommon.timefreq.foi          = 1:2:100;%[1:2:100] is ritght value
 configcommon.timefreq.foi_band     = {[1 5],[10 20],[25 50],[70 90]};%Hz
 configcommon.timefreq.t_ftimwin.long    = 10;% in second, length of the time window 10 (right value)
 configcommon.timefreq.t_ftimwin.short = 4; % in seconds
