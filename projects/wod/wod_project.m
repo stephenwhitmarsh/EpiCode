@@ -9,19 +9,19 @@ function wod_project(slurm_task_id)
 % to compute/plot the average between rats, set slurm_task_id = 0
 
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\projects\wod'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\EpiCode\projects\dtx'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\shared'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\external'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\templates'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
     
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/projects/wod'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/EpiCode/projects/dtx'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/templates'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/wod'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
 end
 
@@ -36,22 +36,22 @@ config = wod_setparams;
 
 ipart = 1; %ipart is always 1 for this project
 
-if slurm_task_id(1) > 0
+if slurm_task_id(1)>0
     for irat = slurm_task_id
         %% load data and compute time freq
         %find concatenated LFP (see wod_concatenateLFP.m)
         [~,dir_name]                       = fileparts(config{irat}.rawdir);
-        config{irat}.rawdir                = fullfile(config{irat}.datasavedir,'concatenated_LFP');
+        config{irat}.rawdir                = fullfile(config{irat}.concatdata_path);
         config{irat}.directorylist{ipart}  = {dir_name};
         
         %read Muse markers
-        MuseStruct               = readMuseMarkers(config{irat}, false);
+        MuseStruct               = readMuseMarkers(config{irat}, true);
         
         %read LFP. T0 = Vent_Off. Each trial is one protocol
         %if exist(name_ica, 'file')
         %   load(name_ica)
         %else
-        LFP = readLFP(config{irat}, MuseStruct, false);
+        LFP = readLFP(config{irat}, MuseStruct, true);
         LFP = LFP{1}.(config{irat}.LFP.name{1}); %remove this 'epicode' organisation for now.
         %end
         
@@ -83,30 +83,40 @@ if slurm_task_id(1) > 0
         LFP             = ft_selectdata(cfgtemp, LFP);
         LFP_cleaned     = LFP; %save for later removing of artefacts
         
+        %remove 50Hz and interpolate with 49 and 51 Hz
+        %LFP_cleaned= ft_preproc_dftfilter(LFP_cleaned,LFP_cleaned.fsample,50,'Flreplace','neighbour');
+        
+        
+        %filter lfp to better recognize WOD/WOR peak
+        cfgtemp             = [];
+        cfgtemp.lpfilter    = 'yes';
+        cfgtemp.lpfilttype  = 'fir';
+
+        cfgtemp.lpfreq      = config{irat}.LFP.lpfilter_wod_detection;
+        LFP_lpfilt      = ft_preprocessing(cfgtemp, LFP_cleaned);
+        %             plot(LFP_trial_lpfilt.time{1}(1:640),LFP_trial_lpfilt.trial{1}(1,1:640))
+        %             plot(LFP.time{1}(1:640),LFP.trial{1}(1,1:640))
+        %             close all
+        
+        
+        %hp filter lfp to exclude WoD and WoR and Notch 50Hz
+        cfgtemp             = [];
+        cfgtemp.hpfilter    = 'yes';
+        cfgtemp.hpfilttype  = 'fir';
+        cfgtemp.hpfreq      = config{irat}.LFP.hpfilter_wod_exclusion;
+        cfgtemp.bsfilter     = 'yes';
+        cfgtemp.bsfilttype     = 'fir';
+        cfgtemp.bsfreq          = [49 51];
+        LFP_cleaned          = ft_preprocessing(cfgtemp, LFP_cleaned);
+        
+        
         %analyse each trial independently
         for itrial = 1:size(LFP.trial,2)
             
             %select one trial
             cfgtemp         = [];
             cfgtemp.trials  = itrial;
-            LFP_trial       = ft_selectdata(cfgtemp, LFP);
-            
-            %filter lfp to better recognize WOD/WOR peak
-            cfgtemp             = [];
-            cfgtemp.lpfilter    = 'yes';
-            cfgtemp.lpfilttype  = 'fir';
-            cfgtemp.lpfreq      = config{irat}.LFP.lpfilter_wod_detection;
-            LFP_trial_lpfilt      = ft_preprocessing(cfgtemp, LFP_trial);
-%             plot(LFP_trial_lpfilt.time{1}(1:640),LFP_trial_lpfilt.trial{1}(1,1:640))
-%             plot(LFP.time{1}(1:640),LFP.trial{1}(1,1:640))
-%             close all
-            
-            %hp filter lfp to exclude WoD and WoR
-            cfgtemp             = [];
-            cfgtemp.hpfilter    = 'yes';
-            cfgtemp.hpfilttype  = 'fir';
-            cfgtemp.hpfreq      = config{irat}.LFP.hpfilter_wod_exclusion;
-            LFP_trial           = ft_preprocessing(cfgtemp, LFP_trial);
+            LFP_trial       = ft_selectdata(cfgtemp, LFP_cleaned);
             
             %recover trial real timings to use it with muse markers
             starttrial              = LFP_trial.trialinfo.begsample / LFP_trial.fsample;
@@ -115,9 +125,11 @@ if slurm_task_id(1) > 0
             
             
             for iparam= ["long" "short"]
+                
+                
                 %do time frequency analysis
                 cfgtemp                         = [];
-                cfgtemp.channel                 = 1%'all';
+                cfgtemp.channel                 = 'all';
                 cfgtemp.method                  = 'mtmconvol';
                 cfgtemp.output                  = 'pow';
                 cfgtemp.taper                   = 'dpss'; %default = dpss
@@ -128,7 +140,6 @@ if slurm_task_id(1) > 0
                 cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi))*config{irat}.timefreq.t_ftimwin.(iparam);
                 cfgtemp.toi                     = config{irat}.timefreq.toi.(iparam)(1) : config{irat}.timefreq.timestep.(iparam) : config{irat}.timefreq.toi.(iparam)(end);
                 timefreq_alldata{itrial}.(iparam) = ft_freqanalysis(cfgtemp,LFP_trial);
-                
                 
                 %replace artifacts by nans
                 %need to remove artefacts after time freq analysis, because
@@ -141,8 +152,9 @@ if slurm_task_id(1) > 0
                         if length(bad_start) ~= length(bad_end)
                             error('not the same amount of bad start and end markers');
                         end
-                        t_tfr                   = timefreq_alldata{itrial}.(iparam).time;
+                        %                         t_tfr                   = timefreq_alldata{itrial}.(iparam).time;
                         t_lfp                   = LFP_trial.time{1};
+                        t_tfr                   = timefreq_alldata{itrial}.(iparam).time;
                         bad_sel                 = find(bad_start >= starttrial & bad_start <= endtrial);
                         %go through each bad timing
                         for ibad = bad_sel
@@ -156,6 +168,7 @@ if slurm_task_id(1) > 0
                         clear bad_sel t_tfr t_lfp
                     end
                 end
+                
             end %iparam
             
             for ichan = 1:size(timefreq_alldata{itrial}.long.label,1)
@@ -186,18 +199,18 @@ if slurm_task_id(1) > 0
                 
                 %select lfp channel with the same name as tfr channel (in
                 %case channel numbers were schuffled by fieldtrip)
-                chan_idx    = strcmp(LFP_trial_lpfilt.label, ichan_name);
+                chan_idx    = strcmp(LFP_lpfilt.label, ichan_name);
                 
                 %get hand-annotated wod timing
                 wor_marker = MuseStruct{1}{1}.markers.WOR.synctime(itrial);
                 
                 %select times where to search WOR peak
-                t = LFP_trial_lpfilt.time{1};
+                t = LFP_lpfilt.time{1};
                 t_1 = t > (wor_marker + config{irat}.LFP.wor_toisearch(1) - starttrial + offsettrial);
                 t_2 = t < (wor_marker + config{irat}.LFP.wor_toisearch(2) - starttrial + offsettrial);
                 t_sel = t_1 & t_2;
                 %Search LFP maximum peak in this selected window. wor is positive
-                [v_peak_wor, t_peak_wor] = findpeaks(LFP_trial_lpfilt.trial{1}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
+                [v_peak_wor, t_peak_wor] = findpeaks(LFP_lpfilt.trial{1}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
                 end_wor= timefreq_wor{itrial}.(ichan_name).time(end);
                 clear t t_1 t_2 t_sel
                 
@@ -214,13 +227,13 @@ if slurm_task_id(1) > 0
                 timefreq_wor_timenorm{itrial}.(ichan_name).time   = timefreq_wor_timenorm{itrial}.(ichan_name).time./timefreq_wor_timenorm{itrial}.(ichan_name).time(end);%./end_wor;
                 %check the location of the peak detection
                 fig=figure;hold
-                plot(LFP_trial_lpfilt.time{1}, LFP_trial_lpfilt.trial{1}(ichan,:));
+                plot(LFP_lpfilt.time{1}, LFP_lpfilt.trial{1}(ichan,:));
                 scatter(t_peak_wor, v_peak_wor,50,'red');
-                              
+                
                 xlim([t_peak_wor-10 t_peak_wor+10]);
-                 print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'Detection',sprintf('Rat%g_WOR%g_%s.png',irat,itrial,ichan_name)),'-r600');
-                 close all
-%                 
+                print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'Detection',sprintf('Rat%g_WOR%g_%s.png',irat,itrial,ichan_name)),'-r600');
+                close all
+                %
                 for ifreq = 1:size(timefreq_wor_timenorm{itrial}.(ichan_name).powspctrm,2)
                     %resample data to have the same number of data points, for
                     %time-normalized data
@@ -232,21 +245,9 @@ if slurm_task_id(1) > 0
                 timefreq_wor_timenorm{itrial}.(ichan_name).time         = t_new;
                 timefreq_wor_timenorm{itrial}.(ichan_name).powspctrm    = powspctrm_new;
                 clear powspctrm_new
-                %                     plot(timefreq_wor_timenorm{itrial}.(ichan_name).time,squeeze(timefreq_wor_timenorm{itrial}.(ichan_name).powspctrm),'r'); %xlim([0 0.95])
                 
                 
-                %%%%%%%%%%%%%%%%do general time frequency map
-                %%%%%%%%%%%%%%%%from Vent_Off to peak WoD
-                %                 cfgteam                         = [];
-                %                 cfgtemp.channel                 = 'all';
-                %                 cfgtemp.method                  = 'mtmconvol';
-                %                 cfgtemp.output                  = 'pow';
-                %                 cfgtemp.taper                   = 'hanning';
-                %                 cfgtemp.pad                     = 'nextpow2';
-                %                 cfgtemp.keeptrials              = 'no';
-                %                 cfgtemp.foi                     = 0.1 : 1 : 50.1;
-                %                 cfgtemp.toi                     =
-                
+               
                 %% baseline long
                 %VOIR COMMENT
                 
@@ -258,9 +259,9 @@ if slurm_task_id(1) > 0
                 %% MAKE BASELINE CORRECTION FOR LONG PERIODS
                 
                 %duplicate timefreq data
-                 timefreq_recovery_blcorrected{itrial}.(ichan_name)= timefreq_recovery{itrial}.(ichan_name);
-                 timefreq_wor_blcorrected{itrial}.(ichan_name)= timefreq_wor{itrial}.(ichan_name);
-                 timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name)= timefreq_wor_timenorm{itrial}.(ichan_name);
+                timefreq_recovery_blcorrected{itrial}.(ichan_name)= timefreq_recovery{itrial}.(ichan_name);
+                timefreq_wor_blcorrected{itrial}.(ichan_name)= timefreq_wor{itrial}.(ichan_name);
+                timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name)= timefreq_wor_timenorm{itrial}.(ichan_name);
                 
                 
                 %average power by frequency step and apply baseline
@@ -273,6 +274,29 @@ if slurm_task_id(1) > 0
                 end %baseline
                 
                 clear timefreq_ichan_temp timefreq_baseline_long
+                
+                size(log10(squeeze(timefreq_recovery_blcorrected{itrial}.(ichan_name).powspctrm(1,1,:))))
+                size(log10(timefreq_recovery_blcorrected{itrial}.(ichan_name).powspctrm(1,1,:)))
+                %% Make Logarythm for long periods
+                
+                %duplicate fieldtrip structure
+                log_timefreq_recovery{itrial}.(ichan_name)=timefreq_recovery{itrial}.(ichan_name);
+                log_timefreq_recovery_blcorrected{itrial}.(ichan_name) = timefreq_recovery{itrial}.(ichan_name);
+                log_timefreq_wor{itrial}.(ichan_name)=timefreq_wor{itrial}.(ichan_name);
+                log_timefreq_wor_blcorrected{itrial}.(ichan_name)=timefreq_wor_blcorrected{itrial}.(ichan_name);
+                log_timefreq_wor_timenorm{itrial}.(ichan_name)=timefreq_wor_timenorm{itrial}.(ichan_name);
+                log_timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name)=timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name);
+                
+                
+                %apply logarythm to powspctrm
+                log_timefreq_recovery{itrial}.(ichan_name).powspctrm= log10(timefreq_recovery{itrial}.(ichan_name).powspctrm);
+                log_timefreq_recovery_blcorrected{itrial}.(ichan_name).powspctrm =log10(timefreq_recovery_blcorrected{itrial}.(ichan_name).powspctrm) ;
+                              
+                log_timefreq_wor{itrial}.(ichan_name).powspctrm= log10(timefreq_wor{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wor_blcorrected{itrial}.(ichan_name).powspctrm= log10(timefreq_wor_blcorrected{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wor_timenorm{itrial}.(ichan_name).powspctrm= log10(timefreq_wor_timenorm{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name).powspctrm= log10(timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name).powspctrm);
+                
                 
                 %% select channel for short param
                 ichan_name              = timefreq_alldata{itrial}.short.label{ichan};
@@ -288,18 +312,18 @@ if slurm_task_id(1) > 0
                 
                 %select lfp channel with the same name as tfr channel (in
                 %case channel numbers were schuffled by fieldtrip)
-                chan_idx    = strcmp(LFP_trial_lpfilt.label, ichan_name);
+                chan_idx    = strcmp(LFP_lpfilt.label, ichan_name);
                 
                 %get hand-annotated wod timing
                 wod_marker = MuseStruct{1}{1}.markers.WOD.synctime(itrial);
                 
                 %select times where to search WOD peak
-                t = LFP_trial_lpfilt.time{1};
+                t = LFP_lpfilt.time{1};
                 t_1 = t > (wod_marker + config{irat}.LFP.wod_toisearch(1) - starttrial + offsettrial);
                 t_2 = t < (wod_marker + config{irat}.LFP.wod_toisearch(2) - starttrial + offsettrial);
                 t_sel = t_1 & t_2;
                 %Search LFP maximum peak in this selected window. '-'LFP because wod is negative
-                [v_peak_wod, t_peak_wod] = findpeaks(-LFP_trial_lpfilt.trial{1}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
+                [v_peak_wod, t_peak_wod] = findpeaks(-LFP_lpfilt.trial{1}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
                 clear t t_1 t_2 t_sel
                 
                 %keep only data between 0 and wod
@@ -311,12 +335,12 @@ if slurm_task_id(1) > 0
                 timefreq_wod_timenorm{itrial}.(ichan_name)        = timefreq_wod{itrial}.(ichan_name);
                 timefreq_wod_timenorm{itrial}.(ichan_name).time   = timefreq_wod{itrial}.(ichan_name).time ./ t_peak_wod;
                 %check the location of the peak detection
-%                 fig= figure;hold
-%                 plot(LFP_trial_lpfilt.time{1}, LFP_trial_lpfilt.trial{1}(ichan,:));
-%                 scatter(t_peak_wod, -v_peak_wod,50,'xr');
-%                 xlim([t_peak_wod-10 t_peak_wod+10]);
-%                 print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'Detection',sprintf('Rat%g_WOD%g_%s.png',irat,itrial,ichan_name)),'-r600');
-%                 close all
+                %                 fig= figure;hold
+                %                 plot(LFP_trial_lpfilt.time{1}, LFP_trial_lpfilt.trial{1}(ichan,:));
+                %                 scatter(t_peak_wod, -v_peak_wod,50,'xr');
+                %                 xlim([t_peak_wod-10 t_peak_wod+10]);
+                %                 print(fig, '-dpng', fullfile(config{irat}.imagesavedir,'Detection',sprintf('Rat%g_WOD%g_%s.png',irat,itrial,ichan_name)),'-r600');
+                %                 close all
                 
                 for ifreq = 1:size(timefreq_wod_timenorm{itrial}.(ichan_name).powspctrm,2)
                     %resample data to have the same number of data points, for
@@ -354,6 +378,25 @@ if slurm_task_id(1) > 0
                 
                 clear timefreq_ichan_temp
                 
+                %% Make Logarythm for short periods
+                
+                %duplicate fieldtrip structure
+                log_timefreq_baseline_blcorrected{itrial}.(ichan_name)= timefreq_baseline_blcorrected{itrial}.(ichan_name);
+                log_timefreq_baseline{itrial}.(ichan_name)=timefreq_baseline{itrial}.(ichan_name);
+                log_timefreq_wod_blcorrected{itrial}.(ichan_name)=timefreq_wod_blcorrected{itrial}.(ichan_name);
+                log_timefreq_wod{itrial}.(ichan_name)=timefreq_wod{itrial}.(ichan_name);
+                log_timefreq_wod_timenorm{itrial}.(ichan_name)=timefreq_wod_timenorm{itrial}.(ichan_name);
+                log_timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name)=timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name);
+                
+                %apply logarythm to powspctrm
+                log_timefreq_baseline_blcorrected{itrial}.(ichan_name).powspctrm= log10(timefreq_baseline_blcorrected{itrial}.(ichan_name).powspctrm);
+                log_timefreq_baseline{itrial}.(ichan_name).powspctrm= log10(timefreq_baseline{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wod_blcorrected{itrial}.(ichan_name).powspctrm= log10(timefreq_wod_blcorrected{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wod{itrial}.(ichan_name).powspctrm= log10(timefreq_wod{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wod_timenorm{itrial}.(ichan_name).powspctrm= log10(timefreq_wod_timenorm{itrial}.(ichan_name).powspctrm);
+                log_timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name).powspctrm= log10(timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name).powspctrm);
+                
+                
                 
                 %% remove cfg fields as it is what takes the most of place on disk, whereas we do not use it later
                 timefreq_wod{itrial}.(ichan_name)            = rmfield(timefreq_wod{itrial}.(ichan_name),{'cfg'});
@@ -364,10 +407,22 @@ if slurm_task_id(1) > 0
                 timefreq_wor_blcorrected{itrial}.(ichan_name)            = rmfield(timefreq_wor_blcorrected{itrial}.(ichan_name),{'cfg'});
                 timefreq_wor_timenorm{itrial}.(ichan_name) 	 = rmfield(timefreq_wor_timenorm{itrial}.(ichan_name),{'cfg'});
                 timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name) 	 = rmfield(timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name),{'cfg'});
-                timefreq_recovery{itrial}.(ichan_name)    	 = rmfield(timefreq_recovery{itrial}.(ichan_name),{'cfg'});
+                timefreq_recovery{itrial}.(ichan_name)                   = rmfield(timefreq_recovery{itrial}.(ichan_name),{'cfg'});
                 timefreq_recovery_blcorrected{itrial}.(ichan_name)    	 = rmfield(timefreq_recovery_blcorrected{itrial}.(ichan_name),{'cfg'});
-                timefreq_baseline{itrial}.(ichan_name)       = rmfield(timefreq_baseline{itrial}.(ichan_name),{'cfg'});
+                timefreq_baseline{itrial}.(ichan_name)                  = rmfield(timefreq_baseline{itrial}.(ichan_name),{'cfg'});
                 timefreq_baseline_blcorrected{itrial}.(ichan_name)       = rmfield(timefreq_baseline_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_baseline_blcorrected{itrial}.(ichan_name)    = rmfield(log_timefreq_baseline_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_baseline{itrial}.(ichan_name)                = rmfield(log_timefreq_baseline{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wod_blcorrected{itrial}.(ichan_name)         = rmfield(log_timefreq_wod_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wod{itrial}.(ichan_name)                     = rmfield(log_timefreq_wod{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wod_timenorm{itrial}.(ichan_name)            = rmfield(log_timefreq_wod_timenorm{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name)= rmfield(log_timefreq_wod_timenorm_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_recovery_blcorrected{itrial}.(ichan_name)    = rmfield(log_timefreq_recovery_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_recovery{itrial}.(ichan_name)               = rmfield(log_timefreq_recovery{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wor{itrial}.(ichan_name)                     = rmfield(log_timefreq_wor{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wor_blcorrected{itrial}.(ichan_name)         = rmfield(log_timefreq_wor_blcorrected{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wor_timenorm{itrial}.(ichan_name)            = rmfield(log_timefreq_wor_timenorm{itrial}.(ichan_name),{'cfg'});
+                log_timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name)= rmfield(log_timefreq_wor_timenorm_blcorrected{itrial}.(ichan_name),{'cfg'});
                 
                 
             end %ichan
@@ -393,9 +448,27 @@ if slurm_task_id(1) > 0
                     
                     timefreq_wor_timenorm{itrial}.(chan_renamed)        = [];
                     timefreq_wor_timenorm_blcorrected{itrial}.(chan_renamed)        = [];
-                     
+                    
                     timefreq_baseline{itrial}.(chan_renamed)            = [];
                     timefreq_baseline_blcorrected{itrial}.(chan_renamed)            = [];
+                    
+                    log_timefreq_recovery{itrial}.(chan_renamed)            = [];
+                    log_timefreq_recovery_blcorrected{itrial}.(chan_renamed)            = [];
+                    
+                    log_timefreq_wod{itrial}.(chan_renamed)                 = [];
+                    log_timefreq_wod_blcorrected{itrial}.(chan_renamed)                 = [];
+                    
+                    log_timefreq_wod_timenorm{itrial}.(chan_renamed)        = [];
+                    log_timefreq_wod_timenorm_blcorrected{itrial}.(chan_renamed)                 = [];
+                    
+                    log_timefreq_wor{itrial}.(chan_renamed)                 = [];
+                    log_timefreq_wor_blcorrected{itrial}.(chan_renamed)                 = [];
+                    
+                    log_timefreq_wor_timenorm{itrial}.(chan_renamed)        = [];
+                    log_timefreq_wor_timenorm_blcorrected{itrial}.(chan_renamed)        = [];
+                    
+                    log_timefreq_baseline{itrial}.(chan_renamed)            = [];
+                    log_timefreq_baseline_blcorrected{itrial}.(chan_renamed)            = [];
                     
                 end
             end
@@ -406,26 +479,38 @@ if slurm_task_id(1) > 0
         %WOD data (entre vent_off et pic de wod), power normalized with baseline period :
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wod.mat']),'timefreq_wod','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wod_blcorrected.mat']),'timefreq_wod_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wod.mat']),'log_timefreq_wod','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wod_blcorrected.mat']),'log_timefreq_wod_blcorrected','-v7.3');
         
         %WOD data : time normalized between vent_off and wod peak, per channel. power normalized with baseline period :
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wod_timenorm.mat']),'timefreq_wod_timenorm','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wod_timenorm_blcorrected.mat']),'timefreq_wod_timenorm_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wod_timenorm.mat']),'log_timefreq_wod_timenorm','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wod_timenorm_blcorrected.mat']),'log_timefreq_wod_timenorm_blcorrected','-v7.3');
         
         %Recovery data : t0 at Vent_On, t_end at Vent_On+3600s:
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_recovery.mat']),'timefreq_recovery','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_recovery_blcorrected.mat']),'timefreq_recovery_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_recovery.mat']),'log_timefreq_recovery','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_recovery_blcorrected.mat']),'log_timefreq_recovery_blcorrected','-v7.3');
         
         %WOR data : power normalized with baseline period (time not normalized) :
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wor.mat']),'timefreq_wor','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wor_blcorrected.mat']),'timefreq_wor_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wor.mat']),'log_timefreq_wor','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wor_blcorrected.mat']),'log_timefreq_wor_blcorrected','-v7.3');
         
         %WOR data : time normalized between vent_off and wor peak, per channel. power normalized with baseline period :
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wor_timenorm.mat']),'timefreq_wor_timenorm','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_wor_timenorm_blcorrected.mat']),'timefreq_wor_timenorm_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wor_timenorm.mat']),'log_timefreq_wor_timenorm','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_wor_timenorm_blcorrected.mat']),'log_timefreq_wor_timenorm_blcorrected','-v7.3');
         
         %Baseline data: t0 at Vent_Off analysis made before Vent_Off
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_baseline.mat']),'timefreq_baseline','-v7.3');
         save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'timefreq_baseline_blcorrected.mat']),'timefreq_baseline_blcorrected','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_baseline.mat']),'log_timefreq_baseline','-v7.3');
+        save(fullfile(config{irat}.datasavedir,[config{irat}.prefix, 'log_timefreq_baseline_blcorrected.mat']),'log_timefreq_baseline_blcorrected','-v7.3');
         
         
         
@@ -433,611 +518,3 @@ if slurm_task_id(1) > 0
     
 end %slurm_task_id >0
 end % wod_project
-
-% if slurm_task_id(1) == 0
-%
-%     %load data
-%     analysis_names = {'timefreq_wod', 'timefreq_wod_timenorm', 'timefreq_recovery','timefreq_wor','timefreq_wor_timenorm', 'timefreq_baseline'};
-%
-%     %go through each data structure
-%     for idata = 1:size( analysis_names,2)
-%
-%         fprintf('For %s\n', analysis_names{idata});
-%
-%         for dobaseline = [false, true] %baseline
-%             cfgcommon = config{4}; %same common config for all rats
-%
-%             %initialize data structures
-%             data_allrats = [];
-%             count_trials                    = 0;
-%
-%             % load timefreq data from all rats
-%             for irat = 4:size(config,2)
-%                 %load data
-%                 fprintf('Load timefreq data for rat %d/%d\n', irat,size(config,2));
-%                 data_temp = load(fullfile(config{irat}.datasavedir,[config{irat}.prefix,analysis_names{idata},'.mat']));
-%                 if dobaseline %baseline
-%                     fprintf('Load baseline data for rat %d/%d\n', irat,size(config,2)); %baseline
-%                     baseline_temp = load(fullfile(config{irat}.datasavedir,[config{irat}.prefix,'timefreq_baseline.mat'])); %baseline
-%                 end %baseline
-%
-%                 %pool all rat data in the same structure
-%                 for itrial = 1:size(data_temp.(analysis_names{idata}),2)
-%                     count_trials = count_trials +1;
-%                     wod_rat(count_trials) = irat; %store rat id for each wod (some rats have several wod)
-%                     chan_list                                   = fieldnames(data_temp.(analysis_names{idata}){itrial});
-%                     for ichan = 1:numel(chan_list)
-%                         chan_name = chan_list{ichan};
-%                         data_allrats.(chan_name){count_trials}     = data_temp.(analysis_names{idata}){itrial}.(chan_name);
-%                         if dobaseline
-%                             baseline_allrats.(chan_name){count_trials} = baseline_temp.timefreq_baseline{itrial}.(chan_name); %baseline
-%                         end
-%                     end
-%                 end
-%
-%                 clear data_temp baseline_temp
-%             end
-%
-%             % pool data
-%             % if not the same number of points, keep only the number of points of
-%             % the shorter trial
-%             chan_list                                   = fieldnames(data_allrats);
-%             for ichan = 1:numel(chan_list)
-%                 chan_name                               = chan_list{ichan};
-%
-%                 %correct baseline or replace empty channels by nan channels
-%                 hasdata = find(~cellfun(@isempty,data_allrats.(chan_name)));
-%                 for iwod = 1:size(data_allrats.(chan_name),2)
-%                     %replace empty channel by nan
-%                     if isempty(data_allrats.(chan_name){iwod})
-%                         data_allrats.(chan_name){iwod}                       = data_allrats.(chan_name){hasdata(1)};
-%                         data_allrats.(chan_name){iwod}.powspctrm             = nan(size(data_allrats.(chan_name){iwod}.powspctrm));
-%                     end
-%                     %do baseline correction
-%                     if dobaseline && ~isempty(baseline_allrats.(chan_name){iwod})  %baseline correction for each frequency
-%
-%                         for ifreq = 1:size(baseline_allrats.(chan_name){iwod}.freq,2) %baseline
-%                             baseline_ifreq = nanmean(squeeze(baseline_allrats.(chan_name){iwod}.powspctrm(1,ifreq,:))); %baseline
-%                             data_allrats.(chan_name){iwod}.powspctrm(1,ifreq,:) = data_allrats.(chan_name){iwod}.powspctrm(1,ifreq,:) ./ baseline_ifreq; %baseline
-%                         end %baseline
-%                     end %baseline
-%                 end
-%
-%                 %data separated for each channel
-%                 cfgtemp                 = [];
-%                 cfgtemp.keepindividual  = 'yes';
-%                 data.(chan_name)        = ft_freqgrandaverage(cfgtemp, data_allrats.(chan_name){:});
-%             end
-%
-%             clear data_allrats baseline_allrats
-%
-%             if dobaseline
-%                cfgcommon.imagesavedir = fullfile(config{4}.imagesavedir, 'baseline_corrected');
-%
-%             end
-%             if ~isfolder(cfgcommon.imagesavedir)
-%                 fprintf('Creating directory %s\n', cfgcommon.imagesavedir);
-%                 mkdir(cfgcommon.imagesavedir)
-%             end
-%
-%
-%             %% TFR average over chans and over rats
-%
-%             %gather powspctrm data for each channel
-%             powspctrm_allchans = nan(size(data.(chan_name).powspctrm));
-%             ichan=0;
-%             for chan_name = string(fieldnames(data))'
-%                 ichan=ichan+1;
-%                 temp = data.(chan_name).powspctrm;
-%                 if size(data.(chan_name).powspctrm,4) > size(powspctrm_allchans,4)
-%                     temp = data.(chan_name).powspctrm(:,:,:,1:size(powspctrm_allchans,4));
-%                 elseif size(data.(chan_name).powspctrm,4) < size(powspctrm_allchans,4)
-%                     powspctrm_allchans = powspctrm_allchans(:,:,:,1:size(data.(chan_name).powspctrm,4));
-%                 end
-%                 powspctrm_allchans(:,ichan,:,:) = temp;
-%                 clear temp
-%             end
-%
-%             %re-create fieldtrip structure
-%             datafreq_allchans.label = fieldnames(data)';
-%             datafreq_allchans.powspctrm = powspctrm_allchans;
-%             datafreq_allchans.freq = data.(chan_name).freq;
-%             datafreq_allchans.time = data.(chan_name).time(1:size(powspctrm_allchans,4));
-%             datafreq_allchans.dimord = 'subj_chan_freq_time';
-%             clear powspctrm_allchans
-%
-%             %average over protocols
-%             data_plot = datafreq_allchans;
-%             data_plot.label = {'average channels'};
-%             data_plot.powspctrm = squeeze(nanmean(datafreq_allchans.powspctrm,1));
-%             %data_plot.powspctrm = squeeze((datafreq_allchans.powspctrm(iwod,:,:,:)));
-%             %average over chan because fieldtrip does not do nanmean
-%             data_plot.powspctrm = nanmean(data_plot.powspctrm,1);
-%             data_plot.dimord = 'chan_freq_time';
-%
-%             fig=figure;
-%
-%             sgtitle([analysis_names{idata}, ' All Rats'], 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%             subplot(2,1,1)
-%             %plot TFR
-%             %voir les paramètres optionnels dans le descriptifs de la fonction pour
-%             %modifier l'aspect du TFR. Avec les paramètres par défaut :
-%             cfgtemp         = [];
-%             cfgtemp.channel = 'all';
-%             cfgtemp.interactive = 'no';
-%             cfgtemp.colormap= 'jet';
-%             cfg.fontsize = 12;
-%             cfgtemp.ylim= [0 49];
-%             cfgtemp.masknans    = 'yes';
-%             ft_singleplotTFR(cfgtemp, data_plot);
-%             if dobaseline
-%             caxis([0 4]);
-%             end
-%
-%
-%             title('Time-Frequency [1 : 50]');
-%             %figure settings (fontsize,fontweight, ticks dir, renderer etc.)
-%             set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%             xlabel('Time (s)');
-%             ylabel(sprintf('Frequency (Hz)'));
-%             axis tight;
-%
-%             subplot(2,1,2)
-%             %plot TFR
-%             %voir les paramètres optionnels dans le descriptifs de la fonction pour
-%             %modifier l'aspect du TFR. Avec les paramètres par défaut :
-%             cfgtemp         = [];
-%             cfgtemp.channel = 'all';
-%             cfgtemp.interactive = 'no';
-%             cfgtemp.masknans    = 'yes';
-%             cfgtemp.colormap= 'jet';
-%             cfgtemp.ylim= [51 100];
-%             cfg.fontsize = 12;
-%             ft_singleplotTFR(cfgtemp, data_plot);
-%             ylim([51 100]);
-%             if dobaseline
-%             caxis([0 4]);
-%             end
-%             title('Time-Frequency [50 : 100]');
-%             %figure settings (fontsize,fontweight, ticks dir, renderer etc.)
-%             set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%             xlabel('Time (s)');
-%             ylabel(sprintf('Frequency (Hz)'));
-%             axis tight;
-%
-%             if dobaseline
-%                % print image to file
-%                config{4}.imagesavedir_data{1}= fullfile(cfgcommon.imagesavedir,'TFR')
-%             else
-%                 % print image to file
-%                 if ~isfolder(fullfile(config{4}.imagesavedir_data{1}))
-%                     mkdir(fullfile(config{4}.imagesavedir_data{1}));
-%                 end
-%             end
-%             %   FAIRE ARCHITECTURE DOSSIERS
-%             set(fig,'PaperOrientation','landscape');
-%             set(fig,'PaperUnits','normalized');
-%             set(fig,'PaperPosition', [0 0 1 1]);
-%             print(fig, '-dpdf', fullfile(config{4}.imagesavedir_data{1},['AllRats_TFR_',analysis_names{idata},'.pdf']),'-r600');
-%             print(fig, '-dpng', fullfile(config{4}.imagesavedir_data{1},['AllRats_TFR_',analysis_names{idata},'.png']),'-r600');
-%             savefig(fig,fullfile(config{4}.imagesavedir_data{1},['AllRats_TFR_',analysis_names{idata}]));
-%             close all
-%
-%             clear data_plot
-%             config{4}.imagesavedir_data{1}='\\lexport\iss01.charpier\analyses\wod\TFR';
-%
-%             %% TFR average over chans by rat
-%             %get wod_rat and wod_rat_number for titles
-%             %gather powspctrm data for each channel
-%
-%
-%             for iwod = 1:size(datafreq_allchans.powspctrm,1)
-%
-%                 %keep only the iwod protocol
-%                 data_plot = datafreq_allchans;
-%                 data_plot.label = {'average channels'};
-%                 data_plot.powspctrm = squeeze((datafreq_allchans.powspctrm(iwod,:,:,:)));
-%                 %average over chan because fieldtrip does not do nanmean
-%                 data_plot.powspctrm = nanmean(data_plot.powspctrm,1);
-%                 data_plot.dimord = 'chan_freq_time';
-%
-%                 rat_wod_sum = sum(wod_rat == wod_rat(iwod));
-%                 rat_wod_nr = 1;
-%                 if iwod >1
-%                     if wod_rat(iwod-1) == wod_rat(iwod)
-%                         rat_wod_nr = 2;
-%                     end
-%                 end
-%
-%                 fig=figure;
-%                 %changer titre general
-%                 %retirer titres ou changer titres subplots
-%                 %augmenter taille police, police gras
-%                 %ylabel et xlabel
-%                 sgtitle(sprintf('%s Rat %d (%d/%d)',analysis_names{idata},wod_rat(iwod), rat_wod_nr, rat_wod_sum), 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%                 subplot(2,1,1)
-%                 %plot TFR
-%                 %voir les paramètres optionnels dans le descriptifs de la fonction pour
-%                 %modifier l'aspect du TFR. Avec les paramètres par défaut :
-%                 cfgtemp         = [];
-%                 cfgtemp.channel = 'all';
-%                 cfgtemp.interactive = 'no';
-%                 cfg.fontsize = 12;
-%                 cfgtemp.colormap= 'jet'
-%                 cfgtemp.ylim= [0 49];
-%                 cfgtemp.masknans    = 'yes';
-%                 ft_singleplotTFR(cfgtemp, data_plot);
-%                 if dobaseline
-%                     caxis([0 4]);
-%                 end
-%                 title('Time-Frequency [1 : 50]');
-%                 %figure settings (fontsize,fontweight, ticks dir, renderer etc.)
-%                 set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                 xlabel('Time (s)');
-%                 ylabel(sprintf('Frequency (Hz)'));
-%                 axis tight;
-%
-%                 subplot(2,1,2)
-%                 %plot TFR
-%                 %voir les paramètres optionnels dans le descriptifs de la fonction pour
-%                 %modifier l'aspect du TFR. Avec les paramètres par défaut :
-%                 cfgtemp         = [];
-%                 cfgtemp.channel = 'all';
-%                 cfgtemp.interactive = 'no';
-%                 cfgtemp.colormap= 'jet'
-%                 cfgtemp.masknans    = 'yes';
-%                 cfgtemp.ylim= [51 100];
-%                 cfg.fontsize = 12;
-%                 ft_singleplotTFR(cfgtemp, data_plot);
-%                 if dobaseline
-%                     caxis([0 4]);
-%                 end
-%                 title('Time-Frequency [50 : 100]');
-%
-%             %figure settings (fontsize,fontweight, ticks dir, renderer etc.)
-%                 set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                 xlabel('Time (s)');
-%                 ylabel(sprintf('Frequency (Hz)'));
-%                 axis tight;
-%
-%                 if ~isfolder(fullfile(config{4}.imagesavedir_data{1},'by_rat'))
-%                               mkdir(fullfile(config{4}.imagesavedir_data{1},'by_rat'));
-%                               analydir= fullfile(config{4}.imagesavedir_data{1},'by_rat');
-%                 end
-%                           if dobaseline
-%                              analydir= fullfile(cfgcommon.imagesavedir,'TFR','by_rat');
-%
-%                           end
-%                 %save figure :
-%                 set(fig,'PaperOrientation','landscape');
-%                 set(fig,'PaperUnits','normalized');
-%                 set(fig,'PaperPosition', [0 0 1 1]);
-%                 print(fig, '-dpdf', fullfile(analydir,sprintf('%s_TFR_Rat%d_%d.pdf',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 print(fig, '-dpng', fullfile(analydir,sprintf('%s_TFR_Rat%d_%d.png',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 savefig(fig,fullfile(analydir,sprintf('%s_TFR_Rat%d_%d',analysis_names{idata},wod_rat(iwod), rat_wod_nr)));
-%
-%                 close all
-%
-%             end %iwod
-%
-%             clear datafreq_allchans data_plot
-%             %
-%             %% plot frequency bands over time for all rats
-%             fig = figure;
-%             sgtitle([analysis_names{idata}, ' All Rats'], 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%
-%             for ifreq = 1:size(cfgcommon.timefreq.foi_band,2)
-%
-%                 subplot(2,2,ifreq);hold;
-%                 C        	= colormap(autumn(numel(chan_list)));%fais un dégradé codé en RGB avec autant de couleurs que le channels
-%
-%                 for chan_name = string(fieldnames(data))'
-%                     %go trhough each electrode in the ascending order
-%                     chan_nr          = str2num(cell2mat(regexp(chan_name,'\d*','Match')))-7;%-7 because E8 is 1st and E16 is 9th
-%                     legend_name{chan_nr} = chan_name;
-%                     %                 if isempty(data{ifreq}.(chan_name))
-%                     %                     continue
-%                     %                 end
-%                     color   = C(chan_nr,:);
-%
-%                     x = data.(chan_name).time;
-%                     clear pow_band y
-%
-%                     %find frequencies of the band (comparer des valeurs : > <
-%                     %>= <= ==)
-%                     freq_band_idx = data.(chan_name).freq >= cfgcommon.timefreq.foi_band{ifreq}(1) & data.(chan_name).freq <= cfgcommon.timefreq.foi_band{ifreq}(2);
-%                     pow_band= data.(chan_name).powspctrm(:,:,freq_band_idx,:);
-%                     %average over frequencies and over protocols
-%                     pow_band = nanmean(pow_band,1); %average over protocols
-%                     pow_band = nanmean(pow_band,3); %average over frequencies
-%                     y = squeeze(pow_band);
-%
-%                     if ismember(idata, [3 4 5]) %only for recovery, wor and wor timenorm
-%                         y = movmean(y,config{4}.timefreq.movmeanwin(idata),'omitnan');
-%                     end
-%
-%                     %plot std
-%                     %                 std = nanstd(squeeze(data{ifreq}.(chan_name).powspctrm(:,1,1,:)));
-%                     %                 y_area = [y - std; std; std]'; %FIXME tester avec 2*std
-%                     %                 filled_SD = area(x,y_area);
-%                     %                 filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
-%                     %                 filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
-%                     %                 filled_SD(2).FaceColor = color; filled_SD(3).FaceColor = color;
-%                     %                 filled_SD(1).ShowBaseLine = 'off';
-%
-%                     %plot avg
-%
-%                     leg{chan_nr} = plot(x, y, 'Color', color);
-%                 end
-%
-%                 %set figure display :
-%                 %set(gca, 'YScale', 'log');
-%                 set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                 xlabel('Time');
-%                 ylabel(sprintf('%g-%gHz\nNormalized power',config{irat}.timefreq.foi_band{ifreq}(1),config{irat}.timefreq.foi_band{ifreq}(end)));
-%                 leg = flip(leg); legend_name = flip(legend_name); %set E16 on top
-%                 legend([leg{:}], legend_name{:}, 'Fontsize',8,'location','eastoutside');
-%                 legend('boxoff');
-%                 axis tight;
-%             end
-%
-%             if dobaseline
-%                % print image to file
-%                config{4}.imagesavedir_data{2}= fullfile(cfgcommon.imagesavedir,'band_depth');
-%             else
-%                 % print image to file
-%                 if ~isfolder(fullfile(config{4}.imagesavedir_data{2}))
-%                     mkdir(fullfile(config{4}.imagesavedir_data{2}));
-%                 end
-%             end
-%
-%             %save figure :
-%             set(fig,'PaperOrientation','landscape');
-%             set(fig,'PaperUnits','normalized');
-%             set(fig,'PaperPosition', [0 0 1 1]);
-%             print(fig, '-dpdf', fullfile(config{4}.imagesavedir_data{2},['AllRats_',analysis_names{idata},'.pdf']),'-r600');
-%             print(fig, '-dpng', fullfile(config{4}.imagesavedir_data{2},['AllRats_',analysis_names{idata},'.png']),'-r600');
-%             savefig(fig,fullfile(config{4}.imagesavedir_data{2},['AllRats_',analysis_names{idata}]));
-%             close all
-%             config{4}.imagesavedir_data{2}='\\lexport\iss01.charpier\analyses\wod\band_depth';
-%
-%             %% plot data by frequency band by protocol
-%             for iwod = 1 :size(data.(chan_name).powspctrm,1)
-%
-%                 fig = figure;
-%                 rat_wod_sum = sum(wod_rat == wod_rat(iwod));
-%                 rat_wod_nr = 1;
-%                 if iwod >1
-%                     if wod_rat(iwod-1) == wod_rat(iwod)
-%                         rat_wod_nr = 2;
-%                     end
-%                 end
-%                 sgtitle(sprintf('%s Rat %d (%d/%d)',analysis_names{idata},wod_rat(iwod), rat_wod_nr, rat_wod_sum), 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%
-%                 for ifreq = 1:size(cfgcommon.timefreq.foi_band,2)
-%
-%                     subplot(2,2,ifreq);hold;
-%                     C        	= colormap(autumn(numel(chan_list)));%fais un dégradé codé en RGB avec autant de couleurs que le channels
-%
-%                     for chan_name = string(fieldnames(data))'
-%                         %go trhough each electrode in the ascending order
-%                         chan_nr          = str2num(cell2mat(regexp(chan_name,'\d*','Match')))-7;%-7 because E8 is 1st and E16 is 9th
-%                         legend_name{chan_nr} = chan_name;
-%                         color   = C(chan_nr,:);
-%
-%                         x = data.(chan_name).time;
-%                         %select wod and frequency band
-%                         freq_band_idx = data.(chan_name).freq >= cfgcommon.timefreq.foi_band{ifreq}(1) & data.(chan_name).freq <= cfgcommon.timefreq.foi_band{ifreq}(2);
-%                         pow_band= data.(chan_name).powspctrm(iwod,:,freq_band_idx,:);
-%                         %average over frequencies and over protocols
-%                         pow_band = nanmean(pow_band,3); %average over frequencies
-%                         y = squeeze(pow_band);
-%                         y = movmean(y,config{4}.timefreq.movmeanwin(idata),'omitnan');
-%
-%
-%                         %plot std
-%                         %                 std = nanstd(squeeze(data{ifreq}.(chan_name).powspctrm(:,1,1,:)));
-%                         %                 y_area = [y - std; std; std]'; %FIXME tester avec 2*std
-%                         %                 filled_SD = area(x,y_area);
-%                         %                 filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
-%                         %                 filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
-%                         %                 filled_SD(2).FaceColor = color; filled_SD(3).FaceColor = color;
-%                         %                 filled_SD(1).ShowBaseLine = 'off';
-%
-%                         %find maximum of the first half of data to adapt y scale
-%                         leg{chan_nr} = plot(x, y, 'Color', color);
-%                     end
-%
-%                     %set figure display :
-%                     %set(gca, 'YScale', 'log');
-%                     set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                     xlabel('Time');
-%                     ylabel(sprintf('%g-%gHz\nNormalized power',config{irat}.timefreq.foi_band{ifreq}(1),config{irat}.timefreq.foi_band{ifreq}(2)));
-%                     leg = flip(leg); legend_name = flip(legend_name); %set E16 on top
-%                     legend([leg{:}], legend_name{:}, 'Fontsize',8,'location','eastoutside');
-%                     legend('boxoff');
-%                     axis tight;
-%
-%
-%                 end
-%
-%                 if ~isfolder(fullfile(config{4}.imagesavedir_data{2},'by_rat'))
-%                               mkdir(fullfile(config{4}.imagesavedir_data{2},'by_rat'));
-%                               analydir= fullfile(config{4}.imagesavedir_data{2},'by_rat');
-%                 end
-%                           if dobaseline
-%                               analydir=fullfile(cfgcommon.imagesavedir,'band_depth','by_rat');
-%                               if ~isfolder(analydir)
-%                                   mkdir(analydir);
-%                               end
-%                           end
-%
-%                 %save figure :
-%                 set(fig,'PaperOrientation','landscape');
-%                 set(fig,'PaperUnits','normalized');
-%                 set(fig,'PaperPosition', [0 0 1 1]);
-%                 print(fig, '-dpdf', fullfile(analydir,sprintf('%s_Rat%d_%d.pdf',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 print(fig, '-dpng', fullfile(analydir,sprintf('%s_Rat%d_%d.png',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 savefig(fig,fullfile(analydir,sprintf('%s_Rat%d_%d',analysis_names{idata},wod_rat(iwod), rat_wod_nr)));
-%
-%                 close all
-%             end
-%
-%             % compute statistiques : y a-t-il des profondeurs qui récupèrent plus vite ? Lesquelles ?
-%
-%             % trouver période stable de recovery
-%
-%             %% plot frequency band averaged over channels over rats
-%             fig = figure;
-%             sgtitle([analysis_names{idata}, ' All Rats, average over cortical channels'], 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%
-%             for ifreq = 1:size(cfgcommon.timefreq.foi_band,2)
-%
-%                 subplot(2,2,ifreq);hold;
-%                 color = 'b';
-%
-%                 ichan = 0;
-%                 for chan_name = string(fieldnames(data))'
-%                     ichan = ichan+1;
-%
-%                     %find frequencies of the band, averaged over all wod (comparer des valeurs : > <
-%                     %>= <= ==)
-%                     freq_band_idx = data.(chan_name).freq >= cfgcommon.timefreq.foi_band{ifreq}(1) & data.(chan_name).freq <= cfgcommon.timefreq.foi_band{ifreq}(2);
-%                     pow_band= data.(chan_name).powspctrm(:,:,freq_band_idx,:);
-%                     %average over frequencies and over protocols
-%                     pow_band = nanmean(pow_band,1); %average over protocols
-%                     pow_band = nanmean(pow_band,3); %average over frequencies
-%                     y = squeeze(pow_band);
-%
-%                     if ismember(idata, [3 4 5]) %only for recovery
-%                         y = movmean(y,config{4}.timefreq.movmeanwin(idata),'omitnan');
-%                     end
-%
-%                     data_chan.time{ichan} = data.(chan_name).time;
-%                     data_chan.trial{ichan} = y';
-%                     data_chan.label{1} = 'dummy';
-%                 end
-%
-%                 data_avgchan = ft_timelockanalysis([],data_chan);
-%
-%                 x = data_avgchan.time;
-%                 y = data_avgchan.avg;
-%
-%                 %plot std
-%                 y_std = sqrt(data_avgchan.var);
-%                 y_area = [y - y_std; y_std; y_std]'; %FIXME tester avec 2*std
-%                 filled_SD = area(x,y_area);
-%                 filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
-%                 filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
-%                 filled_SD(2).FaceColor = color; filled_SD(3).FaceColor = color;
-%                 filled_SD(1).ShowBaseLine = 'off';
-%
-%                 %plot avg
-%                 plot(x, y, 'Color', color);
-%
-%
-%
-%                 %set figure display :
-%                 %set(gca, 'YScale', 'log');
-%                 set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                 xlabel('Time (s)');
-%                 ylabel(sprintf('%g-%gHz\nNormalized power',config{irat}.timefreq.foi_band{ifreq}(1),config{irat}.timefreq.foi_band{ifreq}(end)));
-%                 axis tight;
-%
-%
-%             end
-%
-%             if ~isfolder(fullfile(config{4}.imagesavedir_data{3}))
-%                               mkdir(fullfile(config{4}.imagesavedir_data{3}));
-%                               analydir= fullfile(config{4}.imagesavedir_data{3});
-%                           end
-%
-%             %save figure :
-%             set(fig,'PaperOrientation','landscape');
-%             set(fig,'PaperUnits','normalized');
-%             set(fig,'PaperPosition', [0 0 1 1]);
-%             print(fig, '-dpdf', fullfile(analydir,['AllRats_AllCortex_',analysis_names{idata},'.pdf']),'-r600');
-%             print(fig, '-dpng', fullfile(analydir,['AllRats_AllCortex_',analysis_names{idata},'.png']),'-r600');
-%             savefig(fig,fullfile(analydir,['AllRats_AllCortex_',analysis_names{idata}]));
-%             close(fig);
-%
-%             %% plot frequency band averaged over channels by rat
-%             for iwod= 1:size(data.(chan_name).powspctrm,1)
-%                 fig = figure;
-%                 sgtitle(sprintf('%s Rat %d (%d/%d) average over all cortical channels',analysis_names{idata},wod_rat(iwod), rat_wod_nr, rat_wod_sum), 'Interpreter', 'none', 'FontWeight', 'bold', 'FontSize', 23);
-%
-%                 for ifreq = 1:size(cfgcommon.timefreq.foi_band,2)
-%
-%                     subplot(2,2,ifreq);hold;
-%                     color = 'b';
-%
-%                     ichan = 0;
-%                     for chan_name = string(fieldnames(data))'
-%                         ichan = ichan+1;
-%
-%                         %find frequencies of the band, averaged over all wod (comparer des valeurs : > <
-%                         %>= <= ==)
-%                         freq_band_idx = data.(chan_name).freq >= cfgcommon.timefreq.foi_band{ifreq}(1) & data.(chan_name).freq <= cfgcommon.timefreq.foi_band{ifreq}(2);
-%                         pow_band= data.(chan_name).powspctrm(iwod,:,freq_band_idx,:);
-%                         %average over frequencies
-%                         pow_band = nanmean(pow_band,3);
-%                         y = squeeze(pow_band);
-%
-%                         if ismember(idata, [3 4 5]) %only for recovery
-%                             y = movmean(y,config{4}.timefreq.movmeanwin(idata),'omitnan');
-%                         end
-%
-%                         data_chan.time{ichan} = data.(chan_name).time;
-%                         data_chan.trial{ichan} = y';
-%                         data_chan.label{1} = 'dummy';
-%                     end
-%
-%                     data_avgchan = ft_timelockanalysis([],data_chan);
-%
-%                     x = data_avgchan.time;
-%                     y = data_avgchan.avg;
-%
-%                     %plot std
-%                     y_std = sqrt(data_avgchan.var);
-%                     y_area = [y - y_std; y_std; y_std]'; %FIXME tester avec 2*std
-%                     filled_SD = area(x,y_area);
-%                     filled_SD(1).FaceAlpha = 0; filled_SD(2).FaceAlpha = 0.4; filled_SD(3).FaceAlpha = 0.4;
-%                     filled_SD(1).EdgeColor = 'none'; filled_SD(2).EdgeColor = 'none'; filled_SD(3).EdgeColor = 'none';
-%                     filled_SD(2).FaceColor = color; filled_SD(3).FaceColor = color;
-%                     filled_SD(1).ShowBaseLine = 'off';
-%
-%                     %plot avg
-%                     plot(x, y, 'Color', color);
-%
-%
-%
-%                     %set figure display :
-%                     %set(gca, 'YScale', 'log');
-%                     set(gca, 'TickDir', 'out', 'FontSize', 12, 'FontWeight', 'bold');
-%                     xlabel('Time (s)');
-%                     legend
-%                     ylabel(sprintf('%g-%gHz\nNormalized power',config{irat}.timefreq.foi_band{ifreq}(1),config{irat}.timefreq.foi_band{ifreq}(end)));
-%                     axis tight;
-%
-%                 end
-%
-%                 if ~isfolder(fullfile(config{4}.imagesavedir_data{3},'by_rat'))
-%                               mkdir(fullfile(config{4}.imagesavedir_data{3},'by_rat'));
-%                               analydir= fullfile(config{4}.imagesavedir_data{3},'by_rat');
-%                           end
-%
-%                 %save figure :
-%                 set(fig,'PaperOrientation','landscape');
-%                 set(fig,'PaperUnits','normalized');
-%                 set(fig,'PaperPosition', [0 0 1 1]);
-%                 print(fig, '-dpdf', fullfile(analydir,sprintf('%s_Allcortex_Rat%d_%d.pdf',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 print(fig, '-dpng', fullfile(analydir,sprintf('%s_Allcortex_Rat%d_%d.png',analysis_names{idata},wod_rat(iwod), rat_wod_nr)),'-r600');
-%                 savefig(fig,fullfile(analydir,sprintf('%s_Allcortex_Rat%d_%d',analysis_names{idata},wod_rat(iwod), rat_wod_nr)));
-%                 close(fig);
-%             end %iwod
-%             clear data
-%         end %dobaseline
-%     end %idata
-% end %slurm task id == 0
-
-
