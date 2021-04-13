@@ -6,7 +6,7 @@ if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
     addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-    
+    addpath \\lexport\iss01.charpier\analyses\wod\fdr_bh
 elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
     addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
@@ -78,6 +78,10 @@ for idata= 1: size(analysis_names,2)
                     pow.(iband).(chan_name).powspctrm = nanmean(pow.(iband).(chan_name).powspctrm,1);
                     pow.(iband).(chan_name).time= pow.(iband).(chan_name).time;
                     
+                    while iband= "LF"
+                    Ratio.(chan_name)= pow.(iband).(chan_name);
+                    Ratio.(chan_name).powspctrm= pow.(iband).(chan_name).powspctrm ./ pow.HF.(chan_name).powspctrm;
+                    end
                     
                     
                     %% find peak value and peak time
@@ -303,3 +307,76 @@ end %idata
 
 %save data
 save(fullfile(comp_woddir,'corr_wod.mat'),'Corr_wod');
+
+%% Compare delays between frequency bands
+bands={"HF", "MF", "MLF", "LF"};
+
+%between adjacent bands
+for idata= 1:size(analysis_names,2)
+    for iband= 1:size(bands,2)
+        for ichan= 1:size(stat.HF.timefreq_wod.time,2)
+            
+            if iband >= size(bands,2)
+                
+                continue
+                
+            end
+            
+            A=stat.(bands{iband}).(analysis_names{idata}).time(:,ichan);
+            B=stat.(bands{iband+1}).(analysis_names{idata}).time(:,ichan);
+            
+            [p,h,stats]= signrank(A,B);
+            
+            Test_betbands.(bands{iband}).(analysis_names{idata}).p(ichan,1)= p;
+            Test_betbands.(bands{iband}).(analysis_names{idata}).h(ichan,1)=h;
+            Test_betbands.(bands{iband}).(analysis_names{idata}).stats=stats;
+            
+            clear A B p h stats
+            
+        end %ichan
+        if iband >= size(bands,2)
+                
+                continue
+                
+            end
+        
+        [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(Test_betbands.(bands{iband}).(analysis_names{idata}).p,0.05,'pdep','no');
+        Test_betbands.(bands{iband}).(analysis_names{idata}).correc_p= adj_p;
+        
+    end %iband
+end %idata
+
+%between ends of the spectrum
+bands={"HF","LF"};
+
+for idata= 1:size(analysis_names,2)
+    for iband= 1:size(bands,2)
+        for ichan= 1:size(stat.HF.timefreq_wod.time,2)
+            
+            if iband >= size(bands,2)
+                
+                continue
+                
+            end
+            
+            A=stat.(bands{iband}).(analysis_names{idata}).time(:,ichan);
+            B=stat.(bands{iband+1}).(analysis_names{idata}).time(:,ichan);
+            
+            [p,h,stats]= signrank(A,B);
+            
+            Test_betbands.extreme.(bands{iband}).(analysis_names{idata}).p(ichan,1)= p;
+            Test_betbands.extreme.(bands{iband}).(analysis_names{idata}).h(ichan,1)=h;
+            Test_betbands.extreme.(bands{iband}).(analysis_names{idata}).stats=stats;
+            
+            clear A B p h stats
+            
+        end %ichan
+        
+        %correction of p-values
+        [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(Test_betbands.extreme.(bands{iband}).(analysis_names{idata}).p,0.05,'pdep','no');
+        Test_betbands.extreme.(bands{iband}).(analysis_names{idata}).correc_p= adj_p;
+    end %iband
+end %idata
+clear bands
+
+save(fullfile(freqstatpath,'test_between_freqband.mat'),'Test_betbands');

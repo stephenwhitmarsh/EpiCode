@@ -54,19 +54,15 @@ for iprot= 1:size(config,2)
      if iprot >= 13
         chanlist= "DC_dep";
     end
-    %% Calculate slope detect start times
+    %% Calculate slope detect start times for WOD
     for channame= chanlist
         for isignal= ["raw" "filt"]
-        
-            
-            
-            
-            
+
             %smoothing signal
         dataprot.(isignal).(channame).trial{1}=movmean(dataprot.(isignal).(channame).trial{1},1000); 
             
             
-            %calculate slope for raw signal and exatrct min slope and max slope
+        %calculate slope for raw signal and exatrct min slope and max slope
         %timings
         dataslope.(isignal).(channame)= dataprot.(isignal).(channame);
         dataslope.(isignal).(channame).trial{1}=ft_preproc_derivative(dataslope.(isignal).(channame).trial{1});
@@ -97,14 +93,36 @@ for iprot= 1:size(config,2)
         cfgtemp.channel= 'all';
         AD_slope.(isignal).(channame)= ft_selectdata(cfgtemp,dataslope.(isignal).(channame));
         clear t1 t2 t_sel
-        
-        
-        
+            
+                
         %find indices where data crossing threshold in negative
         idx_slope= find(AD_slope.(isignal).(channame).trial{1}< thr_slopebl);
         idx_start= min(idx_slope);
         time_startbl= AD_slope.(isignal).(channame).time{1}(1,idx_start);
-            
+        
+        
+        
+        
+        %in positive
+        t1=dataprot.events.markers.VentOn.synctime+2;
+        t_sel= [t1 dataprot.(isignal).(channame).time{1}(1,end)];
+
+        
+        
+        cfgtemp=[];
+        cfgtemp.latency=t_sel;
+        cfgtemp.trials='all';
+        cfgtemp.channel='all';
+        WOR_slope.(isignal).(channame)= ft_selectdata(cfgtemp,dataslope.(isignal).(channame));
+
+        clear t1 t_sel
+        
+        
+        idx_slopewor= find(WOR_slope.(isignal).(channame).trial{1}> thr_slopebl);
+        idx_start= min(idx_slopewor);
+        timewor_startbl= WOR_slope.(isignal).(channame).time{1}(1,idx_start);
+
+        
 %         Functions to find intersection points with threshold and/or other curve
 %         x1 = AD_slope.(isignal).(channame).time{1};
 %         y1 = AD_slope.(isignal).(channame).trial{1};
@@ -155,6 +173,7 @@ for iprot= 1:size(config,2)
         xline(max(blslope.(isignal).(channame).time{1}));
         xline(time_startbl,'Color','r');
         xline(time_start,'Color','b');
+        xline(timewor_startbl,'Color','r');
         
         %save figures for visual verification
         fname2= fullfile(detect_thr,sprintf('%s_prot_%i_%s_%s',config{iprot}.prefix,iprot,channame,isignal));
@@ -168,8 +187,8 @@ for iprot= 1:size(config,2)
         
         
         %store data in a structure
-        DC_timings.(isignal).start.baseline.(channame)(iprot,1)= time_startbl-dataprot.events.markers.VentOff.synctime;
-        DC_timings.(isignal).start.max_slope.(channame)(iprot,1)= time_start-dataprot.events.markers.VentOff.synctime;
+        DC_timings.(isignal).wod_start.baseline.(channame)(iprot,1)= time_startbl-dataprot.events.markers.VentOff.synctime;
+        DC_timings.(isignal).wod_start.max_slope.(channame)(iprot,1)= time_start-dataprot.events.markers.VentOff.synctime;
         DC_timings.(isignal).min_slope.(channame)(iprot,1)=t_minslope-dataprot.events.markers.VentOff.synctime;
         DC_timings.(isignal).max_slope.(channame)(iprot,1)=t_maxslope-dataprot.events.markers.VentOff.synctime;
         DC_timings.(isignal).area.(channame)(iprot,1)= Area_uc;
@@ -177,7 +196,7 @@ for iprot= 1:size(config,2)
         
         %% Detection of DC shift peak
         
-        t1= t_minslope-20;
+        t1= t_minslope-30;
         t2= t_minslope+20;
         t_sel= [t1 t2];
         
@@ -190,7 +209,7 @@ for iprot= 1:size(config,2)
         [v_peak t_peak]= findpeaks(-dataAD.(isignal).(channame).trial{1},dataAD.(isignal).(channame).time{1},'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
         
         %Store timings in DC_timings
-        DC_timings.(isignal).peak.(channame)(iprot,1)=t_peak-dataprot.events.markers.VentOff.synctime;
+        DC_timings.(isignal).wod_peak.(channame)(iprot,1)=t_peak-dataprot.events.markers.VentOff.synctime;
         
         %plot peak detection
         fig3=figure;
@@ -211,7 +230,9 @@ for iprot= 1:size(config,2)
         dtx_savefigure(fig3,fname3,'png','pdf','close');
         
         clear v_peak t_peak dataAD
-    
+
+        
+        
         end %isgnal
         end %channame
     

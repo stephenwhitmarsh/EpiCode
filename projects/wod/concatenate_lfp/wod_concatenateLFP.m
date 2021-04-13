@@ -50,7 +50,7 @@ for irat = rat_list
             end
             
             [~,foldername] = fileparts(config{irat}.rawdir);
-            output_datapath = fullfile(config{irat}.concatdata_path);
+            output_datapath = fullfile(config{irat}.concatdata_path,config{irat}.prefix);
             
             if ~isfolder(output_datapath)
                 mkdir(output_datapath);
