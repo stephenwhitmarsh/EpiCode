@@ -35,6 +35,8 @@ clear temp
 temp= load(fullfile(freqstatpath,'peak_value.mat'));
 all_data.value= temp.value;
 clear temp
+
+
 all_data.Depth= table2array(depthelectrodewod);
 all_data.Depth(1,:)=[];
 all_data.Depth([9:end],:)=[];

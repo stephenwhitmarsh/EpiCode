@@ -21,7 +21,7 @@ ft_defaults
 config = wod_setparams;
 
 freqstatpath= fullfile(config{4}.statsavedir,'freq_data');
-analysis_names={'timefreq_wod','timefreq_wod_blcorrected'};
+analysis_names={'timefreq_wod','timefreq_wod_timenorm','timefreq_wod_blcorrected','timefreq_wod_timenorm_blcorrected'};
 
 %% Prepare structure to analyze
 
@@ -128,7 +128,7 @@ for idata= 1: size(analysis_names,2)
                     
                     plot(pow.(iband).(chan_name).time,pow.(iband).(chan_name).powspctrm);
                     hold on
-                    scatter(t_peak.(iband).(chan_name),v_peak.(iband).(chan_name),'x');
+                    scatter(t_peak.(iband).(chan_name),v_peak.(iband).(chan_name),'rx');
                     xlim([0 60])
                 end
                 
@@ -149,6 +149,8 @@ end
 save(fullfile(freqstatpath,'peak_time.mat'),'time');
 save(fullfile(freqstatpath,'peak_value.mat'),'value');
 save(fullfile(freqstatpath,'all_data.mat'),'Val');
+
+
 
 
 %% Make comparison between electrodes
@@ -213,10 +215,23 @@ clear Stats_depth time value
 %% Make Spearman corr of timings with depth
 
 %load depth into structure (glisser table dans variables)
-stat.depth= table2array(depthelectrodewod);
-stat.depth(1,:)=[];
-stat.depth=transpose(stat.depth);
+Detectionpath=fullfile(config{4}.datasavedir,'Detection');
+temp= load(fullfile(Detectionpath,'Depth_electrode.mat'));
+Depth= temp.Electrode_depth;
+clear temp
 
+a=0
+for irat=4:size(config,2)
+    
+    a=a+1;
+    if irat== size(config,2)
+        continue
+    end
+    A=Depth.(sprintf('Rat_%i',irat));
+    B=Depth.(sprintf('Rat_%i',irat+1));
+    C= horzcat(A,B)
+    
+end %irat
 
 for idata= 1: size(analysis_names,2)
     for iband= ["HF" "MF" "MLF" "LF"]

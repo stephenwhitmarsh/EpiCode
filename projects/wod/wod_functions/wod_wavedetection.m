@@ -1,55 +1,30 @@
-function wod_wavedetection(configscript)
+function wod_wavedetection(cfg)
 
-try %en local
-    scriptpath = matlab.desktop.editor.getActiveFilename;
-catch %cluster
-    scriptpath = mfilename('fullpath');
-end
-
-epicodepath = [fileparts(fileparts(fileparts(scriptpath))), filesep];
-
-addpath (genpath([epicodepath,'development']))
-addpath (genpath([epicodepath,'shared']))
-addpath (genpath([epicodepath,'external']))
-addpath (genpath([epicodepath,'templates']))
-addpath (genpath([epicodepath,'projects', filesep, 'wod']))
-addpath (genpath([epicodepath,'projects', filesep, 'dtx']))
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-elseif isunix
-    addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
-end
-
-ft_defaults
-
-config = eval(configscript);
-
-for irat= 1:size(config,2)
+for irat= 1:size(cfg,2)
     %Load LFP and Muse markers
-    temp= load(fullfile(config{irat}.datasavedir,sprintf('%s%s_%s.mat',config{irat}.prefix,'LFP',config{irat}.name{1})));
+    temp= load(fullfile(cfg{irat}.datasavedir,sprintf('%s%s_%s.mat',cfg{irat}.prefix,'LFP',cfg{irat}.name{1})));
     LFP=temp.LFP{1,1}.WoD;
     clear temp
-    MuseStruct               = readMuseMarkers(config{irat}, false);
+    MuseStruct               = readMuseMarkers(cfg{irat}, false);
     
     %vérifier qu'il y a bien autant de trials que de marqueurs Vent_Off
-    startmarker = config{irat}.muse.startmarker.(config{irat}.LFP.name{1});
+    startmarker = cfg{irat}.muse.startmarker.(cfg{irat}.LFP.name{1});
     if size(LFP.trial,2) ~= size(MuseStruct{1}{1}.markers.(startmarker).synctime,2)
-        error('Not the same number of trials that of marker start for %s. \nCheck that begin/end of each trial is not before start of file or after end of file', config{irat}.prefix(1:end-1));
+        error('Not the same number of trials that of marker start for %s. \nCheck that begin/end of each trial is not before start of file or after end of file', cfg{irat}.prefix(1:end-1));
     end
     
     %rename chans according to their real deepness.
     %the name is in cfg.LFP.channel, and it is renamed with the name at
     %the same index in cfg.LFP.rename
     %16 is surface, 1 is the deepest. 0 is the respi.
-    n_chans = size(config{irat}.LFP.allchannel,2);
+    n_chans = size(cfg{irat}.LFP.allchannel,2);
     for ichan = 1:n_chans
-        if any(strcmp(config{irat}.LFP.channel,config{irat}.LFP.allchannel{ichan}))
-            %search channel into config
-            chan_idx = strcmp(config{irat}.LFP.channel,config{irat}.LFP.allchannel{ichan});
-            new_name = config{irat}.LFP.rename{chan_idx};
+        if any(strcmp(cfg{irat}.LFP.channel,cfg{irat}.LFP.allchannel{ichan}))
+            %search channel into cfg
+            chan_idx = strcmp(cfg{irat}.LFP.channel,cfg{irat}.LFP.allchannel{ichan});
+            new_name = cfg{irat}.LFP.rename{chan_idx};
             %search channel into LFP data to remane it
-            chan_idx = strcmp(LFP.label, config{irat}.LFP.allchannel{ichan});
+            chan_idx = strcmp(LFP.label, cfg{irat}.LFP.allchannel{ichan});
             LFP.label{chan_idx} = new_name;
         end
     end
@@ -69,12 +44,12 @@ for irat= 1:size(config,2)
     cfgtemp.lpfilter    = 'yes';
     cfgtemp.lpfilttype  = 'fir';
     
-    cfgtemp.lpfreq      = config{irat}.LFP.lpfilter_wod_detection;
+    cfgtemp.lpfreq      = cfg{irat}.LFP.lpfilter_wod_detection;
     LFP_lpfilt      = ft_preprocessing(cfgtemp, LFP_cleaned);
     
     for itrial = 1:size(LFP.trial,2)
         
-        
+         
         %recover trial real timings to use it with muse markers
         starttrial              = LFP_lpfilt.trialinfo.begsample / LFP_lpfilt.fsample;
         endtrial                = LFP_lpfilt.trialinfo.endsample / LFP_lpfilt.fsample;
@@ -96,8 +71,8 @@ for irat= 1:size(config,2)
             wod_marker = MuseStruct{1}{1}.markers.WOD.synctime(itrial);
             %select times where to search WOD peak
             t = LFP_lpfilt.time{itrial};
-            t_1 = t > (wod_marker + config{irat}.LFP.wod_toisearch(1) - starttrial(itrial) + offsettrial(itrial));
-            t_2 = t < (wod_marker + config{irat}.LFP.wod_toisearch(2) - starttrial(itrial) + offsettrial(itrial));
+            t_1 = t > (wod_marker + cfg{irat}.LFP.wod_toisearch(1) - starttrial(itrial) + offsettrial(itrial));
+            t_2 = t < (wod_marker + cfg{irat}.LFP.wod_toisearch(2) - starttrial(itrial) + offsettrial(itrial));
             t_sel = t_1 & t_2;
             
             [v_peak_wod, t_peak_wod] = findpeaks(-LFP_lpfilt.trial{itrial}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
@@ -108,8 +83,8 @@ for irat= 1:size(config,2)
             wor_marker = MuseStruct{1}{1}.markers.WOR.synctime(itrial);
             %select times where to search WOR peak
             t = LFP_lpfilt.time{itrial};
-            t_1 = t > (wor_marker + config{irat}.LFP.wor_toisearch(1) - starttrial(itrial) + offsettrial(itrial));
-            t_2 = t < (wor_marker + config{irat}.LFP.wor_toisearch(2) - starttrial(itrial) + offsettrial(itrial));
+            t_1 = t > (wor_marker + cfg{irat}.LFP.wor_toisearch(1) - starttrial(itrial) + offsettrial(itrial));
+            t_2 = t < (wor_marker + cfg{irat}.LFP.wor_toisearch(2) - starttrial(itrial) + offsettrial(itrial));
             t_sel = t_1 & t_2;
             
             [v_peak_wor, t_peak_wor] = findpeaks(LFP_lpfilt.trial{itrial}(chan_idx,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
@@ -117,7 +92,7 @@ for irat= 1:size(config,2)
             
             %store peak timings per channel in structure
             
-            WOD_data.timings.(sprintf('Rat_%i',irat)).(ichan_name).peak(ichan,itrial)= t_peak_wod;
+            WOD_data.timings.(sprintf('Rat_%i',irat)).peak(ichan,itrial)= t_peak_wod;
             %express wor data compared to Vent_On
             t_VentOn= MuseStruct{1}{1}.markers.Vent_On.synctime(itrial)-starttrial(itrial) +offsettrial(itrial);
             WOR_data.timings.(sprintf('Rat_%i',irat)).peak(ichan,itrial)= t_peak_wor - t_VentOn;
@@ -135,9 +110,9 @@ for irat= 1:size(config,2)
             scatter(t_peak_wor,v_peak_wor,'x');
             xlim([t_peak_wor-10 t_peak_wor+10]);
             
-            detectsavedir=fullfile(config{irat}.imagesavedir,'detection');
-            detectpeak_wod=fullfile(detectsavedir,'WoD','peak',sprintf('%s',config{irat}.prefix));
-            detectpeak_wor=fullfile(detectsavedir,'WoR','peak',sprintf('%s',config{irat}.prefix));
+            detectsavedir=fullfile(cfg{irat}.imagesavedir,'detection');
+            detectpeak_wod=fullfile(detectsavedir,'WoD','peak',sprintf('%s',cfg{irat}.prefix));
+            detectpeak_wor=fullfile(detectsavedir,'WoR','peak',sprintf('%s',cfg{irat}.prefix));
             
             if ~isfolder(detectsavedir)
                 mkdir(detectsavedir);
@@ -239,8 +214,8 @@ for irat= 1:size(config,2)
             scatter(t_peak_worslope,v_peak_worslope,'x');
             xlim([t_peak_wor-10 t_peak_wor+10]);
             
-            detectslope_wod=fullfile(detectsavedir,'WoD','slope',sprintf('%s',config{irat}.prefix));
-            detectslope_wor=fullfile(detectsavedir,'WoR','slope',sprintf('%s',config{irat}.prefix));
+            detectslope_wod=fullfile(detectsavedir,'WoD','slope',sprintf('%s',cfg{irat}.prefix));
+            detectslope_wor=fullfile(detectsavedir,'WoR','slope',sprintf('%s',cfg{irat}.prefix));
             
             if ~isfolder(detectsavedir)
                 mkdir(detectsavedir);
@@ -284,9 +259,9 @@ for irat= 1:size(config,2)
             [x_wodintersect, y_wodintersect] = intersections(x1, y1, x2, y2);
             
             time_start_wod= x_wodintersect(1);
-            value_start_wod= y_wodintersect(1);
+            value_start_wod= y_wodintersect(1); 
             
-            clear t t_1 t_2 t_sel
+            clear t t_1 t_2 t_sel 
             
             t = WOR_cut.time{itrial};
             t_1 = t > (t_peak_worslope - 10);
@@ -302,7 +277,7 @@ for irat= 1:size(config,2)
             [x_worintersect, y_worintersect] = intersections(x1, y1, x2, y2);
             time_start_wor= x_worintersect(1);
             value_start_wor= y_worintersect(1);
-            
+
             clear t t_1 t_2 t_sel
             
             %store values
@@ -323,8 +298,8 @@ for irat= 1:size(config,2)
             xline(time_start_wor);
             
             
-            detectstart_wod=fullfile(detectsavedir,'WoD','start',sprintf('%s',config{irat}.prefix));
-            detectstart_wor=fullfile(detectsavedir,'WoR','start',sprintf('%s',config{irat}.prefix));
+            detectstart_wod=fullfile(detectsavedir,'WoD','start',sprintf('%s',cfg{irat}.prefix));
+            detectstart_wor=fullfile(detectsavedir,'WoR','start',sprintf('%s',cfg{irat}.prefix));
             
             if ~isfolder(detectstart_wod)
                 mkdir(detectstart_wod);
@@ -353,7 +328,7 @@ for irat= 1:size(config,2)
             clear y_wodintersect y_worintersect x_wodintersect x_worintersect
             %Determine time window to search
             %WOD
-            
+
             t = WOD_cut.time{itrial};
             t_1 = t > (t_peak_wod - 10);
             t_2 = t < (t_peak_wod + 10);
@@ -382,7 +357,7 @@ for irat= 1:size(config,2)
             
             WOR_halfwi= x_worintersect(2)- x_worintersect(1);
             clear x1 y1 x2 y2
-            
+                        
             %Store data
             WOD_data.values.(sprintf('Rat_%i',irat)).halfwidth(ichan,itrial)=WOD_halfwi;
             WOR_data.values.(sprintf('Rat_%i',irat)).halfwidth(ichan,itrial)=WOR_halfwi;
@@ -402,8 +377,8 @@ for irat= 1:size(config,2)
             scatter(x_worintersect,y_worintersect,'rx')
             yline(half_wor);
             
-            detecthalf_wod=fullfile(detectsavedir,'WoD','half-width',sprintf('%s',config{irat}.prefix));
-            detecthalf_wor=fullfile(detectsavedir,'WoR','half-width',sprintf('%s',config{irat}.prefix));
+            detecthalf_wod=fullfile(detectsavedir,'WoD','half-width',sprintf('%s',cfg{irat}.prefix));
+            detecthalf_wor=fullfile(detectsavedir,'WoR','half-width',sprintf('%s',cfg{irat}.prefix));
             
             if ~isfolder(detecthalf_wod)
                 mkdir(detecthalf_wod);
@@ -424,8 +399,7 @@ for irat= 1:size(config,2)
             
             %% Create structure with electrode depths
             
-            Electrode_depth.(sprintf('Rat_%i',irat))(ichan,itrial)=config{irat}.LFP.chan_depth{ichan};
-            
+            Electrode_depth.(sprintf('Rat_%i',irat))(ichan,itrial)=cfg{irat}.LFP.chan_depth{ichan};
             
             
         end %ichan
@@ -433,41 +407,9 @@ for irat= 1:size(config,2)
     end %itrial
 end %irat
 
-%% Arrange structures to have a version with all trials
-
-
-
-%arrange structure to have all trials
-%for electrode depth
-depth_allrats = [];
-icol = 0;
-for idepth = 0:250:2500 %step de 250 car les électrodes sont espacées de 250µm
-    icol = icol+1;
-    irow = 0;
-    for ratname = string(fieldnames(Depth))'
-        for itrial = 1:size(Depth.(ratname), 2)
-            irow = irow+1;
-            sel = abs(Depth.(ratname)(:, itrial) - idepth) < 125;
-            if sum(sel) == 1
-                depth_allrats(irow,icol) = Depth.(ratname)(sel, itrial);
-            elseif sum(sel) == 0
-                depth_allrats(irow,icol) = nan;
-            elseif sum(sel) > 1
-                error('it should have only one electrode for one deepness');
-            end
-        end
-    end
-end
-
-depth_allrats=depth_allrats';
-
-
-
-
-
 %% Save structures
 
-Detectionpath=fullfile(config{4}.datasavedir,'Detection');
+Detectionpath=fullfile(cfg{4}.datasavedir,'Detection');
 
 if ~isfolder(Detectionpath)
     mkdir(Detectionpath);
@@ -476,7 +418,3 @@ end
 save(fullfile(Detectionpath,'WoD_data.mat'),'WOD_data');
 save(fullfile(Detectionpath,'WoR_data.mat'),'WOR_data');
 save(fullfile(Detectionpath,'Depth_electrode'),'Electrode_depth');
-
-
-
-save(fullfile(Detectionpath,'allrats_depth.mat'),'depth_allrats');

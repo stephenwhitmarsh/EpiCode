@@ -37,6 +37,12 @@ temp=load(fullfile(config{1}.datasavedir,'DC_timings.mat'));
 DC_timings=temp.DC_timings;
 clear temp
 
+DC_stats_datadir=fullfile(config{1}.datasavedir,'statistics');
+
+if ~isfolder(DC_stats_datadir)
+    mkdir(DC_stats_datadir);
+end
+
 chanlist=["DC_sup" "DC_dep"];
 
 %% Separate data from depth to superficial for raw signal
@@ -83,6 +89,53 @@ for ifilt= ["raw" "filt"]
         Tests.(idata).(ifilt).stats=stats;
         P_val(end+1,1)=p;
         clear p h stats
+        
+        
     end %idata
+    
+    % Test between two thresholding methods for same electrode
+    A=Sup_timings.raw.start.baseline;
+    B=Sup_timings.raw.start.max_slope;
+    
+    [p h stats]= signrank(A,B);
+    clear A B
+    
+    Tests.start_thr.Sup=p;
+    
+    A=Dep_timings.raw.start.baseline;
+    B=Dep_timings.raw.start.max_slope;
+    
+    [p h stats]= signrank(A,B);
+    clear A B
+    
+    Tests.start_thr.Dep=p;
 end %ifilt
+
+save(fullfile(DC_stats_datadir,'test_betw_DC.mat'),'Tests');
+
+
+
+
+%% Test values with WoD and WoR peak at same 
+
+configscript_lfp='wod_setparams';
+config_lfp=eval(configscript_lfp);
+detectiondatapath= fullfile(config_lfp{4}.datasavedir,'Detection');
+
+%load LFP timings data
+
+temp= load(fullfile(detectiondatapath,'WoD_data.mat'));
+WoD_data=temp.WOD_data;
+clear temp
+temp= load(fullfile(detectiondatapath,'WoR_data.mat'));
+WoR_data=temp.WOR_data;
+clear temp
+temp= load(fullfile(detectiondatapath,'Depth_electrode.mat'));
+Depth=temp.Electrode_depth;
+clear temp
+
+%Determine electrode of same depth
+
+
+
 

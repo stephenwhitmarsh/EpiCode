@@ -27,7 +27,7 @@ freqstat_path= fullfile(statsavedir,'freq_data');
 script_path  = mfilename('fullpath');
 script_path  = fileparts(script_path);
 
-%% config common for all patients
+%% config common for all rats
 configcommon.muse.templatemarker   = fullfile(datasavedir,'TemplateEventsWOD.mrk');%find the template file to create muse marker file
 
 configcommon.name                  = {'WoD'};
@@ -87,6 +87,7 @@ config{4}.rawdir              = fullfile(rootpath_data,'2020_05_19_WOD');       
 config{4}.directorylist{1}    = {'2020-05-19_14-25', '2020-05-19_15-44', '2020-05-19_16-25'}; %liste de tous les fichiers, tous les protocoles
 config{4}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP','Puff'};
 config{4}.LFP.rename          = {'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{4}.LFP.chan_depth         = {565, 815, 1065, 1315, 1565, 1815};
 config{4}.LFP.origin_WoD          = {'E14', 'E14'};
 config{4}.LFP.origin_WoR          = {'E11', 'E11'};
 
@@ -107,8 +108,9 @@ config{5}.rawdir              = fullfile(rootpath_data,'2020_05_25_WOD');       
 
 config{5}.directorylist{1}    = {'2020-05-25_15-05'}; %liste de tous les fichiers, tous les protocoles
 config{5}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Puff'};
-config{5}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
-config{5}.LFP.origin_WoD          = {'E11', 'E11'};
+config{5}.LFP.rename          = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{5}.LFP.origin_WoD      = {'E11', 'E11'};
+config{5}.LFP.chan_depth      = {73, 323, 573, 823, 1073, 1323, 1573, 1823};
 
 
 config{5}.circus.channel      = {'E04', 'E05','E06', 'E10', 'E11', 'E13'};       %name of the first electrode
@@ -128,6 +130,7 @@ config{6}.rawdir              = fullfile(rootpath_data,'2020_05_27_WOD');       
 config{6}.directorylist{1}    = {'2020-05-27_14-19', '2020-05-27_15-40', '2020-05-27_16-19'}; %liste de tous les fichiers, tous les protocoles
 config{6}.LFP.channel         = { 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'E08LFP', 'Puff'};
 config{6}.LFP.rename         = { 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E8', 'E0'};
+config{6}.LFP.chan_depth         = { 410,660,910, 1160, 1410, 1660, 1910, 2160};
 config{6}.LFP.origin_WoD          = {'E8', 'E9'};
 config{6}.LFP.origin_WoR          = {'E8', 'E12'};
 
@@ -148,6 +151,7 @@ config{7}.rawdir              = fullfile(rootpath_data,'2020_06_16_WOD');       
 config{7}.directorylist{1}    = {'2020-06-16_14-35', '2020-06-16_15-57', '2020-06-16_16-35'}; %liste de tous les fichiers, tous les protocoles
 config{7}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Puff'};
 config{7}.LFP.rename          = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{7}.LFP.chan_depth        = {85, 335, 585, 835, 1085, 1335, 1585, 1835};
 config{7}.LFP.origin_WoD          = {'E10', 'E10'};
 config{7}.LFP.origin_WoR          = {'E13', 'E13'};
 
@@ -168,6 +172,8 @@ config{8}.rawdir              = fullfile(rootpath_data,'2020_07_22_WOD2');      
 config{8}.directorylist{1}    = {'2020-07-22_13-28'}; %liste de tous les fichiers, tous les protocoles
 config{8}.LFP.channel         = { 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{8}.LFP.rename          = {'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{8}.LFP.chan_depth         = {337, 587, 837, 1087, 1337, 1587, 1837};
+
 config{8}.LFP.origin_WoD          = {'E10', 'E9'};
 config{8}.LFP.origin_WoR          = {'E13', 'E13'};
 
@@ -188,6 +194,8 @@ config{9}.rawdir              = fullfile(rootpath_data,'2020_07_28_WOD');       
 config{9}.directorylist{1}    = {'2020-07-28_13-54', '2020-07-28_15-35', '2020-07-28_16-48', '2020-07-28_17-35'}; %liste de tous les fichiers, tous les protocoles
 config{9}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP',  'Respi'};
 config{9}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{9}.LFP.chan_depth         = {41, 291, 541, 791, 1041, 1291, 1541, 1791};
+
 config{9}.LFP.origin_WoD          = {'E9', 'E9'};
 config{9}.LFP.origin_WoR          = {'E12', 'E10'};
 
@@ -208,6 +216,8 @@ config{10}.rawdir              = fullfile(rootpath_data,'2020_07_31_WOD');      
 config{10}.directorylist{1}    = {'2020-07-31_13-19', '2020-07-31_14-50', '2020-07-31_15-19'}; %liste de tous les fichiers, tous les protocoles
 config{10}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{10}.LFP.rename         = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{10}.LFP.chan_depth        = {67, 317, 567, 817, 1067, 1317, 1567, 1817};
+
 config{10}.LFP.origin_WoD          = {'E13', 'E11'};
 config{10}.LFP.origin_WoR          = {'E13', 'E11'};
 
@@ -228,6 +238,8 @@ config{11}.rawdir              = fullfile(rootpath_data,'2020_08_14_WOD');      
 config{11}.directorylist{1}    = {'2020-08-14_13-26', '2020-08-14_14-57', '2020-08-14_15-26'}; %liste de tous les fichiers, tous les protocoles
 config{11}.LFP.channel         = {'E16LFP', 'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'Respi'};
 config{11}.LFP.rename        = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E0'};
+config{11}.LFP.chan_depth        = {126, 376, 626, 876, 1126, 1376, 1626};
+
 config{11}.LFP.origin_WoD          = {'E10', 'E10'};
 config{11}.LFP.origin_WoR          = {'E12', 'E12'};
 
@@ -249,6 +261,8 @@ config{12}.rawdir              = fullfile(rootpath_data,'2020_09_10_WOD');      
 config{12}.directorylist{1}    = {'2020-09-10_20-01'}; %liste de tous les fichiers, tous les protocoles
 config{12}.LFP.channel         = {'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{12}.LFP.rename        = { 'E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{12}.LFP.chan_depth        = {434, 684, 934, 1184, 1434, 1684, 1934};
+
 
 config{12}.circus.channel      = { 'E06', 'E10', 'E11','E12','E13' 'E14'};       %name of the first electrode
 config{12}.circus.rename      = { 'E6', 'E10', 'E11','E12','E13', 'E14'};       %name of the first electrode
@@ -267,6 +281,7 @@ config{13}.rawdir              = fullfile(rootpath_data,'2020_09_15_WOD_2');    
 config{13}.directorylist{1}    = {'2020-09-15_16-49','2020-09-15_18-15'}; %liste de tous les fichiers, tous les protocoles
 config{13}.LFP.channel         = {'E16LFP','E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{13}.LFP.rename        = { 'E16','E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{13}.LFP.chan_depth        = {25,275, 525, 775, 1025, 1275, 1525, 1775};
 
 config{13}.circus.channel      = { 'E02','E04','E05','E07','E09', 'E10', 'E11','E12','E13' 'E14'};       %name of the first electrode
 config{13}.circus.rename      = { 'E2','E4','E5','E7','E9', 'E10', 'E11','E12','E13', 'E14'};       %name of the first electrode
@@ -285,6 +300,7 @@ config{14}.rawdir              = fullfile(rootpath_data,'2020_09_16_WOD');      
 config{14}.directorylist{1}    = {'2020-09-16_17-44'}; %liste de tous les fichiers, tous les protocoles
 config{14}.LFP.channel         = {'E16LFP','E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{14}.LFP.rename        = { 'E16','E15', 'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{14}.LFP.chan_depth         = {119,369, 619, 869,1119, 1369, 1619, 1869};
 
 
 config{14}.circus.channel      = { 'E02','E03','E05','E07','E14' 'E15'};       %name of the first electrode
@@ -306,6 +322,7 @@ config{15}.rawdir              = fullfile(rootpath_data,'2020_09_23_WOD');      
 config{15}.directorylist{1}    = {'2020-09-23_17-56','2020-09-23_19-05','2020-09-23_22-06'}; %liste de tous les fichiers, tous les protocoles
 config{15}.LFP.channel         = {'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP', 'E09LFP', 'Respi'};
 config{15}.LFP.rename        = {'E14', 'E13', 'E12', 'E11', 'E10', 'E9', 'E0'};
+config{15}.LFP.chan_depth        = {516, 766, 1016, 1266, 1516,1766 };
 
 
 config{15}.circus.channel      = { 'E05','E08','E10','E11' 'E13'};       %name of the first electrode
@@ -325,6 +342,7 @@ config{16}.rawdir              = fullfile(rootpath_data,'2020_09_29_WOD');      
 config{16}.directorylist{1}    = {'2020-09-29_15-38','2020-09-29_18-45'}; %liste de tous les fichiers, tous les protocoles
 config{16}.LFP.channel         = {'E15LFP', 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP','E09LFP', 'Respi'};
 config{16}.LFP.rename        = {'E16', 'E15', 'E14', 'E13', 'E12', 'E11','E10', 'E0'};
+config{16}.LFP.chan_depth        = {238, 488, 738, 988, 1238, 1488,1738};
 
 
 config{16}.circus.channel      = { 'E02','E03','E04','E05','E06','E10','E11','E13' 'E14'};       %name of the first electrode
@@ -343,7 +361,8 @@ config{17}.rawdir              = fullfile(rootpath_data,'2020_10_07_WOD');      
 
 config{17}.directorylist{1}    = {'2020-10-07_19-15'}; %liste de tous les fichiers, tous les protocoles
 config{17}.LFP.channel         = { 'E14LFP', 'E13LFP', 'E12LFP', 'E11LFP', 'E10LFP','E09LFP', 'Respi'};
-config{17}.LFP.rename        = { 'E14', 'E13', 'E12', 'E11','E10','E9', 'E0'};
+config{17}.LFP.rename        = { 'E15', 'E14', 'E13', 'E12','E11','E10', 'E0'};
+config{17}.LFP.chan_depth        = { 432, 682, 932, 1182, 1432,1682};
 
 
 config{17}.circus.channel      = { 'E01','E04','E05','E07','E08','E10','E11','E12' 'E13'};       %name of the first electrode
