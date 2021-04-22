@@ -1,4 +1,8 @@
 function wod_concatenateLFP(rat_list, configscript)
+
+% Les données avec une fréquence d'échantillonnage supérieure à 30kHz sont
+% sous-échantillonnés au dixième.
+
 % code copied from writespykingcircus.m
 % Must use a modified version of ft_writedata to give the good channel
 % name to Muse. Each added line in ft_writedata is commented with %Paul.
@@ -28,14 +32,12 @@ end
 
 %/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 %Attention au risque d'écraser des fichiers marqueurs déjà existants
-overwriteMuseMarkerFile = false; %false : do not write a new muse marker if one is founed.
+overwriteMuseMarkerFile = false; %false : do not write a new muse marker if one is founded.
 %/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 
 ft_defaults
 
 config = eval(configscript);
-
-feature('DefaultCharacterSet', 'CP1252');
 
 for irat = rat_list
     
@@ -49,9 +51,10 @@ for irat = rat_list
                 continue
             end
             
-            [~,foldername] = fileparts(config{irat}.rawdir);
+            %[~,foldername] = fileparts(config{irat}.rawdir);
+
             output_datapath = fullfile(config{irat}.concatdata_path,config{irat}.prefix);
-            
+
             if ~isfolder(output_datapath)
                 mkdir(output_datapath);
             end
@@ -63,11 +66,20 @@ for irat = rat_list
                 temp                                    = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},['*',config{irat}.LFP.channel{ichan},'.ncs']));
                 fname{1}                                = fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},temp.name);
                 cfgtemp                                 = [];
-                cfgtemp.dataset                         = fname{1};
+                cfgtemp.dataset                         = fname{1}; %dir du channel/pertrial/perrat/inrawdaata
                 fprintf('LOADING: %s\n',cfgtemp.dataset);
                 clear fname
                 fname{1}                                = cfgtemp.dataset;
                 dirdat{idir}                            = ft_read_neuralynx_interp(fname);
+                
+                %lp filter LFP data if needed :
+                if dirdat{idir}.fsample > 30000
+                   cfgtemp              = [];
+                   cfgtemp.resamplefs   = dirdat{idir}.fsample / 10;
+                   cfgtemp.feedback     = 'text';
+                   dirdat{idir}         = ft_resampledata(cfgtemp, dirdat{idir});
+                end
+                
                 header_orig{idir}                       = ft_read_header(fname{1});
             end
             
@@ -77,7 +89,6 @@ for irat = rat_list
                 fprintf('Concatinating directory %d, channel %d\n',idir, ichan);
                 chandat.trial{1}        = [chandat.trial{1} dirdat{idir}.trial{1}];
                 chandat.time{1}         = [chandat.time{1} (dirdat{idir}.time{1} + chandat.time{1}(end))];
-                %concatenate events
             end
             
             if isempty(idir) %correct idir if there is only 1 file
@@ -87,17 +98,22 @@ for irat = rat_list
             % create filename for concatinated data
             temp        = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},['*',config{irat}.LFP.channel{ichan},'.ncs']));
             hdrtemp  = ft_read_header(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir}, temp.name));
-            clear fname
             
             fname = fullfile(output_datapath,[config{irat}.prefix,config{irat}.LFP.channel{ichan}, '.ncs']);
                         
             hdr                         = [];
-            hdr.Fs                      = hdrtemp.Fs;
+            hdr.Fs                      = chandat.fsample;
             hdr.nSamples                = size(chandat.trial{1},2);
-            hdr.nSamplesPre             = hdrtemp.nSamplesPre;
+            
             hdr.nChans                  = 1;
             hdr.FirstTimeStamp          = hdrtemp.FirstTimeStamp;
-            hdr.TimeStampPerSample      = hdrtemp.TimeStampPerSample;
+            if hdrtemp.Fs > 30000
+                hdr.TimeStampPerSample      = hdrtemp.TimeStampPerSample * 10;%car sous échantillonné /10
+                hdr.nSamplesPre             = round(hdrtemp.nSamplesPre/10);
+            else
+                hdr.TimeStampPerSample      = hdrtemp.TimeStampPerSample;
+                hdr.nSamplesPre             = hdrtemp.nSamplesPre;
+            end
             hdr.label{1}                = config{irat}.LFP.channel{ichan};
             hdr.chantype                = hdrtemp.chantype;
             hdr.chanunit                = hdrtemp.chanunit;
@@ -111,7 +127,7 @@ for irat = rat_list
             
             add_nev = false;
             if overwriteMuseMarkerFile || ~exist(fullfile(output_datapath,'Events.mrk'), 'file')
-                copyfile(config{irat}.muse.templatemarker,fullfile(output_datapath,'Events.mrk'));
+                copyfile(config{irat}.muse.templatemarker, fullfile(output_datapath,'Events.mrk'));
                 add_nev = true;
             end
             
@@ -159,8 +175,7 @@ for irat = rat_list
         %add events to MuseStruct
         if add_nev
             cfgtemp = config{irat};
-            [~,dir_name]                  = fileparts(config{irat}.rawdir);
-            cfgtemp.rawdir                = fullfile(config{irat}.datasavedir,'concatenated_LFP');
+            [cfgtemp.rawdir,dir_name]     = fileparts(output_datapath);
             cfgtemp.directorylist{ipart}  = {dir_name};
             MuseStruct = readMuseMarkers(cfgtemp, true);
             MuseStruct = read_nev_Muse(cfgtemp, MuseStruct, nev_all);
