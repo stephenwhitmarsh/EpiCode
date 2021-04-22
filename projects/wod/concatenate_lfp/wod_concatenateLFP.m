@@ -156,7 +156,7 @@ for irat = rat_list
         %concatenate events
         nev_all{1} = nev_data{1};
         for idir = 2 : length(config{irat}.directorylist{ipart})
-            fprintf('Concatinating events %d\n',idir);
+            fprintf('Concatenating events %d\n',idir);
             if isempty(nev_data{idir})
                 continue
             end
