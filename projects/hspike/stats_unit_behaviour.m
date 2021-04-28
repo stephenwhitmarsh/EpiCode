@@ -1,8 +1,8 @@
-function dat = plotGrandAverageWindowedModel(cfg, force)
+function dat = stats_unit_behaviour(cfg, force)
 
 set(groot,'defaultAxesTickLabelInterpreter','none');
 hyplabels   = ["REM",  "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"];
-fname_out   = fullfile(cfg{1}.datasavedir, 'AllDataCombined.mat');
+fname_out   = fullfile(cfg{1}.datasavedir, 'stats_unit_behaviour.mat');
 
 %% load data
 if force == false && exist(fname_out, 'file')
@@ -85,8 +85,6 @@ else
     save(fname_out, 'dat', '-v7.3');
 end
 
-load(fname_out, 'dat', '-v7.3');
-
 %% prepare data for stats and plotting
 dat.SUA                                         = deblank(dat.cluster_group) == "good";
 dat.sleepstage                                  = dat.hyplabel;
@@ -146,6 +144,7 @@ set(fig, 'PaperOrientation', 'landscape');
 set(fig, 'PaperUnits', 'normalized');
 set(fig, 'PaperPosition', [0 0 1 1]);
 set(fig, 'Renderer', 'Painters');
+
 settings = {'Notch', 'off', 'GroupByColor', dat_avg.sleepstage, 'MarkerStyle', '.', 'JitterOutliers', 'on'};
 
 subplot(2,4,1);
@@ -182,11 +181,9 @@ for k = 1 : size(b, 1); b(k).BoxFaceColor = cm(k, :); end; for k = 1 : size(b, 1
 
 % print file
 fname = fullfile(cfg{1}.imagesavedir, 'stats', 'stats_windowed');
-print(fig, '-dpdf',  fname);
-print(fig, '-djpeg', fname, '-r600');
 disp(['Exporting figure ', fname])
-export_fig(fname, '-png');
-close all
+exportgraphics(fig, [fname, '.pdf']);
+exportgraphics(fig, [fname, '.tiff']);
 
 %% statistics
 

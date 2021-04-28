@@ -63,7 +63,13 @@ config{1}.hyp.spikewindow           = 60;
 config{1}.hyp.spikewindowoverlap    = 0.5;
 
 config{1}.epoch.toi.Hspike          = [-0.5  1];
-config{1}.epoch.pad.Hspike          = 0.5;
+config{1}.epoch.pad.Hspike          = 1;
+config{1}.epoch.toi.combined1       = [-0.5  1];
+config{1}.epoch.pad.combined1       = 1;
+config{1}.epoch.toi.combined2       = [-0.5  1];
+config{1}.epoch.pad.combined2       = 1;
+config{1}.epoch.toi.combined3       = [-0.5  1];
+config{1}.epoch.pad.combined3       = 1;
 
 config{1}.LFP.name                  = {'Hspike'};
 config{1}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -74,15 +80,26 @@ config{1}.LFP.baseline              = 'yes';
 config{1}.LFP.baselinewindow.Hspike = [-1, -0.5];
 
 config{1}.TFR.channel               = 'all';
-config{1}.TFR.foi                   = 4:4:80;
-config{1}.TFR.t_ftimwin             = 7./config{1}.TFR.foi;
-config{1}.TFR.toi                   = config{1}.epoch.toi.Hspike(1) : 0.04 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.keeptrials            = 'no';
+config{1}.TFR.foi.combined1          = 1:1:100;
+config{1}.TFR.foi.combined2          = 1:1:100;
+config{1}.TFR.foi.combined3          = 1:1:100;
+config{1}.TFR.t_ftimwin.combined1    = 5./config{1}.TFR.foi.combined1;
+config{1}.TFR.t_ftimwin.combined2    = 5./config{1}.TFR.foi.combined2;
+config{1}.TFR.t_ftimwin.combined3    = 5./config{1}.TFR.foi.combined3;
+config{1}.TFR.toi.combined1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.combined2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.combined3          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.bl.combined1           = [-0.5, -0.2];
+config{1}.TFR.bl.combined2           = [-0.5, -0.2];
+config{1}.TFR.bl.combined3           = [-0.5, -0.2];
 
 config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.align.reref               = 'yes';
 config{1}.align.refmethod           = 'bipolar';
 config{1}.align.latency.Hspike      = [-0.1 0.4];
+config{1}.align.zerochannel         = 'HaT2_1-HaT2_2';
 
 config{1}.cluster.name              = {'Hspike'};
 config{1}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'}; % CHECK REFERENCE
@@ -107,18 +124,29 @@ config{1}.template.threshold        = 2.7;
 config{1}.circus.channel                        = {'mHaT2_1', 'mHaT2_3', 'mHaT2_4','mHaT2_6', 'mHaT2_7', 'mHaT2_8'};
 config{1}.circus.reref                          = 'no';
 config{1}.circus.refchan                        = '';
-config{1}.circus.outputdir                      = 'SpykingCircus';
+% config{1}.circus.outputdir                      = 'SpykingCircus';
+% config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus_new.params');
+% config{1}.circus.params.detection.spike_thresh  = '6';
+% config{1}.circus.params.filtering.cut_off       = '300, auto';
+% config{1}.circus.params.filtering.remove_median = 'False';
+% config{1}.circus.params.clustering.max_elts     = '20000';
+% config{1}.circus.params.detection.peaks         = 'positive';
+
+config{1}.circus.outputdir                      = 'SpykingCircus_new';
 config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus.params');
 config{1}.circus.params.detection.spike_thresh  = '6';
 config{1}.circus.params.filtering.cut_off       = '300, auto';
 config{1}.circus.params.filtering.remove_median = 'False';
 config{1}.circus.params.clustering.max_elts     = '20000';
-config{1}.circus.params.detection.peaks         = 'positive';
+config{1}.circus.params.detection.peaks         = 'negative';
+config{1}.circus.params.data.stream_mode        = 'mapping-file';
+config{1}.circus.params.data.mapping_file       = 'filelist.txt';
 
+config{1}.spike.name                = {'combined1', 'combined2'};
 config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
-config{1}.spike.toi.combined1       = [-0.5, 1.5];           % for plotting spikerate
-config{1}.spike.toi.combined2       = [-0.5, 1.5];           % for p200mslotting spikerate
-config{1}.spike.toi.combined3       = [-0.5, 1.5];      % for plotting spikerate
+config{1}.spike.toi.combined1       = [-0.5, 1];           % for plotting spikerate
+config{1}.spike.toi.combined2       = [-0.5, 1];           % for p200mslotting spikerate
+config{1}.spike.toi.combined3       = [-0.5, 1];          % for plotting spikerate
 config{1}.spike.bl.combined1        = [-0.5, -0.2];
 config{1}.spike.bl.combined2        = [-0.5, -0.2];
 config{1}.spike.bl.combined3        = [-0.5, -0.2];
@@ -131,15 +159,22 @@ config{1}.spike.resamplefs.combined3 = 1000;
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
-config{1}.spike.ISIbins             = [0 : 0.0005 : 0.150]; %in s
+config{1}.spike.ISIbins             = 0 : 0.0005 : 0.150; %in s
 config{1}.spike.nrsdfbins           = 100;
+
+config{1}.spike.psthbin.combined1   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.combined2   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.combined3   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.sdftimwin.combined1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.combined2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.combined3 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 
 config{1}.spikewin.windowsize       = 60;
 config{1}.spikewin.windowoverlap    = 0.5;
 
-config{1}.stats.toi.combined1      = [-0.5, 1.5];
-config{1}.stats.toi.combined2       = [-0.5, 1.5];
-config{1}.stats.toi.combined3       = [-0.5, 1.5];
+config{1}.stats.toi.combined1       = [-0.5, 1];
+config{1}.stats.toi.combined2       = [-0.5, 1];
+config{1}.stats.toi.combined3       = [-0.5, 1];
 config{1}.stats.bl.combined1        = [-0.5 -0.2];
 config{1}.stats.bl.combined2        = [-0.5 -0.2];
 config{1}.stats.bl.combined3        = [-0.5 -0.2];
@@ -162,6 +197,7 @@ config{2}.hyp.micromedchannel       = 'HaT11';
 config{2}.LFP.channel               = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{2}.align.channel             = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{2}.align.latency             = [-0.1, 0.4];
+config{2}.align.zerochannel         = 'HmT2_1-HmT2_2';
 config{2}.cluster.channel           = {'_HaT1_1','_HaT1_2','_HaT1_3','_HaT1_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{2}.cluster.align.latency     = [-0.1, 0.4];
 config{2}.cluster.reref             = 'yes';
@@ -171,12 +207,14 @@ config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
 config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
+config{1}.circus.params.filtering.remove_median = 'False';
 config{2}.circus.params.detection.spike_thresh  = '6';
 config{2}.circus.params.detection.peaks         = 'negative';
 config{2}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined1';
                                         'template4', 'combined1';
                                         'template6', 'combined1'};
+config{2}.spike.name               = {'combined1'};
                                     
 %% Patient 3
 config{3}                           = config{1};
@@ -187,6 +225,7 @@ config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.LFP.channel               = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.latency             = [-0.1 0.1];
+config{3}.align.zerochannel         = 'Hm2g_2';
 config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.cluster.align.latency     = [-0.2 0.5];
 config{3}.cluster.reref             = 'no';
@@ -195,14 +234,13 @@ config{3}.template.latency          = [-0.2, 0.5];
 config{3}.template.threshold        = 3;
 config{3}.template.reref            = 'no';
 config{3}.template.refmethod        = 'bipolar';
-
+config{3}.circus.params.filtering.remove_median = 'False';
 config{3}.circus.channel            = {'mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8','mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
 config{3}.circus.channelname        = {'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd', };
 
 config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
-config{3}.circus.params.detection.peaks         = 'positive'; % two different bundles end up having AP peaks in different direction
 config{3}.circus.params.filtering.remove_median = 'True';
-config{3}.circus.version                        = 'fieldtrip';
+% config{3}.circus.version                        = 'fieldtrip';
 
 config{3}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined1';
@@ -210,6 +248,7 @@ config{3}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template4', 'combined1';
                                         'template5', 'combined1';
                                         'template6', 'combined1'};
+config{3}.spike.name                = { 'combined1', 'combined2'};
                                     
 %% Patient 4
 config{4}                           = config{1};
@@ -220,6 +259,7 @@ config{4}.hyp.micromedchannel       = 'HaT21';
 config{4}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.align.latency             = [-0.1 0.1];
+config{4}.align.zerochannel         = 'HmT2_1';
 config{4}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5'};
 config{4}.cluster.align.latency     = [-0.2 0.5];
 config{4}.cluster.reref             = 'no';
@@ -228,16 +268,15 @@ config{4}.template.threshold        = 2.7;
 config{4}.template.reref            = 'no';
 config{4}.template.refmethod        = 'bipolar';
 config{4}.circus.channel            = {'mHaT2_3','mHaT2_5','mHaT2_7'}; % might just as well remove amygdata electrodes as they are too noisy
-config{4}.circus.params.detection.spike_thresh  = '6';
-config{4}.circus.params.detection.peaks         = 'negative'; % two different bundles end up having AP peaks in different direction
-config{4}.circus.params.filtering.remove_median = 'True';
-
+config{4}.circus.params.detection.spike_thresh  = '9';
+config{4}.circus.params.filtering.remove_median = 'False';
 config{4}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined2';
                                         'template3', 'combined2';
                                         'template4', 'combined2';
                                         'template5', 'combined2';
                                         'template6', 'combined3'};
+config{4}.spike.name               =  {'combined1', 'combined2', 'combined3'};
 
 %% Patient 5
 % some clear cases for merging in mLMI1 & mLMS2
@@ -248,6 +287,7 @@ config{5}.locfile                   = fullfile(rootpath_epiloc, 'pat_02689_1168'
 config{5}.hyp.micromedchannel       = 'HmT31';
 config{5}.LFP.channel               = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','_HmT3_5','_HpNI_1','_HpNI_2','_HpNI_3','_HpNI_4','_HpNI_5'};
 config{5}.align.channel             = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','_HmT3_5','_HpNI_1','_HpNI_2','_HpNI_3','_HpNI_4','_HpNI_5'};
+config{5}.align.zerochannel         = 'HmT3_2-HmT3_3';
 config{5}.cluster.channel           = {'_HmT3_1','_HmT3_2','_HmT3_3','_HmT3_4','_HmT3_5','_HpNI_1','_HpNI_2','_HpNI_3','_HpNI_4','_HpNI_5'};
 config{5}.cluster.align.latency     = [-0.2 0.5];
 config{5}.cluster.reref             = 'yes';
@@ -258,13 +298,13 @@ config{5}.template.refmethod        = 'bipolar';
 config{5}.circus.channel            = {'mHmT3_4','mHmT3_5','mHmT3_7', 'mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7', 'mLMS2_2'};
 config{5}.circus.channelname        = {'mHmT3',  'mHmT3',  'mHmT3',   'mLMI1',  'mLMI1',  'mLMI1',  'mLMI1',   'mLMS2'};
 config{5}.circus.params.detection.spike_thresh  = '6';
-config{5}.circus.params.filtering.remove_median = 'True';
-config{5}.circus.params.detection.peaks         = 'negative';
+config{5}.circus.params.filtering.remove_median = 'False';
 config{5}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined2';
                                         'template3', 'combined3';
                                         'template5', 'combined2'; };
-                                    
+config{5}.spike.name               =  {'combined1', 'combined2', 'combined3'};
+                              
 %% Patient 6
 config{6}                           = config{1};
 config{6}.prefix                    = '2651-'; %% REDO SPYKING CIRCUS AFTER REDOING ARTEFACTS
@@ -273,6 +313,7 @@ config{6}.locfile                   = fullfile(rootpath_epiloc, 'pat_02651_1127'
 config{6}.hyp.micromedchannel       = 'HmT21';
 config{6}.LFP.channel               = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{6}.align.channel             = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
+config{6}.align.zerochannel         = 'HmT2_1';
 config{6}.cluster.channel           = {'_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4','_HmT2_5','_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{6}.cluster.reref             = 'no';
 config{6}.cluster.refmethod         = 'bipolar';
@@ -283,7 +324,6 @@ config{6}.template.refmethod        = 'bipolar';
 config{6}.circus.channel            = {'mHaT2_6','mHaT2_7','mHaT2_8','mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6'};
 config{6}.circus.channelname        = {'mHaT2','mHaT2','mHaT2','mHmT2','mHmT2','mHmT2','mHmT2'};
 config{6}.circus.params.detection.spike_thresh  = '6';
-config{6}.circus.params.detection.peaks         = 'negative';
 config{6}.circus.params.filtering.remove_median = 'False';
 config{6}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined1';
@@ -291,7 +331,8 @@ config{6}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template4', 'combined1';
                                         'template5', 'combined1';
                                         'template6', 'combined1'};
-                                    
+config{6}.spike.name               =  {'combined1'};
+                                  
 %% Patient 7
 config{7}                           = config{1};
 config{7}.prefix                    = '2619-';
@@ -300,6 +341,7 @@ config{7}.locfile                   = fullfile(rootpath_epiloc, 'pat_02619_1078'
 config{7}.hyp.micromedchannel       = 'HaTB1';
 config{7}.LFP.channel               = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
 config{7}.align.channel             = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
+config{7}.align.zerochannel         = 'HaTB_1';
 config{7}.cluster.channel           = {'_HaTB_1','_HaTB_2','_HaTB_3','_HaTB_4','_HaTB_5'};
 config{7}.cluster.reref             = 'no';
 config{7}.cluster.refmethod         = 'bipolar';
@@ -309,14 +351,14 @@ config{7}.template.refmethod        = 'bipolar';
 config{7}.circus.channel            = {'mAmT2_1','mAmT2_2','mAmT2_4','mAmT2_5','mAmT2_6'};
 config{7}.circus.reref              = 'no';
 config{7}.circus.params.detection.spike_thresh  = '7';
-config{7}.circus.params.detection.peaks         = 'negative'; %SURE???
-config{7}.circus.params.filtering.remove_median = 'True';
+config{7}.circus.params.filtering.remove_median = 'False';
 config{7}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined1';
                                         'template3', 'combined2';
                                         'template4', 'combined2';
                                         'template5', 'combined1';
                                         'template6', 'combined2'};
+config{7}.spike.name                =  {'combined1', 'combined2'};
 
 %% Patient NO MUA ON FIRST DAY - ONLY HYPNOGRAM ON FIRST DAY
 config{8}                           = config{1};
@@ -339,7 +381,27 @@ config{8}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template4', 'combined2';
                                         'template5', 'combined1'};
 
-                                    
+config{9}                           = config{1};
+config{9}.prefix                    = '2614-';
+config{9}.rawdir                    = fullfile(rootpath_data, 'pat_02578_1036', 'eeg');
+config{9}.epilocdir                 = fullfile(rootpath_epiloc, 'pat_02578_1036', 'pat_02578_1036_anatomical_localizations.csv');
+config{9}.hyp.micromedchannel       = 'HaTB1';
+config{9}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT1_1','_HmT1_2','_HmT1_3','_HmT1_4'};
+config{9}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4'};
+config{9}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT1_1','_HmT1_2','_HmT1_3','_HmT1_4'};
+config{9}.cluster.reref             = 'no';
+config{9}.cluster.refmethod         = 'bipolar';
+config{9}.template.threshold        = 3;
+config{9}.template.reref            = 'no';
+config{9}.template.refmethod        = 'bipolar';
+config{9}.circus.channel            = {'mAmT2_3'};
+config{9}.circus.reref              = 'no';
+config{9}.editmarkerfile.torename   = { 'template1', 'combined1';
+                                        'template2', 'combined2';
+                                        'template4', 'combined2';
+                                        'template5', 'combined1'};
+
+                                                                      
                                     
                                     
                                     

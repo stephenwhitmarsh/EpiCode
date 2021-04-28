@@ -12,6 +12,7 @@ parallel_hdf5  = True       # Use the parallel HDF5 feature (if available)
 output_dir     =            # By default, generated data are in the same folder as the data.
 auto_cluster   = False      # This and the next parameter prevent /tmp to become saturated
 global_tmp     = True
+mapping_file   =
 
 [detection]
 radius         = auto       # Radius [in um] (if auto, read from the prb file)
