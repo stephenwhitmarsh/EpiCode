@@ -9,13 +9,10 @@ function writeSpykingCircusParameters_new(cfg)
 % Change this file to have new default values.
 %
 % Mandatory inputs
-% cfg.prefix            % name of the data to analyse, will be appended at
-%                         the begining of each data file
-% cfg.directorylist     % list of folders with the neuralynx raw files (one
-%                         file per electrode)
-% cfg.datasavedir       % where to save the data. The folder with Spyking-
+%
+% cfg.directorylist     % list of folders with the neuralynx raw files
 % cfg.circus.channel    % list of channels to process with Spyking-Circus
-%                         (the first one is used to name the .param file)
+% cfg.datasavedir       % where to save the data
 %
 % Optional cfg fields
 %
@@ -54,6 +51,7 @@ cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
 mfile_name = mfilename('fullpath');
 pathstr    = fileparts(fileparts(mfile_name));
 pathCell   = regexp(path, pathsep, 'split');
+
 if ispc  % Windows is not case-sensitive
     onPath = any(strcmpi(fullfile(pathstr, ['external', filesep, 'iniconfig']), pathCell));
 else
@@ -83,8 +81,8 @@ end
 
 for ipart = cfg.circus.part_list
 
-    subjdir         = cfg.prefix(1:end-1);
-    partdir         = ['p', num2str(ipart)];
+    subjdir = cfg.prefix(1:end-1);
+    partdir = ['p', num2str(ipart)];
 
     % read Spyking-Circus params file
     ini = IniConfig();
@@ -127,8 +125,8 @@ for ipart = cfg.circus.part_list
                 for field = string(fields(cfg.circus.params))'
                     for setting = string(fields(cfg.circus.params.(field)))'
                         h4 = ini.SetValues(char(field), char(setting), cfg.circus.params.(field).(setting));
-                        if h4 ~= 1, error('Something went wrong with adjusting parameters'); end
-                        fprintf('Set: [%s] %s to %s\n', field, setting, cfg.circus.params.(field).(setting));
+                        fprintf('Set: [%s] %s to %s\n', field, setting, cfg.circus.params.(field).(setting));                        
+                        if h4 ~= 1, error('Something went wrong with adjusting parameters; does the field not exist in the template?'); end
                     end
                 end
             end
@@ -139,11 +137,14 @@ for ipart = cfg.circus.part_list
             if h0 ~= 1, error('Something went wrong with adjusting parameters'); end
         end
         
-%         filename        = [cfg.prefix, 'p', num2str(ipart), '-multifile-', cfg.circus.channel{1}, '.params'];
-        filename    = 'spyking-circus.params';
+        filename    = 'SpykingCircus.params';
         fname_params    = fullfile(cfg.datasavedir, subjdir, partdir, filename);
         status          = ini.WriteFile(fname_params);
-        if status == false, error('Couldn''t write file %s', fname_params); end
+        if status == false
+            error('Couldn''t write file %s', fname_params);
+        else
+            fprintf('Succesfully wrote SpykingCircus settings to %s\n', fname_params);
+        end
         writeProbeFile(nb_channels, fullfile(cfg.datasavedir, subjdir, partdir, fname_prb));
 
     else
@@ -152,7 +153,6 @@ for ipart = cfg.circus.part_list
 
             % add artefact file to params only if needed
             temp        = strcmp(cfg.circus.channelname, chandir);
-            firstchan   = cfg.circus.channel(find(temp,1,'first'));
             nb_channels = sum(temp);
 
             % adjust parameters common to all
@@ -189,13 +189,17 @@ for ipart = cfg.circus.part_list
                 if h0 ~= 1, error('Something went wrong with adjusting parameters'); end
             end
 
-%             filename        = strcat(cfg.prefix, 'p', num2str(ipart), '-multifile-', firstchan, '.params');
-            filename    = 'spyking-circus.params';            
+            filename        = 'SpykingCircus.params';            
             fname_params    = char(fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), filename));
             fname_prb       = ['Adtech_', num2str(nb_channels), 'chan.prb'];
             status          = ini.WriteFile(fname_params);
-            if status == false, error('Couldn''t write file %s', fname_params); end
+            if status == false
+                error('Couldn''t write file %s', fname_params);
+            else
+                fprintf('Succesfully wrote SpykingCircus settings to %s\n', fname_params);
+            end
             writeProbeFile(nb_channels, fullfile(cfg.datasavedir, subjdir, partdir, string(chandir), fname_prb));
+            
         end
     end
 end
