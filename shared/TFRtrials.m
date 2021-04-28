@@ -18,6 +18,26 @@ function [TFR] = TFRtrials(cfg, LFP, force)
 
 fname_out = fullfile(cfg.datasavedir,[cfg.prefix, 'TFRtrials.mat']);
 
+if nargin == 1
+    if exist(fname_out, 'file')
+        fprintf('Reading %s\n', fname_out);
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname_out, 'TFR');
+
+            catch ME
+                err_count = err_count + 1;
+            end
+            count = count + 1;
+        end
+        return   
+    else
+        fprintf('Computing TFR\n');
+    end
+end
+
 if exist(fname_out, 'file') && force == false
     fprintf('Loading TFR\n');
     load(fname_out, 'TFR');
