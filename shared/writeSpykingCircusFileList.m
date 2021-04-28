@@ -42,6 +42,7 @@ if nargin == 1
                     load(fname_output, 'filelist', 'sampleinfo', 'timestamps', 'hdr');
                 else
                     load(fname_output, 'filelist', 'sampleinfo', 'hdr');
+                    timestamps = [];
                 end
             catch ME
                 err_count = err_count + 1;
@@ -67,6 +68,7 @@ if exist(fname_output, 'file') && force == false
                 load(fname_output, 'filelist', 'sampleinfo', 'timestamps', 'hdr');
             else
                 load(fname_output, 'filelist', 'sampleinfo', 'hdr');
+                timestamps = [];
             end
         catch ME
             err_count = err_count + 1;
