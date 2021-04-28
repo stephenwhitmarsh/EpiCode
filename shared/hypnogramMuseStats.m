@@ -25,7 +25,7 @@ warning('off', 'all');
 
 fname = fullfile(cfg.datasavedir, sprintf('%shypnogramStats.mat', cfg.prefix));
 
-if nargin == 1
+if nargin == 1 || force == false
     if exist(fname, 'file')
         fprintf('Reading %s\n', fname);
         % repeat to deal with load errors
@@ -45,6 +45,7 @@ if nargin == 1
         return
     end
 end
+ 
 
 fprintf('Calculating stats\n');
 
