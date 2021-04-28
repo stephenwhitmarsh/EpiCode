@@ -56,10 +56,11 @@ keepcfg             = ft_getopt(cfg.LFP, 'keepcfg', true);
 cfg.LFP.reref       = ft_getopt(cfg.LFP, 'reref', 'no');
 cfg.LFP.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
 cfg.LFP.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
+cfg.LFP.postfix     = ft_getopt(cfg.LFP, 'postfix', []);
 
 if nargin == 1
     for markername = string(cfg.LFP.name)
-        fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, '.mat'));
+        fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, cfg.LFP.postfix, '.mat'));
         if exist(fname, 'file')
             fprintf('Reading %s\n', fname);
             count = 0;
@@ -80,13 +81,37 @@ if nargin == 1
         end
     end
     return
+elseif ~force
+    missing = [];
+    for markername = string(cfg.LFP.name)
+        fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, cfg.LFP.postfix, '.mat'));
+        if exist(fname, 'file')
+            fprintf('Reading %s\n', fname);
+            count = 0;
+            err_count = 0;
+            while count == err_count
+                try
+                    temp = load(fname);
+                    for ipart = 1 : size(cfg.directorylist, 2)
+                        LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
+                    end
+                catch ME
+                    err_count = err_count + 1;
+                end
+                count = count + 1;
+            end
+        else
+            fprintf('(re-) computing LFP data for %s\n', markername);
+            missing = [missing; markername];
+        end
+    end
+    cfg.LFP.name = missing;
 end
-
+    
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg);
 
 % initialize LFP, to return empty cell in case there is no LFP to load
-LFP = {};
 hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % loop over markers
