@@ -39,9 +39,9 @@ if nargin == 1
                 load(fname, 'SpikeTrials');
             catch ME
                 err_count = err_count + 1;
+                disp('Something went wrong loading the file. Trying again...')                
             end
             count = count + 1;
-            disp('Something went wrong loading the file. Trying again...')
         end
         return;
     else
@@ -71,9 +71,9 @@ if exist(fname, 'file') && force == false
             load(fname, 'SpikeTrials');
         catch ME
             err_count = err_count + 1;
+            disp('Something went wrong loading the file. Trying again...')                
         end
         count = count + 1;
-        disp('Something went wrong loading the file. Trying again...')        
     end
     return
 else
@@ -95,46 +95,35 @@ for ipart = cfg.circus.part_list
         continue
     end
 
-    % to deal with multichannel data
     if isfield(SpikeRaw{ipart}, 'hdr')
         hdr = SpikeRaw{ipart}.hdr;
     else
-        if isempty(cfg.circus.channelname)
-            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-        else
-            temp        = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
-        end
-
-        hdr_fname   = fullfile(temp(1).folder, temp(1).name);
-        hdr         = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+        disp('Can''t find header information, recovering it now');
+        [~, ~, ~, hdr_in] = writeSpykingCircusFileList(cfg, false);
+        hdr = hdr_in{ipart};
     end
+%         
+%         % to deal with multichannel data
+%         if isempty(cfg.circus.channelname)
+%             temp = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+%         else
+%             temp = dir(fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], cfg.circus.channelname{1}, [cfg.prefix, 'p', num2str(ipart), '-multifile-*.ncs']));
+%         end
+% 
+%         hdr_fname = fullfile(temp(1).folder, temp(1).name);
+%         hdr       = ft_read_header(hdr_fname); % take the first file to extract the header of the data
+%     end
 
     % create trials
     clear Trials
-    for markername = string(cfg.name)
+    for markername = string(cfg.spike.name)
 
-        SpikeTrials{ipart}.(markername) = []; %initialize to avoid bug in case no marker are found and need to output empty structure
-        
-%         % clock time of each event
-%         clocktimes = [];
-%         for ifile = 1 : size(MuseStruct{ipart}, 2)
-%             if ~isfield(cfg.muse.startmarker, char(markername))
-%                 continue
-%             end
-%             if ~isfield(MuseStruct{ipart}{ifile}.markers, char(cfg.muse.startmarker.(markername)))
-%                 continue
-%             end
-%             if ~isfield(MuseStruct{ipart}{ifile}.markers.(cfg.muse.startmarker.(markername)), 'clock')
-%                 continue
-%             end
-%             clocktimes = [clocktimes, MuseStruct{ipart}{ifile}.markers.(cfg.muse.startmarker.(markername)).clock];
-%         end
+        SpikeTrials{ipart}.(markername) = []; %initialize 
 
-        % first sample starts at 0, add cumulative directory along the way
         hyplabels_trl   = [];
-        Startsample     = [];
-        Endsample       = [];
-        Offset          = [];
+        Startsample     = int64([]);
+        Endsample       = int64([]);
+        Offset          = int64([]);
         Trialnr         = [];
         Trialnr_dir     = [];
         Filenr          = [];
@@ -142,19 +131,21 @@ for ipart = cfg.circus.part_list
         Starttime       = [];
         Endtime         = [];
         Directory       = [];
-        clocktimes      = [];
-        dirOnset(1)     = 0;
+        TrialDirOnset   = int64([]);
+        
+        % first sample starts at 0, add cumulative directory along the way        
+        dirOnset        = int64(0);
         trialcount      = 1;
         StartTrialnr    = [];
         EndTrialnr      = [];
         
         % loop over directories
         for idir = 1 : size(MuseStruct{ipart}, 2)
-
-            % calculate duration of single file/directory
-            temp                = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{1}(1:end-2), '*.ncs']));
-            hdrtemp             = ft_read_header(fullfile(temp(1).folder, temp(1).name));
-            dirOnset(idir+1)    = dirOnset(idir) + hdrtemp.nSamples;
+            
+            % make sure to do this before any 'continue'
+            if idir > 1
+                dirOnset = dirOnset + hdr{idir-1}.nSamples - 512; %% FIXME: WORKAROUND FOR BUG IN SPYKING CIRCUS
+            end
 
             % Check whether data has events
             if ~isfield(cfg.muse.startmarker, char(markername))
@@ -172,48 +163,48 @@ for ipart = cfg.circus.part_list
             end
 
             % starting trialcount fresh at every directory
-            trialcount_dir      = 1;
+            trialcount_dir = 1;
             
             % add trialnr before sorting for reference & checks
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr     = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr       = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime, 2);
 
-            % sort times in case markers have been combined to prevent
-            % problems in identifying start and end markers based on time
+            % sort times in case markers have been combined
             [~, sidx] = sort(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime    = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(sidx);
-    
             [~, sidx] = sort(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime      = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock         = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(sidx);
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr       = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(sidx);
 
-            % loop over events
+            % loop over events 
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
 
-                ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * hdr.Fs);
-                idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * hdr.Fs) >= ss, 1, 'first');
-                es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * hdr.Fs);
+                ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * hdr{idir}.Fs);
+                idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * hdr{idir}.Fs) >= ss, 1, 'first');
+                es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx) * hdr{idir}.Fs);
 
                 if isempty(es)
                     continue
                 end
 
-                Startsample     = [Startsample; ss + (cfg.spike.toi.(markername)(1) + cfg.spike.pad.(markername)) * hdr.Fs + dirOnset(idir)];
-                Endsample       = [Endsample;   es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr.Fs + dirOnset(idir)];
+                Startsample     = [Startsample;  int64(ss + (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
+                Endsample       = [Endsample;    int64(es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
+                Offset          = [Offset;       int64(     (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs)];
+
+                % extra info for trialinfo
+                TrialDirOnset   = [TrialDirOnset; dirOnset]; % TO CHECK
                 StartTrialnr    = [StartTrialnr; MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(ievent)];
-                EndTrialnr      = [EndTrialnr; MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(ievent)];
-                Starttime       = [Starttime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
-                Endtime         = [Endtime;     MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx) + seconds(cfg.spike.toi.(markername)(2))];
-                Offset          = [Offset;      cfg.spike.toi.(markername)(1) * hdr.Fs];
-                Trialnr_dir     = [Trialnr_dir; trialcount_dir];
-                Trialnr         = [Trialnr;     trialcount];
-                Filenr          = [Filenr;      idir];
-                FileOffset      = [FileOffset;  dirOnset(idir)];
-                Directory       = [Directory;   cfg.directorylist{ipart}{idir}];
-                    
+                EndTrialnr      = [EndTrialnr;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(ievent)];
+                Starttime       = [Starttime;    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
+                Endtime         = [Endtime;      MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx)      + seconds(cfg.spike.toi.(markername)(2))];
+                Trialnr_dir     = [Trialnr_dir;  trialcount_dir];
+                Trialnr         = [Trialnr;      trialcount];
+                Filenr          = [Filenr;       idir];
+                FileOffset      = [FileOffset;   dirOnset];
+                Directory       = [Directory;    cfg.directorylist{ipart}{idir}];           
                 trialcount      = trialcount + 1;
                 trialcount_dir  = trialcount_dir + 1;
 
@@ -264,24 +255,42 @@ for ipart = cfg.circus.part_list
                 end
 
             end % ievent
+
         end %idir
 
-        full_trial = Startsample > 0 & Endsample < hdr.nSamples;% so not to read before BOF or after EOFs
+        full_trial = Startsample > 0 & Endsample < SpikeRaw{ipart}.trialinfo.endsample;% so not to read before BOF or after EOFs
         cfgtemp                         = [];
         cfgtemp.trl                     = [Startsample, Endsample, Offset];
         cfgtemp.trl                     = cfgtemp.trl(full_trial, :); % so not to read before BOF or after EOFs
-
         if isempty(cfgtemp.trl)
             continue
         end
 
         % create spiketrials timelocked to events
         cfgtemp.trlunit                                         = 'samples';
-        cfgtemp.hdr                                             = hdr;
+        cfgtemp.hdr                                             = rmfield(hdr{1}, {'nSamples', 'orig'});
+%         cfgtemp.hdr.nSamples                                    = SpikeRaw{ipart}.trialinfo.endsample(1);
+
+        %%% DUMMY TIMESTAMPS
+        cfgtemp.hdr.FirstTimeStamp                              = 0;
+        cfgtemp.hdr.TimeStampPerSample                          = 1;
+        %%%
         SpikeTrials{ipart}.(markername)                         = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
+       
+% 
+%         
+%         cfg_raster                  = [];
+%         % cfgtemp.latency       = [cfg.stats.toi.(markername)(1), cfg.stats.toi.(markername)(2)];
+%         cfg_raster.trialborders     = 'yes';
+%         cfg_raster.linewidth        = 1;
+%         cfg_raster.topplotsize      = 0.5;
+%         cfg_raster.trialborders     = 'no';
+%         figure; 
+%         ft_spike_plot_raster(cfg_raster, SpikeTrials{ipart}.(markername));
+%         
+%         
         if isfield(SpikeRaw{ipart},'clusternames'); SpikeTrials{ipart}.clusternames = SpikeRaw{ipart}.clusternames; end
-%         SpikeTrials{ipart}.(markername).trialinfo.clocktime     = clocktimes;
-        SpikeTrials{ipart}.(markername).hdr                     = hdr;
+        SpikeTrials{ipart}.(markername).hdr                     = cfgtemp.hdr;
         SpikeTrials{ipart}.(markername).trialinfo               = table;
         SpikeTrials{ipart}.(markername).trialinfo.trialnr_dir   = Trialnr_dir(full_trial); % trialnr which restarts for each dir
         SpikeTrials{ipart}.(markername).trialinfo.begsample     = Startsample(full_trial);

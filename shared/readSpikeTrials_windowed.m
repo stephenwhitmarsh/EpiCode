@@ -37,6 +37,7 @@ if nargin == 1
                 load(fname, 'SpikeTrials');
             catch ME
                 err_count = err_count + 1;
+                disp('Something went wrong loading the file. Trying again...')       
             end
             count = count + 1;
         end
@@ -47,7 +48,6 @@ if nargin == 1
         return
     end
 end
-
 
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
@@ -66,8 +66,14 @@ else
     fprintf('(re-)computing SpikeTrials_MuseMarkers for %s\n', cfg.prefix);
 end
 
-for ipart = cfg.circus.part_list
+% concatinate timestamps & samples
+[~, samples_separate, ~, ~] = writeSpykingCircusFileList(cfg, false);
 
+for ipart = cfg.circus.part_list
+    
+    temp        = sum(samples_separate{ipart});
+    samples     = [1 temp(2)];
+    
     if ipart > size(SpikeRaw, 2)
         SpikeTrials{ipart}.window = [];
         continue
@@ -93,16 +99,17 @@ for ipart = cfg.circus.part_list
 
     % create trials of x seconds
     cfgtemp                                         = [];
-    cfgtemp.trl(:, 1)                               = 0 : hdr.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : hdr.nSamples - (hdr.Fs * cfg.spikewin.windowsize);
-    cfgtemp.trl(:, 2)                               = cfgtemp.trl(:, 1) + hdr.Fs * cfg.spikewin.windowsize - 1; %-1 because starts at zero
+%     cfgtemp.trl(:, 1)                               = 0 : hdr{1}.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : hdr{1}.nSamples - (hdr{1}.Fs * cfg.spikewin.windowsize);
+    cfgtemp.trl(:, 1)                               = 0 : hdr{1}.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : samples(2) - (hdr{1}.Fs * cfg.spikewin.windowsize);
+    cfgtemp.trl(:, 2)                               = cfgtemp.trl(:, 1) + hdr{1}.Fs * cfg.spikewin.windowsize - 1; %-1 because starts at zero
     cfgtemp.trl(:, 3)                               = zeros(size(cfgtemp.trl, 1), 1);
     cfgtemp.trlunit                                 = 'samples';
-    cfgtemp.hdr                                     = hdr;
+    cfgtemp.hdr                                     = rmfield(hdr{1}, 'nSamples');
     SpikeTrials{ipart}.window                       = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
     if isfield(SpikeRaw{ipart},'clustername'); SpikeTrials{ipart}.clustername = SpikeRaw{ipart}.clustername; end
     SpikeTrials{ipart}.window.trialinfo             = table;
     SpikeTrials{ipart}.window.trialinfo.starttime   = (MuseStruct{ipart}{1}.starttime : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime - seconds(cfg.spikewin.windowsize))';
-    SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.spikewin.windowsize -1/hdr.Fs) : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime)';
+    SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.spikewin.windowsize -1/hdr{1}.Fs) : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime)';
 
     if height(SpikeTrials{ipart}.window.trialinfo) ~= size(cfgtemp.trl, 1)
         error('Difference in total duration of TRL and MuseMarker list - have you trimmed your directorylist?');
