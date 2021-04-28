@@ -27,14 +27,12 @@ function [artefacts] = writeSpykingCircusDeadfiles(cfg, MuseStruct, force, suffi
 if nargin < 4
     suffix = [];
 end
-fname_output                = fullfile(cfg.datasavedir, [cfg.prefix, 'SpykingCircus_artefacts', char(suffix), '.mat']);
-cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
-
+fname_output           = fullfile(cfg.datasavedir, [cfg.prefix, 'SpykingCircus_artefacts', char(suffix), '.mat']);
+cfg.circus.channelname = ft_getopt(cfg.circus, 'channelname', []);
 
 if exist(fname_output, 'file') && force == false
     fprintf('\nLoading sampleinfo artefacts: %s \n', fname_output);
-    temp         = load(fname_output, 'cfg');
-    artefacts    = temp.artefacts;
+    load(fname_output, 'artefacts');
     return
 end
 
@@ -154,5 +152,6 @@ for ipart = 1 : size(cfg.directorylist, 2)
     artefacts.deadfile_ms{ipart}         = deadfile_ms;
     artefacts.deadfile_samples{ipart}    = deadfile_samples;
     artefacts.idir{ipart}                = deadfile_idir;
- 
+    save(fname_output, 'artefacts');
+
 end
