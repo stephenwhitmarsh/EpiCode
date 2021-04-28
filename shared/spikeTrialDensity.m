@@ -35,6 +35,7 @@ if nargin == 1
                 load(fname, 'stats');
             catch ME
                 err_count = err_count + 1;
+                disp('Something went wrong loading the file. Trying again...')    
             end
             count = count + 1;
         end
@@ -48,7 +49,6 @@ end
 
 if exist(fname, 'file') && force == false
     fprintf('Loading %s\n', fname);
-    
     count = 0;
     err_count = 0;
     while count == err_count
@@ -56,6 +56,7 @@ if exist(fname, 'file') && force == false
             load(fname, 'stats');
         catch ME
             err_count = err_count + 1;
+            disp('Something went wrong loading the file. Trying again...')            
         end
         count = count + 1;
     end
@@ -68,6 +69,10 @@ if strcmp(cfg.spike.part_list, 'all')
     cfg.spike.part_list = 1:size(cfg.directorylist, 2);
 end
 stats = {};
+
+
+% for correlation with LFP
+LFP = readLFP(cfg);
 
 for ipart = cfg.spike.part_list
     
@@ -84,61 +89,53 @@ for ipart = cfg.spike.part_list
             continue
         end
         
-        %spike pssth (no smoothing)
+        % spike peristimulus time histogram
         cfgtemp                         = [];
         if isfield(cfg.spike, 'psthbin')
             cfgtemp.binsize             = cfg.spike.psthbin.(markername);
         end
         cfgtemp.keeptrials              = 'yes';
-%         cfgtemp.trials                  = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;        
-        psth_event                      = ft_spike_psth(cfgtemp,SpikeTrials{ipart}.(markername));
+        psth_event                      = ft_spike_psth(cfgtemp, SpikeTrials{ipart}.(markername));
         stats{ipart}.psth.(markername)  = psth_event;
         
-        % spike density function, with smoothed version
+        % spike density function
         cfgtemp                         = [];
-        cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);   % sample at 1000 hz
-%         cfgtemp.trials                  = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;
+        cfgtemp.fsample                 = cfg.spike.resamplefs.(markername);
         cfgtemp.keeptrials              = 'yes';
         if isfield(cfg.spike, 'sdftimwin')
             cfgtemp.timwin              = cfg.spike.sdftimwin.(markername);
         end
-        sdf_line{ipart}                 = ft_spikedensity(cfgtemp, SpikeTrials{ipart}.(markername));
+        stats{ipart}.sdf_lin.(markername) = ft_spikedensity(cfgtemp, SpikeTrials{ipart}.(markername));
         
         % prepare data for stats on bar graph
-        [n, e, b] = histcounts(sdf_line{ipart}.time, cfg.spike.nrsdfbins);
+        [n, e, b] = histcounts(stats{ipart}.sdf_lin.(markername).time, cfg.spike.nrsdfbins);
         binsize = diff(e);
-        y = nan(size(sdf_line{ipart}.trial, 1), size(sdf_line{ipart}.label, 2), size(n, 2));
+        y = nan(size(stats{ipart}.sdf_lin.(markername).trial, 1), size(stats{ipart}.sdf_lin.(markername).label, 2), size(n, 2));
         x = e(1:end-1) + binsize/2;
-        for itemp = 1 : size(sdf_line{ipart}.label, 2)
+        for itemp = 1 : size(stats{ipart}.sdf_lin.(markername).label, 2)
             for i = 1 : size(n, 2)
-                for itrial = 1 : size(sdf_line{ipart}.trial, 1)
-                    y(itrial, itemp, i) = mean(sdf_line{ipart}.trial(itrial, itemp, b == i));
+                for itrial = 1 : size(stats{ipart}.sdf_lin.(markername).trial, 1)
+                    y(itrial, itemp, i) = mean(stats{ipart}.sdf_lin.(markername).trial(itrial, itemp, b == i));
                 end
             end
         end
-        
-        sdf_bar{ipart}                      = [];
-        sdf_bar{ipart}.trial                = y;
-        sdf_bar{ipart}.time                 = x;
-        sdf_bar{ipart}.label                = sdf_line{ipart}.label;
-        sdf_bar{ipart}.dimord               = 'rpt_chan_time';
-        sdf_bar{ipart}.avg                  = squeeze(mean(sdf_bar{ipart}.trial, 1));
-        
-        % contain spike density in stat data
-        stats{ipart}.sdf_bar.(markername)   = sdf_bar{ipart};
-        stats{ipart}.sdf_lin.(markername)   = sdf_line{ipart};
-        
+        stats{ipart}.sdf_bar.(markername).trial     = y;
+        stats{ipart}.sdf_bar.(markername).time      = x;
+        stats{ipart}.sdf_bar.(markername).label     = stats{ipart}.sdf_lin.(markername).label;
+        stats{ipart}.sdf_bar.(markername).dimord    = 'rpt_chan_time';
+        stats{ipart}.sdf_bar.(markername).avg       = squeeze(mean(stats{ipart}.sdf_bar.(markername).trial, 1));
+          
         % calculate baseline for dummy stats
-        slim(1)                             = find(sdf_bar{ipart}.time > cfg.stats.bl.(markername)(1), 1, 'first');
-        slim(2)                             = find(sdf_bar{ipart}.time < cfg.stats.bl.(markername)(2), 1, 'last');
-        sdf_bar_bl{ipart}                   = sdf_bar{ipart};
+        slim(1)                             = find(stats{ipart}.sdf_bar.(markername).time > cfg.stats.bl.(markername)(1), 1, 'first');
+        slim(2)                             = find(stats{ipart}.sdf_bar.(markername).time < cfg.stats.bl.(markername)(2), 1, 'last');
+        sdf_bar_bl                          = stats{ipart}.sdf_bar.(markername);
         
         % baseline is mean during baseline period
-        bl                                  = nanmean(sdf_bar{ipart}.trial(:, :, slim(1):slim(2)), 3);
-        sdf_bar_bl{ipart}.trial             = ones(size(sdf_bar_bl{ipart}.trial)) .* bl;
+        bl                                  = nanmean(stats{ipart}.sdf_bar.(markername).trial(:, :, slim(1):slim(2)), 3);
+        sdf_bar_bl.trial                    = ones(size(sdf_bar_bl.trial)) .* bl;
         
         % clusterstats on bargraph, separate for each unit
-        for itemp = 1 : size(sdf_bar{ipart}.label, 2)
+        for itemp = 1 : size(stats{ipart}.sdf_bar.(markername).label, 2)
             
             cfgtemp                                         = [];
             cfgtemp.channel                                 = itemp;
@@ -148,7 +145,7 @@ for ipart = cfg.spike.part_list
             cfgtemp.method                                  = 'montecarlo';
             cfgtemp.computestat                             = 'yes';
             cfgtemp.correctm                                = 'cluster';
-            cfgtemp.latency                                 = [cfg.stats.bl.(markername)(2) sdf_bar{ipart}.time(end)]; % active perio starts after baseline
+            cfgtemp.latency                                 = [cfg.stats.bl.(markername)(2) stats{ipart}.sdf_bar.(markername).time(end)]; % active period starts after baseline
             cfgtemp.ivar                                    = 1;
             cfgtemp.uvar                                    = 2;
             
@@ -157,17 +154,66 @@ for ipart = cfg.spike.part_list
             trialcount                                      = sum(cleanindx);
             cfgtemp.design(:, 1)                            = [ones(1, trialcount) ones(1, trialcount) * 2];
             cfgtemp.design(:, 2)                            = [1 : trialcount 1 : trialcount];
-            cfgtemp.numrandomization                        = 1000;
-            dat_sel                                         = sdf_bar{ipart};
+            cfgtemp.numrandomization                        = 2000;
+            dat_sel                                         = stats{ipart}.sdf_bar.(markername);
             dat_sel.trial                                   = dat_sel.trial(cleanindx, :, :);
-            dat_bl_sel                                      = sdf_bar_bl{ipart};
-            dat_bl_sel.trial                                = sdf_bar_bl{ipart}.trial(cleanindx, :, :);
+            dat_bl_sel                                      = sdf_bar_bl;
+            dat_bl_sel.trial                                = sdf_bar_bl.trial(cleanindx, :, :);
 
             stats{ipart}.stat.(markername){itemp}           = ft_timelockstatistics(cfgtemp, dat_sel, dat_bl_sel);
             stats{ipart}.stat.(markername){itemp}.baseline  = bl;
+            
+            
+            % note if unit responds statistically
+            stats{ipart}.stat.(markername){itemp}.responsive_pos   = false;
+            stats{ipart}.stat.(markername){itemp}.responsive_neg   = false;
+            stats{ipart}.stat.(markername){itemp}.responsive       = false;
+            
+            if isfield(stats{ipart}.stat.(markername){itemp}, 'posclusters')
+                for ipos = 1 : size(stats{ipart}.stat.(markername){itemp}.posclusters, 2)
+                    if stats{ipart}.stat.(markername){itemp}.posclusters(ipos).prob < 0.025
+                        stats{ipart}.stat.(markername){itemp}.responsive_pos = true;
+                        stats{ipart}.stat.(markername){itemp}.responsive = true;
+                        
+                    end
+                end
+            end
+            if isfield(stats{ipart}.stat.(markername){itemp}, 'negclusters')
+                for ineg = 1 : size(stats{ipart}.stat.(markername){itemp}.negclusters, 2)
+                    if stats{ipart}.stat.(markername){itemp}.negclusters(ineg).prob < 0.025
+                        stats{ipart}.stat.(markername){itemp}.responsive_neg = true;
+                        stats{ipart}.stat.(markername){itemp}.responsive = true;
+                    end
+                end
+            end
+            
+            % correlate firing rate with LFP and pick largest abs(rho)         
+            LFP_avg = ft_timelockanalysis([], LFP{ipart}.(markername));
+            
+            % resample to same time-axis
+            cfgtemp         = [];
+            cfgtemp.time{1} = stats{ipart}.psth.(markername).time;           
+            LFP_ds          = ft_resampledata(cfgtemp, LFP_avg);
+            
+            [corr_rho, corr_pval] = ...
+                corr(LFP_ds.avg(:, :)', stats{ipart}.psth.(markername).avg', 'type', 'pearson');
+            
+            [~, indx] = max(abs(corr_rho));
+            for iunit = 1 : size(indx, 2)
+                stats{ipart}.psth.(markername).corr_chan(iunit) = indx(iunit);
+                stats{ipart}.psth.(markername).corr_rho(iunit)  = corr_rho(indx(iunit), iunit);
+                stats{ipart}.psth.(markername).corr_pval(iunit) = corr_pval(indx(iunit), iunit);
+            end
+
+%             figure;
+%             subplot(2,1,1);
+%             plot(LFP_ds.avg(maxchan, :));
+%             subplot(2,1,2);
+%             plot(stats{ipart}.psth.(markername).avg'); 
+%             
             clear dat_sel dat_bl_sel
-        end 
-    end
-end
+        end % itemp
+    end % markername
+end % ipart
 
 save(fname, 'stats', '-v7.3');
