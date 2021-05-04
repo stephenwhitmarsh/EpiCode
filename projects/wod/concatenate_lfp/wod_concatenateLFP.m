@@ -96,8 +96,8 @@ for irat = rat_list
             end
             
             % create filename for concatinated data
-            temp        = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},['*',config{irat}.LFP.channel{ichan},'.ncs']));
-            hdrtemp  = ft_read_header(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir}, temp.name));
+            temp        = dir(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{1},['*',config{irat}.LFP.channel{ichan},'.ncs']));
+            hdrtemp  = ft_read_header(fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{1}, temp.name));
             
             fname = fullfile(output_datapath,[config{irat}.prefix,config{irat}.LFP.channel{ichan}, '.ncs']);
                         
@@ -127,7 +127,7 @@ for irat = rat_list
             
             add_nev = false;
             if overwriteMuseMarkerFile || ~exist(fullfile(output_datapath,'Events.mrk'), 'file')
-                copyfile(config{irat}.muse.templatemarker, fullfile(output_datapath,'Events.mrk'));
+%                 copyfile(config{irat}.muse.templatemarker, fullfile(output_datapath,'Events.mrk'));
                 add_nev = true;
             end
             
