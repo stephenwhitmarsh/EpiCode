@@ -153,31 +153,31 @@ for iprot= 1:size(config,2)
         
         
         %plot detection for each channel
-        fig1=figure;
-        plot(AD_slope.(isignal).(channame).time{1},AD_slope.(isignal).(channame).trial{1});
-        hold on
-        plot(blslope.(isignal).(channame).time{1},blslope.(isignal).(channame).trial{1},'Color','r');
-        yline(thr_slopebl);
-        yline(thr_slope,'Color','b');
+%         fig1=figure;
+%         plot(AD_slope.(isignal).(channame).time{1},AD_slope.(isignal).(channame).trial{1});
+%         hold on
+%         plot(blslope.(isignal).(channame).time{1},blslope.(isignal).(channame).trial{1},'Color','r');
+%         yline(thr_slopebl);
+%         yline(thr_slope,'Color','b');
+%         
+%         
+%         fname1= fullfile(detect_thr,sprintf('%s_prot_%i_%s_%s_slope',config{iprot}.prefix,iprot,channame,isignal));
+%         dtx_savefigure(fig1,fname1,'png','pdf','close');
+%         
         
         
-        fname1= fullfile(detect_thr,sprintf('%s_prot_%i_%s_%s_slope',config{iprot}.prefix,iprot,channame,isignal));
-        dtx_savefigure(fig1,fname1,'png','pdf','close');
-        
-        
-        
-        fig2=figure;
-        plot(dataprot.(isignal).(channame).time{1},dataprot.(isignal).(channame).trial{1});
-        xline(t_minslope,'Color','g');
-        xline(min(blslope.(isignal).(channame).time{1}));
-        xline(max(blslope.(isignal).(channame).time{1}));
-        xline(time_startbl,'Color','r');
-        xline(time_start,'Color','b');
-        xline(timewor_startbl,'Color','r');
-        
-        %save figures for visual verification
-        fname2= fullfile(detect_thr,sprintf('%s_prot_%i_%s_%s',config{iprot}.prefix,iprot,channame,isignal));
-        dtx_savefigure(fig2,fname2,'png','pdf','close');
+%         fig2=figure;
+%         plot(dataprot.(isignal).(channame).time{1},dataprot.(isignal).(channame).trial{1});
+%         xline(t_minslope,'Color','g');
+%         xline(min(blslope.(isignal).(channame).time{1}));
+%         xline(max(blslope.(isignal).(channame).time{1}));
+%         xline(time_startbl,'Color','r');
+%         xline(time_start,'Color','b');
+%         xline(timewor_startbl,'Color','r');
+%         
+%         %save figures for visual verification
+%         fname2= fullfile(detect_thr,sprintf('%s_prot_%i_%s_%s',config{iprot}.prefix,iprot,channame,isignal));
+%         dtx_savefigure(fig2,fname2,'png','pdf','close');
         
         %Calculate Area under curve
         Area_uc=trapz(dataprot.(isignal).(channame).time{1},dataprot.(isignal).(channame).trial{1});
@@ -197,7 +197,7 @@ for iprot= 1:size(config,2)
         %% Detection of DC shift peak
         
         t1= t_minslope-30;
-        t2= t_minslope+20;
+        t2= t_minslope+30;
         t_sel= [t1 t2];
         
         cfgtemp=[];
@@ -230,6 +230,54 @@ for iprot= 1:size(config,2)
         dtx_savefigure(fig3,fname3,'png','pdf','close');
         
         clear v_peak t_peak dataAD
+
+        
+        
+        %% Detection of rising part
+        
+        %Detect maximum rising slope
+        t= dataslope.(isignal).(channame).time{1};
+        t1=t>(dataprot.events.markers.VentOn.synctime);
+        t2=t<(dataprot.events.markers.VentOn.synctime+60);
+        t_sel=t1 & t2;
+        
+        [v_peakslope t_peakslope]=findpeaks(dataslope.(isignal).(channame).trial{1}(1,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
+        
+        clear t t1 t2 t_sel
+        
+        %Detect DC shift peak
+        t= dataprot.(isignal).(channame).time{1};
+        t1=t>(dataprot.events.markers.VentOn.synctime);
+        t2=t<(dataprot.events.markers.VentOn.synctime+100);
+        t_sel=t1 & t2;
+        
+        [v_peakrising t_peakrising]=findpeaks(dataprot.(isignal).(channame).trial{1}(1,t_sel),t(t_sel),'NPeaks',1,'SortStr','descend','WidthReference','Halfheight');
+
+        clear t t1 t2 t_sel
+        
+        %store timings in structure
+        DC_timings.(isignal).wor_slope.(channame)(iprot,1)=t_peakslope-dataprot.events.markers.VentOn.synctime;
+        DC_timings.(isignal).wor_repol.(channame)(iprot,1)=t_peakrising-dataprot.events.markers.VentOn.synctime;
+        
+        %plot for visual control
+        fig_wor=figure;
+        
+        plot(dataprot.(isignal).(channame).time{1},dataprot.(isignal).(channame).trial{1});
+        hold on 
+        xline(dataprot.events.markers.VentOn.synctime,'Color','k');
+        xline(t_peakslope,'Color','r');
+        xline(t_peakrising,'Color','b');        
+        
+        legend('Voltage (mV)','Vent On','Maximum slope','Peak rising phase','Location','eastoutside');
+        
+        detect_rising= fullfile(detect_images,'Rising');
+        
+        if ~isfolder(detect_rising)
+            mkdir(detect_rising);
+        end
+        
+        fname4=fullfile(detect_rising,sprintf('%s_prot_%i_%s_%s_rising',config{iprot}.prefix,iprot,channame,isignal));
+        dtx_savefigure(fig_wor,fname4,'png', 'pdf','close');
 
         
         

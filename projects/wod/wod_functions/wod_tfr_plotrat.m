@@ -1,4 +1,4 @@
-function wod_plotbyrat(cfg)
+function wod_tfr_plotrat(cfg)
 
 analysis_names = {'timefreq_wod', 'timefreq_wod_timenorm', 'timefreq_recovery','timefreq_wor','timefreq_wor_timenorm', 'timefreq_baseline','timefreq_wod_blcorrected', 'timefreq_wod_timenorm_blcorrected', 'timefreq_recovery_blcorrected','timefreq_wor_blcorrected','timefreq_wor_timenorm_blcorrected', 'timefreq_baseline_blcorrected','log_timefreq_wod', 'log_timefreq_wod_timenorm', 'log_timefreq_recovery','log_timefreq_wor','log_timefreq_wor_timenorm', 'log_timefreq_baseline','log_timefreq_wod_blcorrected', 'log_timefreq_wod_timenorm_blcorrected', 'log_timefreq_recovery_blcorrected','log_timefreq_wor_blcorrected','log_timefreq_wor_timenorm_blcorrected', 'log_timefreq_baseline_blcorrected'};
 
@@ -14,7 +14,7 @@ for idata = 1:size( analysis_names,2)
         for itrial = 1:size(data_temp.(analysis_names{idata}),2)
             count_trials = count_trials +1;
             wod_rat(count_trials) = count_trials; %store rat id for each wod (some rats have several wod)
-            chan_list                                   = fieldnames(data_temp.(analysis_names{idata}){itrial});
+            chan_list = fieldnames(data_temp.(analysis_names{idata}){itrial});
             
             data_rat= data_temp.(analysis_names{idata}){itrial};
             
@@ -45,7 +45,7 @@ for idata = 1:size( analysis_names,2)
                 cfgtemp.channel = 'all';
                 cfgtemp.interactive = 'no';
                 cfgtemp.colormap= 'jet';
-                cfg.fontsize = 12;
+                cfgtemp.fontsize = 12;
                 cfgtemp.ylim= [51 100];
                 cfgtemp.masknans    = 'yes';
                 ft_singleplotTFR(cfgtemp, data_plot);
@@ -69,7 +69,7 @@ for idata = 1:size( analysis_names,2)
                 cfgtemp.masknans    = 'yes';
                 cfgtemp.colormap= 'jet';
                 cfgtemp.ylim= [0 50];
-                cfg.fontsize = 12;
+                cfgtemp.fontsize = 12;
                 ft_singleplotTFR(cfgtemp, data_plot);
                 ft_pimpplot(fig, jet(5000))
                 

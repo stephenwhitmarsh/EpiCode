@@ -39,6 +39,9 @@ end
 
 ft_defaults
 
+
+config16 = wod_setparams;
+config32 = wod_setparams_32chan;
 config = wod_setparams;
 cfgorig = config;
 
@@ -72,7 +75,7 @@ end
 wod_tfr_compute(config{irat}, MuseStruct,LFP);
 
 %Plot TFR data for each rat
-%wod_tfr_plotrat(config{irat});
+wod_tfr_plotrat(config{irat});
 
 
 
@@ -81,13 +84,26 @@ end %irat
 end %if rat_list
 
 if rat_list==0
-%% Analysis for all rats
+%% Analysis for pooled rats
+
 
 %Detect waves, extract timings and values
-wod_wavedetection(config);
+stats_all=wod_wavedetection([config16, config32], false);
+
+%extract origin depth, timing, propagation speed. make stats between
+%protocols and between waves.
 
 
 
+
+%extract peak time and value for power bands
+%freq_data=wod_tfr_extractdata([config16, config32],false);
+
+%Plot average TFR
+%wod_tfr_grandaverage(config);
+
+%gather 16 and 32 chans
+%stats_concat = wod_fusion_data(stats_all,force);
 
 end %rat_list
 end %wod_project

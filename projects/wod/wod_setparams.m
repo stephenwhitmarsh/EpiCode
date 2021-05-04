@@ -45,7 +45,7 @@ configcommon.LFP.write                          = true; %save computed data to d
 
 configcommon.LFP.lpfilter_wod_detection         = 4;%Hz
 configcommon.LFP.wod_toisearch                  = [-10 50]; %s, were to find wod negative peak relative to the muse marker
-configcommon.LFP.wor_toisearch                  = [-1 25]; %s, were to find wor positive peak relative to the muse marker
+configcommon.LFP.wor_toisearch                  = [-1 50]; %s, were to find wor positive peak relative to the muse marker REAL VALUE -1 25
 configcommon.LFP.hpfilter_wod_exclusion         = 1; %Hz
 
 configcommon.timefreq.foi          = [1:2:100];%[1:2:100] is right value

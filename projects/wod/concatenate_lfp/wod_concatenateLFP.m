@@ -145,7 +145,7 @@ for irat = rat_list
                 continue
             end
             
-            fname                                = fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},temp.name);
+            fname = fullfile(config{irat}.rawdir,config{irat}.directorylist{ipart}{idir},temp.name);
             nev_data{idir} = read_neuralynx_nev(fname,'eventformat','neuralynx_nev');
             for ievent = 1:size(nev_data{idir}, 1)
                 nev_data{idir}(ievent).idir = idir;

@@ -14,7 +14,7 @@ catch %cluster
     scriptpath = mfilename('fullpath');
 end
 
-epicodepath = [fileparts(fileparts(fileparts(fileparts(scriptpath)))), filesep];
+epicodepath = [fileparts(fileparts(fileparts(scriptpath))), filesep];
 
 addpath (genpath([epicodepath,'shared']))
 addpath (genpath([epicodepath,'external']))
@@ -42,8 +42,8 @@ ipart = 1; %ipart is always 1 for this project
         %% load data and compute time freq
         %find concatenated LFP (see wod_concatenateLFP.m)
         [~,dir_name]                       = fileparts(config{irat}.rawdir);
-        config{irat}.rawdir                = fullfile(config{irat}.concatdata_path);
-        config{irat}.directorylist{ipart}  = {dir_name};
+        config{irat}.rawdir                = fullfile(config{irat}.concatdata_path,config{irat}.prefix);
+        config{irat}.directorylist{ipart}  = config{irat}.prefix;%{dir_name};
         
         %read Muse markers
         MuseStruct               = readMuseMarkers(config{irat}, true);

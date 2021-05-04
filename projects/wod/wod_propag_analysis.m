@@ -1,218 +1,196 @@
-function wod_propag_analysis(rat_list,configscript)
+function stats_propag = wod_propag_analysis(cfg)
 
-try %en local
-    scriptpath = matlab.desktop.editor.getActiveFilename;
-catch %cluster
-    scriptpath = mfilename('fullpath');
-end
-
-epicodepath = [fileparts(fileparts(fileparts(scriptpath))), filesep];
-
-addpath (genpath([epicodepath,'development']))
-addpath (genpath([epicodepath,'shared']))
-addpath (genpath([epicodepath,'external']))
-addpath (genpath([epicodepath,'templates']))
-addpath (genpath([epicodepath,'projects', filesep, 'wod']))
-addpath (genpath([epicodepath,'projects', filesep, 'dtx']))
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
-elseif isunix
-    addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
-end
-
-ft_defaults
-
-config = eval(configscript);
-detectiondatapath= fullfile(config{4}.datasavedir,'Detection');
+detectiondatapath= fullfile(cfg{4}.datasavedir,'Detection');
 
 
 %% loading data
-temp= load(fullfile(detectiondatapath,'WoD_data.mat'));
-WoD_data=temp.WOD_data;
-clear temp
-temp= load(fullfile(detectiondatapath,'WoR_data.mat'));
-WoR_data=temp.WOR_data;
-clear temp
-temp= load(fullfile(detectiondatapath,'Depth_electrode.mat'));
-Depth=temp.Electrode_depth;
+temp= load(fullfile(detectiondatapath,'stats_all.mat'));
+stats=temp.stats_all;
 clear temp
 
-for irat= 4:size(config,2)
+
+for irat= 1:size(cfg,2)
+    
+    if isempty(cfg{irat})
+        continue
+    end
+    
     irat_name=sprintf('Rat_%i',irat);
-    for itime= ["peak" "min_slope" "start"]
-        for itrial= 1:size(WoD_data.timings.(irat_name).(itime),2)
-            %% WOD Find origin and store origin depth and timings
-            A=WoD_data.timings.(irat_name).(itime)(:,itrial);
-            B= Depth.(irat_name)(:,itrial);
-            %find minimum timing
-            origin_time=min(A);
-            %store minimum timing in structure
-            Data_waves.WOD.origin_time.(itime)(irat,itrial)=origin_time;
-            
-            %find index of origin and get origin depth
-            idx_origin=find(A==origin_time);
-            origin_depth=Depth.(irat_name)(idx_origin,itrial);
-            %store origin depth
-            Data_waves.WOD.origin_depth.(itime)(irat,itrial)=origin_depth;
-            
-            %% WOD Calculate propagation speed
-            
-            %Calculate propagation speed from origin in both ways
-            for ichan= 1:size(A,1)
+    for iwave= ["WoD" "WoR"]
+        for itime= ["peak" "min_slope" "start"]
+            for itrial= 1:size(WoD_data.timings.(irat_name).(itime),2)
+                %% WOD Find origin and store origin depth and timings
+                A=WoD_data.timings.(irat_name).(itime)(:,itrial);
+                B= Depth.(irat_name)(:,itrial);
+                %find minimum timing
+                origin_time=min(A);
+                %store minimum timing in structure
+                Data_waves.WOD.origin_time.(itime)(irat,itrial)=origin_time;
                 
-                if ichan== idx_origin
-                    continue
+                %find index of origin and get origin depth
+                idx_origin=find(A==origin_time);
+                origin_depth=Depth.(irat_name)(idx_origin,itrial);
+                %store origin depth
+                Data_waves.WOD.origin_depth.(itime)(irat,itrial)=origin_depth;
+                
+                %% WOD Calculate propagation speed
+                
+                %Calculate propagation speed from origin in both ways
+                for ichan= 1:size(A,1)
+                    
+                    if ichan== idx_origin
+                        continue
+                    end
+                    
+                    if ichan<idx_origin
+                        Speed_up(ichan,1)= (B(idx_origin,1)-B(ichan,1))/(A(ichan,1)-A(idx_origin,1));
+                    end
+                    
+                    
+                    if ichan > idx_origin
+                        Speed_down(ichan,1)= (B(ichan,1)-B(idx_origin,1))/(A(ichan,1)-A(idx_origin,1));
+                    end
+                end %ichan
+                
+                %replace zeros by NaN
+                exist Speed_up
+                bool_up= ans;
+                exist Speed_down
+                bool_down= ans;
+                if bool_up==1
+                    Nul_values_up= find(Speed_up(:,1)==0);
+                    Speed_up(Nul_values_up,1)=NaN;
                 end
                 
-                if ichan<idx_origin
-                    Speed_up(ichan,1)= (B(idx_origin,1)-B(ichan,1))/(A(ichan,1)-A(idx_origin,1));
+                if bool_down==1
+                    Nul_values_down= find(Speed_down(:,1)==0);
+                    Speed_down(Nul_values_down,1)=NaN;
+                end
+                %Average and store values
+                if bool_up==1
+                    Data_waves.WOD.speed.(itime).up(irat,itrial)=nanmean(Speed_up);
+                end
+                if bool_down==1
+                    Data_waves.WOD.speed.(itime).down(irat,itrial)=nanmean(Speed_down);
                 end
                 
+                %% WOD Calculate Instantaneous speed
                 
-                if ichan > idx_origin
-                    Speed_down(ichan,1)= (B(ichan,1)-B(idx_origin,1))/(A(ichan,1)-A(idx_origin,1));
-                end
-            end %ichan
-            
-            %replace zeros by NaN
-            exist Speed_up
-            bool_up= ans;
-            exist Speed_down
-            bool_down= ans;
-            if bool_up==1
-                Nul_values_up= find(Speed_up(:,1)==0);
-                Speed_up(Nul_values_up,1)=NaN;
-            end
-            
-            if bool_down==1
-                Nul_values_down= find(Speed_down(:,1)==0);
-                Speed_down(Nul_values_down,1)=NaN;
-            end
-            %Average and store values
-            if bool_up==1
-                Data_waves.WOD.speed.(itime).up(irat,itrial)=nanmean(Speed_up);
-            end
-            if bool_down==1
-                Data_waves.WOD.speed.(itime).down(irat,itrial)=nanmean(Speed_down);
-            end
-            
-            %% WOD Calculate Instantaneous speed
-            
-            %upwards
-            for ichan= 1:idx_origin
+                %upwards
+                for ichan= 1:idx_origin
+                    
+                    if ichan== idx_origin
+                        continue
+                    end
+                    Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan,1)-A(ichan+1,1));
+                    
+                end %ichan
                 
-                if ichan== idx_origin
-                    continue
-                end
-                Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan,1)-A(ichan+1,1));
+                %downwards
                 
-            end %ichan
-            
-            %downwards
-            
-            for ichan= idx_origin:size(A,1)
+                for ichan= idx_origin:size(A,1)
+                    
+                    if ichan==size(A,1)
+                        continue
+                    end
+                    
+                    Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan+1,1)-A(ichan,1));
+                    
+                end %ichan
                 
-                if ichan==size(A,1)
-                continue
-                end
+                Data_waves.WOD.speed_instan.(sprintf('Rat_%i',irat)).(itime)(:,itrial)=Speed_instan;
                 
-                Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan+1,1)-A(ichan,1));
-               
-            end %ichan
-            
-            Data_waves.WOD.speed_instan.(sprintf('Rat_%i',irat)).(itime)(:,itrial)=Speed_instan;
-            
-            
-            
-            clear A origin_time origin_depth bool_up bool_down Speed_up Speed_down Speed_instan
-            %% WOR Find origin and store origin depth and timings
-            
-            %same operation for WoR
-            A=WoR_data.timings.(irat_name).(itime)(:,itrial);
-            
-            %find minimum timing
-            origin_time=min(A);
-            %store minimum timing in structure
-            Data_waves.WOR.origin_time.(itime)(irat,itrial)=origin_time;
-            
-            %find index of origin and get origin depth
-            idx_origin=find(A==origin_time);
-            origin_depth=Depth.(irat_name)(idx_origin,itrial);
-            %store origin depth
-            Data_waves.WOR.origin_depth.(itime)(irat,itrial)=origin_depth;
-            
-            %% WOR Calculate propagation speed
-            
-            %Calculate propagation speed from origin in both ways
-            for ichan= 1:size(A,1)
                 
-                if ichan== idx_origin
-                    continue
+                
+                clear A origin_time origin_depth bool_up bool_down Speed_up Speed_down Speed_instan
+                %% WOR Find origin and store origin depth and timings
+                
+                %same operation for WoR
+                A=WoR_data.timings.(irat_name).(itime)(:,itrial);
+                
+                %find minimum timing
+                origin_time=min(A);
+                %store minimum timing in structure
+                Data_waves.WOR.origin_time.(itime)(irat,itrial)=origin_time;
+                
+                %find index of origin and get origin depth
+                idx_origin=find(A==origin_time);
+                origin_depth=Depth.(irat_name)(idx_origin,itrial);
+                %store origin depth
+                Data_waves.WOR.origin_depth.(itime)(irat,itrial)=origin_depth;
+                
+                %% WOR Calculate propagation speed
+                
+                %Calculate propagation speed from origin in both ways
+                for ichan= 1:size(A,1)
+                    
+                    if ichan== idx_origin
+                        continue
+                    end
+                    
+                    if ichan<idx_origin
+                        Speed_up(ichan,1)= (B(idx_origin,1)-B(ichan,1))/(A(ichan,1)-A(idx_origin,1));
+                    end
+                    
+                    if ichan > idx_origin
+                        Speed_down(ichan,1)= (B(ichan,1)-B(idx_origin,1))/(A(ichan,1)-A(idx_origin,1));
+                    end
+                end %ichan
+                
+                %replace zeros by NaN
+                exist Speed_up;
+                bool_up= ans;
+                exist Speed_down;
+                bool_down= ans;
+                if bool_up==1
+                    Nul_values_up= find(Speed_up==0);
+                    Speed_up(Nul_values_up,1)=NaN;
                 end
                 
-                if ichan<idx_origin
-                    Speed_up(ichan,1)= (B(idx_origin,1)-B(ichan,1))/(A(ichan,1)-A(idx_origin,1));
+                if bool_down==1
+                    Nul_values_down= find(Speed_down==0);
+                    Speed_down(Nul_values_down,1)=NaN;
+                end
+                %Average and store values
+                if bool_up==1
+                    Data_waves.WOR.speed.(itime).up(irat,itrial)=nanmean(Speed_up);
+                end
+                if bool_down==1
+                    Data_waves.WOR.speed.(itime).down(irat,itrial)=nanmean(Speed_down);
                 end
                 
-                if ichan > idx_origin
-                    Speed_down(ichan,1)= (B(ichan,1)-B(idx_origin,1))/(A(ichan,1)-A(idx_origin,1));
-                end
-            end %ichan
-            
-            %replace zeros by NaN
-            exist Speed_up;
-            bool_up= ans;
-            exist Speed_down;
-            bool_down= ans;
-            if bool_up==1
-                Nul_values_up= find(Speed_up==0);
-                Speed_up(Nul_values_up,1)=NaN;
-            end
-            
-            if bool_down==1
-                Nul_values_down= find(Speed_down==0);
-                Speed_down(Nul_values_down,1)=NaN;
-            end
-            %Average and store values
-            if bool_up==1
-                Data_waves.WOR.speed.(itime).up(irat,itrial)=nanmean(Speed_up);
-            end
-            if bool_down==1
-                Data_waves.WOR.speed.(itime).down(irat,itrial)=nanmean(Speed_down);
-            end
-            
-            %% WOR Calculate Instantaneous speed
-            
-            %upwards
-            for ichan= 1:idx_origin
+                %% WOR Calculate Instantaneous speed
                 
-                if ichan== idx_origin
-                    continue
-                end
-                Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan,1)-A(ichan+1,1));
+                %upwards
+                for ichan= 1:idx_origin
+                    
+                    if ichan== idx_origin
+                        continue
+                    end
+                    Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan,1)-A(ichan+1,1));
+                    
+                end %ichan
                 
-            end %ichan
-            
-            %downwards
-            
-            for ichan= idx_origin:size(A,1)
+                %downwards
                 
-                if ichan==size(A,1)
-                continue
-                end
+                for ichan= idx_origin:size(A,1)
+                    
+                    if ichan==size(A,1)
+                        continue
+                    end
+                    
+                    Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan+1,1)-A(ichan,1));
+                    
+                end %ichan
                 
-                Speed_instan(ichan,1)= (B(ichan+1,1)-B(ichan,1))/(A(ichan+1,1)-A(ichan,1));
-               
-            end %ichan
-            
-            Data_waves.WOR.speed_instan.(sprintf('Rat_%i',irat)).(itime)(:,itrial)=Speed_instan;
-            
-            
-            clear A origin_time origin_depth idx_origin bool_up bool_down Speed_up Speed_down Speed_instan
-       
-        end %itrial
-    end %itime
+                Data_waves.WOR.speed_instan.(sprintf('Rat_%i',irat)).(itime)(:,itrial)=Speed_instan;
+                
+                
+                clear A origin_time origin_depth idx_origin bool_up bool_down Speed_up Speed_down Speed_instan
+                
+            end %itrial
+        end %itime
+    end %iwave
 end %irat
 
 %% Replace all 0 values by NaNs
@@ -253,7 +231,7 @@ clear first_trial second_trial
 %same operation for average propagation speed
 for iwave=["WOD" "WOR"]
     for itime= ["peak" "min_slope" "start"]
-            count=0;
+        count=0;
         
         for isens=["up" "down"]
             

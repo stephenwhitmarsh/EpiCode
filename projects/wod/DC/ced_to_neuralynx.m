@@ -1,73 +1,85 @@
 
 
+try %en local
+    scriptpath = matlab.desktop.editor.getActiveFilename;
+catch %cluster
+    scriptpath = mfilename('fullpath');
+end
+
+epicodepath = [fileparts(fileparts(fileparts(scriptpath))), filesep];
+
+addpath (genpath([epicodepath,'development']))
+addpath (genpath([epicodepath,'shared']))
+addpath (genpath([epicodepath,'external']))
+addpath (genpath([epicodepath,'templates']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod']))
+addpath (genpath([epicodepath,'projects', filesep, 'dtx']))
+addpath (genpath([epicodepath,'projects', filesep, 'wod',filesep,'wod_functions']))
+addpath
+
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\wod'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\wod\Antoine\EpiCode\projects\dtx'))
     addpath \\lexport\iss01.charpier\analyses\wod\fieldtrip-20200607
     addpath \\lexport\iss01.charpier\echanges\scripts-paul\Spike2_vers_MATLAB
-    
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/wod'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/wod/Antoine/EpiCode/projects/dtx'))
     addpath /network/lustre/iss01/charpier/analyses/wod/fieldtrip-20200607
     addpath /network/lustre/iss01/charpier/echanges/scripts-paul/Spike2_vers_MATLAB
-    
+
 end
 
 ft_defaults
 
-config = DC_setparams;
-
-chanlist = ["DC", "Vm"];
+config = eval(configscript);
 
 
-% for iprot= 1:size(config,2)
-%     datapath = char(fullfile(config{iprot}.rawdir,config{iprot}.directorylist{1}));
-%     
-%     CEDStruct = readCEDevents(datapath);
-%     
-%     for channame = chanlist
-%         data = readCEDwaveforms(datapath, channame);
-%         
-%         [folder, file, extension] = fileparts(datapath);
-%         Neurlynx_datapath= fullfile(folder,'Neuralynx_data');
-%         
-%         %Resample channels to have same samplerate for both
-%         cfgtemp= [];
-%         cfgtemp.resamplefs      = config{iprot}.DC.resamplefs;
-%         cfgtemp.detrend         = 'no';
-%         data                    = ft_resampledata(cfgtemp,data);
-%         
-%         
-%         
-%         header.filename         = fullfile(Neurlynx_datapath, [file,'_', char(channame), '.ncs']);
-%         header.date             = CEDStruct.starttime;
-%         header.dateEnd          = CEDStruct.endtime;
-%         header.nChans           = 1;
-%         header.chanunit         = data.chanunit{1};
-%         header.chantype         = 'waveform';
-%         header.label            = data.label;
-%         header.Fs               = data.fsample;
-%         header.FirstTimeStamp   = 0;
-%         header.TimeStampPerSample = 1;
-%         
-%         
-%         if ~isfolder(Neurlynx_datapath)
-%             mkdir(Neurlynx_datapath);
-%         end
-%         
-%         
-%         fprintf('\nWriting data in Neuralynx format with Fieldtrip : %s \n',header.filename);
-%         ft_write_data(header.filename,data.trial{1},'header',header, 'dataformat','neuralynx_ncs');
-%         
-%     end %channame
-% end %iprot
+chanlist= ["DC", "Vm"]; %chanlist double DC
+chanlist= ["Vm","EEG-S1-L","Im"]; %chanlist Intra
+
+for iprot= 1:size(config,2)
+    datapath = char(fullfile(config{iprot}.rawdir,config{iprot}.directorylist{1}));
+    
+    CEDStruct = readCEDevents(datapath);
+    
+    for channame = chanlist
+        data = readCEDwaveforms(datapath, channame);
+        
+        
+        if configscript=='DC_setparams'
+        [folder, file, extension] = fileparts(datapath);
+        Neurlynx_datapath= fullfile(folder,'Neuralynx_data');
+        
+        %Resample channels to have same samplerate for both
+        cfgtemp= [];
+        cfgtemp.resamplefs      = config{iprot}.Intra.resamplefs;
+        cfgtemp.detrend         = 'no';
+        data                    = ft_resampledata(cfgtemp,data);
+        
+        
+        
+        header.filename         = fullfile(Neurlynx_datapath, [file,'_', char(channame), '.ncs']);
+        header.date             = CEDStruct.starttime;
+        header.dateEnd          = CEDStruct.endtime;
+        header.nChans           = 1;
+        header.chanunit         = data.chanunit{1};
+        header.chantype         = 'waveform';
+        header.label            = data.label;
+        header.Fs               = data.fsample;
+        header.FirstTimeStamp   = 0;
+        header.TimeStampPerSample = 1;
+        
+        
+        if ~isfolder(Neurlynx_datapath)
+            mkdir(Neurlynx_datapath);
+        end
+        
+        
+        fprintf('\nWriting data in Neuralynx format with Fieldtrip : %s \n',header.filename);
+        ft_write_data(header.filename,data.trial{1},'header',header, 'dataformat','neuralynx_ncs');
+        end %if
+        
+        
+        
+    end %channame
+end %iprot
 
 
 
