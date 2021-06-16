@@ -30,22 +30,35 @@ for ipart = 1 : size(MuseStruct, 2)
         for idir = 1 : size(MuseStruct{ipart}, 2)
             if isfield(MuseStruct{ipart}{idir}, 'markers')
                 if isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(markername))
-                    if ~isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).events)
+                    if ~isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).events) ...
+                            && MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).events > 0
                         Starttime = [Starttime; MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime'];
                         Endtime   = [Endtime;   MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime'];
                     end
                 end
             end
         end
-        intervals.(markername)           = [Starttime, Endtime, Endtime-Starttime];
-        intervals.(markername)(:,4)      = [diff(Starttime); nan];
-        intervals.(markername)(intervals.((markername))(:,4) < 0, :) = nan;
+        temp.(markername){ipart}           = [Starttime, Endtime, Endtime-Starttime];
+        temp.(markername){ipart}(:,4)      = [diff(Starttime); nan];
     end
 end
 
+for markername = string(cfg.muse.name)
+    intervals.table.(markername) = table;
+    intervals.table.(markername).Starttime  = cat(1, temp.(markername){:}(:,1));
+    intervals.table.(markername).Endtime    = cat(1, temp.(markername){:}(:,2));
+    intervals.table.(markername).interval   = cat(1, temp.(markername){:}(:,4));
+    toclear = intervals.table.(markername).interval < 0;
+    intervals.table.(markername)(toclear, :) = [];
+    intervals.median.(markername) = nanmedian(intervals.table.(markername).interval);
+    intervals.mean.(markername) = nanmean(intervals.table.(markername).interval);
+    intervals.min.(markername)  = min(intervals.table.(markername).interval);
+    intervals.max.(markername)  = max(intervals.table.(markername).interval);
+    intervals.mode.(markername) = mode(intervals.table.(markername).interval);
+    intervals.std.(markername)  = nanstd(intervals.table.(markername).interval);
+end
+
 save(fname,'intervals','-v7.3');
-
-
 
 fig = figure('visible', true);
 set(fig, 'PaperPositionMode', 'auto');
@@ -64,16 +77,9 @@ for ipart = 1 : size(MuseStruct, 2)
     for markername = string(cfg.muse.name)
         
         subplot(nrows, ncols, iplot + (ipart-1) * ncols);
-        histogram(intervals.(markername)(:,4), 'BinLimits', [0 cfg.interval.histlim.(markername)], 'BinWidth', cfg.interval.histbin.(markername), 'EdgeColor', 'black', 'facecolor','k');
-        %             histogram(intervals.(markername)(:,4), 'BinLimits',[0 10],'BinWidth', 0.25,'EdgeColor','black','facecolor','k');
-        %             histogram(intervals.(markername)(:,4), 'EdgeColor','black','facecolor','k');
-        me = nanmedian(intervals.(markername)(:,4));
-        mo = mode(intervals.(markername)(:,4));
-        m  = nanmean(intervals.(markername)(:,4));
-        sd = nanstd(intervals.(markername)(:,4));
+        histogram(intervals.table.(markername).interval, 'BinLimits', [0 cfg.interval.histlim.(markername)], 'BinWidth', cfg.interval.histbin.(markername), 'EdgeColor', 'black', 'facecolor','k');
         axis tight
-        title(sprintf('%s, Median: %1.2f, Mode: %1.2f, Mean: %1.2f, SD: %1.2f', markername, me, mo, m, sd));
-        title(sprintf('%s', markername));
+        title(sprintf('%s\nMedian: %1.2fs\nMode: %1.2fs\nMean: %1.2fs\nSD: %1.2fs', markername, intervals.median.(markername), intervals.mode.(markername), intervals.mean.(markername), intervals.std.(markername)));
         xlabel('Seconds');
         ylabel('Count');
         box off
