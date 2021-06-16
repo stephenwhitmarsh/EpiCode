@@ -18,40 +18,58 @@ for ipart = 1 : size(SpikeDensity_timelocked, 2)
     col = 1;
     for markername = string(fields(SpikeDensity_timelocked{ipart}.sdf_bar))'
         disp(size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).label, 2));
-
+        
         row = 1;
         for itemp = 1 : size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).label, 2)
-
-            subaxis(nrows, ncols, (row-1) * ncols + col, 'SpacingVert', 0.01);
             
-            bar(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).time, SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, :), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
-            hold;
+            subaxis(nrows, ncols, (row-1) * ncols + col, 'SpacingVert', 0.01);
+            hold on
+            if size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).label, 2) == 1
+                bar(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).time, SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
+            else
+                bar(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).time, SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, :), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
+            end
             if isfield(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}, 'posclusters')
                 for ipos = 1 : size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.posclusters, 2)
                     if SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.posclusters(ipos).prob < cfg.stats.alpha
-                        lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
                         sel = find(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.posclusterslabelmat == ipos);
-                        if length(sel) == 1
-                            bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                        if size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).label, 2) == 1
+                            lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 1) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
+                            if length(sel) == 1
+                                bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg( sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                            else
+                                bar( SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                            end
                         else
-                            bar( SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
-                        end                        
+                            lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
+                            if length(sel) == 1
+                                bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                            else
+                                bar( SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                            end
+                        end 
                     end
                 end
             end
             
-            if strcmp(markername, "ES") && itemp == 9
-                disp('now');
-            end
             if isfield(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}, 'negclusters')
                 for ineg = 1 : size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.negclusters, 2)
                     if SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.negclusters(ineg).prob < cfg.stats.alpha
-                        lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
                         sel = find(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.negclusterslabelmat == ineg);
-                        if length(sel) == 1
-                            bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor',  'none');
+                        if size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).label, 2) == 1
+                            lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 1) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
+                            if length(sel) == 1
+                                bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg( sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                            else
+                                bar( SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                            end
                         else
-                            bar(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor',  'none');
+                            lag = size(SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.mask, 2);
+                            if length(sel) == 1
+                                bar([SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                            else
+                                bar( SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity_timelocked{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                            end
                         end
                     end
                 end
@@ -88,7 +106,7 @@ for ipart = 1 : size(SpikeDensity_timelocked, 2)
     fname_fig = fullfile(cfg.imagesavedir, 'stats', strcat(cfg.prefix, 'p', num2str(ipart), '_stats_bargraphs'));
     exportgraphics(fig, [fname_fig, '.jpg'], 'resolution', 150);
     exportgraphics(fig, [fname_fig, '.pdf']);
-
+    
 end
 
 
