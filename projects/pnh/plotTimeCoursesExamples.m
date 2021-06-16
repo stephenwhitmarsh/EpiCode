@@ -2,16 +2,16 @@ function plotTimeCoursesExamples(cfg)
 
 
 fig = figure('visible', true);
-% set(fig, 'PaperPositionMode', 'auto');
-% set(fig, 'position', get(0,'ScreenSize'));
+set(fig, 'PaperPositionMode', 'auto');
+set(fig, 'position', get(0,'ScreenSize'));
 % set(fig, 'PaperOrientation', 'landscape');
 % set(fig, 'PaperUnits', 'normalized');
 % set(fig, 'PaperPosition', [0.2 0.2 0.8 0.8]);
 
-ncols   = 4;
+ncols   = cfg.plot.ncols;
 icol    = 1;
 
-for markername = string(fields(cfg.plot.toi))'
+for markername = string(cfg.plot.name)
     
     nrows   = size(cfg.plot.fname.(markername), 2);
 
@@ -65,10 +65,10 @@ fig.Renderer = 'Painters'; % Else pdf is saved to bitmap
 set(fig,'PaperOrientation','landscape');
 set(fig,'PaperUnits','normalized');
 set(fig,'PaperPosition', [0 0 1 1]);
-fname_fig = fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'example_timecourses'));
-exportgraphics(fig, [fname_fig, '.jpg'], 'resolution', 600);
-exportgraphics(fig, [fname_fig, '.tiff'], 'resolution', 600);
-exportgraphics(fig, [fname_fig, '.pdf']);
+fname_fig = fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'example_timecourses', cfg.plot.postfix));
+exportgraphics(fig, strcat(fname_fig, '.jpg'),  'resolution', 600);
+exportgraphics(fig, strcat(fname_fig, '.tiff'), 'resolution', 600);
+exportgraphics(fig, strcat(fname_fig, '.pdf'));
 
 close all
 

@@ -61,7 +61,7 @@ config{1}.align.latency.PSW         = [-0.2 2];
 config{1}.align.latency.FA          = [-0.2 1];
 config{1}.align.latency.ES          = [-0.1 0.1];
 
-config{1}.LFP.name                  = {'PSW','FA','ES','SEIZURE'};
+config{1}.LFP.name                  = {'PSW', 'FA', 'ES', 'SEIZURE'};
 config{1}.LFP.channel               = {'m1pNs_1', 'm1pNs_4', 'm1pNs_6', 'm1pNs_7'};
 config{1}.LFP.resamplefs            = 500; % 32000/500=64 which is nice
 config{1}.LFP.dftfilter             = 'yes'; % notch filter
@@ -69,31 +69,41 @@ config{1}.LFP.dftfilter             = 'yes'; % notch filter
 config{1}.epoch.toi.PSW             = [-2, 2];
 config{1}.epoch.toi.FA              = [-2, 2];
 config{1}.epoch.toi.ES              = [-1, 1];
-config{1}.epoch.toi.SEIZURE         = [-5, 13];
+config{1}.epoch.toi.SEIZURE         = [-2, 8];
 config{1}.epoch.pad.PSW             = 0.5;
 config{1}.epoch.pad.ES              = 0.5;
 config{1}.epoch.pad.FA              = 0.5;
 config{1}.epoch.pad.SEIZURE         = 0.5;
 
+config{1}.TFR.name                  = {'PSW', 'FA', 'ES', 'SEIZURE'};
 config{1}.TFR.keeptrials            = 'no';
 config{1}.TFR.foi.PSW               = 1:200;
 config{1}.TFR.foi.FA                = 1:200;
 config{1}.TFR.foi.ES                = 1:200;
 config{1}.TFR.foi.SEIZURE           = 1:200;
-config{1}.TFR.t_ftimwin.PSW         = 10 ./ config{1}.TFR.foi.PSW;
-config{1}.TFR.t_ftimwin.FA          = 10 ./ config{1}.TFR.foi.FA;
-config{1}.TFR.t_ftimwin.ES          = 10 ./ config{1}.TFR.foi.ES;
-config{1}.TFR.t_ftimwin.SEIZURE     = 10 ./ config{1}.TFR.foi.ES;
+
+% config{1}.TFR.t_ftimwin.PSW         = 10 ./ config{1}.TFR.foi.PSW;
+% config{1}.TFR.t_ftimwin.FA          = 10 ./ config{1}.TFR.foi.FA;
+% config{1}.TFR.t_ftimwin.ES          = 10 ./ config{1}.TFR.foi.ES;
+% config{1}.TFR.t_ftimwin.SEIZURE     = 10 ./ config{1}.TFR.foi.SEIZURE;
+config{1}.TFR.t_ftimwin.PSW         = 0.4 * ones(size(config{1}.TFR.foi.PSW));
+config{1}.TFR.t_ftimwin.FA          = 0.4 * ones(size(config{1}.TFR.foi.FA));
+config{1}.TFR.t_ftimwin.ES          = 0.2 * ones(size(config{1}.TFR.foi.ES));
+config{1}.TFR.t_ftimwin.SEIZURE     = 0.5 * ones(size(config{1}.TFR.foi.SEIZURE));
+
 config{1}.TFR.toi.PSW               = -2 : 0.005 : 2;
 config{1}.TFR.toi.FA                = -2 : 0.005 : 2;
 config{1}.TFR.toi.ES                = -1 : 0.005 : 1;
-config{1}.TFR.toi.SEIZURE           = -5 : 0.005 : 13;
-config{1}.TFR.bl.PSW                = [-1.5, -1];
-config{1}.TFR.bl.FA                 = [-1.5, -1];
+config{1}.TFR.toi.SEIZURE           = -2 : 0.005 : 8;
+config{1}.TFR.bl.PSW                = [-2, -1];
+config{1}.TFR.bl.FA                 = [-2, -1];
 config{1}.TFR.bl.ES                 = [-1, -0.5];
-config{1}.TFR.bl.SEIZURE            = [-5, -0.5];
+config{1}.TFR.bl.SEIZURE            = [-2, -0.5];
 
-config{1}.circus.channel                        = {'m1pNs_1','m1pNs_2','m1pNs_6','m1pNs_7','m1pNs_8'};
+config{1}.hyp.markers               = {'PSW', 'FA', 'ES'};
+
+config{1}.circus.correct_chunk{1}               = true;
+config{1}.circus.channel                        = {'m1pNs_1', 'm1pNs_2', 'm1pNs_6', 'm1pNs_7', 'm1pNs_8'};
 config{1}.circus.reref                          = 'no';
 config{1}.circus.refchan                        = '';
 config{1}.circus.outputdir                      = 'SpykingCircus';
@@ -107,15 +117,16 @@ config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
 
 config{1}.spike.name                = {'PSW', 'FA', 'ES', 'SEIZURE'};
+config{1}.spike.overlap             = {'PSW', 'FA', 'ES', 'SEIZURE'};                                   
 config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
 config{1}.spike.toi.PSW             = [-2, 2];           % for plotting spikerate
 config{1}.spike.toi.FA              = [-2, 2];           % for p200mslotting spikerate
 config{1}.spike.toi.ES              = [-1, 1];          % for plotting spikerate
-config{1}.spike.toi.SEIZURE         = [-5, 13];          % for plotting spikerate
-config{1}.spike.bl.PSW              = [-1, -0.5];
-config{1}.spike.bl.FA               = [-1, -0.5];
+config{1}.spike.toi.SEIZURE         = [-2, 8];          % for plotting spikerate
+config{1}.spike.bl.PSW              = [-2, -1];
+config{1}.spike.bl.FA               = [-2, -1];
 config{1}.spike.bl.ES               = [-1, -0.5];
-config{1}.spike.bl.SEIZURE          = [-5, -1];
+config{1}.spike.bl.SEIZURE          = [-2, -1];
 config{1}.spike.pad.PSW             = 0.1;
 config{1}.spike.pad.FA              = 0.1;
 config{1}.spike.pad.ES              = 0.1;
@@ -126,29 +137,29 @@ config{1}.spike.resamplefs.ES       = 1000;
 config{1}.spike.resamplefs.SEIZURE  = 1000;
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
-% config{1}.spike.baseline            = [-0.001 -0.0005];
 config{1}.spike.ISIbins             = 0 : 0.0005 : 0.150;
 config{1}.spike.nrsdfbins           = 100;
-% config{1}.spike.psthbin.PSW
-% config{1}.spike.psthbin.FA
-% config{1}.spike.psthbin.ES
 config{1}.spike.sdftimwin.PSW       = [-0.05 0.05];
 config{1}.spike.sdftimwin.FA        = [-0.05 0.05];
 config{1}.spike.sdftimwin.ES        = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.SEIZURE   = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
-config{1}.spike.psthbin.PSW         = 0.1; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.FA          = 0.1; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.ES          = 0.02; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.SEIZURE     = 0.05; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.PSW         = 0.05; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.FA          = 0.05; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.ES          = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.SEIZURE     = 0.5;  % depends a lot on pattern, default is too large
+config{1}.spike.overlap             = {'PSW', 'FA', 'ES', 'SEIZURE'};
+
+config{1}.spikewin.windowsize       = 60;
+config{1}.spikewin.windowoverlap    = 0.5;
 
 config{1}.stats.toi.PSW             = [-0.5, 2];
 config{1}.stats.toi.FA              = [-0.5, 2];
 config{1}.stats.toi.ES              = [-0.5, 1];
-config{1}.stats.toi.SEIZURE         = [-0.5, 13];
+config{1}.stats.toi.SEIZURE         = [-0.5, 8];
 config{1}.stats.bl.PSW              = [-2, -1];
 config{1}.stats.bl.FA               = [-2, -1];
 config{1}.stats.bl.ES               = [-1, -0.5];
-config{1}.stats.bl.SEIZURE          = [-5, -1];
+config{1}.stats.bl.SEIZURE          = [-2, -0.5];
 config{1}.stats.alpha               = 0.025;
 
 config{1}.interval.histbin.ES       = 0.25;
@@ -160,110 +171,124 @@ config{1}.interval.histlim.FA       = 60;
 config{1}.interval.histlim.PSW      = 60;
 config{1}.interval.histlim.SEIZURE  = 60;
 
-config{1}.plot.dir.PSW              = [1,  2,  3,  4,  5,  6];
-config{1}.plot.trial.PSW            = [10, 10, 10, 10, 10, 10];
-config{1}.plot.unit.PSW             = [0,  0,  0,  0,  0,  0];
-config{1}.plot.dir.FA               = [1,  2,  3,  4,  5,  6];
-config{1}.plot.trial.FA             = [10, 10, 10, 10, 10, 10];
-config{1}.plot.unit.FA              = [0,  0,  0,  0,  0,  0];
-config{1}.plot.dir.ES               = [1,  2,  3,  4,  5,  6];
-config{1}.plot.trial.ES             = [10, 10, 10, 10, 10, 10];
-config{1}.plot.unit.ES              = [0,  0,  0,  0,  0,  0];
-config{1}.plot.dir.SEIZURE          = [3,  4,  4,  4,  9, 11];
-config{1}.plot.trial.SEIZURE        = [1,  1,  2,  3,  1, 1];
-config{1}.plot.unit.SEIZURE         = [0,  0,  0,  0,  0, 0]; 
+config{1}.plot.name                 = {'PSW', 'FA', 'ES', 'SEIZURE'};
+config{1}.plot.unit{1}              = [0,  0,  0,  0,  0,  0];
+config{1}.plot.trial.PSW{1}         = [10, 11, 12, 13, 14, 15];
+config{1}.plot.trial.FA{1}          = [10, 11, 12, 13, 14, 15];
+config{1}.plot.trial.ES{1}          = [10, 11, 12, 13, 14, 15];
+config{1}.plot.trial.SEIZURE{1}     = [1,  2,  3,  4,  5,  6];
 
-% Patient 2, first nodule
+% Patient 2, right nodule
 config{2}                           = config{1};
-config{2}.prefix                    = '2614L-';
+config{2}.prefix                    = '2614R-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02614_1073', 'eeg');
-config{2}.align.channel             = {'mTNmi_1','mTNmi_2','mTNmi_3','mTNmi_5','mTNmi_6','mTNmi_8'};
+config{2}.LFP.channel               = {'mCasd_2', 'mCasd_1', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
+config{2}.align.channel             = {'mCasd_2', 'mCasd_1', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
 config{2}.align.lpfilter            = 'yes';
 config{2}.align.lpfreq              = 40;
 
-config{2}.epoch.toi.FA              = [-2, 3];
-config{2}.epoch.toi.ES              = [-1, 1];
+config{2}.LFP.name                  = {'PSW', 'FA', 'ES'};
+config{2}.TFR.name                  = {'PSW', 'FA', 'ES'};
+config{2}.muse.name                 = {'PSW', 'FA', 'ES'};
+config{2}.muse.startmarker.PSW      = "p02614_01__START__";
+config{2}.muse.endmarker.PSW        = "p02614_01__START__";
+config{2}.muse.startmarker.FA       = "p02614_04__START__";
+config{2}.muse.endmarker.FA         = "p02614_04__START__";
+config{2}.muse.startmarker.ES       = "p02614_02";
+config{2}.muse.endmarker.ES         = "p02614_02";
+config{2}.circus.params.filtering.remove_median = 'False';
+config{2}.circus.channel            = {'mCasd_1', 'mCasd_2', 'mCasd_3', 'mCasd_4', 'mCasd_5', 'mCasd_6', 'mCasd_7'};
 
-config{2}.LFP.name                  = {'FA','ES'};
-config{2}.LFP.channel               = {'mTNmi_1','mTNmi_2','mTNmi_3','mTNmi_4','mTNmi_5','mTNmi_6','mTNmi_7','mTNmi_8'};
+config{2}.spike.name                = {'PSW', 'FA', 'ES'};
 
-config{2}.TFR.toi.FA                = -2 : 0.005 : 3;
-config{2}.TFR.toi.ES                = -1 : 0.005 : 1;
+config{2}.plot.name                 = {'PSW', 'FA', 'ES'};
 
-config{2}.muse.name                 = {'FA','ES'};
-config{2}.muse.startmarker.FA       = "p02614_07__START__";
-config{2}.muse.endmarker.FA         = "p02614_07__START__";
-config{2}.muse.startmarker.ES       = "p02614_09";
-config{2}.muse.endmarker.ES         = "p02614_09";
-config{2}.circus.channel            = {'mTNmi_2','mTNmi_3','mTNmi_5','mTNmi_6','mTNmi_7','mTNmi_8'}; % redo within 1st and 4th electrode - now removed
-config{2}.circus.params.detection.spike_thresh  = '5.5';
-config{3}.circus.params.filtering.remove_median = 'False';
-config{2}.spike.name                            = {'FA','ES'};
-config{2}.spike.toi.FA              = [-2, 3];           % for p200mslotting spikerate
-config{2}.stats.toi.FA              = [-0.5, 3];
-
-% Patient 2, second nodule
+% Patient 2, left nodule
 config{3}                           = config{1};
-config{3}.prefix                    = '2614R-';
+config{3}.prefix                    = '2614L-';
 config{3}.rawdir                    = fullfile(rootpath_data, 'pat_02614_1073', 'eeg');
-config{3}.LFP.channel               = {'mCasd_2','mCasd_1','mCasd_4','mCasd_6','mCasd_7'};
-config{3}.align.channel             = {'mCasd_2','mCasd_1','mCasd_4','mCasd_6','mCasd_7'};
+config{3}.align.channel             = {'mTNmi_1', 'mTNmi_2', 'mTNmi_3', 'mTNmi_5', 'mTNmi_6', 'mTNmi_8'};
 config{3}.align.lpfilter            = 'yes';
 config{3}.align.lpfreq              = 40;
 
-config{3}.epoch.toi.PSW             = [-2, 2];
-config{3}.epoch.toi.FA              = [-2, 2];
-config{3}.epoch.toi.ES              = [-1, 1];
+config{3}.epoch.toi.FA              = [-3, 3];
 
-config{3}.TFR.toi.PSW               = -2 : 0.005 : 2;
-config{3}.TFR.toi.FA                = -2 : 0.005 : 2;
-config{3}.TFR.toi.ES                = -1 : 0.005 : 1;
+config{3}.LFP.name                  = {'FA', 'ES'};
+config{3}.LFP.channel               = {'mTNmi_1', 'mTNmi_2', 'mTNmi_3', 'mTNmi_4', 'mTNmi_5', 'mTNmi_6', 'mTNmi_7', 'mTNmi_8'};
+config{3}.TFR.name                  = {'FA', 'ES'};
+config{3}.TFR.toi.FA                = -3 : 0.005 : 3;
+config{3}.TFR.bl.FA                 = [-3, -1];           % for p200mslotting spikerate
 
-config{3}.LFP.name                  = {'PSW','FA','ES'};
-config{3}.muse.name                 = {'PSW','FA','ES'};
-config{3}.muse.startmarker.PSW      = "p02614_01__START__";
-config{3}.muse.endmarker.PSW        = "p02614_01__START__";
-config{3}.muse.startmarker.FA       = "p02614_04__START__";
-config{3}.muse.endmarker.FA         = "p02614_04__START__";
-config{3}.muse.startmarker.ES       = "p02614_02";
-config{3}.muse.endmarker.ES         = "p02614_02";
+config{3}.muse.name                 = {'FA', 'ES'};
+config{3}.muse.startmarker.FA       = "p02614_07__START__";
+config{3}.muse.endmarker.FA         = "p02614_07__START__";
+config{3}.muse.startmarker.ES       = "p02614_09";
+config{3}.muse.endmarker.ES         = "p02614_09";
+
+config{3}.circus.channel            = {'mTNmi_2', 'mTNmi_3', 'mTNmi_5', 'mTNmi_6', 'mTNmi_7', 'mTNmi_8'}; % redo within 1st and 4th electrode - now removed
+config{3}.circus.channel            = {'mTNmi_1', 'mTNmi_2', 'mTNmi_3', 'mTNmi_4', 'mTNmi_5', 'mTNmi_6', 'mTNmi_7', 'mTNmi_8'};
+config{3}.circus.params.detection.spike_thresh  = '5.5';
 config{3}.circus.params.filtering.remove_median = 'False';
-config{3}.circus.channel            = {'mCasd_1','mCasd_2','mCasd_3','mCasd_4','mCasd_5','mCasd_6','mCasd_7'};
-config{3}.spike.name                = {'PSW','FA','ES'};
 
+config{3}.spike.name                = {'FA', 'ES'};
+config{3}.spike.toi.FA              = [-3, 3];           % for p200mslotting spikerate
+
+config{3}.stats.toi.FA              = [-0.5, 3];
+config{3}.stats.bl.FA               = [-3, -1];           % for p200mslotting spikerate
+
+config{3}.plot.name                 = {'FA', 'ES'};
 
 % Patient 3 %
 config{4}                           = config{1};
 config{4}.prefix                    = '2689-';
 config{4}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
-config{4}.align.channel             = {'mLMI1_3','mLMI1_2','mLMI1_4','mLMI1_5','mLMI1_7'};
+config{4}.align.channel             = {'mLMI1_3', 'mLMI1_2', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
 config{4}.align.lpfilter            = 'yes';
 config{4}.align.lpfreq              = 40;
 config{4}.align.latency.PSW         = [-0.2, 5];
 
-config{4}.epoch.toi.PSW             = [-2, 5];
-config{4}.epoch.toi.FA              = [-2, 3];
-config{4}.epoch.toi.ES              = [-1, 1];
+config{4}.epoch.toi.PSW             = [-5, 5];
+config{4}.epoch.toi.SEIZURE         = [-1, 3];
 
-config{4}.TFR.toi.PSW               = [-2 : 0.005 : 5];
-config{4}.TFR.toi.FA                = -2 : 0.005 : 3;
-config{4}.TFR.toi.ES                = -1 : 0.005 : 1;
+config{4}.TFR.toi.PSW               = -5 : 0.005 : 5;
+config{4}.TFR.toi.SEIZURE           = -1 : 0.005 : 3;
+config{4}.TFR.bl.SEIZURE            = [-1, -0.5];
+config{4}.TFR.bl.PSW                = [-5, -3];
 
-config{4}.LFP.name                  = {'PSW','FA','ES'};
-config{4}.LFP.channel               = {'mLMI1_3','mLMI1_2','mLMI1_4','mLMI1_5','mLMI1_7'};
-config{4}.muse.name                 = {'PSW','FA','ES'};
+config{4}.LFP.name                  = {'PSW', 'FA', 'ES', 'SEIZURE'};
+config{4}.LFP.channel               = {'mLMI1_3', 'mLMI1_2', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
+
+config{4}.muse.name                 = {'PSW', 'FA', 'ES'};
 config{4}.muse.startmarker.PSW      = "Marker1__START__";
 config{4}.muse.endmarker.PSW        = "Marker1__START__";
 config{4}.muse.startmarker.FA       = "Marker3__START__";
 config{4}.muse.endmarker.FA         = "Marker3__START__";
 config{4}.muse.startmarker.ES       = "Marker2";
 config{4}.muse.endmarker.ES         = "Marker2";
-config{4}.circus.channel            = {'mLMI1_2','mLMI1_3','mLMI1_4','mLMI1_7'};
-config{4}.spike.name                = {'PSW','FA','ES'};
-config{4}.spike.toi.PSW             = [-2, 5];           % for p200mslotting spikerate
-config{4}.stats.toi.PSW             = [-0.5, 5];
-config{4}.spike.toi.FA              = [-2, 3];           % for p200mslotting spikerate
-config{4}.stats.toi.FA              = [-0.5, 3];
+config{4}.muse.startmarker.SEIZURE  = "CriseStart";
+config{4}.muse.endmarker.SEIZURE    = "CriseEnd";
+
+config{4}.circus.channel            = {'mLMI1_2', 'mLMI1_3', 'mLMI1_4', 'mLMI1_7'};
+config{4}.circus.correct_chunk{1}   = false;
+
+config{4}.spike.name                = {'PSW', 'FA', 'ES', 'SEIZURE'};
+config{4}.spike.toi.PSW             = [-5, 5];           % for p200mslotting spikerate
+config{4}.spike.bl.PSW              = [-5, -3];
+config{4}.spike.toi.SEIZURE         = [-1, 3];
+config{4}.spike.bl.SEIZURE          = [-1, -0.5];
+
+config{4}.stats.toi.PSW             = [-1, 5];
+config{4}.stats.toi.SEIZURE         = [-1, 3];
+
+config{4}.stats.bl.PSW              = [-5, -3];
+config{4}.stats.bl.SEIZURE          = [-1, -0.5];
+
+config{4}.plot.name                 = {'PSW', 'FA', 'ES', 'SEIZURE'};
+config{4}.plot.unit{1}              = [0,  0,  0,  0,  0,  0,  0,  0];
+config{4}.plot.trial.PSW{1}         = [1,  2,  3,  4,  5,  6,  7,  8];
+config{4}.plot.trial.FA{1}          = [1,  2,  3,  4,  5,  6,  7,  8];
+config{4}.plot.trial.ES{1}          = [1,  2,  3,  4,  5,  6,  7,  8];
+config{4}.plot.trial.SEIZURE{1}     = [1,  2,  3,  4,  5,  6,  7,  8];
 
 % DATA
 
@@ -280,18 +305,14 @@ config{1}.directorylist{1}          =  {'02230_2015-02-25_12-36'...
     '02230_2015-02-26_05-16'...
     '02230_2015-02-26_07-16'};
 
-%                                         '02230_2015-02-26_09-16'...
-%                                         '02230_2015-02-26_10-03'...
-%                                         '02230_2015-02-26_10-31'};
-
 config{2}.directorylist             = [];
 config{2}.directorylist{1}          =  {'02614_2018-06-12_15-23'...
-    '02614_2018-06-12_17-23'...
+    '02614_2018-06-12_17-23'... %     '02614_2018-06-12_19-23'... %% strange    
     '02614_2018-06-12_21-23'};
 
 config{3}.directorylist             = [];
 config{3}.directorylist{1}          =  {'02614_2018-06-12_15-23'...
-    '02614_2018-06-12_17-23'...
+    '02614_2018-06-12_17-23'... %     '02614_2018-06-12_19-23'... %% strange
     '02614_2018-06-12_21-23'};
 
 config{4}.directorylist             = [];
@@ -440,60 +461,107 @@ config{1}.plot.scale.patternC{4}          = [-200 200];
 config{1}.plot.scale.patternC{5}          = [-muscale muscale];
 config{1}.plot.scale.patternC{6}          = [-muscale muscale];
 
-%% NODULE 2
-config{2}.plot                            = config{1}.plot;
-config{2}.plot.toi.patternA               = [1004.0, 1008.0, 0];
-config{2}.plot.fname.patternA{1}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
-config{2}.plot.fname.patternA{2}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_1.ncs');
-config{2}.plot.fname.patternA{3}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
-config{2}.plot.fname.patternA{4}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_5.ncs');
-config{2}.plot.fname.patternA{5}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
-config{2}.plot.fname.patternA{6}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_6.ncs');
-config{2}.plot.refname.patternA{1}        = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_3.ncs');
-config{2}.plot.refname.patternA{2}        = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
 
-config{2}.plot.toi.patternB               = [412.9, 415.4, 0];
-config{2}.plot.fname.patternB{1}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
-config{2}.plot.fname.patternB{2}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_1.ncs');
-config{2}.plot.fname.patternB{3}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
-config{2}.plot.fname.patternB{4}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_5.ncs');
-config{2}.plot.fname.patternB{5}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
-config{2}.plot.fname.patternB{6}          = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_4.ncs');
-config{2}.plot.refname.patternB{1}        = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_3.ncs');
-config{2}.plot.refname.patternB{2}        = fullfile(config{2}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
-
-config{2}.plot.toi.patternC               = [1664.850-0.20, 1664.850+0.4, -0.20];
-config{2}.plot.fname.patternC{1}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_2.ncs');
-config{2}.plot.fname.patternC{2}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_1.ncs');
-config{2}.plot.fname.patternC{3}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_2.ncs');
-config{2}.plot.fname.patternC{4}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_5.ncs');
-config{2}.plot.fname.patternC{5}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_2.ncs');
-config{2}.plot.fname.patternC{6}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_5.ncs');
-config{2}.plot.refname.patternC{1}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_3.ncs');
-config{2}.plot.refname.patternC{2}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_2.ncs');
+config{1}.plot.toi.seizureA               = [6303.9-5, 6303.9+13, -5];
+config{1}.plot.hpfilter.seizureA{1}       = 'no';
+config{1}.plot.hpfilter.seizureA{2}       = 'no';
+config{1}.plot.hpfilter.seizureA{3}       = 'no';
+config{1}.plot.hpfilter.seizureA{4}       = 'no';
+config{1}.plot.hpfilter.seizureA{5}       = 'yes';
+config{1}.plot.hpfilter.seizureA{6}       = 'yes';
+config{1}.plot.hpfreq.seizureA{1}         = [];
+config{1}.plot.hpfreq.seizureA{2}         = [];
+config{1}.plot.hpfreq.seizureA{3}         = [];
+config{1}.plot.hpfreq.seizureA{4}         = [];
+config{1}.plot.hpfreq.seizureA{5}         = 300;
+config{1}.plot.hpfreq.seizureA{6}         = 300;
+config{1}.plot.lpfilter.seizureA{1}       = 'yes';
+config{1}.plot.lpfilter.seizureA{2}       = 'yes';
+config{1}.plot.lpfilter.seizureA{3}       = 'yes';
+config{1}.plot.lpfilter.seizureA{4}       = 'yes';
+config{1}.plot.lpfilter.seizureA{5}       = 'yes';
+config{1}.plot.lpfilter.seizureA{6}       = 'yes';
+config{1}.plot.lpfreq.seizureA{1}         = 300;
+config{1}.plot.lpfreq.seizureA{2}         = 300;
+config{1}.plot.lpfreq.seizureA{3}         = 300;
+config{1}.plot.lpfreq.seizureA{4}         = 300;
+config{1}.plot.lpfreq.seizureA{5}         = 3000;
+config{1}.plot.lpfreq.seizureA{6}         = 3000;
+config{1}.plot.fname.seizureA{1}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_1pNs_2.ncs');
+config{1}.plot.fname.seizureA{2}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_1pNs_1.ncs');
+config{1}.plot.fname.seizureA{3}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_4.ncs');
+config{1}.plot.fname.seizureA{4}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_6.ncs');
+config{1}.plot.fname.seizureA{5}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_1.ncs');
+config{1}.plot.fname.seizureA{6}          = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_8.ncs');
+config{1}.plot.refname.seizureA{1}        = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_1pNs_3.ncs');
+config{1}.plot.refname.seizureA{2}        = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_1pNs_2.ncs');
+config{1}.plot.refname.seizureA{3}        = [];
+config{1}.plot.refname.seizureA{4}        = [];
+config{1}.plot.refname.seizureA{5}        = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_4.ncs');
+config{1}.plot.refname.seizureA{6}        = fullfile(config{1}.rawdir, '02230_2015-02-25_15-16', '02230_2015-02-25_15-16_m1pNs_4.ncs');
+config{1}.plot.scale.seizureA{1}          = [-200 200];
+config{1}.plot.scale.seizureA{2}          = [-200 200];
+config{1}.plot.scale.seizureA{3}          = [-200 200];
+config{1}.plot.scale.seizureA{4}          = [-200 200];
+config{1}.plot.scale.seizureA{5}          = [-muscale muscale];
+config{1}.plot.scale.seizureA{6}          = [-muscale muscale];
 
 %% nodule 3
-config{3}.plot                            = config{1}.plot;
-config{3}.plot.toi                        = rmfield(config{3}.plot.toi, 'patternC');
-config{3}.plot.toi.patternA               = [1181, 1185, 0];
-config{3}.plot.fname.patternA{1}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
-config{3}.plot.fname.patternA{2}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_1.ncs');
-config{3}.plot.fname.patternA{3}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
-config{3}.plot.fname.patternA{4}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_5.ncs');
-config{3}.plot.fname.patternA{5}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
-config{3}.plot.fname.patternA{6}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_7.ncs');
-config{3}.plot.refname.patternA{1}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_3.ncs');
-config{3}.plot.refname.patternA{2}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
+config{2}.plot                            = config{1}.plot;
+config{2}.plot.toi                        = rmfield(config{2}.plot.toi, 'patternC');
+config{2}.plot.toi.patternA               = [1181, 1185, 0];
+config{2}.plot.fname.patternA{1}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
+config{2}.plot.fname.patternA{2}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_1.ncs');
+config{2}.plot.fname.patternA{3}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
+config{2}.plot.fname.patternA{4}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_5.ncs');
+config{2}.plot.fname.patternA{5}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
+config{2}.plot.fname.patternA{6}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_7.ncs');
+config{2}.plot.refname.patternA{1}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_3.ncs');
+config{2}.plot.refname.patternA{2}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
 
-config{3}.plot.toi.patternB               = [722.5, 723.3, -0.4];
-config{3}.plot.fname.patternB{1}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
-config{3}.plot.fname.patternB{2}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_1.ncs');
-config{3}.plot.fname.patternB{3}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
-config{3}.plot.fname.patternB{4}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_4.ncs');
-config{3}.plot.fname.patternB{5}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
-config{3}.plot.fname.patternB{6}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_5.ncs');
-config{3}.plot.refname.patternB{1}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_3.ncs');
-config{3}.plot.refname.patternB{2}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
+config{2}.plot.toi.patternB               = [722.5, 723.3, -0.4];
+config{2}.plot.fname.patternB{1}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
+config{2}.plot.fname.patternB{2}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_1.ncs');
+config{2}.plot.fname.patternB{3}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
+config{2}.plot.fname.patternB{4}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_4.ncs');
+config{2}.plot.fname.patternB{5}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_3.ncs');
+config{2}.plot.fname.patternB{6}          = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mTNmi_5.ncs');
+config{2}.plot.refname.patternB{1}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_3.ncs');
+config{2}.plot.refname.patternB{2}        = fullfile(config{2}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_TNmi_2.ncs');
+
+%% NODULE 2
+config{3}.plot                            = config{1}.plot;
+config{3}.plot.toi.patternA               = [1004.0, 1008.0, 0];
+config{3}.plot.fname.patternA{1}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
+config{3}.plot.fname.patternA{2}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_1.ncs');
+config{3}.plot.fname.patternA{3}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
+config{3}.plot.fname.patternA{4}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_5.ncs');
+config{3}.plot.fname.patternA{5}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
+config{3}.plot.fname.patternA{6}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_6.ncs');
+config{3}.plot.refname.patternA{1}        = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_3.ncs');
+config{3}.plot.refname.patternA{2}        = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
+
+config{3}.plot.toi.patternB               = [412.9, 415.4, 0];
+config{3}.plot.fname.patternB{1}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
+config{3}.plot.fname.patternB{2}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_1.ncs');
+config{3}.plot.fname.patternB{3}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
+config{3}.plot.fname.patternB{4}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_5.ncs');
+config{3}.plot.fname.patternB{5}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_2.ncs');
+config{3}.plot.fname.patternB{6}          = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_mCasd_4.ncs');
+config{3}.plot.refname.patternB{1}        = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_3.ncs');
+config{3}.plot.refname.patternB{2}        = fullfile(config{3}.rawdir, '02614_2018-06-12_17-23', '02614_2018-06-12_17-23_Casd_2.ncs');
+
+config{3}.plot.toi.patternC               = [1664.850-0.20, 1664.850+0.4, -0.20];
+config{3}.plot.fname.patternC{1}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_2.ncs');
+config{3}.plot.fname.patternC{2}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_1.ncs');
+config{3}.plot.fname.patternC{3}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_2.ncs');
+config{3}.plot.fname.patternC{4}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_5.ncs');
+config{3}.plot.fname.patternC{5}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_2.ncs');
+config{3}.plot.fname.patternC{6}          = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_mCasd_5.ncs');
+config{3}.plot.refname.patternC{1}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_3.ncs');
+config{3}.plot.refname.patternC{2}        = fullfile(config{3}.rawdir, '02614_2018-06-12_15-23', '02614_2018-06-12_15-23_Casd_2.ncs');
+
+
 
 %% nodule 3
 config{4}.plot                            = config{1}.plot;

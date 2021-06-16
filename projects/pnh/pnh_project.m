@@ -7,6 +7,8 @@
 
 %% Add path
 
+restoredefaultpath
+
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
@@ -31,11 +33,6 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 % load settings
 config = pnh_setparams;
-
-% read muse markers
-[MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
-
-
 
 
 %% General analyses

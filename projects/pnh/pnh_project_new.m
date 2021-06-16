@@ -19,7 +19,7 @@ if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis
     addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries'));
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13/
-    
+    ft_defaults
 end
 
 if ispc
@@ -30,439 +30,139 @@ if ispc
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
+    ft_defaults
 end
 
-%% Valerio
-if isunix
-    addpath /network/lustre/iss01/charpier/analyses/valerio.frazzini/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/valerio.frazzini/EpiCode/projects/pnh/
-    addpath /network/lustre/iss01/charpier/analyses/valerio.frazzini/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/valerio.frazzini/EpiCode/shared/utilities
-    addpath /network/lustre/iss01/charpier/analyses/valerio.frazzini/EpiCode/external/subaxis    
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/valerio.frazzini/scripts/releaseDec2015/'));
-end
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\EpiCode\projects\pnh
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\EpiCode\external\subaxis
-    addpath \\lexport\iss01.charpier\analyses\valerio.frazzini\MatlabImportExport_v6.0.0
-end
-
-ft_defaults
-
-%%
 MuseStruct{4}               = [];
 SpikeRaw{4}                 = [];
 SpikeDensity_timelocked{4}  = [];
 SpikeTrials_timelocked{4}   = [];
-LFP{4}   = [];
+SpikeTrials_windowed{4}     = [];
+SpikeStats_windowed{4}      = [];
+LFP{4}                      = [];
+intervals{4}                = [];
 
-for ipatient = 1 : 4
+for ipatient = [1, 2, 3, 4]
     
-    % load settings
+%     % load settings
     config = pnh_setparams;
-    
+%     
     % read muse markers
-    MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, true);
+    MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
     
     % align markers
-    MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, true);
+    MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
     
-    % add seizures
+    % add seizures 
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, {'CriseStart', 'CriseEnd'});
-   
-    % read LFP data (trial-by-trial)
-    LFP{ipatient} = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
-    
-    % make TFR
-    TFR{ipatient} = TFRtrials(config{ipatient}, LFP{ipatient}, true);
-    
-    % write parameters for spyking circus
+%            
+%     % intervals between IEDs
+%     intervals{ipatient} = inter_trial_intervals(config{ipatient}, MuseStruct{ipatient}, false);
+%     
+%     % read hypnogram for combining with windowed data (neccecary for stats but not used in article)
+%     hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, false);
+% 
+%     % read LFP data (trial-by-trial)
+%     LFP{ipatient} = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
+% 
+%     % Time-frequency of IEDs
+%     TFR{ipatient} = TFRtrials(config{ipatient}, false);
+%    
+%     % add any artefacts added later
 %     [MuseStruct{ipatient}] = updateBadMuseMarkers(config{ipatient}, MuseStruct{ipatient});
+%     
+%     % write parameters for spyking circus
 %     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct_aligned{ipatient}, true);
 %     writeSpykingCircusParameters_new(config{ipatient});
 %     [filelist, sampleinfo, timestamps, hdr] = writeSpykingCircusFileList(config{ipatient}, false);
-    
+
     % read spike data from Phy as one continuous trial
-    SpikeRaw{ipatient} = readSpikeRaw_Phy_new(config{ipatient}, true);
-    
-    % segment into trials based on IED markers
-    SpikeTrials_timelocked{ipatient}    = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
-    
-    % get spike density and stats vs. baseline
-    SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config{ipatient}, SpikeTrials_timelocked{ipatient}, true);
+    SpikeRaw{ipatient} = readSpikeRaw_Phy_new(config{ipatient}, false);
      
-    % search for example units
-%     ipart = 1;
-    %     good = strcmp(strtrim(SpikeTrials_timelocked{ipatient}{ipart}.ES.cluster_group), 'good');
-    %     rho  = SpikeDensity_timelocked{ipatient}{ipart}.psth.ES.corr_rho;
-    %     [~, i] = max(abs(rho(good)));
-    %     i = find(good);
-%     
-%     nrtrials = 1;
-%     nrdirs = size(config{ipatient}.directorylist{ipart}, 2);
-%     nrdirs = 1;
-%     for markername = string(config{ipatient}.LFP.name)
-%         config{ipatient}.plot.trial.(markername) = repmat(1:nrtrials, 1, nrdirs);
-%         config{ipatient}.plot.dir.(markername) = 1;
-%         config{ipatient}.plot.unit = [];
-%         
-%         for idir = 1 : nrdirs
-%             config{ipatient}.plot.dir.(markername) = [config{ipatient}.plot.dir.(markername), ones(1, nrtrials) * idir];
+    % segment into trials based on IED markers
+    SpikeTrials_timelocked{ipatient}    = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+ 
+    % spike density and stats vs. baseline
+    SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config{ipatient}, SpikeTrials_timelocked{ipatient}, true);
+
+%     % create sliding timewindows
+%     config{ipatient}.spikewin.windowsize = 10; %Patient 1; 10: (0/total) = 7835/14826; 60: 352/2460
+%     for ipart = 1 : size(config{ipatient}.directorylist, 2)
+%         for idir = 1 : size(config{ipatient}.directorylist{ipart}, 2)
+%             temp = dir(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, ['*', config{ipatient}.LFP.channel{1}, '.ncs']));
+%             hdr  = ft_read_header(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, temp.name));
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime = 0 : (config{ipatient}.spikewin.windowsize - config{ipatient}.spikewin.windowsize * config{ipatient}.spikewin.windowoverlap) : hdr.nSamples/hdr.Fs - (config{ipatient}.spikewin.windowsize);
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock    = seconds(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime) + MuseStruct{ipatient}{ipart}{idir}.starttime;
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.events   = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime, 2);
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime   = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime + config{ipatient}.spikewin.windowsize;
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.clock      = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock + seconds(config{ipatient}.spikewin.windowsize);
+%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.events     = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime, 2);  
 %         end
 %     end
-    plot_patterns_multilevel_examples(config{ipatient});
-%     close all
-    
-%     intervals{ipatient} = inter_trial_intervals(config{ipatient}, MuseStruct_aligned{ipatient}, true);
-    
-    % plot LFP timecourse examples for article
-%     plotTimeCoursesExamples(config{ipatient});
-        
-    
-    
-    plotstats(config{ipatient})
-end
-
-
-
-%% Spyking circus
-% eval('~/.local/bin/spyking-circus spyking-circus.params')
-
-
-
-
-%% General analyses
-
-
-for ipatient = 1 : 4
-    
-    
-    % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-%     [MuseStruct_micro, MuseStruct_macro]    = MuseMarkers_update_filepath(config{ipatient},MuseStruct_micro, MuseStruct_macro);
-    
-%     % read LFP data
-    [dat_micro, dat_macro] = readLFP(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-%     
-
-%     )
-%     % plot LFP data
-%     [FFT_micro_trials,TFR_micro_trials,TFR_macro_trials,stat_TFR_micro] = plotLFP(config{ipatient}, dat_micro, dat_macro, true);
-%     
-    % write data concatinated for SC, and update config with sampleinfo
-    config{ipatient}                        = writeSpykingCircus(config{ipatient}, MuseStruct_micro, false);
-    
-    % read raw spike data from SC, and segment into trials
-    [SpikeRaw, SpikeTrials]                 = readSpykingCircus(config{ipatient}, MuseStruct_micro, false);
-    
-    % read and plot spikerate overview, and get the stats
-    [SpikeRateStats{ipatient}, stats_bar{ipatient}, sdf_orig_out{ipatient}, sdf_bar_out] = spikeratestats(config{ipatient}, SpikeRaw, SpikeTrials, false);
-    
-    % read and plot LFP of spike events
-%     [spike_LFP]  = spikeLFP(config{ipatient},SpikeRaw, false);
-
-
-        % segment into equal periods
-    SpikeTrials_windowed{ipatient}        = readSpikeTrials_windowed(config_trimmed{ipatient}, MuseStruct_trimmed{ipatient}, SpikeRaw{ipatient}, true);
-    SpikeStats_windowed{ipatient}         = spikeTrialStats(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
-    
-end
-
-
-
-
-
-
-
-
-
-%% extra spike stats cf Pierre
-for ipatient =  1 : 3
-    
-    % continuous data
-    for itemp = 1 : length(SpikeRateStats{ipatient}.isi)
-        
-        isi = SpikeRateStats{ipatient}.isi{itemp}/1000;
-        SpikeRateStats{ipatient}.mean_freq(itemp)     = 1 / mean(isi);
-        SpikeRateStats{ipatient}.median_freq(itemp)   = 1 / median(isi);
-        SpikeRateStats{ipatient}.mean_isi(itemp)      = mean(isi);
-        SpikeRateStats{ipatient}.stdev_isi(itemp)     = std(isi);
-        SpikeRateStats{ipatient}.var_isi(itemp)       = std(isi)^2;
-        SpikeRateStats{ipatient}.fano_isi(itemp)      = SpikeRateStats{ipatient}.var_isi(itemp)   / SpikeRateStats{ipatient}.mean_isi(itemp);
-        SpikeRateStats{ipatient}.CV_isi(itemp)        = SpikeRateStats{ipatient}.stdev_isi(itemp) / SpikeRateStats{ipatient}.mean_isi(itemp);
-        SpikeRateStats{ipatient}.burstindex(itemp)    = sum(SpikeRateStats{ipatient}.isi{itemp} < 5) / sum(SpikeRateStats{ipatient}.isi{itemp} < 100);
-    end
-    
-    % per pattern
-    for ipattern = 1 : size(SpikeRateStats{ipatient}.isi_pattern_all,2)
-        
-        for itemp = 1 : length(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi)
-            
-            trialavg_isi_all    = [];
-            trialavg_isi_bl     = [];
-            trialavg_isi_ac     = [];
-            
-            i = 1;
-            for itrial                 = unique(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.trial{itemp})
-                trialindx              = SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.trial{itemp} == itrial;
-                trialavg_isi_all(i)    = nanmean(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi{itemp}(trialindx));
-                i = i + 1;
-            end
-            i = 1;
-            for itrial                 = unique(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.trial{itemp})
-                trialindx              = SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.trial{itemp} == itrial;
-                isi                    = SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp}(trialindx);     
-                trialavg_isi_bl(i)     = nanmean(isi);               
-                trail_CV_bl(i)         = nanstd(isi) / nanmean(isi);                
-                x                      = isi(1:end-1) ./ isi(2:end);
-                trial_CV2_bl(i)        = nanmean(2 * abs(x - 1) ./ (x + 1));
-                trial_spikecount_bl(i) = sum(trialindx);                
-                i = i + 1;
-            end
-            i = 1;
-            trial_CV = [];
-            for itrial                 = unique(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.trial{itemp})
-                trialindx              = SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.trial{itemp} == itrial;
-                trialavg_isi_ac(i)     = nanmean(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp}(trialindx));
-                i = i + 1;
-            end
-            
-            
-            SpikeRateStats{ipatient}.freq_all(ipattern,itemp)   = 1 / nanmean(trialavg_isi_all);
-            SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = 1 / nanmean(trialavg_isi_bl);
-            SpikeRateStats{ipatient}.freq_ac(ipattern,itemp)    = 1 / nanmean(trialavg_isi_ac);
-            
-            SpikeRateStats{ipatient}.freq_all(ipattern,itemp)   = 1 / nanmean(trialavg_isi_all);
-            SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = 1 / nanmean(trialavg_isi_bl);
-            SpikeRateStats{ipatient}.freq_ac(ipattern,itemp)    = 1 / nanmean(trialavg_isi_ac);
-            
-%             SpikeRateStats{ipatient}.freq_bl(ipattern,itemp)    = stats_bar{ipatient}.clusterstat{ilabel}{itemp}.bl.avg;  
-            
-            SpikeRateStats{ipatient}.fano_all(ipattern,itemp)   = nanstd(trialavg_isi_all)^2 / nanmean(trialavg_isi_all);
-% %             SpikeRateStats{ipatient}.fano_bl(ipattern,itemp)    = nanstd(trialavg_isi_bl)^2  / nanmean(trialavg_isi_bl);
-            SpikeRateStats{ipatient}.fano_ac(ipattern,itemp)    = nanstd(trialavg_isi_ac)^2  / nanmean(trialavg_isi_ac);
-            SpikeRateStats{ipatient}.cv_all(ipattern,itemp)     = nanstd(trialavg_isi_all)   / nanmean(trialavg_isi_all);
-%             SpikeRateStats{ipatient}.cv_bl(ipattern,itemp)      = nanstd(trialavg_isi_bl)    / nanmean(trialavg_isi_bl);
-            SpikeRateStats{ipatient}.cv_ac(ipattern,itemp)      = nanstd(trialavg_isi_ac)    / nanmean(trialavg_isi_ac);
-            SpikeRateStats{ipatient}.BI_all(ipattern,itemp)     = sum(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi{itemp} < 0.005) / sum(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi{itemp} < 0.100);
-            SpikeRateStats{ipatient}.BI_bl(ipattern,itemp)      = sum(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp} < 0.005)  / sum(SpikeRateStats{ipatient}.isi_pattern_bl{ipattern}.isi{itemp} < 0.100);
-            SpikeRateStats{ipatient}.BI_ac(ipattern,itemp)      = sum(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp} < 0.005)  / sum(SpikeRateStats{ipatient}.isi_pattern_ac{ipattern}.isi{itemp} < 0.100);
-            
-            SpikeRateStats{ipatient}.cv_bl(ipattern,itemp)      = nanmean(trail_CV_bl);
-            SpikeRateStats{ipatient}.cv2_bl(ipattern,itemp)     = nanmean(trial_CV2_bl);
-            SpikeRateStats{ipatient}.fano_bl(ipattern,itemp)    = nanstd(trial_spikecount_bl)^2  / nanmean(trial_spikecount_bl);     
-        end
-    end
-end
-
-
-tbl = table;
-iunit = 1;
-for ipatient =  1 : 3
-    
-    for itemp = 1 : length(SpikeRateStats{ipatient}.isi_pattern_all{ipattern}.isi)
-        
-        
-        tbl.nodule(iunit)   = ipatient;
-        total               = length(SpikeRateStats{ipatient}.isi{itemp});
-        short               = sum(SpikeRateStats{ipatient}.isi{itemp} < 2);
-        long                = sum(SpikeRateStats{ipatient}.isi{itemp} >= 2);
-        tbl.unit(iunit)     = itemp;
-        tbl.total(iunit)    = total;
-        
-        if short/total * 100 < 1
-            tbl.percRPV{iunit} = round(short/total * 100,2);
-        else
-            tbl.percRPV{iunit} = round(short/total * 100,2);
-        end
-        
-        tbl.template_pt(iunit)      = SpikeRateStats{ipatient}.template_pt(itemp);
-        tbl.template_tp(iunit)      = SpikeRateStats{ipatient}.template_tp(itemp);        
-        tbl.template_width(iunit)   = SpikeRateStats{ipatient}.template_width(itemp);
-   
-        tbl.ipatient(iunit)         = ipatient;
-        tbl.ALL_mean_freq(iunit)    = SpikeRateStats{ipatient}.mean_freq(itemp);
-        tbl.ALL_median_freq(iunit)  = SpikeRateStats{ipatient}.median_freq(itemp);
-        tbl.ALL_fano(iunit)         = SpikeRateStats{ipatient}.fano_isi(itemp);
-        tbl.ALL_CV(iunit)           = SpikeRateStats{ipatient}.CV_isi(itemp);
-        tbl.ALL_BI(iunit)           = SpikeRateStats{ipatient}.burstindex(itemp);
-        
-        if ipatient ~= 3
-            
-            tbl.SW_bl_freq(iunit)   = SpikeRateStats{ipatient}.freq_bl(1,itemp);
-            tbl.FA_bl_freq(iunit)   = SpikeRateStats{ipatient}.freq_bl(2,itemp);
-            tbl.ES_bl_freq(iunit)   = SpikeRateStats{ipatient}.freq_bl(3,itemp);
-            tbl.SW_ac_freq(iunit)   = SpikeRateStats{ipatient}.freq_ac(1,itemp);
-            tbl.FA_ac_freq(iunit)   = SpikeRateStats{ipatient}.freq_ac(2,itemp);
-            tbl.ES_ac_freq(iunit)   = SpikeRateStats{ipatient}.freq_ac(3,itemp);
-            
-            tbl.SW_bl_fano(iunit)   = SpikeRateStats{ipatient}.fano_bl(1,itemp);
-            tbl.FA_bl_fano(iunit)   = SpikeRateStats{ipatient}.fano_bl(2,itemp);
-            tbl.ES_bl_fano(iunit)   = SpikeRateStats{ipatient}.fano_bl(3,itemp);
-            tbl.SW_ac_fano(iunit)   = SpikeRateStats{ipatient}.fano_ac(1,itemp);
-            tbl.FA_ac_fano(iunit)   = SpikeRateStats{ipatient}.fano_ac(2,itemp);
-            tbl.ES_ac_fano(iunit)   = SpikeRateStats{ipatient}.fano_ac(3,itemp);
-            
-            tbl.SW_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(1,itemp);
-            tbl.FA_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(2,itemp);
-            tbl.ES_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(3,itemp);
-            tbl.SW_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(1,itemp);
-            tbl.FA_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(2,itemp);
-            tbl.ES_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(3,itemp);
-            
-            tbl.SW_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(1,itemp);
-            tbl.FA_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(2,itemp);
-            tbl.ES_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(3,itemp);
-            
-            tbl.SW_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(1,itemp);
-            tbl.FA_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(2,itemp);
-            tbl.ES_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(3,itemp);
-            tbl.SW_ac_BI(iunit)     = SpikeRateStats{ipatient}.BI_ac(1,itemp);
-            tbl.FA_ac_BI(iunit)     = SpikeRateStats{ipatient}.BI_ac(2,itemp);
-            tbl.ES_ac_BI(iunit)     = SpikeRateStats{ipatient}.BI_ac(3,itemp);
-            
-        else
-            
-            tbl.FA_bl_freq(iunit)   = SpikeRateStats{ipatient}.freq_bl(1,itemp);
-            tbl.ES_bl_freq(iunit)   = SpikeRateStats{ipatient}.freq_bl(2,itemp);
-            tbl.FA_ac_freq(iunit)   = SpikeRateStats{ipatient}.freq_ac(1,itemp);
-            tbl.ES_ac_freq(iunit)   = SpikeRateStats{ipatient}.freq_ac(2,itemp);
-            
-            tbl.FA_bl_fano(iunit)   = SpikeRateStats{ipatient}.fano_bl(1,itemp);
-            tbl.ES_bl_fano(iunit)   = SpikeRateStats{ipatient}.fano_bl(2,itemp);
-            tbl.FA_ac_fano(iunit)   = SpikeRateStats{ipatient}.fano_ac(1,itemp);
-            tbl.ES_ac_fano(iunit)   = SpikeRateStats{ipatient}.fano_ac(2,itemp);
-            
-            tbl.FA_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(1,itemp);
-            tbl.ES_bl_CV(iunit)     = SpikeRateStats{ipatient}.cv_bl(2,itemp);
-            
-            tbl.FA_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(1,itemp);
-            tbl.ES_bl_CV2(iunit)    = SpikeRateStats{ipatient}.cv2_bl(2,itemp);
-            
-            tbl.FA_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(1,itemp);
-            tbl.ES_ac_CV(iunit)     = SpikeRateStats{ipatient}.cv_ac(2,itemp);
-            
-            tbl.FA_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(1,itemp);
-            tbl.ES_bl_BI(iunit)     = SpikeRateStats{ipatient}.BI_bl(2,itemp);
-            tbl.FA_ac_BI(iunit)     = SpikeRateStats{ipatient}.BI_ac(1,itemp);
-            tbl.ES_ac_BI(iunit)     = SpikeRateStats{ipatient}.BI_ac(2,itemp);
-        end
-        
-        iunit                       = iunit + 1;
-        
-    end
-end
-
-
-filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.xlsx');
-writetable(tbl,filename)
-filename = fullfile(config{ipatient}.datasavedir,'spikestats_revision.csv');
-writetable(tbl,filename)
-
-
-
-
-
-
-%     temp                = dir(fullfile(config{ipatient}.datasavedir,[config{ipatient}.prefix,'all_data_',config{ipatient}.circus.channel{1}(1:end-2),'_*.ncs']));
-%     hdr_fname           = fullfile(temp(1).folder,temp(1).name);
-%     hdr                 = ft_read_header(hdr_fname); % take the first file to extract the header of the data
-%     
-%     % redefine trials to 1-second windows for ISI
-%     cfgtemp             = [];
-%     cfgtemp.trl         = (1 : hdr.Fs*1 : hdr.nSamples)';
-%     cfgtemp.trl(:,2)    = cfgtemp.trl(:,1) + hdr.Fs*1 - 1;
-%     cfgtemp.trl(:,3)    = zeros(size(cfgtemp.trl,1),1);
-%     cfgtemp.trl         = cfgtemp.trl(1:end-1,:);
-%     cfgtemp.trlunit     = 'samples';
-%     cfgtemp.hdr         = hdr;
-%     spiketrials_1s      = ft_spike_maketrials(cfgtemp,SpikeRaw);
-%     
-%     for itemp = 1 : length(SpikeRateStats.isi)
-%         
-%         for itrial = unique(spiketrials_1s.trial{itemp})
-%             trialsel = find(spiketrials_1s.trial{itemp} == itrial);
-%             if trialsel > 1
-%                 temp(itemp,itrial) = mean( diff( spiketrials_1s.time{itemp}(trialsel)));
-%             else
-%                 temp(itemp,itrial) = nan;
-%             end
-%         end
-%         
-%     end
-%     temp(temp == 0) = nan;
-%     t = nanmean(temp,2)';
 % 
-% end
+%     config{ipatient}.muse.startmarker.window    = 'window__START__';
+%     config{ipatient}.muse.endmarker.window      = 'window__END__';
+%     config{ipatient}.spike.toi.window           = [0 0];
+%     config{ipatient}.spike.pad.window           = 0;
+%     config{ipatient}.spike.name                 = "window";
+%     config{ipatient}.spike.postfix              = '-windowed';
+%     SpikeTrials_windowed{ipatient}              = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+%     SpikeStats_windowed{ipatient}               = spikeTrialStats(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
 
-%% average spike LFP averages
+%     % plot LFP timecourse examples for article
+%     config{ipatient}.plot.name      = {'patternA', 'patternB', 'patternC'};
+%     config{ipatient}.plot.ncols     = 4;
+%     config{ipatient}.plot.postfix   = "_IEDs";
+%     plotTimeCoursesExamples(config{ipatient});
+%     
+%     % plot seizure timecourse examples for article
+%     config{ipatient}.plot.name      = "seizureA";
+%     config{ipatient}.plot.ncols     = 1;    
+%     config{ipatient}.plot.postfix   = "_seizureA";
+%     plotTimeCoursesExamples(config{ipatient});
+%     
+%     % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
+%     config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * 0; % all in the same plot
+%     config{ipatient}.plot.name      = "SEIZURE";
+%     config{ipatient}.plot.ncols     = 1;    
+%     config{ipatient}.plot.postfix   = "_SEIZURE";
+%     plot_patterns_multilevel_examples2(config{ipatient});
+%     
+%     % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
+%     config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * -1; % all individually
+%     if ipatient == 3
+%         config{ipatient}.plot.name   = {'FA','ES'};
+%     else
+%         config{ipatient}.plot.name   = {'PSW','FA','ES'};
+%     end
+%     config{ipatient}.plot.ncols     = 4;
+%     config{ipatient}.plot.postfix   = "_IEDs";
+%     plot_patterns_multilevel_examples2(config{ipatient});
+% 
+%     % plot firing rate change for each pattern (not in article, see Figure2.m & Figure3.m)
+%     plotstats(config{ipatient});
+%     
+%     % extract waveforms from raw data
+%     SpikeWaveforms = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, false);
 
-w_pre  = config{ipatient}.spike.pre * spike_LFP{itemp}.fsample;
-w_post = config{ipatient}.spike.post * spike_LFP{itemp}.fsample;
-
-for itemp = 1 : size(spike_LFP,2)
-    
-    spike_LFP{itemp}.trial_norm = [];
-    
-    % average
-    i = 1;
-    for trialnr = 1 : size(spike_LFP{itemp}.trial,2)
-        if size(find(SpikeRaw.sample{itemp} < SpikeRaw.sample{itemp}(trialnr)+w_post & SpikeRaw.sample{itemp} > SpikeRaw.sample{itemp}(trialnr)-w_pre),1) == 1
-            
-            fprintf('Normalizing unit %d of %d: trial %d of %d\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
-            
-            %             spike_LFP{itemp}.trial_norm(i,:) = (spike_LFP{itemp}.trial{trialnr} - min(spike_LFP{itemp}.trial{trialnr})) / (max(spike_LFP{itemp}.trial{trialnr}) - min(spike_LFP{itemp}.trial{trialnr}) );
-            spike_LFP{itemp}.trial_norm{i} = spike_LFP{itemp}.trial{trialnr};
-            
-            i = i + 1;
-        else
-            fprintf('Skipping unit %d of %d: trial %d of %d because it overlaps with other spikes\n',itemp,size(spike_LFP,2),trialnr,size(spike_LFP{itemp}.trial,2));
-        end
-        
-    end
 end
+  
 
-for itemp = 1 : size(spike_LFP,2)
-    cfgtemp = [];
-    cfgtemp.demean = 'yes';
-    cfgtemp.baselinewindow = [-0.001, -0.0005];
-    spike_LFP{itemp} = ft_preprocessing(cfgtemp,spike_LFP{itemp});
-    spike_LFP_avg{itemp} = ft_timelockanalysis([],spike_LFP{itemp});
-    spike_LFP_avg{itemp}.avg_norm = (spike_LFP_avg{itemp}.avg - min(spike_LFP_avg{itemp}.avg)) / (max(spike_LFP_avg{itemp}.avg) - min(spike_LFP_avg{itemp}.avg) );
-end
+% analyse periodicity c.f. Hirsch
+analyze_periodicity(config);
+    
+% Figure 2 for article
+cfg_fig = [];
+cfg_fig.colorscale = 0.2;
+Figure2(cfg_fig);
 
+% Figure 3 for article
+Figure3;
 
-figure; hold;
-for itemp = 1 : size(spike_LFP,2)
-    plot(spike_LFP_avg{itemp}.time,spike_LFP_avg{itemp}.avg_norm,'k');
-end
+% Table 2 for article
+T = Table2(config, true);
 
-
-%% plot correlations between micro and macro
-
-for ipatient =  1 : 3
-    
-    config = setparams([]);
-    
-    % read muse markers
-    [MuseStruct_micro, MuseStruct_macro]    = readMuseMarkers(config{ipatient}, false);
-    
-    % align Muse markers according to peaks and detect whether they contain artefacts
-    [MuseStruct_micro, MuseStruct_macro]    = alignMuseMarkers(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-    
-    % read LFP data
-    [dat_micro, dat_macro] = readLFP(config{ipatient},MuseStruct_micro, MuseStruct_macro, false);
-    
-    % plot LFP timecourse examples for article
-    % plotTimeCourses(config{ipatient});
-    
-    % plot LFP data
-    [FFT_micro_trials{ipatient}, TFR_micro_trials{ipatient}, TFR_macro_trials{ipatient}, stat_TFR_micro{ipatient}, corrs{ipatient}] = plotLFP(config{ipatient}, dat_micro, dat_macro, false);
-end
+% plot correlations between micro and macro
 
 close all
 fig = figure; hold;
