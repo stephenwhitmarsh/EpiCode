@@ -21,9 +21,9 @@ function [stats] = spikeTrialStats(cfg, SpikeTrials, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-cfg.spike.RPV   = ft_getopt(cfg.spike, 'RPV', 0.001);
-cfg.postfix     = ft_getopt(cfg, 'postfix', '');
-fname           = fullfile(cfg.datasavedir, [cfg.prefix, 'spikestats', cfg.postfix, '.mat']);
+cfg.spike.RPV       = ft_getopt(cfg.spike, 'RPV', 0.002);
+cfg.spike.postfix   = ft_getopt(cfg.spike, 'postfix', '');
+fname               = fullfile(cfg.datasavedir, [cfg.prefix, 'spikestats', cfg.spike.postfix, '.mat']);
 
 if nargin == 1
     if exist(fname, 'file')
@@ -63,72 +63,79 @@ for ipart = 1 : size(SpikeTrials, 2)
             SpikeTrials{ipart}.(markername).trialinfo.hyplabel(SpikeTrials{ipart}.(markername).trialinfo.hyplabel == "NO_SCORE") = "AWAKE";
         end
 
-        % ISI over conditions
+        % ISIs independent of hyplabels
         cfgtemp                                     = [];
         cfgtemp.outputunit                          = 'spikecount';
         cfgtemp.bins                                = cfg.spike.ISIbins;%0 : 0.0005 : 0.200;   % use bins of 0.5 milliseconds
         cfgtemp.param                               = 'coeffvar';         % compute the coefficient of variation (sd/mn of isi)
-        isi_temp                                    = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
+        isi_temp_all                                = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
 
 %         % Xcorr over conditions
-        cfgtemp                                     = [];
-        cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
-        cfgtemp.maxlag                              = 0.200;
-        cfgtemp.outputunit                          = 'proportion';
-        cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];
-        xcorr_temp                                  = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
+%         cfgtemp                                     = [];
+%         cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
+%         cfgtemp.maxlag                              = 0.200;
+%         cfgtemp.outputunit                          = 'proportion';
+%         cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];
+%         xcorr_temp                                  = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
 
-        % get them now because cfg.keeptrials in the nextloop doesn't work:
-        if any(ismember(SpikeTrials{ipart}.(markername).trialinfo.Properties.VariableNames, 'hyplabel'))
+        % ISIs dependent of hyplabels
+        if any(contains(SpikeTrials{ipart}.(markername).trialinfo.hyplabel, hyplabels))
             for hyplabel = hyplabels
-
+                
                 trials = SpikeTrials{ipart}.(markername).trialinfo.hyplabel == hyplabel;
-
+                
+                if ~any(trials)
+                    continue
+                end
+                
                 % ISI per condition
                 cfgtemp                                     = [];
                 cfgtemp.outputunit                          = 'proportion';
                 cfgtemp.bins                                = 0 : 0.0005 : 0.200; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
                 cfgtemp.param                               = 'coeffvar';         % compute the coefficient of variation (sd/mn of isi)
                 cfgtemp.trials                              = trials;
-                isi_hyp_temp.(hyplabel)                     = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
+                isi_temp_label.(hyplabel)                   = ft_spike_isi(cfgtemp, SpikeTrials{ipart}.(markername));
 
                 % Xcorr per condition
-                cfgtemp                                     = [];
-                cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
-                cfgtemp.maxlag                              = 0.200;
-                cfgtemp.trials                              = trials;
-                cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];
-                xcorr_hyp_temp.(hyplabel)                   = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
+%                 cfgtemp                                     = [];
+%                 cfgtemp.binsize                             = 0.001; % cfg.spike.ISIbins;   % use bins of 0.5 milliseconds
+%                 cfgtemp.maxlag                              = 0.200;
+%                 cfgtemp.trials                              = trials;
+%                 cfgtemp.channelcmb                          = [SpikeTrials{ipart}.(markername).label', SpikeTrials{ipart}.(markername).label'];
+%                 xcorr_hyp_temp.(hyplabel)                   = ft_spike_xcorr(cfgtemp, SpikeTrials{ipart}.(markername));
             end
         end
 
         for itemp = 1 : size(SpikeTrials{ipart}.(markername).label, 2)
 
-            stats{ipart}.(markername){itemp}.isi            = isi_temp.isi{itemp};
-            stats{ipart}.(markername){itemp}.isi_avg        = isi_temp.avg(itemp, :);
-            stats{ipart}.(markername){itemp}.isi_avg_time   = isi_temp.time;
-            stats{ipart}.(markername){itemp}.label          = isi_temp.label{itemp};
-            refr = sum(stats{ipart}.(markername){itemp}.isi < cfg.spike.RPV);
+            stats{ipart}.(markername){itemp}.isi            = isi_temp_all.isi{itemp};
+            stats{ipart}.(markername){itemp}.isi_avg        = isi_temp_all.avg(itemp, :);
+            stats{ipart}.(markername){itemp}.isi_avg_time   = isi_temp_all.time;
+            stats{ipart}.(markername){itemp}.label          = isi_temp_all.label{itemp};
+            refr = sum(    stats{ipart}.(markername){itemp}.isi < cfg.spike.RPV);
             tot  = length((stats{ipart}.(markername){itemp}.isi));
             stats{ipart}.(markername){itemp}.RPV = refr/tot;
 
             % spike autocorr
-            cfgtemp              = [];
-            cfgtemp.spikechannel = SpikeTrials{ipart}.(markername).label{itemp};
-            spike_temp           = ft_spike_select(cfgtemp,SpikeTrials{ipart}.(markername));
-            stats{ipart}.(markername){itemp}.autocorr   = ft_spike_xcorr(cfgtemp, spike_temp);
-            stats{ipart}.(markername){itemp}.autocorr   = rmfield(stats{ipart}.(markername){itemp}.autocorr, 'cfg');
-            stats{ipart}.(markername){itemp}.xcorr      = xcorr_temp.xcorr;
-            stats{ipart}.(markername){itemp}.xcorr_time = xcorr_temp.time;
+%             cfgtemp              = [];
+%             cfgtemp.spikechannel = SpikeTrials{ipart}.(markername).label{itemp};
+%             spike_temp           = ft_spike_select(cfgtemp,SpikeTrials{ipart}.(markername));
+%             stats{ipart}.(markername){itemp}.autocorr   = ft_spike_xcorr(cfgtemp, spike_temp);
+%             stats{ipart}.(markername){itemp}.autocorr   = rmfield(stats{ipart}.(markername){itemp}.autocorr, 'cfg');
+%             stats{ipart}.(markername){itemp}.xcorr      = xcorr_temp.xcorr;
+%             stats{ipart}.(markername){itemp}.xcorr_time = xcorr_temp.time;
 
-            if any(ismember(SpikeTrials{ipart}.(markername).trialinfo.Properties.VariableNames, 'hyplabel'))
+            if any(contains(SpikeTrials{ipart}.(markername).trialinfo.hyplabel, hyplabels))
                 for hyplabel = hyplabels
-                    stats{ipart}.(markername){itemp}.(hyplabel).isi            = isi_hyp_temp.(hyplabel).isi{itemp};
-                    stats{ipart}.(markername){itemp}.(hyplabel).isi_avg        = isi_hyp_temp.(hyplabel).avg(itemp, :);
-                    stats{ipart}.(markername){itemp}.(hyplabel).isi_avg_time   = isi_hyp_temp.(hyplabel).time;
-                    stats{ipart}.(markername){itemp}.(hyplabel).label          = isi_hyp_temp.(hyplabel).label{itemp};
-                    stats{ipart}.(markername){itemp}.(hyplabel).xcorr          = xcorr_hyp_temp.(hyplabel).xcorr;
-                    stats{ipart}.(markername){itemp}.(hyplabel).xcorr_time     = xcorr_hyp_temp.(hyplabel).time;
+                    if ~isfield(isi_temp_label, hyplabel)
+                        continue
+                    end
+                    stats{ipart}.(markername){itemp}.(hyplabel).isi            = isi_temp_label.(hyplabel).isi{itemp};
+                    stats{ipart}.(markername){itemp}.(hyplabel).isi_avg        = isi_temp_label.(hyplabel).avg(itemp, :);
+                    stats{ipart}.(markername){itemp}.(hyplabel).isi_avg_time   = isi_temp_label.(hyplabel).time;
+                    stats{ipart}.(markername){itemp}.(hyplabel).label          = isi_temp_label.(hyplabel).label{itemp};
+%                     stats{ipart}.(markername){itemp}.(hyplabel).xcorr          = xcorr_hyp_temp.(hyplabel).xcorr;
+%                     stats{ipart}.(markername){itemp}.(hyplabel).xcorr_time     = xcorr_hyp_temp.(hyplabel).time;
                 end
             end
 
