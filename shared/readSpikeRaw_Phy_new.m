@@ -85,11 +85,13 @@ for ipart = cfg.circus.part_list
     
     temp        = sum(samples_separate{ipart});
     samples     = [1 temp(2)];
-%     timestamp   = cat(2, timestamps_separate{ipart}{:});
+    clear temp
     
-    %%% DUMMY TIMESTAMP
-    timestamp   = 0:temp(2);
-    %%%
+    % use dummy timestamps, 1 per sample, because SC ignores timestamps
+    for idir = 1 : size(hdr_in, 2)
+        hdr_in{ipart}{idir}.TimeStampPerSample = 1;
+        hdr_in{ipart}{idir}.FirstTimeStamp = 0;
+    end
     
     if isempty(cfg.circus.channelname)
         channelname = 'none';
@@ -198,12 +200,8 @@ for ipart = cfg.circus.part_list
             % add amplitude, samples and timestamps at selected spike timings
             SpikeRaw{ipart}.amplitude{icluster}             = phydata.amplitudes(cluster_idx)';
             SpikeRaw{ipart}.sample{icluster}                = phydata.spike_times(cluster_idx)';
-%             SpikeRaw{ipart}.timestamp{icluster}             = SpikeRaw{ipart}.sample{icluster} * hdr{ipart}.TimeStampPerSample;
+            SpikeRaw{ipart}.timestamp{icluster}             = SpikeRaw{ipart}.sample{icluster}; % DUMMY TIMESTAMPS!
 
-            %%% DUMMY TIMESTAMPS
-            SpikeRaw{ipart}.timestamp{icluster}             = SpikeRaw{ipart}.sample{icluster};
-            %%% 
-            
             % add Phy group info (good, mua)
             if ischecked
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id  == cluster_list(icluster), :);
@@ -224,18 +222,18 @@ for ipart = cfg.circus.part_list
         cfgtemp                     = [];
         cfgtemp.trl                 = [samples, 0];
         cfgtemp.trlunit             = 'samples';
-        cfgtemp.hdr                 = rmfield(hdr_in{ipart}{1}, {'nSamples','orig'}); % use first timestamp from first dir
+        cfgtemp.hdr                 = rmfield(hdr_in{ipart}{1}, {'nSamples','orig'});
                 
         if strcmp(channelname, 'none')         
             SpikeRaw{ipart}                     = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
-            SpikeRaw{ipart}.hdr                 = hdr_in{ipart}; % add headers of all directories
             SpikeRaw{ipart}.trialinfo           = table;
             SpikeRaw{ipart}.trialinfo.begsample = samples(1);
             SpikeRaw{ipart}.trialinfo.endsample = samples(2);
             SpikeRaw{ipart}.trialinfo.offset    = 0;
+            SpikeRaw{ipart}.hdr                 = hdr_in{ipart};             
         else
             SpikeRaw_chan{ipart}.(char(chandir))                     = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
-            SpikeRaw_chan{ipart}.(char(chandir)).hdr                 = hdr_in{ipart}; % add all headers
+            SpikeRaw_chan{ipart}.(char(chandir)).hdr                 = hdr_in{ipart}; 
             SpikeRaw_chan{ipart}.(char(chandir)).trialinfo           = table;
             SpikeRaw_chan{ipart}.(char(chandir)).trialinfo.begsample = samples(1);
             SpikeRaw_chan{ipart}.(char(chandir)).trialinfo.endsample = samples(2);
@@ -289,4 +287,4 @@ for ipart = cfg.circus.part_list
     
 end % ipart
 
-save(fname, 'SpikeRaw');
+save(fname, 'SpikeRaw', '-v7.3');
