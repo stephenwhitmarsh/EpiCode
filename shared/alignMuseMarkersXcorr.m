@@ -42,10 +42,37 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 write       = ft_getopt(cfg.align, 'write', true);
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 
+
+fname       = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr.mat']);
+
 % load results if requested (force = false) and result file exist
+
+if nargin == 1
+    if exist(fname, 'file')
+        fprintf('Loading results xcorr alignment: %s\n', fname);
+        
+        % repeat to deal with load errors
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname,'MuseStruct');
+            catch ME
+                err_count = err_count + 1;
+                disp('Something went wrong loading the file. Trying again...')
+            end
+            count = count + 1;
+        end
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        return
+    end
+end
+
 fname = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr.mat']);
 if exist(fname,'file') && force == false
-    fprintf('Loading results xcorr alignment\n');
+    fprintf('Loading results xcorr alignment: %s\n', fname);
     load(fname,'MuseStruct');
     return
 end

@@ -35,9 +35,30 @@ cfg.template.name           = ft_getopt(cfg.template, 'name', 'TemplateDetect');
 
 fname_out                   = fullfile(cfg.datasavedir, [cfg.prefix, 'MuseStruct_detectedTemplates.mat']);
 
+if nargin == 1
+    if exist(fname_out, 'file')
+        fprintf('Loading results template detection: %s\n', fname_out);
+        % repeat to deal with load errors
+        count = 0;
+        err_count = 0;
+        while count == err_count
+            try
+                load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
+            catch ME
+                err_count = err_count + 1;
+                disp('Something went wrong loading the file. Trying again...')
+            end
+            count = count + 1;
+        end
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        return
+    end
+end
+
 if exist(fname_out,'file') && force == false
-    fprintf('Loading results template detection\n');
-    
+    fprintf('Loading results template detection: %s\n', fname_out);
     % repeat to deal with load errors
     count = 0;
     err_count = 0;
@@ -49,9 +70,7 @@ if exist(fname_out,'file') && force == false
         end
         count = count + 1;
     end
-    
     return
-    
 end
 
 fprintf('Detecting spikes\n');
