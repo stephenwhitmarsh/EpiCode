@@ -41,23 +41,41 @@ end
 
 %% Patient 1
 
-config{1}.prefix                    = '2711-';
-config{1}.rawdir                    = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
-config{1}.datasavedir               = fullfile(rootpath_analysis, 'data',   'hspike');
-config{1}.imagesavedir              = fullfile(rootpath_analysis, 'images', 'hspike');
-config{1}.locfile                   = fullfile(rootpath_epiloc,   'pat_02711_1193', 'pat_02711_1193_anatomical_localizations.csv');
-config{1}.visible                   = 'on';
+config{1}.prefix                        = '2711-';
+config{1}.rawdir                        = fullfile(rootpath_data,     'pat_02711_1193', 'eeg');
+config{1}.datasavedir                   = fullfile(rootpath_analysis, 'data',   'hspike');
+config{1}.imagesavedir                  = fullfile(rootpath_analysis, 'images', 'hspike');
+config{1}.locfile                       = fullfile(rootpath_epiloc,   'pat_02711_1193', 'pat_02711_1193_anatomical_localizations.csv');
+config{1}.visible                       = 'on';
 
-config{1}.name                      = {'Hspike'};
-config{1}.muse.startmarker.Hspike   = "Hspike";
-config{1}.muse.endmarker.Hspike     = "Hspike";
-config{1}.muse.backupdir            = fullfile(rootpath_analysis, 'markerbackup');
+config{1}.name                          = {'Hspike'};
+config{1}.muse.startmarker.Hspike       = "Hspike";
+config{1}.muse.endmarker.Hspike         = "Hspike";
+config{1}.muse.startmarker.template1    = "template1";
+config{1}.muse.endmarker.template1      = "template1";
+config{1}.muse.startmarker.template2    = "template2";
+config{1}.muse.endmarker.template2      = "template2";
+config{1}.muse.startmarker.template3    = "template3";
+config{1}.muse.endmarker.template3      = "template3";
+config{1}.muse.startmarker.template4    = "template4";
+config{1}.muse.endmarker.template4      = "template4";
+config{1}.muse.startmarker.template5    = "template5";
+config{1}.muse.endmarker.template5      = "template5";
+config{1}.muse.startmarker.template6    = "template6";
+config{1}.muse.endmarker.template6      = "template6";
+config{1}.muse.startmarker.combined1    = "combined1";
+config{1}.muse.endmarker.combined1      = "combined1";
+config{1}.muse.startmarker.combined2    = "combined2";
+config{1}.muse.endmarker.combined2      = "combined2";
+config{1}.muse.startmarker.combined3    = "combined3";
+config{1}.muse.startmarker.combined3    = "combined3";
+config{1}.muse.backupdir                = fullfile(rootpath_analysis, 'markerbackup');
 
 config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hspike');
 config{1}.hyp.backupdir             = fullfile(rootpath_analysis, 'markerbackup');
 config{1}.hyp.markerdir             = fullfile(rootpath_analysis, 'data',   'hspike');
 config{1}.hyp.micromedchannel       = 'F3p6';
-config{1}.hyp.markers               = [];
+config{1}.hyp.markers               = {'Hspike','template1','template2','template3','template4','template5','template6','combined1','combined2','combined3'};
 config{1}.hyp.overwrite             = 'append';
 config{1}.hyp.spikewindow           = 60;
 config{1}.hyp.spikewindowoverlap    = 0.5;
@@ -70,29 +88,82 @@ config{1}.epoch.toi.combined2       = [-0.5  1];
 config{1}.epoch.pad.combined2       = 1;
 config{1}.epoch.toi.combined3       = [-0.5  1];
 config{1}.epoch.pad.combined3       = 1;
+config{1}.epoch.toi.template1       = [-0.5  1];
+config{1}.epoch.pad.template1       = 1;
+config{1}.epoch.toi.template2       = [-0.5  1];
+config{1}.epoch.pad.template2       = 1;
+config{1}.epoch.toi.template3       = [-0.5  1];
+config{1}.epoch.pad.template3       = 1;
+config{1}.epoch.toi.template4       = [-0.5  1];
+config{1}.epoch.pad.template4       = 1;
+config{1}.epoch.toi.template5       = [-0.5  1];
+config{1}.epoch.pad.template5       = 1;
+config{1}.epoch.toi.template6       = [-0.5  1];
+config{1}.epoch.pad.template6       = 1;
 
-config{1}.LFP.name                  = {'Hspike'};
-config{1}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
-config{1}.LFP.hpfilter              = 'no';
-config{1}.LFP.hpfreq                = 1;
-config{1}.LFP.resamplefs            = 250;
-config{1}.LFP.baseline              = 'yes';
-config{1}.LFP.baselinewindow.Hspike = [-1, -0.5];
+config{1}.LFP.name                      = {'Hspike'};
+config{1}.LFP.channel                   = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
+config{1}.LFP.hpfilter                  = 'no';
+config{1}.LFP.hpfreq                    = 1;
+config{1}.LFP.resamplefs                = 250;
+config{1}.LFP.baseline                  = 'yes';
+config{1}.LFP.baselinewindow.combined1  = [-1, -0.5];
+config{1}.LFP.baselinewindow.combined2  = [-1, -0.5];
+config{1}.LFP.baselinewindow.combined3  = [-1, -0.5];
+config{1}.LFP.baselinewindow.Hspike     = [-1, -0.5];
+config{1}.LFP.baselinewindow.template1  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template2  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template3  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template4  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template5  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template6  = [-1, -0.5];
 
-config{1}.TFR.channel               = 'all';
-config{1}.TFR.keeptrials            = 'no';
-config{1}.TFR.foi.combined1          = 1:1:100;
-config{1}.TFR.foi.combined2          = 1:1:100;
-config{1}.TFR.foi.combined3          = 1:1:100;
+config{1}.TFR.name                      = {'Hspike'};
+config{1}.TFR.channel                   = 'all';
+config{1}.TFR.keeptrials                = 'no';
+config{1}.TFR.foi.combined1             = 1:1:100;
+config{1}.TFR.foi.combined2             = 1:1:100;
+config{1}.TFR.foi.combined3             = 1:1:100;
+config{1}.TFR.foi.Hspike                = 1:1:100;
+config{1}.TFR.foi.template1             = 1:1:100;
+config{1}.TFR.foi.template2             = 1:1:100;
+config{1}.TFR.foi.template3             = 1:1:100;
+config{1}.TFR.foi.template4             = 1:1:100;
+config{1}.TFR.foi.template5             = 1:1:100;
+config{1}.TFR.foi.template6             = 1:1:100;
+
 config{1}.TFR.t_ftimwin.combined1    = 5./config{1}.TFR.foi.combined1;
 config{1}.TFR.t_ftimwin.combined2    = 5./config{1}.TFR.foi.combined2;
 config{1}.TFR.t_ftimwin.combined3    = 5./config{1}.TFR.foi.combined3;
+config{1}.TFR.t_ftimwin.Hspike       = 5./config{1}.TFR.foi.Hspike;
+config{1}.TFR.t_ftimwin.template1    = 5./config{1}.TFR.foi.combined1;
+config{1}.TFR.t_ftimwin.template2    = 5./config{1}.TFR.foi.combined2;
+config{1}.TFR.t_ftimwin.template3    = 5./config{1}.TFR.foi.combined3;
+config{1}.TFR.t_ftimwin.template4    = 5./config{1}.TFR.foi.combined1;
+config{1}.TFR.t_ftimwin.template5    = 5./config{1}.TFR.foi.combined2;
+config{1}.TFR.t_ftimwin.template6    = 5./config{1}.TFR.foi.combined3;
+
 config{1}.TFR.toi.combined1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.combined2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.combined3          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.Hspike             = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template3          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template4          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template5          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.template6          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+
 config{1}.TFR.bl.combined1           = [-0.5, -0.2];
 config{1}.TFR.bl.combined2           = [-0.5, -0.2];
 config{1}.TFR.bl.combined3           = [-0.5, -0.2];
+config{1}.TFR.bl.Hspike              = [-0.5, -0.2];
+config{1}.TFR.bl.template1           = [-0.5, -0.2];
+config{1}.TFR.bl.template2           = [-0.5, -0.2];
+config{1}.TFR.bl.template3           = [-0.5, -0.2];
+config{1}.TFR.bl.template4           = [-0.5, -0.2];
+config{1}.TFR.bl.template5           = [-0.5, -0.2];
+config{1}.TFR.bl.template6           = [-0.5, -0.2];
 
 config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -121,17 +192,12 @@ config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
 config{1}.template.threshold        = 2.7;
 
+config{1}.circus.correct_chunk{1}               = true;
+config{1}.circus.correct_chunk{2}               = true;
+config{1}.circus.correct_chunk{3}               = true;
 config{1}.circus.channel                        = {'mHaT2_1', 'mHaT2_3', 'mHaT2_4','mHaT2_6', 'mHaT2_7', 'mHaT2_8'};
 config{1}.circus.reref                          = 'no';
 config{1}.circus.refchan                        = '';
-% config{1}.circus.outputdir                      = 'SpykingCircus';
-% config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus_new.params');
-% config{1}.circus.params.detection.spike_thresh  = '6';
-% config{1}.circus.params.filtering.cut_off       = '300, auto';
-% config{1}.circus.params.filtering.remove_median = 'False';
-% config{1}.circus.params.clustering.max_elts     = '20000';
-% config{1}.circus.params.detection.peaks         = 'positive';
-
 config{1}.circus.outputdir                      = 'SpykingCircus_new';
 config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus.params');
 config{1}.circus.params.detection.spike_thresh  = '6';
@@ -143,41 +209,103 @@ config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
 
 config{1}.spike.name                = {'combined1', 'combined2'};
+config{1}.spike.overlap             = [];                                    
 config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
-config{1}.spike.toi.combined1       = [-0.5, 1];           % for plotting spikerate
-config{1}.spike.toi.combined2       = [-0.5, 1];           % for p200mslotting spikerate
-config{1}.spike.toi.combined3       = [-0.5, 1];          % for plotting spikerate
+config{1}.spike.toi.combined1       = [-0.5, 1];          
+config{1}.spike.toi.combined2       = [-0.5, 1];           
+config{1}.spike.toi.combined3       = [-0.5, 1];           
+config{1}.spike.toi.Hspike          = [-0.5, 1];    
+config{1}.spike.toi.template1       = [-0.5, 1];          
+config{1}.spike.toi.template2       = [-0.5, 1];           
+config{1}.spike.toi.template3       = [-0.5, 1];    
+config{1}.spike.toi.template4       = [-0.5, 1];          
+config{1}.spike.toi.template5       = [-0.5, 1];           
+config{1}.spike.toi.template6       = [-0.5, 1];    
+
 config{1}.spike.bl.combined1        = [-0.5, -0.2];
 config{1}.spike.bl.combined2        = [-0.5, -0.2];
 config{1}.spike.bl.combined3        = [-0.5, -0.2];
+config{1}.spike.bl.Hspike           = [-0.5, -0.2];
+config{1}.spike.bl.template1        = [-0.5, -0.2];
+config{1}.spike.bl.template2        = [-0.5, -0.2];
+config{1}.spike.bl.template3        = [-0.5, -0.2];
+config{1}.spike.bl.template4        = [-0.5, -0.2];
+config{1}.spike.bl.template5        = [-0.5, -0.2];
+config{1}.spike.bl.template6        = [-0.5, -0.2];
+
 config{1}.spike.pad.combined1        = 0.1;
 config{1}.spike.pad.combined2        = 0.1;
 config{1}.spike.pad.combined3        = 0.1;
+config{1}.spike.pad.Hspike           = 0.1;
+config{1}.spike.pad.template1        = 0.1;
+config{1}.spike.pad.template2        = 0.1;
+config{1}.spike.pad.template3        = 0.1;
+config{1}.spike.pad.template4        = 0.1;
+config{1}.spike.pad.template5        = 0.1;
+config{1}.spike.pad.template6        = 0.1;
+
 config{1}.spike.resamplefs.combined1 = 1000;
 config{1}.spike.resamplefs.combined2 = 1000;
 config{1}.spike.resamplefs.combined3 = 1000;
+config{1}.spike.resamplefs.Hspike    = 1000;
+config{1}.spike.resamplefs.template1 = 1000;
+config{1}.spike.resamplefs.template2 = 1000;
+config{1}.spike.resamplefs.template3 = 1000;
+config{1}.spike.resamplefs.template4 = 1000;
+config{1}.spike.resamplefs.template5 = 1000;
+config{1}.spike.resamplefs.template6 = 1000;
+
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
 config{1}.spike.ISIbins             = 0 : 0.0005 : 0.150; %in s
 config{1}.spike.nrsdfbins           = 100;
-
 config{1}.spike.psthbin.combined1   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.combined2   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.combined3   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.Hspike      = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template1   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template2   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template3   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template4   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template5   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.template6   = 0.01; % depends a lot on pattern, default is too large
+
 config{1}.spike.sdftimwin.combined1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.combined2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.combined3 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.Hspike    = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template3 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template4 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template5 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.template6 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 
-config{1}.spikewin.windowsize       = 60;
+config{1}.spikewin.windowsize       = 10; % to prevent too much data lost on overlaps with IEDs
 config{1}.spikewin.windowoverlap    = 0.5;
 
 config{1}.stats.toi.combined1       = [-0.5, 1];
 config{1}.stats.toi.combined2       = [-0.5, 1];
 config{1}.stats.toi.combined3       = [-0.5, 1];
+config{1}.stats.toi.Hspike          = [-0.5, 1];
+config{1}.stats.toi.template1       = [-0.5, 1];
+config{1}.stats.toi.template2       = [-0.5, 1];
+config{1}.stats.toi.template3       = [-0.5, 1];
+config{1}.stats.toi.template4       = [-0.5, 1];
+config{1}.stats.toi.template5       = [-0.5, 1];
+config{1}.stats.toi.template6       = [-0.5, 1];
+
 config{1}.stats.bl.combined1        = [-0.5 -0.2];
 config{1}.stats.bl.combined2        = [-0.5 -0.2];
 config{1}.stats.bl.combined3        = [-0.5 -0.2];
+config{1}.stats.bl.Hspike           = [-0.5 -0.2];
+config{1}.stats.bl.template1        = [-0.5 -0.2];
+config{1}.stats.bl.template2        = [-0.5 -0.2];
+config{1}.stats.bl.template3        = [-0.5 -0.2];
+config{1}.stats.bl.template4        = [-0.5 -0.2];
+config{1}.stats.bl.template5        = [-0.5 -0.2];
+config{1}.stats.bl.template6        = [-0.5 -0.2];
 config{1}.stats.alpha               = 0.025;
 
 config{1}.editmarkerfile.torename   = { 'template1', 'combined1';
@@ -185,6 +313,37 @@ config{1}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template3', 'combined1';
                                         'template5', 'combined2';
                                         'template6', 'combined2'};
+             
+                                    
+
+config{1}.plot.reref                = 'yes';
+config{1}.plot.refmethod            = 'bipolar';                                  
+config{1}.plot.name                 = {'combined1', 'combined2'};   
+
+config{1}.plot.unit{1}              = [-1,  -1,  -1,  -1,  -1];                     
+config{1}.plot.trial.template1{1}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template2{1}   = [1,    2,    3,    4,    5];
+config{1}.plot.trial.template3{1}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template4{1}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template5{1}   = [10,    20,   30,   40,   50];
+config{1}.plot.trial.template6{1}   = [100,  120,  130,  140,  150];
+
+config{1}.plot.unit{2}              = [-1,  -1,  -1,  -1,  -1];                     
+config{1}.plot.trial.template1{2}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template2{2}   = [1,    2,    3,    4,    5];
+config{1}.plot.trial.template3{2}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template4{2}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template5{2}   = [10,    20,   30,   40,   50];
+config{1}.plot.trial.template6{2}   = [100,  120,  130,  140,  150];
+
+config{1}.plot.unit{3}              = [-1,  -1,  -1,  -1,  -1];                  
+config{1}.plot.trial.template1{3}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template2{3}   = [1,    2,    3,    4,    5];
+config{1}.plot.trial.template3{3}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template4{3}   = [100,  120,  130,  140,  150];
+config{1}.plot.trial.template5{3}   = [10,    20,   30,   40,   50];
+config{1}.plot.trial.template6{3}   = [100,  120,  130,  140,  150];
+
 
 %% Patient 2
 % Patterns more clear in bipolar reference. Consider this for template
@@ -205,17 +364,47 @@ config{2}.cluster.refmethod         = 'bipolar';
 config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
+
+config{2}.circus.correct_chunk{1}      = false;
+config{2}.circus.correct_chunk{2}      = true;
+config{2}.circus.correct_chunk{3}      = true;
 config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
-config{1}.circus.params.filtering.remove_median = 'False';
+config{2}.circus.params.filtering.remove_median = 'False';
 config{2}.circus.params.detection.spike_thresh  = '6';
 config{2}.circus.params.detection.peaks         = 'negative';
 config{2}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template2', 'combined1';
                                         'template4', 'combined1';
                                         'template6', 'combined1'};
-config{2}.spike.name               = {'combined1'};
-                                    
+config{2}.spike.name                = {'combined1'};
+% config{2}.spike.name                = {'Hspike'};
+
+config{2}.plot                      = [];
+config{2}.plot.unit{1}              = [-1,  -1,  -1,  -1,  -1];                     
+config{2}.plot.trial.template1{1}   = [100,  120,  130,  140,  150];
+config{2}.plot.trial.template2{1}   = [1,    2,    3,    4,    5];
+config{2}.plot.trial.template3{1}   = [11,   12,    13,    14,  15];
+config{2}.plot.trial.template4{1}   = [100,  120,  130,  140,  150];
+config{2}.plot.trial.template5{1}   = [10,    20,   30,   40,   50];
+config{2}.plot.trial.template6{1}   = [100,  120,  130,  140,  150];
+
+config{2}.plot.unit{2}              = [-1,  -1,  -1,  -1,  -1];                     
+config{2}.plot.trial.template1{2}   = [100, 120,  130,  140,  150];
+config{2}.plot.trial.template2{2}   = [1,    2,    3,    4,    5];
+config{2}.plot.trial.template3{2}   = [1,    1,    1,    1,    1];
+config{2}.plot.trial.template4{2}   = [100, 120,  130,  140,  150];
+config{2}.plot.trial.template5{2}   = [10,    20,   30,   40,   50];
+config{2}.plot.trial.template6{2}   = [100,  120,  130,  140,  150];
+
+config{2}.plot.unit{3}              = [-1,  -1,  -1,  -1,  -1];                  
+config{2}.plot.trial.template1{3}   = [100,  120,  130,  140,  150];
+config{2}.plot.trial.template2{3}   = [1,    2,    3,    4,    5];
+config{2}.plot.trial.template3{3}   = [11,   12,    13,    14,  15];
+config{2}.plot.trial.template4{3}   = [1,    2,    3,    4,    5];
+config{2}.plot.trial.template5{3}   = [10,    20,   30,   40,   50];
+config{2}.plot.trial.template6{3}   = [100,  120,  130,  140,  150];
+
 %% Patient 3
 config{3}                           = config{1};
 config{3}.prefix                    = '2660-';
@@ -276,7 +465,7 @@ config{4}.editmarkerfile.torename   = { 'template1', 'combined1';
                                         'template4', 'combined2';
                                         'template5', 'combined2';
                                         'template6', 'combined3'};
-config{4}.spike.name               =  {'combined1', 'combined2', 'combined3'};
+config{4}.spike.name                =  {'combined1', 'combined2', 'combined3'};
 
 %% Patient 5
 % some clear cases for merging in mLMI1 & mLMS2

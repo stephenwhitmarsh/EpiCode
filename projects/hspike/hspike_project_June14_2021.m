@@ -51,6 +51,7 @@ for ipatient = 1:7
     [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     
     %% t-zero LFPs
+   
     fig = figure;
     for ipart = 1 : 3
         for imarker = 1 : size(LFP_cluster_detected{ipatient}{1}, 2)
@@ -86,18 +87,44 @@ for ipatient = 1:7
     % update - add any new artefacts
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
       
-    % get hypnogram data
+    % from now on work on manual and combined templates
+%     MuseStruct_combined{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct_template{ipatient});       
+%     itemp = 1;
+%     config{ipatient}.name = [];
+%     for markername = string(unique(config{ipatient}.editmarkerfile.torename(:, 2))')
+%         config{ipatient}.name{itemp}                      = markername;
+%         config{ipatient}.muse.startmarker.(markername)    = markername;
+%         config{ipatient}.muse.endmarker.(markername)      = markername;
+%         config{ipatient}.epoch.toi.(markername)           = [-0.5  1];
+%         config{ipatient}.epoch.pad.(markername)           = 0.5;
+%         config{ipatient}.LFP.baselinewindow.(markername)  = [-0.5  1];
+%         config{ipatient}.LFP.baselinewindow.(markername)  = [-0.5  1];
+%         config{ipatient}.LFP.name{itemp}                  = markername;
+%         config{ipatient}.TFR.name{itemp}                  = markername;
+%         config{ipatient}.hyp.markers{itemp}               = markername;
+%         itemp = itemp + 1;
+%     end
+%     
+
+     
     [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}]  = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
     
-    % template LFP
     config{ipatient}.LFP.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
     LFP{ipatient}                                                   = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
     
-    % template TFR
     config{ipatient}.TFR.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};    
     TFR{ipatient}                                                   = TFRtrials(config{ipatient}, true);
     
-
+%     % trim files to only those within a hypnogram
+%     config_trimmed                                                  = config;
+%     for ipart = 1 : 3
+%         sel     = hypnogram{ipatient}.directory(hypnogram{ipatient}.part == ipart);
+%         first   = find(strcmp(config{ipatient}.directorylist{ipart}, sel(1)));
+%         last    = find(strcmp(config{ipatient}.directorylist{ipart}, sel(end)));
+%         config_trimmed{ipatient}.directorylist{ipart}   = config{ipatient}.directorylist{ipart}(first:last);
+%         MuseStruct_trimmed{ipatient}{ipart}             = MuseStruct_combined{ipatient}{ipart}(first:last);
+%     end
+%     
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
     writeSpykingCircusFileList(config{ipatient}, true);
     writeSpykingCircusParameters_new(config{ipatient});
@@ -136,23 +163,7 @@ for ipatient = 1:7
 end
 
 
-% prepare spyking-circus
 
-for ipatient = 3:7
-    
-    config                  = hspike_setparams;
-    [MuseStruct{ipatient}]  = readMuseMarkers(config{ipatient});
-    [MuseStruct{ipatient}]  = alignMuseMarkersXcorr(config{ipatient});
-    
-    % add any new artefacts
-    MuseStruct{ipatient}    = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    
-    % write spyking-circus files
-    writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
-    writeSpykingCircusFileList(config{ipatient}, true);
-    writeSpykingCircusParameters_new(config{ipatient});
-end
-    
 for ipatient = 2 : 4
         config = hspike_setparams;
         SpikeRaw{ipatient} = readSpikeRaw_Phy_new(config{ipatient}, false);
@@ -174,9 +185,9 @@ end
 
 %% Create slurm job list
 config              = hspike_setparams;
-fname_slurm_joblist = fullfile('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/slurm_job_list.txt');
+fname_slurm_joblist = fullfile(config{1}.datasavedir, 'slurm_job_list.txt');
 delete(fname_slurm_joblist);
-for ipatient = 3:7
+for ipatient = 4 % 1:7
     for ipart = 1 : size(config{ipatient}.directorylist, 2)
         subjdir     = config{ipatient}.prefix(1:end-1);
         partdir     = ['p', num2str(ipart)];
