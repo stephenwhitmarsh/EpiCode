@@ -18,7 +18,7 @@ mapping_file   =
 radius         = auto       # Radius [in um] (if auto, read from the prb file)
 N_t            = 3          # Width of the templates [in ms]
 spike_thresh   = 6          # Threshold for spike detection
-peaks          = positive   # Can be negative (default), positive or both
+peaks          = negative   # Can be negative (default), positive or both
 dead_channels  =            # If not empty or specified in the probe, a dictionary {channel_group : [list_of_valid_ids]}
 
 [filtering]
@@ -34,8 +34,8 @@ trig_unit      = ms         # The unit in which times are expressed: can be ms o
 clean_artefact = False      # If True, external artefacts induced by triggers will be suppressed from data
 dead_file      =            # Portion of the signals that should be excluded from the analysis [in dead units]
 dead_unit      = ms         # The unit in which times for dead regions are expressed: can be ms or timestep
-ignore_times   = False      # If True, any spike in the dead regions will be ignored by the analysis
-make_plots     =            # Generate sanity plots of the averaged artefacts [Nothing or None if no plots]
+ignore_times   = True       # If True, any spike in the dead regions will be ignored by the analysis
+make_plots     = png        # Generate sanity plots of the averaged artefacts [Nothing or None if no plots]
 
 [whitening]
 spatial        = True       # Perform spatial whitening
@@ -56,7 +56,8 @@ sensitivity    = 3          # Single parameter for clustering sensitivity. The l
 cc_merge       = 0.95       # If CC between two templates is higher, they are merged
 dispersion     = (5, 5)     # Min and Max dispersion allowed for amplitudes [in MAD]
 fine_amplitude = True       # Optimize the amplitudes and compute a purity index for each template
-make_plots     =            # Generate sanity plots of the clustering [Nothing or None if no plots]
+make_plots     = png        # Generate sanity plots of the clustering [Nothing or None if no plots]
+templates_normalization = False # UNDOCUMENTED
 
 [fitting]
 amp_limits     = (0.3, 5)   # Amplitudes for the templates during spike detection [if not auto]
