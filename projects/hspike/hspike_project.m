@@ -41,66 +41,66 @@ labels = ["BAD__START__", "BAD__END__", "PHASE_1__START__", "PHASE_1__END__", "P
 %% General analyses, looping over patients
 %      exportHypnogram(config{ipatient})
 
-for ipatient = 1:7
+for ipatient = 3:7
     
     config = hspike_setparams;
 
-    [MuseStruct{ipatient}]                                      = readMuseMarkers(config{ipatient}, false);
-    [MuseStruct{ipatient}]                                      = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-    [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
+%     [MuseStruct{ipatient}]                                      = readMuseMarkers(config{ipatient}, false);
+%     [MuseStruct{ipatient}]                                      = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+%     [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+%     [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     
     %% t-zero LFPs
-    fig = figure;
-    for ipart = 1 : 3
-        for imarker = 1 : size(LFP_cluster_detected{ipatient}{1}, 2)
-            if isempty(LFP_cluster_detected{ipatient}{ipart}{imarker})
-                continue
-            end
-            chani       = find(strcmp(LFP_cluster_detected{ipatient}{ipart}{imarker}.label, config{ipatient}.align.zerochannel));
-            subplot(3,6,imarker + (ipart-1) * 6); hold;
-            plot(LFP_cluster_detected{ipatient}{ipart}{imarker}.time, LFP_cluster_detected{ipatient}{ipart}{imarker}.avg', 'k');
-            plot(LFP_cluster_detected{ipatient}{ipart}{imarker}.time, LFP_cluster_detected{ipatient}{ipart}{imarker}.avg(chani, :)', 'r');
-            timeindx    = LFP_cluster_detected{ipatient}{ipart}{imarker}.time > -0.1 & LFP_cluster_detected{ipatient}{ipart}{imarker}.time < 0.1;
-            [PKS, LOCS] = findpeaks(-LFP_cluster_detected{ipatient}{ipart}{imarker}.avg(chani, timeindx), 'SortStr', 'descend');
-            if isempty(LOCS)
-                continue
-            end
-            i0 = find(LFP_cluster_detected{ipatient}{ipart}{imarker}.time > -0.1, 1, 'first') + LOCS(1) - 1;
-            t0 = LFP_cluster_detected{ipatient}{ipart}{imarker}.time(i0);
-            axis tight; ax = axis;        
-            plot([t0, t0], [1.2 * ax(3), 1.2 * ax(4)], ':r');
-            title(sprintf('Shift = %.0fms', -t0*1000), 'FontSize', 6);
-            for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
-                MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).t0_shift = t0;
-                MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).synctime = MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).synctime + t0;
-                MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).clock    = MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).clock + seconds(t0);
-            end
-        end
-    end
-    fname = fullfile(config{ipatient}.imagesavedir, 'alignment', [config{ipatient}.prefix, 'tzeroed']);
-    disp(['Exporting figure ', fname])
-    exportgraphics(fig, [fname, '.pdf']);
-    exportgraphics(fig, [fname, '.tiff'], 'resolution', 600);
-    
+%     fig = figure;
+%     for ipart = 1 : 3
+%         for imarker = 1 : size(LFP_cluster_detected{ipatient}{1}, 2)
+%             if isempty(LFP_cluster_detected{ipatient}{ipart}{imarker})
+%                 continue
+%             end
+%             chani       = find(strcmp(LFP_cluster_detected{ipatient}{ipart}{imarker}.label, config{ipatient}.align.zerochannel));
+%             subplot(3,6,imarker + (ipart-1) * 6); hold;
+%             plot(LFP_cluster_detected{ipatient}{ipart}{imarker}.time, LFP_cluster_detected{ipatient}{ipart}{imarker}.avg', 'k');
+%             plot(LFP_cluster_detected{ipatient}{ipart}{imarker}.time, LFP_cluster_detected{ipatient}{ipart}{imarker}.avg(chani, :)', 'r');
+%             timeindx    = LFP_cluster_detected{ipatient}{ipart}{imarker}.time > -0.1 & LFP_cluster_detected{ipatient}{ipart}{imarker}.time < 0.1;
+%             [PKS, LOCS] = findpeaks(-LFP_cluster_detected{ipatient}{ipart}{imarker}.avg(chani, timeindx), 'SortStr', 'descend');
+%             if isempty(LOCS)
+%                 continue
+%             end
+%             i0 = find(LFP_cluster_detected{ipatient}{ipart}{imarker}.time > -0.1, 1, 'first') + LOCS(1) - 1;
+%             t0 = LFP_cluster_detected{ipatient}{ipart}{imarker}.time(i0);
+%             axis tight; ax = axis;        
+%             plot([t0, t0], [1.2 * ax(3), 1.2 * ax(4)], ':r');
+%             title(sprintf('Shift = %.0fms', -t0*1000), 'FontSize', 6);
+%             for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
+%                 MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).t0_shift = t0;
+%                 MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).synctime = MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).synctime + t0;
+%                 MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).clock    = MuseStruct{ipatient}{ipart}{idir}.markers.(['template', num2str(imarker)]).clock + seconds(t0);
+%             end
+%         end
+%     end
+%     fname = fullfile(config{ipatient}.imagesavedir, 'alignment', [config{ipatient}.prefix, 'tzeroed']);
+%     disp(['Exporting figure ', fname])
+%     exportgraphics(fig, [fname, '.pdf']);
+%     exportgraphics(fig, [fname, '.tiff'], 'resolution', 600);
+%     
     % update - add any new artefacts
-    MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-      
-    % get hypnogram data
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}]  = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
-    
-    % template LFP
-    config{ipatient}.LFP.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-    LFP{ipatient}                                                   = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
-    
-    % template TFR
-    config{ipatient}.TFR.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};    
-    TFR{ipatient}                                                   = TFRtrials(config{ipatient}, true);
-    
-
+%     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
+%       
+%     % get hypnogram data
+%     [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}]  = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
+%     
+%     % template LFP
+%     config{ipatient}.LFP.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+%     LFP{ipatient}                                                   = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
+%     
+%     % template TFR
+%     config{ipatient}.TFR.name = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};    
+%     TFR{ipatient}                                                   = TFRtrials(config{ipatient}, true);
+%     
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
     writeSpykingCircusFileList(config{ipatient}, true);
-    writeSpykingCircusParameters_new(config{ipatient});
+    writeSpykingCircusParameters(config{ipatient});
+end
 
     SpikeRaw{ipatient}                    = readSpikeRaw_Phy_new(config{ipatient}, true);
 %     
