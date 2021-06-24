@@ -73,11 +73,11 @@ for ipatient = [1, 2, 3, 4]
 %     
 %     % write parameters for spyking circus
 %     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct_aligned{ipatient}, true);
-%     writeSpykingCircusParameters_new(config{ipatient});
+%     writeSpykingCircusParameters(config{ipatient});
 %     [filelist, sampleinfo, timestamps, hdr] = writeSpykingCircusFileList(config{ipatient}, false);
 
     % read spike data from Phy as one continuous trial
-    SpikeRaw{ipatient} = readSpikeRaw_Phy_new(config{ipatient}, false);
+    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
      
     % segment into trials based on IED markers
     SpikeTrials_timelocked{ipatient}    = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
@@ -126,7 +126,7 @@ for ipatient = [1, 2, 3, 4]
     config{ipatient}.plot.name      = "SEIZURE";
     config{ipatient}.plot.ncols     = 1;    
     config{ipatient}.plot.postfix   = "_SEIZURE";
-    plot_patterns_multilevel_examples2(config{ipatient});
+    plot_patterns_multilevel_examples(config{ipatient});
     
     % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
     config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * -1; % all individually

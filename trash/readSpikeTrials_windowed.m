@@ -67,7 +67,7 @@ else
 end
 
 % concatinate timestamps & samples
-[~, samples_separate, ~, ~] = writeSpykingCircusFileList(cfg, false);
+[~, samples_separate, ~, hdr] = writeSpykingCircusFileList(cfg, false);
 
 for ipart = cfg.circus.part_list
     
@@ -103,16 +103,24 @@ for ipart = cfg.circus.part_list
     cfgtemp.trl(:, 1)                               = 0 : hdr{1}.Fs * (cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : samples(2) - (hdr{1}.Fs * cfg.spikewin.windowsize);
     cfgtemp.trl(:, 2)                               = cfgtemp.trl(:, 1) + hdr{1}.Fs * cfg.spikewin.windowsize - 1; %-1 because starts at zero
     cfgtemp.trl(:, 3)                               = zeros(size(cfgtemp.trl, 1), 1);
+%     cfgtemp.trl(:, 4)                               = 1 : size(cfgtemp.trl, 1);
     cfgtemp.trlunit                                 = 'samples';
     cfgtemp.hdr                                     = rmfield(hdr{1}, 'nSamples');
     SpikeTrials{ipart}.window                       = ft_spike_maketrials(cfgtemp, SpikeRaw{ipart});
-    if isfield(SpikeRaw{ipart},'clustername'); SpikeTrials{ipart}.clustername = SpikeRaw{ipart}.clustername; end
+    
+    if isfield(SpikeRaw{ipart}, 'clustername'); SpikeTrials{ipart}.clustername = SpikeRaw{ipart}.clustername; end
+    
+    
+    
+    
+    
+    
     SpikeTrials{ipart}.window.trialinfo             = table;
     SpikeTrials{ipart}.window.trialinfo.starttime   = (MuseStruct{ipart}{1}.starttime : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime - seconds(cfg.spikewin.windowsize))';
-    SpikeTrials{ipart}.window.trialinfo.endtime     = (MuseStruct{ipart}{1}.starttime + seconds(cfg.spikewin.windowsize -1/hdr{1}.Fs) : seconds(cfg.spikewin.windowsize - cfg.spikewin.windowsize * cfg.spikewin.windowoverlap) : MuseStruct{ipart}{end}.endtime)';
+    SpikeTrials{ipart}.window.trialinfo.endtime     = SpikeTrials{ipart}.window.trialinfo.starttime + seconds(cfg.spikewin.windowsize);
 
     if height(SpikeTrials{ipart}.window.trialinfo) ~= size(cfgtemp.trl, 1)
-        error('Difference in total duration of TRL and MuseMarker list - have you trimmed your directorylist?');
+        error(sprintf('Difference in total duration of TRL and MuseMarker list by %d, results might be unreliable!', abs(height(SpikeTrials{ipart}.window.trialinfo)- size(cfgtemp.trl, 1))));
     end
 
     % find overlap with sleepstages
@@ -174,7 +182,7 @@ for ipart = cfg.circus.part_list
     end
 
     % find overlap with IEDs
-    for markername = string(cfg.name)
+    for markername = string(cfg.spike.name)
         SpikeTrials{ipart}.window.trialinfo.(char(markername)) = zeros(size(SpikeTrials{ipart}.window.trialinfo, 1), 1);
     end
 

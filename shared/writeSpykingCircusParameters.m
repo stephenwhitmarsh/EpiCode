@@ -1,4 +1,4 @@
-function writeSpykingCircusParameters(cfg)
+function writeSpykingCircusParameters_new(cfg)
 
 % WRITESPYKINGCIRCUSPARAMETERS writes .params and .prb file for Spyking Circus
 %
