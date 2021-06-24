@@ -13,33 +13,30 @@ for ipatient = 1 : 4
     SpikeStats_windowed{ipatient}   = spikeTrialStats(cfg{ipatient}); 
     SpikeTrials_windowed{ipatient}  = readSpikeTrials_windowed_samples(cfg{ipatient});
 end
-% 
-%             %% ISI windowed
-%             disp('ISI')
-%             subplot(9,7, 47); hold on;
-%             title('ISI');
-%             bar(SpikeStats_windowed{ipart}.window{itemp}.isi_avg_time * 1000, SpikeStats_windowed{ipart}.window{itemp}.isi_avg, 1, 'facecolor', [0 0 0], 'edgecolor', 'none');
-%             set(gca, 'box', 'off', 'XGrid', 'on', 'TickDir', 'out');
-%             axis tight
-%             xlim([0, 0.025] * 1000);
-%             xlabel('Time (ms)'); ylabel('Spikecount');
 
+% so that FA of nodule 3 will end up in line with PSWs
+SpikeTrials{3}{1}.PSW           = SpikeTrials{3}{1}.FA; 
+SpikeTrials{3}{1}               = rmfield(SpikeTrials{3}{1}, 'FA');
+SpikeDensity{3}{1}.stat.PSW     = SpikeDensity{3}{1}.stat.FA;
+SpikeDensity{3}{1}.stat         = rmfield(SpikeDensity{3}{1}.stat, 'FA');
+SpikeDensity{3}{1}.sdf_bar.PSW  = SpikeDensity{3}{1}.sdf_bar.FA;
+SpikeDensity{3}{1}.sdf_bar      = rmfield(SpikeDensity{3}{1}.sdf_bar, 'FA');
+SpikeDensity{3}{1}.psth.PSW     = SpikeDensity{3}{1}.psth.FA;
+SpikeDensity{3}{1}.psth         = rmfield(SpikeDensity{3}{1}.psth, 'FA');
+
+% which units to plot
 units(1, :) = [1, 8];
 units(2, :) = [3, 9];
 units(3, :) = [1, 9];
 units(4, :) = [1, 4];
 
+% configure figure
 papersize = 1000;
 fig = figure('visible', true);
 set(fig, 'PaperPositionMode', 'auto');
 set(fig, 'position', get(0,'ScreenSize'));
 set(fig, 'position', [20 -60  papersize papersize*sqrt(2)]);
-
-% set(fig, 'PaperOrientation', 'portrait');
-% set(fig, 'PaperUnits', 'normalized');
-% set(fig, 'PaperPosition', [0 0 1 1]);
-% set(fig, 'Renderer', 'Painters');
-% orient(fig,'portrait')
+set(fig, 'Renderer', 'Painters');
 
 ntemp       = 2;
 nmarker     = 3;
@@ -72,11 +69,6 @@ for ipatient = 1 : 4
             row     = (tempnr-1) * 2 + (ipatient - 1) * 4 + 1;
             itemp   = units(ipatient, tempnr);
             s1      = axes('Position', [hratio*(imarker-1) + w*(spacehor/2) + rshift, 1-(vratio*row) + upshift, w, htop]);
-            
-            %             if imarker == 2 && tempnr == 1
-            %                 title(sprintf('Nodule %d, Unit %d', ipatient, itemp));
-            %             end
-            
             set(s1, 'XGrid', 'off', 'box', 'off', 'xticklabel', [], 'XColor', 'none', 'tickdir', 'out', 'Color', 'none');
             
             hold on
@@ -143,16 +135,14 @@ for ipatient = 1 : 4
                         
                     case "PSW"
                         th = title("Periodic Slow Waves", 'FontSize', 14);
-                        
-                    case "FA"
-                        th = title("Fast Activity", 'FontSize', 14);
                         if ipatient == 3
                             th = title("Periodic Fast Activity", 'FontSize', 14);
                         end
+                    case "FA"
+                        th = title("Fast Activity", 'FontSize', 14);
                 end
                 set(th,'position',get(th,'position')-[0 0.07 0])     
             end
-            
             
             if ~((imarker == 1) || (ipatient == 3 && imarker == 2))
                 ylabel([]);
@@ -187,9 +177,9 @@ for ipatient = 1 : 4
             % label MUA/SUA
             if imarker == 1 || (imarker == 2 && ipatient == 3)
                 if strfind(SpikeTrials_windowed{ipatient}{ipart}.window.cluster_group{itemp}, 'good')
-                    text(cfg{ipatient}.stats.bl.(markername)(1) + width * 0.01, y(2) * 0.9, "SUA", 'color', 'k', 'fontsize', 8);
+                    text(cfg{ipatient}.stats.bl.(markername)(1) + width * 0.01, y(2) * 0.95, "SUA", 'color', 'k', 'fontsize', 8);
                 else
-                    text(cfg{ipatient}.stats.bl.(markername)(1) + width * 0.01, y(2) * 0.9, "MUA", 'color', 'k', 'fontsize', 8);
+                    text(cfg{ipatient}.stats.bl.(markername)(1) + width * 0.01, y(2) * 0.95, "MUA", 'color', 'k', 'fontsize', 8); %0.9
                 end
             end
             
@@ -203,7 +193,7 @@ for ipatient = 1 : 4
                 
                 x = s1.Position;
                 x(1) = x(1) + 0.01;
-                x(2) = x(2) + 0.015;
+                x(2) = x(2) + 0.020; % 0.015
                 x(3) = x(3) / 6;
                 x(4) = x(4) / 1.5;   
                 inset1 = axes('position', x, 'color', 'none', 'XColor','none', 'YColor', 'none'); hold on; %left bottom width height
@@ -266,7 +256,7 @@ for ipatient = 1 : 4
                 xticks([]);
             end
             
-            if ~((imarker == 1) || (ipatient == 3 && imarker == 2))
+            if ~((imarker == 1)) % || (ipatient == 3 && imarker == 2))
                 ylabel([]);
             else
                 l = ylabel('Trial');
@@ -282,7 +272,7 @@ for ipatient = 1 : 4
 end
 
 fname = fullfile(cfg{ipart}.imagesavedir, 'article', 'Figure3');
-exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 600);
+% exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
 exportgraphics(fig, strcat(fname, '.pdf'));
 close all
 disp('done'); 

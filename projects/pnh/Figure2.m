@@ -1,6 +1,10 @@
 function Figure2(cfg_fig)
 
-cfg_fig.colorscale          = ft_getopt(cfg_fig, 'colorscale', 0);
+if nargin == 0
+    cfg_fig = [];
+end
+
+cfg_fig.colorscale          = ft_getopt(cfg_fig, 'colorscale', 0.2);
 
 n = 100;
 cmap              = parula(n);
@@ -29,6 +33,7 @@ cfg_fig.FFT.toi.PSW{2}          = [-0.05 0.25];
 cfg_fig.FFT.toi.FA{2}           = [0 0.8];
 cfg_fig.FFT.toi.ES{2}           = [-0.1 0.1];
 cfg_fig.FFT.toi.FA{3}           = [0 0.4];
+cfg_fig.FFT.toi.PSW{3}          = [0 0.4];
 cfg_fig.FFT.toi.ES{3}           = [-0.1 0.1];
 cfg_fig.FFT.toi.PSW{4}          = [0 0.6];
 cfg_fig.FFT.toi.FA{4}           = [0 0.6];
@@ -61,6 +66,17 @@ for ipatient = 1 : 4
     clear LFP
 end
 
+
+% to move PFA of patient 3 under PSW instead of FA
+TFR{3}{1}.PSW           = TFR{3}{1}.FA;
+TFR{3}{1}               = rmfield(TFR{3}{1}, 'FA');
+LFPavg{3}.PSW           = LFPavg{3}.FA;
+LFPavg{3}               = rmfield(LFPavg{3}, 'FA');
+cfg{3}.TFR.bl.PSW       = cfg{3}.TFR.bl.FA;
+cfg{3}.epoch.toi.PSW    = cfg{3}.epoch.toi.FA;
+
+
+% configure figure
 papersize = 1000;
 fig = figure('visible', true);
 set(fig, 'PaperPositionMode', 'auto');
@@ -158,19 +174,17 @@ for ipatient = 1 : 4
                 
             case "PSW"
                 title("Periodic Slow Waves", 'FontSize', 14);
-                
-            case "FA"
-                title("Fast Activity", 'FontSize', 14);
-
                 if ipatient == 3
                     title("Periodic Fast Activity", 'FontSize', 14);
                 end
+            case "FA"
+                title("Fast Activity", 'FontSize', 14);
         end
         
         % FFT toi line
         y = ylim;
         line(cfg_fig.FFT.toi.(markername){ipatient}, [y(1), y(1)] + 5, 'linewidth', 2, 'color', 'k');
-        text(mean(cfg_fig.FFT.toi.(markername){ipatient}), y(1) + 7, 'FFT inset', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
+        text(mean(cfg_fig.FFT.toi.(markername){ipatient}), y(1) + 7, 'Inset', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
  
         %% LFP
         yyaxis right
