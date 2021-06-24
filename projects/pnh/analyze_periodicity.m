@@ -1,10 +1,15 @@
-function analyze_periodicity(cfg)
+function T = analyze_periodicity(cfg, MuseStruct)
 
-fname = fullfile(cfg{1}.datasavedir, 'pattern_quantifications.xlsx');
+fname = fullfile(cfg{1}.datasavedir, 'Manual periodicity annotation.xlsx');
 dat = readtable(fname);
+fname_out = fullfile(cfg{1}.datasavedir, 'Periodicity.xlsx');
+
+for ipatient = 1 : size(cfg, 2)
+    intervals{ipatient} = inter_trial_intervals(cfg{ipatient}, MuseStruct{ipatient}, false);
+end
 
 % distance between discharges - absolute time
-dat.interdischarge = [nan; diff(dat.start)];
+dat.interdischarge = [nan; diff(dat.Start)];
 
 % add counter for every discharge within pattern
 nr = 0;
@@ -27,6 +32,7 @@ for inodule = unique(dat.nodule)'
         dat.avginterdischarge(sel) = nanmean(dat.interdischarge(sel));
     end
 end
+
 
 % boxplot duration discharges
 fig = figure;
@@ -73,8 +79,6 @@ set(fig,'PaperUnits','normalized');
 set(fig,'PaperPosition', [0 0 1 1]);
 print(fig, '-dpdf', fullfile(cfg{1}.imagesavedir,'interval_boxplot.pdf'),'-r600');
 
-
-
 subplot(2,2,3);
 title('Interval between deflections in percentage per mean interval per pattern');
 hold on
@@ -103,3 +107,42 @@ print(fig, '-dpdf', fullfile(cfg{1}.imagesavedir,'pattern_interval_histogram.pdf
 for inodule = 1 : 4
     fprintf('Nodule %d: %0.1f%% (n=%d/%d) of the waves varied less than 25%% from the mean interval between waves (%0.0f ms).\n', inodule, mean(deviation_abs{inodule} <= 25)*100, sum(deviation_abs{inodule} <= 25), size(deviation_abs{inodule}, 1), avg_duration_interdischarge{inodule});
 end
+% summary of numbers and mode ISI of each pattern
+
+t = table;
+clear totaltime
+for ipatient = 1 : 4
+    totaltime(ipatient) = seconds(0);
+    for idir = 1 : size(MuseStruct{ipatient}{1}, 2)
+        totaltime(ipatient) = totaltime(ipatient) + MuseStruct{ipatient}{1}{idir}.endtime - MuseStruct{ipatient}{1}{idir}.starttime;
+    end
+    t.nodule(ipatient) = ipatient;    
+    t.totaltime(ipatient) = hours(totaltime(ipatient));
+end
+
+for ipatient = 1 : 4
+    for markername = ["PSW", "FA", "ES"]
+        if isfield(intervals{ipatient}.table, markername)
+            fprintf('%s, Nodule %d: n=%d, λ=%0.0fms\n', markername, ipatient, size(intervals{ipatient}.table.(markername), 1), intervals{ipatient}.mode.(markername)*1000);
+
+            fn = sprintf('%s_n', markername);
+            t.(fn)(ipatient) = size(intervals{ipatient}.table.(markername), 1);
+           
+            fn = sprintf('%s_λ (ms)', markername);
+            t.(fn)(ipatient) = intervals{ipatient}.mode.(markername)*1000;
+        end
+    end
+end
+
+for ipatient = 1 : 4
+    fprintf('Nodule %d: %0.1f%% (n=%d/%d) of the waves varied less than 25%% from the mean interval between waves (%0.0f ms).\n', ipatient, mean(deviation_abs{ipatient} <= 25)*100, sum(deviation_abs{ipatient} <= 25), size(deviation_abs{ipatient}, 1), avg_duration_interdischarge{ipatient});
+    t.mean_inter_wave_interval(ipatient)    = avg_duration_interdischarge{ipatient};
+    t.std_inter_wave_interval(ipatient)     = std_duration_interdischarge{ipatient};
+%     t.sel_n_dev(ipatient)                   = sum(deviation_abs{ipatient} <= 25);
+%     t.sel_n(ipatient)                       = size(deviation_abs{ipatient}, 1);
+%     t.perc_dev_from_mean(ipatient)          = mean(deviation_abs{ipatient} <= 25)*100;
+    t.("proportion deviation")(ipatient) = sprintf("%d/%d (%0.1f%%)", sum(deviation_abs{ipatient} <= 25), size(deviation_abs{ipatient}, 1), mean(deviation_abs{ipatient} <= 25)*100);
+end
+
+writetable(t, fname_out);
+
