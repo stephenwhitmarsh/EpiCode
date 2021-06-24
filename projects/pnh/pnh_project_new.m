@@ -9,8 +9,6 @@
 
 restoredefaultpath
 
-%% Stephen's paths
-
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/pnh/
@@ -33,6 +31,7 @@ if ispc
     ft_defaults
 end
 
+% initialise
 MuseStruct{4}               = [];
 SpikeRaw{4}                 = [];
 SpikeDensity_timelocked{4}  = [];
@@ -42,6 +41,7 @@ SpikeStats_windowed{4}      = [];
 LFP{4}                      = [];
 intervals{4}                = [];
 
+% analyses
 for ipatient = [1, 2, 3, 4]
     
 %     % load settings
@@ -52,13 +52,13 @@ for ipatient = [1, 2, 3, 4]
     
     % align markers
     MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    
+
     % add seizures 
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, {'CriseStart', 'CriseEnd'});
 %            
 %     % intervals between IEDs
-%     intervals{ipatient} = inter_trial_intervals(config{ipatient}, MuseStruct{ipatient}, false);
-%     
+%     intervals{ipatient} = inter_trial_intervals(config{ipatient}, MuseStruct{ipatient}, true);
+% 
 %     % read hypnogram for combining with windowed data (neccecary for stats but not used in article)
 %     hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, false);
 % 
@@ -85,71 +85,88 @@ for ipatient = [1, 2, 3, 4]
     % spike density and stats vs. baseline
     SpikeDensity_timelocked{ipatient}   = spikeTrialDensity(config{ipatient}, SpikeTrials_timelocked{ipatient}, true);
 
-%     % create sliding timewindows
-%     config{ipatient}.spikewin.windowsize = 10; %Patient 1; 10: (0/total) = 7835/14826; 60: 352/2460
-%     for ipart = 1 : size(config{ipatient}.directorylist, 2)
-%         for idir = 1 : size(config{ipatient}.directorylist{ipart}, 2)
-%             temp = dir(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, ['*', config{ipatient}.LFP.channel{1}, '.ncs']));
-%             hdr  = ft_read_header(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, temp.name));
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime = 0 : (config{ipatient}.spikewin.windowsize - config{ipatient}.spikewin.windowsize * config{ipatient}.spikewin.windowoverlap) : hdr.nSamples/hdr.Fs - (config{ipatient}.spikewin.windowsize);
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock    = seconds(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime) + MuseStruct{ipatient}{ipart}{idir}.starttime;
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.events   = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime, 2);
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime   = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime + config{ipatient}.spikewin.windowsize;
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.clock      = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock + seconds(config{ipatient}.spikewin.windowsize);
-%             MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.events     = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime, 2);  
-%         end
-%     end
-% 
-%     config{ipatient}.muse.startmarker.window    = 'window__START__';
-%     config{ipatient}.muse.endmarker.window      = 'window__END__';
-%     config{ipatient}.spike.toi.window           = [0 0];
-%     config{ipatient}.spike.pad.window           = 0;
-%     config{ipatient}.spike.name                 = "window";
-%     config{ipatient}.spike.postfix              = '-windowed';
-%     SpikeTrials_windowed{ipatient}              = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
-%     SpikeStats_windowed{ipatient}               = spikeTrialStats(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
+    % create sliding timewindows
+    config{ipatient}.spikewin.windowsize = 10; %Patient 1; 10: (0/total) = 7835/14826; 60: 352/2460
+    for ipart = 1 : size(config{ipatient}.directorylist, 2)
+        for idir = 1 : size(config{ipatient}.directorylist{ipart}, 2)
+            temp = dir(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, ['*', config{ipatient}.LFP.channel{1}, '.ncs']));
+            hdr  = ft_read_header(fullfile(config{ipatient}.rawdir, config{ipatient}.directorylist{ipart}{idir}, temp.name));
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime = 0 : (config{ipatient}.spikewin.windowsize - config{ipatient}.spikewin.windowsize * config{ipatient}.spikewin.windowoverlap) : hdr.nSamples/hdr.Fs - (config{ipatient}.spikewin.windowsize);
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock    = seconds(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime) + MuseStruct{ipatient}{ipart}{idir}.starttime;
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.events   = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime, 2);
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime   = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.synctime + config{ipatient}.spikewin.windowsize;
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.clock      = MuseStruct{ipatient}{ipart}{idir}.markers.window__START__.clock + seconds(config{ipatient}.spikewin.windowsize);
+            MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.events     = size(MuseStruct{ipatient}{ipart}{idir}.markers.window__END__.synctime, 2);  
+        end
+    end
 
-%     % plot LFP timecourse examples for article
-%     config{ipatient}.plot.name      = {'patternA', 'patternB', 'patternC'};
-%     config{ipatient}.plot.ncols     = 4;
-%     config{ipatient}.plot.postfix   = "_IEDs";
-%     plotTimeCoursesExamples(config{ipatient});
-%     
-%     % plot seizure timecourse examples for article
-%     config{ipatient}.plot.name      = "seizureA";
-%     config{ipatient}.plot.ncols     = 1;    
-%     config{ipatient}.plot.postfix   = "_seizureA";
-%     plotTimeCoursesExamples(config{ipatient});
-%     
-%     % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
-%     config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * 0; % all in the same plot
-%     config{ipatient}.plot.name      = "SEIZURE";
-%     config{ipatient}.plot.ncols     = 1;    
-%     config{ipatient}.plot.postfix   = "_SEIZURE";
-%     plot_patterns_multilevel_examples2(config{ipatient});
-%     
-%     % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
-%     config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * -1; % all individually
-%     if ipatient == 3
-%         config{ipatient}.plot.name   = {'FA','ES'};
-%     else
-%         config{ipatient}.plot.name   = {'PSW','FA','ES'};
-%     end
-%     config{ipatient}.plot.ncols     = 4;
-%     config{ipatient}.plot.postfix   = "_IEDs";
-%     plot_patterns_multilevel_examples2(config{ipatient});
-% 
-%     % plot firing rate change for each pattern (not in article, see Figure2.m & Figure3.m)
-%     plotstats(config{ipatient});
-%     
-%     % extract waveforms from raw data
-%     SpikeWaveforms = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, false);
+    config{ipatient}.muse.startmarker.window    = 'window__START__';
+    config{ipatient}.muse.endmarker.window      = 'window__END__';
+    config{ipatient}.spike.toi.window           = [0 0];
+    config{ipatient}.spike.pad.window           = 0;
+    config{ipatient}.spike.name                 = "window";
+    config{ipatient}.spike.postfix              = '-windowed';
+    SpikeTrials_windowed{ipatient}              = readSpikeTrials_MuseMarkers(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+    SpikeStats_windowed{ipatient}               = spikeTrialStats(config{ipatient}, SpikeTrials_windowed{ipatient}, true);
+
+    % plot LFP timecourse examples for article
+    config{ipatient}.plot.name      = {'patternA', 'patternB', 'patternC'};
+    config{ipatient}.plot.ncols     = 4;
+    config{ipatient}.plot.postfix   = "_IEDs";
+    plotTimeCoursesExamples(config{ipatient});
+    
+    % plot seizure timecourse examples for article
+    config{ipatient}.plot.name      = "seizureA";
+    config{ipatient}.plot.ncols     = 1;    
+    config{ipatient}.plot.postfix   = "_seizureA";
+    plotTimeCoursesExamples(config{ipatient});
+    
+    % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
+    config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * 0; % all in the same plot
+    config{ipatient}.plot.name      = "SEIZURE";
+    config{ipatient}.plot.ncols     = 1;    
+    config{ipatient}.plot.postfix   = "_SEIZURE";
+    plot_patterns_multilevel_examples2(config{ipatient});
+    
+    % rasterplot & TFR (not in article, see Figure2.m & Figure3.m)
+    config{ipatient}.plot.unit{1}   = ones(size(config{ipatient}.plot.unit{1})) * -1; % all individually
+    if ipatient == 3
+        config{ipatient}.plot.name   = {'FA','ES'};
+    else
+        config{ipatient}.plot.name   = {'PSW','FA','ES'};
+    end
+    config{ipatient}.plot.ncols     = 4;
+    config{ipatient}.plot.postfix   = "_IEDs";
+    plot_patterns_multilevel_examples2(config{ipatient});
+
+    % plot firing rate change for each pattern (not in article, see Figure2.m & Figure3.m)
+    plotstats(config{ipatient});
+    
+    % extract waveforms from raw data
+    SpikeWaveforms = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, false);
 
 end
-  
+
+% summary of numbers and mode ISI of each pattern
+t = table;
+
+for ipatient = 1 : 4
+    for markername = ["PSW", "FA", "ES"]
+        if isfield(intervals{ipatient}.table, markername)
+            fprintf('%s, Nodule %d: n=%d, λ=%0.0fms\n', markername, ipatient, size(intervals{ipatient}.table.(markername), 1), intervals{ipatient}.mode.(markername)*1000);
+            
+            fn = sprintf('%s_n', markername);
+            t.(fn)(ipatient) = size(intervals{ipatient}.table.(markername), 1);
+            
+            fn = sprintf('%s_λ (ms)', markername);
+            t.(fn)(ipatient) = intervals{ipatient}.mode.(markername)*1000;
+           
+        end
+    end
+end
 
 % analyse periodicity c.f. Hirsch
-analyze_periodicity(config);
+analyze_periodicity(config, MuseStruct);
     
 % Figure 2 for article
 cfg_fig = [];
@@ -175,8 +192,8 @@ for ipatient =  1 : 3
         xi = xi + 1;
         
         for icontact = 1 : length(stat_TFR_micro{ipatient}{imarker}.corrs.avg)
-            xpos = (xi-1) * 3;;
-            ypos = (icontact-1) * 3
+            xpos = (xi-1) * 3;
+            ypos = (icontact-1) * 3;
             c = stat_TFR_micro{ipatient}{mloc(ipatient,imarker)}.corrs.avg(icontact);
             if c >= 0
                 col = 'g.';

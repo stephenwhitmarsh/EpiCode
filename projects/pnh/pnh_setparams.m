@@ -225,7 +225,6 @@ config{3}.muse.endmarker.FA         = "p02614_07__START__";
 config{3}.muse.startmarker.ES       = "p02614_09";
 config{3}.muse.endmarker.ES         = "p02614_09";
 
-config{3}.circus.channel            = {'mTNmi_2', 'mTNmi_3', 'mTNmi_5', 'mTNmi_6', 'mTNmi_7', 'mTNmi_8'}; % redo within 1st and 4th electrode - now removed
 config{3}.circus.channel            = {'mTNmi_1', 'mTNmi_2', 'mTNmi_3', 'mTNmi_4', 'mTNmi_5', 'mTNmi_6', 'mTNmi_7', 'mTNmi_8'};
 config{3}.circus.params.detection.spike_thresh  = '5.5';
 config{3}.circus.params.filtering.remove_median = 'False';
