@@ -3,12 +3,21 @@ function [intervals] = inter_trial_intervals(cfg, MuseStruct, force)
 %% Make overview of data as segmented by markers aligned to (first) peak
 binwidths = [1, 1, 0.25, 1, 1, 0.25, 1, 0.25];
 binlimits = [60, 60, 15, 60, 60, 15, 60, 15];
+
 fname = fullfile(cfg.datasavedir, [cfg.prefix,'timings_intervals.mat']);
 
+if nargin == 1
+    if exist(fname, 'file')
+        fprintf('Reading %s\n', fname);
+        load(fname, 'intervals');
+        return;
+    else
+        warning('No precomputed data is found, not enough input arguments to compute data');
+        return
+    end
+end
+
 if exist(fname, 'file') && force == false
-    fprintf('************************************\n');
-    fprintf('*** Loading precomputed intervals ***\n');
-    fprintf('************************************\n\n');
     load(fname, 'intervals');
     return
 end
@@ -85,11 +94,11 @@ for ipart = 1 : size(MuseStruct, 2)
         box off
         iplot = iplot + 1;
     end
+
+    fname = fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_intervals'] );
+    exportgraphics(fig, [fname, '.tiff'], 'Resolution', 150);
+    
 end
 
-
-fname = fullfile(cfg.imagesavedir, [cfg.prefix, 'p', num2str(ipart), '_intervals'] );
-%             exportgraphics(fig, [fname, '.pdf']);
-exportgraphics(fig, [fname, '.tiff'], 'Resolution', 150);
 disp('done');
 
