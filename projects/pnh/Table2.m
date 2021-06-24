@@ -10,6 +10,20 @@ if force == false && exist(fname_out, 'file')
     return
 end
 
+corr.channel{1}.PSW     = 'm1pNs_6';
+corr.channel{1}.FA      = 'm1pNs_4';
+corr.channel{1}.ES      = 'm1pNs_4';
+corr.channel{2}.PSW     = 'mCasd_2';
+corr.channel{2}.FA      = 'mCasd_2';
+corr.channel{2}.ES      = 'mCasd_2';
+corr.channel{3}.PSW     = 'mTNmi_3';
+corr.channel{3}.FA      = 'mTNmi_3';
+corr.channel{3}.ES      = 'mTNmi_3';
+corr.channel{4}.PSW     = 'mLMI1_7';
+corr.channel{4}.FA      = 'mLMI1_7';
+corr.channel{4}.ES      = 'mLMI1_7';
+
+
 dat = table;
 for ipatient = 1 : size(cfg, 2)
 
@@ -57,8 +71,19 @@ for ipatient = 1 : size(cfg, 2)
             for markername = string(fields(SpikeDensity_timelocked{ipart}.stat))'
                 
                 % add correlation with LFP
-                eval(sprintf('temp.%s_LFPcorr_p   = repmat(SpikeDensity_timelocked{ipart}.psth.(markername).corr_pval(itemp), size(temp, 1), 1);', markername));
-                eval(sprintf('temp.%s_LFPcorr_rho = repmat(SpikeDensity_timelocked{ipart}.psth.(markername).corr_rho(itemp),  size(temp, 1), 1);', markername));                
+                if isfield(corr.channel{ipatient}, markername)
+                    indx = ismember(cfg{ipatient}.LFP.channel, corr.channel{ipatient}.(markername));
+                    if any(indx)
+                        eval(sprintf('temp.%s_LFPcorr_rho = repmat(SpikeDensity_timelocked{ipart}.psth.(markername).corr_rho(itemp,  indx), size(temp, 1), 1);', markername));
+                        eval(sprintf('temp.%s_LFPcorr_p   = repmat(SpikeDensity_timelocked{ipart}.psth.(markername).corr_pval(itemp, indx), size(temp, 1), 1);', markername));
+                    else
+                        eval(sprintf('temp.%s_LFPcorr_rho = repmat(nan, size(temp, 1), 1);', markername));
+                        eval(sprintf('temp.%s_LFPcorr_p   = repmat(nan, size(temp, 1), 1);', markername));
+                    end
+                else
+                    eval(sprintf('temp.%s_LFPcorr_rho = repmat(nan, size(temp, 1), 1);', markername));
+                    eval(sprintf('temp.%s_LFPcorr_p   = repmat(nan, size(temp, 1), 1);', markername));
+                end
                 
                 % add signification increase/decrease for each pattern
                 if isfield(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}, 'posclusters') &&  ~isempty(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.posclusters)
@@ -71,15 +96,15 @@ for ipatient = 1 : size(cfg, 2)
                         baseline        = mean(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.baseline(:, itemp));
                         p               = SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.posclusters(clusterindx).prob;
                         val             = Y / baseline * 100 - 100;
-                        eval(sprintf('temp.%s_increase_p   = repmat(p,   size(temp, 1), 1); ', markername));
                         eval(sprintf('temp.%s_increase_val = repmat(val, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_increase_p   = repmat(p,   size(temp, 1), 1); ', markername));
                     else
-                    eval(sprintf('temp.%s_increase_p   = repmat(nan, size(temp, 1), 1); ', markername));
-                    eval(sprintf('temp.%s_increase_val = repmat(nan, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_increase_val = repmat(nan, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_increase_p   = repmat(nan, size(temp, 1), 1); ', markername));
                     end
                 else
-                    eval(sprintf('temp.%s_increase_p   = repmat(nan, size(temp, 1), 1); ', markername));
                     eval(sprintf('temp.%s_increase_val = repmat(nan, size(temp, 1), 1); ', markername));
+                    eval(sprintf('temp.%s_increase_p   = repmat(nan, size(temp, 1), 1); ', markername));
                 end
                 
                 if isfield(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}, 'negclusters') && ~isempty(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.negclusters)
@@ -92,15 +117,15 @@ for ipatient = 1 : size(cfg, 2)
                         baseline        = mean(SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.baseline(:, itemp));
                         p               = SpikeDensity_timelocked{ipart}.stat.(markername){itemp}.negclusters(clusterindx).prob;
                         val             = Y / baseline * 100 - 100;
-                        eval(sprintf('temp.%s_decrease_p   = repmat(p,   size(temp, 1), 1); ', markername));
                         eval(sprintf('temp.%s_decrease_val = repmat(val, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_decrease_p   = repmat(p,   size(temp, 1), 1); ', markername));
                     else
-                    eval(sprintf('temp.%s_decrease_p   = repmat(nan, size(temp, 1), 1); ', markername));
-                    eval(sprintf('temp.%s_decrease_val = repmat(nan, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_decrease_val = repmat(nan, size(temp, 1), 1); ', markername));
+                        eval(sprintf('temp.%s_decrease_p   = repmat(nan, size(temp, 1), 1); ', markername));
                     end
                 else
-                    eval(sprintf('temp.%s_decrease_p   = repmat(nan, size(temp, 1), 1); ', markername));
                     eval(sprintf('temp.%s_decrease_val = repmat(nan, size(temp, 1), 1); ', markername));
+                    eval(sprintf('temp.%s_decrease_p   = repmat(nan, size(temp, 1), 1); ', markername));
                 end
             end
             
@@ -226,7 +251,8 @@ end
 
 fname = fullfile(cfg{1}.imagesavedir, 'Table2.xls');
 writetable(T, fname);
-       
+disp('done');
+
 
 
 
