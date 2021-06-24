@@ -77,7 +77,7 @@ if nargin == 1
                 count = count + 1;
             end
         else
-            fprintf('(re-) computing LFP data for %s\n', markername);
+            fprintf('Will be (re-) computing LFP data for %s\n', markername);
         end
     end
     return
@@ -101,7 +101,7 @@ elseif ~force
                 count = count + 1;
             end
         else
-            fprintf('(re-) computing LFP data for %s\n', markername);
+            fprintf('Will be (re-) computing LFP data for %s\n', markername);
             missing = [missing; markername];
         end
     end
@@ -115,10 +115,10 @@ end
 hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % loop over markers
-for markername = string(cfg.LFP.name)
-
-    fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, '.mat'));
-
+for markername = string(cfg.LFP.name)'
+    
+    fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, cfg.LFP.postfix, '.mat'));
+    
     if exist(fname_out, 'file') && force == false
         fprintf('Loading precomputed LFP data for %s\n', markername);
 
