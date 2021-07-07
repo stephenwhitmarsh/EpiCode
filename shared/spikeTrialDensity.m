@@ -72,7 +72,9 @@ stats = {};
 
 
 % read LFP for correlation later on
-LFP = readLFP(cfg);
+cfgtemp             = cfg;
+cfgtemp.LFP.name    = cfg.spike.name;
+LFP                 = readLFP(cfgtemp);
 
 for ipart = cfg.spike.part_list
     

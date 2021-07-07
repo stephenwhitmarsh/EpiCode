@@ -182,8 +182,8 @@ config{1}.plot.trial.SEIZURE{1}     = [1,  2,  3,  4,  5,  6];
 config{2}                           = config{1};
 config{2}.prefix                    = '2614R-';
 config{2}.rawdir                    = fullfile(rootpath_data, 'pat_02614_1073', 'eeg');
-config{2}.LFP.channel               = {'mCasd_2', 'mCasd_1', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
-config{2}.align.channel             = {'mCasd_2', 'mCasd_1', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
+config{2}.LFP.channel               = {'mCasd_1', 'mCasd_2', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
+config{2}.align.channel             = {'mCasd_1', 'mCasd_2', 'mCasd_4', 'mCasd_6', 'mCasd_7'};
 config{2}.align.lpfilter            = 'yes';
 config{2}.align.lpfreq              = 40;
 
@@ -241,7 +241,7 @@ config{3}.plot.name                 = {'FA', 'ES'};
 config{4}                           = config{1};
 config{4}.prefix                    = '2689-';
 config{4}.rawdir                    = fullfile(rootpath_data, 'pat_02689_1168', 'eeg');
-config{4}.align.channel             = {'mLMI1_3', 'mLMI1_2', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
+config{4}.align.channel             = {'mLMI1_2', 'mLMI1_3', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
 config{4}.align.lpfilter            = 'yes';
 config{4}.align.lpfreq              = 40;
 config{4}.align.latency.PSW         = [-0.2, 5];
@@ -255,7 +255,7 @@ config{4}.TFR.bl.SEIZURE            = [-1, -0.5];
 config{4}.TFR.bl.PSW                = [-5, -3];
 
 config{4}.LFP.name                  = {'PSW', 'FA', 'ES', 'SEIZURE'};
-config{4}.LFP.channel               = {'mLMI1_3', 'mLMI1_2', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
+config{4}.LFP.channel               = {'mLMI1_2', 'mLMI1_3', 'mLMI1_4', 'mLMI1_5', 'mLMI1_7'};
 
 config{4}.muse.name                 = {'PSW', 'FA', 'ES'};
 config{4}.muse.startmarker.PSW      = "Marker1__START__";

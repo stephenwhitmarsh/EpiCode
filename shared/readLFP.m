@@ -115,7 +115,7 @@ end
 hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % loop over markers
-for markername = string(cfg.LFP.name)'
+for markername = string(cfg.LFP.name)
     
     fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFP_', markername, cfg.LFP.postfix, '.mat'));
     
@@ -506,7 +506,3 @@ for markername = string(cfg.LFP.name)'
     end
 
 end % markername
-
-if isempty(markername)
-    fprintf('cfg.LFP.name is empty, no LFP is read\n');
-end

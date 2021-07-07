@@ -168,6 +168,8 @@ for ipart = 1 : size(cfg.directorylist, 2)
                         sampleinfo{ipart}(idir, 2)  = hdr{ipart}{idir}.nSamples;
                         if cfg.circus.timestamps
                             timestamps{ipart}{idir} = ft_read_data(fname, 'timestamp', 'true');  % take the first concatinated channel to extract the timestamps
+                        else
+                            timestamps{ipart}{idir} = [];
                         end
                     end
                 end

@@ -196,6 +196,7 @@ for ipart = cfg.spikewaveform.part_list
             temp{filecnt}.trialinfo.endsample       = Endsample(full_trial);
             temp{filecnt}.trialinfo.offset          = Offset(full_trial);
             temp{filecnt}.trialinfo.trialduration   = double(Endsample(full_trial) - Startsample(full_trial)+1) * 1 / hdr.Fs;
+            temp{filecnt}.trialinfo.datafile        = repmat(datafile, height(temp{filecnt}.trialinfo), 1);            
             temp{filecnt}                           = rmfield(temp{filecnt}, 'cfg');
             
             filecnt = filecnt + 1;

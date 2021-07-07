@@ -14,6 +14,15 @@ for inodule = nodulenr
     LFP{inodule}          = readLFP(cfg{inodule});
 end
 
+
+for iunit = 1 : size(SpikeTrials{4}{ipart}.SEIZURE.trial, 2)
+    i2 = SpikeTrials{4}{ipart}.SEIZURE.trial{iunit} == 2;
+    i1 = SpikeTrials{4}{ipart}.SEIZURE.trial{iunit} == 1;
+    SpikeTrials{4}{ipart}.SEIZURE.trial{iunit}(i2) = 1;
+    SpikeTrials{4}{ipart}.SEIZURE.trial{iunit}(i1) = 2;
+end
+    
+    
 % remove artefacted and non-nodular seizure
 if isunix
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/development/modified_fieldtrip_functions
@@ -55,7 +64,6 @@ for ipatient = nodulenr
     s1      = axes('Position', [hratio*(imarker-1) + w*(spacehor/2) + rshift, 1-(vratio*row) + upshift, w, htop]);
     plot(LFP{ipatient}{ipart}.SEIZURE.time{seizurenr(ipatient)}, LFP{ipatient}{ipart}.SEIZURE.trial{seizurenr(ipatient)}(channelnr(ipatient), :), 'k');
     set(s1, 'XGrid', 'off', 'box', 'off', 'xticklabel', [], 'XColor', 'none', 'tickdir', 'out', 'Color', 'none', 'ticklength', [0.005 0.100]);
-%     xlim(cfg{1}.epoch.toi.SEIZURE);
     xlim(xlimits);
     xticks([xlimits(1), 0, xlimits(2)]);
 
