@@ -1,18 +1,18 @@
 function preictal_writeSpykingCircus(slurm_task_id)
 
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\louis.cousyn\Scripts\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\louis.cousyn\Scripts\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\louis.cousyn\Scripts\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\louis.cousyn\Scripts\EpiCode\projects\preictal'))
-    addpath \\lexport\iss01.charpier\analyses\louis.cousyn\Scripts\fieldtrip-20200607
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\external'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\templates'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\projects\preictal'))
+    addpath \\lexport\iss01.charpier\analyses\vn_preictal\scripts\fieldtrip-20200607
     
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/EpiCode/projects/preictal'))
-    addpath /network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/fieldtrip-20200607
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/shared'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/external'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/templates'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/projects/preictal'))
+    addpath /network/lustre/iss01/charpier/analyses/vn_preictal/scripts/fieldtrip-20200607
 end
 
 

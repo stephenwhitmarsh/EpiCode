@@ -65,9 +65,9 @@ config{2}.imagesavedir        = fullfile(imagesavedir, 'pat_02256_0700_Crise2_m2
 config{2}.prefix              = 'pat_02256_0700_Crise2_m2mCi-';                                                        %patient name. Must end by "-". namepatient-
 config{2}.rawdir              = fullfile(rootpath_data,'pat_02256_0700','eeg');                       %path to patient data
 config{2}.directorylist{1}    = {'02256_2015-05-21_03-28','02256_2015-05-21_05-28'};                                               %list of folders to analyse
-config{2}.circus.channel      = {'m2mCi_2','m2mCi_5','m2mCi_6','m2mCi_7','m2mCi_8'};       %name of the first electrode
+config{2}.circus.channel      = {'m2mCi_2','m2mCi_6','m2mCi_7','m2mCi_8'};       %name of the first electrode
 config{2}.circus.reref        = 'yes';
-config{2}.circus.refchan      = 'm2mCi_4';
+config{2}.circus.refchan      = 'm2mCi_5';
 config{2}.circus.outputdir    = fullfile(rootpath_analysis, 'data', 'SpykingCircus');
 config{2}.circus.hpfilter     = 'no'; % hp before writing data for SC, does not change the hp of SC
 config{2}.circus.hpfreq       = 0; % even when not using
@@ -76,7 +76,7 @@ config{2}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{2}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{2}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{2}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
-config{2}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
+config{2}.bad.time_from_begin = 767; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
 config{2}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 %% patient 3
@@ -219,3 +219,8 @@ config{9}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 
 config{9}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{9}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
 config{9}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
+% config{10}                    = config{9};
+% config{10}.imagesavedir       = fullfile(imagesavedir, 'pat_02599_1057_Crise3_mHaT2');
+% config{10}.prefix             = 'pat_02599_1057_Crise3_mHaT2-';
+% config{9}.circus.channel      = {'mHaT2_6'}; 

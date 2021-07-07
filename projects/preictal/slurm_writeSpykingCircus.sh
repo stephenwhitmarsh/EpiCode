@@ -5,8 +5,8 @@
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=2
 #SBATCH --chdir=.
-#SBATCH --output=/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/slurm_output/output-%j_%a-%x.txt
-#SBATCH --error=/network/lustre/iss01/charpier/analyses/louis.cousyn/Scripts/slurm_output/error-%j_%a-%x.txt
+#SBATCH --output=/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/slurm_output/output-%j_%a-%x.txt
+#SBATCH --error=/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/slurm_output/error-%j_%a-%x.txt
 #SBATCH --array=1
 
 
