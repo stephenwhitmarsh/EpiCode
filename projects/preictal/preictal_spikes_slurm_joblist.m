@@ -9,12 +9,15 @@ fname = fullfile(config{1}.datasavedir,'preictal_slurm_job_list.txt');
 fid = fopen(fname,'w');
 
 for ipatient = 1:size(config,2)
+    
     for ipart = 1:size(config{ipatient}.directorylist,2)
         
         %get patient's information
         subjdir     = config{ipatient}.prefix(1:end-1);
         partdir     = ['p',num2str(ipart)];
-        filename    = [config{ipatient}.prefix,'p',num2str(ipart),'-multifile-',config{ipatient}.circus.channel{1},'.ncs'];
+%         filename    = [config{ipatient}.prefix,'p',num2str(ipart),'-multifile-',config{ipatient}.circus.channel{1},'.ncs'];
+        filename    = 'SpykingCircus.params';
+        
         dirname     = sprintf('/network/lustre/iss01/charpier/analyses/vn_preictal/data/%s/%s',subjdir,partdir);
         
         %code to launch SC

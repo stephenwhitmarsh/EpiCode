@@ -22,9 +22,16 @@ script_path  = mfilename('fullpath');
 script_path  = fileparts(script_path);
 
 %% config common for all patients
-configcommon.name                  = {'Preictal'};
-configcommon.muse.write            = true;
-configcommon.circus.paramfile      = fullfile(script_path,'preictal_SpykingCircus.params');
+configcommon.name                                   = {'Preictal'};
+configcommon.muse.write                             = true;
+configcommon.circus.paramfile                       = fullfile(script_path,'preictal_SpykingCircus.params');
+configcommon.circus.params.filtering.cut_off        = '300, auto';
+configcommon.circus.params.filtering.remove_median  = 'False';
+configcommon.circus.params.clustering.max_elts      = '10000';
+configcommon.circus.params.detection.peaks          = 'negative';
+configcommon.circus.params.data.stream_mode         = 'mapping-file';
+configcommon.circus.params.data.mapping_file        = 'filelist.txt';
+
 configcommon.statstime.timewin     = 10; %statstime : pour fonction spikestatsOverTime.m
 configcommon.statstime.slidestep   = 1;
 configcommon.statstime.minbadtime  = 1; %temps minimum entre 2 marqueurs bad pour qu'il soit utilisé pour supprimer les données mesurées (s)
@@ -32,8 +39,8 @@ configcommon.statstime.write       = true; %whether to save output stats on disk
 configcommon.statstime.plot.toi_seizure = [-600 60]; %temps pour plot autour des crises
 configcommon.spike.ISIbins         = 0:0.001:0.150;%in seconds
 configcommon.spike.RPV             = 0.001;
+configcommon.spikewaveform.nspikes = 1000; %100000; %1000;
 
-configcommon.spikewaveform.nspikes  = 'all'; %100000; %1000;
 
 %% patient 1
 config{1}                     = configcommon;
@@ -42,6 +49,7 @@ config{1}.imagesavedir        = fullfile(imagesavedir, 'pat_02256_0700_Crise1_m2
 config{1}.prefix              = 'pat_02256_0700_Crise1_m2mCi-';                                                        %patient name. Must end by "-". namepatient-
 config{1}.rawdir              = fullfile(rootpath_data,'pat_02256_0700','eeg');                       %path to patient data
 config{1}.directorylist{1}    = {'02256_2015-05-09_05-37','02256_2015-05-09_07-37'};                                               %list of folders to analyse
+config{1}.circus.correct_chunk{1} = false;
 config{1}.circus.channel      = {'m2mCi_2','m2mCi_5','m2mCi_6','m2mCi_8'};       %name of the first electrode
 config{1}.circus.reref        = 'yes';
 config{1}.circus.refchan      = 'm2mCi_7';
@@ -56,7 +64,6 @@ config{1}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 
 config{1}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{1}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
 config{1}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
-
 
 %% patient 2
 config{2}                     = configcommon;
@@ -93,12 +100,16 @@ config{3}.circus.outputdir    = fullfile(rootpath_analysis, 'data', 'SpykingCirc
 config{3}.circus.hpfilter     = 'no'; % hp before writing data for SC, does not change the hp of SC
 config{3}.circus.hpfreq       = 0; % even when not using
 config{3}.circus.postfix      = []; % after using circus-gui-matlab's SAVE number
+config{3}.circus.params.detection.spike_thresh  = '6';
+config{3}.circus.params.clustering.nb_repeats  = '3';
+
 config{3}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{3}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{3}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{3}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{3}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
 config{3}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 4
 config{4}                     = configcommon;
 config{4}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -119,6 +130,7 @@ config{4}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 
 config{4}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{4}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
 config{4}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 5
 config{5}                     = configcommon;
 config{5}.datasavedir         = datasavedir;       %path where to save MuseStruct data

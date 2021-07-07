@@ -1,5 +1,6 @@
 function preictal_project(ipatient)
 
+restoredefaultpath
 if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
     addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\external'))
@@ -16,8 +17,6 @@ elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/projects/dtx/to_share'))
     addpath /network/lustre/iss01/charpier/analyses/vn_preictal/scripts/fieldtrip-20200607
 end
-
-
 ft_defaults
 
 config = preictal_setparams;
