@@ -142,12 +142,13 @@ for ipart = cfg.circus.part_list
         
         %convert templates from 'whitened' to data units
         if size(phydata.templates, 3) ~= size(phydata.whitening_mat_inv, 2)
-            error('Size of templates does not match size of whitening matrix - did you accidentally enable ''sparse_export''?');
+            disp('Size of templates does not match size of whitening matrix - did you accidentally enable ''sparse_export''?');
+        else
+            for itemplate = 1:size(phydata.templates, 1)
+                phydata.templates(itemplate, :, :) = squeeze(phydata.templates(itemplate, :, :)) * phydata.whitening_mat_inv;
+            end
+            phydata.templates = permute(phydata.templates, [1 3 2]);             %permute to be consistent to SpikeRaw struct from MATLAB data
         end
-        for itemplate = 1:size(phydata.templates, 1)
-            phydata.templates(itemplate, :, :) = squeeze(phydata.templates(itemplate, :, :)) * phydata.whitening_mat_inv;
-        end
-        phydata.templates = permute(phydata.templates, [1 3 2]);             %permute to be consistent to SpikeRaw struct from MATLAB data
         
         %convert amplitudes from template-normalized to data units
         for itemplate = 1:size(phydata.templates, 1)
