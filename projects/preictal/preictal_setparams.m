@@ -27,7 +27,6 @@ configcommon.muse.write                             = true;
 configcommon.circus.paramfile                       = fullfile(script_path,'preictal_SpykingCircus.params');
 configcommon.circus.params.filtering.cut_off        = '300, auto';
 configcommon.circus.params.filtering.remove_median  = 'False';
-configcommon.circus.params.clustering.max_elts      = '10000';
 configcommon.circus.params.detection.peaks          = 'negative';
 configcommon.circus.params.data.stream_mode         = 'mapping-file';
 configcommon.circus.params.data.mapping_file        = 'filelist.txt';
@@ -63,7 +62,6 @@ config{1}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{1}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{1}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{1}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{1}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 %% patient 2
 config{2}                     = configcommon;
@@ -84,31 +82,31 @@ config{2}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{2}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{2}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{2}.bad.time_from_begin = 767; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{2}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 %% patient 3
-config{3}                     = configcommon;
-config{3}.datasavedir         = datasavedir;       %path where to save MuseStruct data
-config{3}.imagesavedir        = fullfile(imagesavedir, 'pat_02379_0828_Crise1_mHaBg');
-config{3}.prefix              = 'pat_02379_0828_Crise1_mHaBg-';                                                        %patient name. Must end by "-". namepatient-
-config{3}.rawdir              = fullfile(rootpath_data,'pat_02379_0828','eeg');                       %path to patient data
-config{3}.directorylist{1}    = {'02379_2016-05-30_13-45','02379_2016-05-30_15-45'};                                               %list of folders to analyse
-config{3}.circus.channel      = {'mHaBg_6'};       %name of the first electrode
-config{3}.circus.reref        = 'no';
-config{3}.circus.refchan      = '';
-config{3}.circus.outputdir    = fullfile(rootpath_analysis, 'data', 'SpykingCircus');
-config{3}.circus.hpfilter     = 'no'; % hp before writing data for SC, does not change the hp of SC
-config{3}.circus.hpfreq       = 0; % even when not using
-config{3}.circus.postfix      = []; % after using circus-gui-matlab's SAVE number
+config{3}                                       = configcommon;
+config{3}.datasavedir                           = datasavedir;       %path where to save MuseStruct data
+config{3}.imagesavedir                          = fullfile(imagesavedir, 'pat_02379_0828_Crise1_mHaBg');
+config{3}.prefix                                = 'pat_02379_0828_Crise1_mHaBg-';                                                        %patient name. Must end by "-". namepatient-
+config{3}.rawdir                                = fullfile(rootpath_data,'pat_02379_0828','eeg');                       %path to patient data
+config{3}.directorylist{1}                      = {'02379_2016-05-30_13-45','02379_2016-05-30_15-45'};                                               %list of folders to analyse
+config{3}.circus.channel                        = {'mHaBg_6'};       %name of the first electrode
+config{3}.circus.reref                          = 'no';
+config{3}.circus.refchan                        = '';
+config{3}.circus.outputdir                      = fullfile(rootpath_analysis, 'data', 'SpykingCircus');
+config{3}.circus.hpfilter                       = 'no'; % hp before writing data for SC, does not change the hp of SC
+config{3}.circus.hpfreq                         = 0; % even when not using
+config{3}.circus.postfix                        = []; % after using circus-gui-matlab's SAVE number
 config{3}.circus.params.detection.spike_thresh  = '6';
-config{3}.circus.params.clustering.nb_repeats  = '3';
+config{3}.circus.params.clustering.nb_repeats   = '10';
+config{3}.circus.params.clustering.max_elts     = '20000';
+
 
 config{3}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{3}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{3}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{3}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{3}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{3}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 %% patient 4
 config{4}                     = configcommon;
@@ -129,7 +127,6 @@ config{4}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{4}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{4}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{4}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{4}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 %% patient 5
 config{5}                     = configcommon;
@@ -150,7 +147,7 @@ config{5}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{5}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{5}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{5}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{5}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 6
 config{6}                     = configcommon;
 config{6}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -170,7 +167,7 @@ config{6}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{6}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{6}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{6}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{6}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 7
 config{7}                     = configcommon;
 config{7}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -190,7 +187,7 @@ config{7}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{7}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{7}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{7}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{7}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 8
 config{8}                     = configcommon;
 config{8}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -210,7 +207,7 @@ config{8}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{8}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{8}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{8}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{8}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
+
 %% patient 9
 config{9}                     = configcommon;
 config{9}.datasavedir         = datasavedir;       %path where to save MuseStruct data
@@ -230,7 +227,6 @@ config{9}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
 config{9}.bad.dir_list        = 'last'; %nouveau marqueur BAD sur dernier des 2 fichiers 
 config{9}.bad.sample_list     = 'last'; %dernier marqueur crise END pris en compte (en cas de multiple crise sur un même fichier)
 config{9}.bad.time_from_begin = 1800; %début à +60s de crise END (pour rfaire spike sorting sur crise et post critique immédiat)
-config{9}.bad.removeseizures  = 'no'; %pour enlever les crises mettre 'yes' 
 
 % config{10}                    = config{9};
 % config{10}.imagesavedir       = fullfile(imagesavedir, 'pat_02599_1057_Crise3_mHaT2');
