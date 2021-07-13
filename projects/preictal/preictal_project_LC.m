@@ -1,59 +1,73 @@
-function preictal_project_SW
+function preictal_project_LC
 
 restoredefaultpath
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\preictal'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\dtx\to_share'))
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\external'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\templates'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\projects\preictal'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\projects\dtx\to_share'))
+    addpath \\lexport\iss01.charpier\analyses\vn_preictal\scripts\fieldtrip-20200607
     
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/preictal'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/dtx/to_share'))
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/shared'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/external'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/templates'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/projects/preictal'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/projects/dtx/to_share'))
+    addpath /network/lustre/iss01/charpier/analyses/vn_preictal/scripts/fieldtrip-20200607
 end
 ft_defaults
 
 config = preictal_setparams;
 
-for ielec = 1 : 9
+%% prepare data for Spyking Circus
+% write a new joblist for the cluster
+preictal_spikes_slurm_joblist
+
+for ielec = 3 % à définir
     
     % read muse markers
     MuseStruct = readMuseMarkers(config{ielec}, true);
     
-     
-    % write artefacts to file
-    writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true);
-    
-    %%
-    % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresNotRemoved
-    %%
-    
-    % add arteafct marker from seizure to end of file
+    % remove post ictal from the whole analysis,
+    % according to config (some 'patients' will have
+    % shorter postictal kept because of noise, see setparams)
     MuseStruct = addMuseBAD(config{ielec}, MuseStruct);
-   
-    %%
-    % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresRemoved
-    %%
     
-    % write parameters file for spyking circus
+    % write artefacts to file
+    writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true, '_SeizuresNotRemoved');
+    
+%     %%
+%     % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresNotRemoved
+%     %%
+    
+    % add arteafct marker from seizure start to seizure end  
+    cfgtemp                       = [];
+    cfgtemp.bad.markerStart       = 'CriseStart';
+    cfgtemp.bad.markerEnd         = 'CriseEnd';
+    MuseStruct                    = addMuseBAD(cfgtemp,MuseStruct);
+    
+    writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true, '_SeizuresRemoved');
+   
+%     %%
+%     % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresRemoved
+%     %%
+    
+    % write parameters file for spyking circus 
     writeSpykingCircusParameters(config{ielec});
     
-    % write file list for spyking circus
-    [filelist, sampleinfo, timestamps, hdr] = writeSpykingCircusFileList(config{ielec}, true);
+    % write file list for spyking circus LINUX
+    writeSpykingCircusFileList(config{ielec}, true);
 
-    % write a new joblist for the cluster
-    preictal_spikes_slurm_joblist
-    
-    %%
-    % Now do your spike sorting
-    %%
-    
+end
+
+%%
+% Now do your spike sorting
+%%
+
+%% perform the analysis after spike dorting
+for ielec = 1:size(config,2)
     %read spike data
     SpikeRaw = readSpikeRaw_Phy(config{ielec}, true);
     
