@@ -53,6 +53,7 @@ for ipatient = [1, 2, 3, 4]
     
     % align markers
     MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient});
 
     % add seizures 
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, {'CriseStart', 'CriseEnd'});
@@ -73,9 +74,9 @@ for ipatient = [1, 2, 3, 4]
 %     [MuseStruct{ipatient}] = updateBadMuseMarkers(config{ipatient}, MuseStruct{ipatient});
 %     
 %     % write parameters for spyking circus
-%     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct_aligned{ipatient}, true);
-%     writeSpykingCircusParameters(config{ipatient});
-%     [filelist, sampleinfo, timestamps, hdr] = writeSpykingCircusFileList(config{ipatient}, false);
+    writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct_aligned{ipatient}, true);
+    writeSpykingCircusParameters(config{ipatient});
+    [filelist, sampleinfo, timestamps, hdr] = writeSpykingCircusFileList(config{ipatient}, false);
 
     % read spike data from Phy as one continuous trial
     SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);

@@ -66,7 +66,7 @@ for ipatient = 3:7
     writeSpykingCircusFileList(config{ipatient}, true);
 %     writeSpykingCircusParameters(config{ipatient});
 
-    SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config{ipatient}, true);
+    SpikeRaw{ipatient}                    = readSpikeRaw_Phy(config{ipatient}, false);
 %     
 %     if ipatient == 3
 %         SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;

@@ -368,8 +368,8 @@ for ipart = cfg.circus.part_list
         
         for ievent = 1 : size(SpikeTrials{ipart}.(markername).trialinfo, 1)
             ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
-            trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample_dir(ievent);
-            trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample_dir(ievent);
+            trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample_dir(ievent) / hdr{ipart}.Fs;
+            trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample_dir(ievent) / hdr{ipart}.Fs;
 
             for idir = 1 : size(MuseStruct{ipart}, 2)
 
@@ -390,7 +390,9 @@ for ipart = cfg.circus.part_list
                         continue
                     else
                         artefact(ievent) = true;
-                        artefact_length(ievent) = (artend - artstart) + artefact_length(ievent); %in case several artefacts intersect this trial
+                        % overlap in ms precision
+                        C = intersect(round(artstart, 3):0.001:round(artend, 3), round(double(trlstart), 3):0.001:round(double(trlend), 3));
+                        artefact_length(ievent) = artefact_length(ievent) + length(C) / 1000; 
                     end
 
                 end % iart
