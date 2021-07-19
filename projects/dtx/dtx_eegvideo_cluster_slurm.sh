@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=morpho_refilt
+#SBATCH --job-name=aw
 #SBATCH --partition=normal,bigmem
 #SBATCH --time=99:99:99
 #SBATCH --mem=16G

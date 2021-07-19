@@ -1,6 +1,5 @@
 function dtx_spikes_writeSC(ipatient)
 
-%% set parameters
 if ispc
     addpath \\lexport\iss01.charpier\analyses\lgi1\Git-Paul\fieldtrip;
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx'));
@@ -32,12 +31,8 @@ feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character proble
 
 config = dtx_spikes_setparams;
 
-%% script
-%voir les paramètres par défaut : quel seuil par rapport à freq max pendant
-%SW
-
 MuseStruct                       = readMuseMarkers(config{ipatient}, true);
-if strcmp(config{ipatient}.type, 'dtx') %remove wrong seizures and replace by BAD
+if strcmp(config{ipatient}.type, 'dtx') 
     MuseStruct                   = dtx_remove_wrong_seizure(config{ipatient}, MuseStruct,true);
 end
 
