@@ -79,6 +79,7 @@ for ipart = 1:size(SpikeTrials, 2)
             
             % For trial data
             spikes      = spikedata{itrial};
+            ori_spikes  = spikes; %used to create control spikes data
             para.tmin   = trialtime(itrial,1);
             para.tmax   = trialtime(itrial,2);
             para.dts    = 1/SpikeTrials{ipart}.(markername).hdr.Fs;
@@ -90,7 +91,6 @@ for ipart = 1:size(SpikeTrials, 2)
             d_para = para;
             SPIKY_check_spikes
             para = d_para;
-            
             spiky_results{ipart}.(markername).trials{itrial} = SPIKY_loop_f_distances(spikes,para); 
             
             % for control data with trials merged
@@ -99,18 +99,15 @@ for ipart = 1:size(SpikeTrials, 2)
             d_para = para;
             SPIKY_check_spikes
             para=d_para;
-			
             spiky_results{ipart}.(markername).ctrl_trials{itrial} = SPIKY_loop_f_distances(spikes,para);
             
             % for control data with random distribution, same spike numbers
             para.choice = 1;%1;%spike number;%4; %select psth conservation
-            ori_spikes  = spikes;
             spikes      = SPIKY_f_spike_train_surrogates(ori_spikes,para);
             spiky_results{ipart}.(markername).ctrl_spikenr{itrial} = SPIKY_loop_f_distances(spikes,para);
 
             % for control data with same ISI distribution
             para.choice = 2;%1;%spike number;%4; %select psth conservation
-            ori_spikes  = spikes;
             spikes      = SPIKY_f_spike_train_surrogates(ori_spikes,para);
             spiky_results{ipart}.(markername).ctrl_isi{itrial} = SPIKY_loop_f_distances(spikes,para);
             
@@ -121,7 +118,6 @@ for ipart = 1:size(SpikeTrials, 2)
          
             % for control data with same psth
             para.choice = 4;%1;%spike number;%4; %select psth conservation
-            ori_spikes  = spikes;
             spikes      = SPIKY_f_spike_train_surrogates(ori_spikes,para);
             spiky_results{ipart}.(markername).ctrl_psth{itrial}    = SPIKY_loop_f_distances(spikes,para);
             
