@@ -1,4 +1,4 @@
-function [spike] = ft_spike_select(cfg, spike)
+function [spike] = ft_spike_select_rmfulltrials(cfg, spike)
 
 % FT_SPIKE_SELECT selects subsets of spikes, channels and trials from a
 % spike structure.
@@ -97,6 +97,7 @@ if ~doAll
   try, spike.sample = spike.sample(spikesel); end %Paul
   try, spike.sample = spike.sample(spikesel); end %Paul
   try, spike.cluster_group = spike.cluster_group(spikesel); end %Paul
+  try, spike.channelname = spike.channelname(spikesel); end %Paul
 end
 
 % select the desired trials
@@ -137,9 +138,9 @@ else
     %Modify trialtime and trialinfo to really remove the trials  %Paul
     % Because trials with zero spike can induce a biais in further analysis. %Paul
     try, spike.sampleinfo = spike.sampleinfo(cfg.trials,:); end %Paul
-    try, spike.trialinfo = spike.trialinfo(cfg.trials,:); end %Paul
+    try, spike.trialinfo  = spike.trialinfo(cfg.trials,:); end %Paul
     try, spike.clocktimes = spike.clocktimes(cfg.trials); end %Paul
-    try, spike.trialtime = spike.trialtime(cfg.trials,:); end %Paul
+    try, spike.trialtime  = spike.trialtime(cfg.trials,:); end %Paul
    
   end
 end

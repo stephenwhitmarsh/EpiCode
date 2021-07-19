@@ -29,6 +29,7 @@ function [MuseStruct]  = readMuseMarkers(cfg, force)
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 fname = fullfile(cfg.datasavedir, sprintf('%sMuseStruct.mat', cfg.prefix));
+cfg.muse = ft_getopt(cfg, 'muse', []);
 write = ft_getopt(cfg.muse, 'write', true);
 
 if nargin == 1

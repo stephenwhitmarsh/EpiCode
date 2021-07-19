@@ -7,7 +7,7 @@ function [MuseStruct_new] = editMuseMarkers(cfg, MuseStruct_orig)
 % 
 % Optional fields:
 % 
-% cfg.editmarkerfile.torename       = {'old1, 'new1'; 'old2', 'new2'; 'old3', 'new3'};
+% cfg.editmarkerfile.torename       = {'old1', 'new1'; 'old2', 'new2'; 'old3', 'new3'};
 % cfg.editmarkerfile.toremove       = {'remove1', 'remove2', 'remove3'};
 % cfg.editmarkerfile.toadd          = {'add1', 'add2', 'add3'};
 % cfg.editmarkerfile.toadd_color    = {'#00ff00','#00ff00','#00ff00'};
@@ -64,7 +64,7 @@ for ipart = 1 : size(MuseStruct_orig, 2)
         % remove marker
         for imarker = 1 : size(cfg.editmarkerfile.toremove,2)
             if isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker})
-                nr_removed = nr_removed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.toremove{imarker,1}).synctime, 2);    
+                nr_removed = nr_removed + 1;%size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.toremove{imarker,1}).synctime, 2);    
                 
                 MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker});
             end
@@ -89,4 +89,4 @@ for ipart = 1 : size(MuseStruct_orig, 2)
     end
 end
 
-fprintf('Renamed %d markers\nRemoved %d markers\nAdded %d (empty) markers\n', nr_renamed, nr_removed, nr_added);
+ft_info('Renamed %d markers\nRemoved %d markers\nAdded %d (empty) markers\n', nr_renamed, nr_removed, nr_added);
