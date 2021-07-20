@@ -104,10 +104,8 @@ configcommon.LFP.write                 = false; %do not save after readLFP but a
 
 configcommon.LFP.baseline                          = 'yes';
 configcommon.LFP.baselinewindow.SlowWave           = [-2 -1];
-configcommon.LFP.baselinewindow.SlowWave_begin     = [-2 -1];
 configcommon.LFP.baselinewindow.SlowWave_EMG_begin = [-2 -1];
 configcommon.LFP.baselinewindow.Crise_End          = [3 5];
-configcommon.LFP.baselinewindow.SlowWave_not_aligned = [-2 -1];
 configcommon.LFP.baselinewindow.Seizure = [-10 -5];
 
 configcommon.EMG.SlowWave              = {'EMG1', 'EMG2'};%'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
@@ -173,11 +171,6 @@ config{1}.plotseizure.h             = 5000;
 config{1}.morpho.toiac              = [-0.5 1]; 
 config{1}.morpho.toibl              = [-2 -0.5];
 
-config{1}.TFR.detection.hfwin       = [3 5];
-config{1}.TFR.detection.hffreq      = [13 50];
-config{1}.TFR.detection.lfwin       = [6 8];
-config{1}.TFR.detection.lffreq      = [0 7];
-
 %% Rodent 2 
 
 config{2}                           = configcommon;
@@ -196,11 +189,6 @@ config{2}.plotseizure.h             = 2500;
 config{2}.morpho.toiac              = [-0.4 0.6]; 
 config{2}.morpho.toibl              = [-2 -0.4];
 
-config{2}.TFR.detection.hfwin       = [3 5];
-config{2}.TFR.detection.hffreq      = [13 50];
-config{2}.TFR.detection.lfwin       = [6 10];
-config{2}.TFR.detection.lffreq      = [0 5];
-
 %% Rodent 3
 
 config{3}                           = configcommon;
@@ -218,11 +206,6 @@ config{3}.LFP.flip                  = 'no';
 config{3}.plotseizure.h             = 20000;
 config{3}.morpho.toiac              = [-0.9 1.2]; 
 config{3}.morpho.toibl              = [-2 -0.9];
-
-config{3}.TFR.detection.hfwin       = [2.5 4.5];
-config{3}.TFR.detection.hffreq      = [6 50];
-config{3}.TFR.detection.lfwin       = [6 10];
-config{3}.TFR.detection.lffreq      = [0 5];
 
 %% Rodent 4 
 % début à 17h00, 5h30 post injection, car changement de position à ce moment
@@ -246,11 +229,6 @@ config{4}.plotseizure.h             = 10000;
 config{4}.morpho.toiac              = [-0.4 0.5]; 
 config{4}.morpho.toibl              = [-2 -0.5];
 
-config{4}.TFR.detection.hfwin       = [2.5 4.5];
-config{4}.TFR.detection.hffreq      = [10 50];
-config{4}.TFR.detection.lfwin       = [6 10];
-config{4}.TFR.detection.lffreq      = [0 10];
-
 %% Rodent 5
 
 % l'électrode M1G lache pendant le fichier 2020_06_30_19-37. On voit quand
@@ -272,11 +250,6 @@ config{5}.morpho.toiac              = [-0.3 0.5];
 config{5}.morpho.toiac              = [-0.5 0.5]; 
 config{5}.morpho.toibl              = [-2 -0.5];
 
-config{5}.TFR.detection.hfwin       = [2.5 5];
-config{5}.TFR.detection.hffreq      = [5 50];
-config{5}.TFR.detection.lfwin       = [8 11];
-config{5}.TFR.detection.lffreq      = [0 6];
-
 %% Rodent 
 
 config{6}                           = configcommon;
@@ -296,12 +269,7 @@ config{6}.align.method.SlowWave     = 'nearestmax';
 config{6}.align.method.SlowWave_begin     = 'nearestmax';
 config{6}.plotseizure.h             = 2000;
 config{6}.morpho.toiac              = [-1 0.9]; 
-config{6}.morpho.toibl              = [-2 -1];
-
-config{6}.TFR.detection.hfwin       = [2 3.5];
-config{6}.TFR.detection.hffreq      = [10 50];
-config{6}.TFR.detection.lfwin       = [6 9];
-config{6}.TFR.detection.lffreq      = [0 5];
+config{6}.morpho.toibl              = [-2 -1];;
 
 %% Rodent 7
 
@@ -326,12 +294,6 @@ config{7}.plotseizure.h             = 2000;
 config{7}.morpho.toiac              = [-0.5 1]; 
 config{7}.morpho.toibl              = [-2 -0.5];
 
-config{7}.TFR.detection.hfwin       = [2.5 5];
-config{7}.TFR.detection.hffreq      = [12 50];
-config{7}.TFR.detection.lfwin       = [6 10];
-config{7}.TFR.detection.lffreq      = [0 5];
-
-
 %% Rodent 8
 
 config{8}                           = configcommon;
@@ -351,12 +313,6 @@ config{8}.plotseizure.h             = 2000;
 config{8}.morpho.toiac              = [-0.5 0.7]; 
 config{8}.morpho.toibl              = [-2 -0.5];
 
-config{8}.TFR.detection.hfwin       = [2 3.5];
-config{8}.TFR.detection.hffreq      = [10 50];
-config{8}.TFR.detection.lfwin       = [6 10];
-config{8}.TFR.detection.lffreq      = [0 5];
-
-
 %% Rodent 9
 
 config{9}                           = configcommon;
@@ -374,12 +330,6 @@ config{9}.align.method.SlowWave_begin     = 'nearestmax';
 config{9}.plotseizure.h             = 2000;
 config{9}.morpho.toiac              = [-0.5 0.6]; 
 config{9}.morpho.toibl              = [-2 -0.5];
-
-config{9}.TFR.detection.hfwin       = [2 5];
-config{9}.TFR.detection.hffreq      = [0 50];
-config{9}.TFR.detection.lfwin       = [5 10];
-config{9}.TFR.detection.lffreq      = [0 5];
-
 
 %% find files
 for irat = 1:size(config,2)
