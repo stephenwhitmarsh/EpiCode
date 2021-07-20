@@ -75,7 +75,7 @@ end
 if exist(fname,'file') && force == false
     fprintf('Loading results alignment\n');
     load(fname, 'MuseStruct');
-    continue
+    return
 end
 
 if force == true
@@ -229,7 +229,7 @@ for ipart = 1 : size(cfg.directorylist,2)
             clear dat_filt
 
             if strcmp(cfg.align.demean.(markername), 'yes')
-                cfgtem = [];
+                cfgtemp = [];
                 cfgtemp.demean = 'yes';
                 cfgtemp.baselinewindow = cfg.align.toibaseline.(markername);
                 dat_sel_trl = ft_preprocessing(cfgtemp, dat_sel_trl);

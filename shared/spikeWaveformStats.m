@@ -68,8 +68,10 @@ for ipart = 1:size(SpikeWaveforms)
                 %interpolate the averaged waveform to have more precise values
                 time_temp        = linspace(waveformavg.time(1),waveformavg.time(end),1000);
                 avg_temp         = pchip(waveformavg.time,waveformavg.avg,time_temp);
+                var_temp         = pchip(waveformavg.time,waveformavg.var,time_temp);
                 waveformavg.time = time_temp;
                 waveformavg.avg  = avg_temp;
+                waveformavg.var  = var_temp;
                 %scatter(waveformavg.time, waveformavg.avg, '.');
 
                 %search if AP is positive or negative

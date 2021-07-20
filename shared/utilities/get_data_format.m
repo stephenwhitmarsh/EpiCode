@@ -57,7 +57,6 @@ elseif isMicromed
     ft_info('Data is Micromed\n');
 elseif isBrainvision
     ft_info('Data is Brainvision\n');
-
 end
 
 if isNeuralynx + isMicromed + isBrainvision == 0
