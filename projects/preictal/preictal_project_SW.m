@@ -6,7 +6,9 @@ if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external'))
     addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\templates'))
     addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\preictal'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\dtx\to_share'))
+    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\SPIKY_apr_2021'))
+%     addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\SPIKY_Dec_2019'))
+    
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
     
 elseif isunix
@@ -14,7 +16,8 @@ elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external'))
     addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/templates'))
     addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/preictal'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/dtx/to_share'))
+    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/SPIKY_apr_2021'))
+%     addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/SPIKY_Dec_2019'))
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
 end
 ft_defaults
@@ -25,10 +28,10 @@ config = preictal_setparams;
 % write a new joblist for the cluster
 preictal_spikes_slurm_joblist
 
-for ielec = 2 % à définir
+for ielec = 3 % à définir
     
     % read muse markers
-    MuseStruct = readMuseMarkers(config{ielec}, true);
+    MuseStruct = readMuseMarkers(config{ielec}, false);
     
     % remove post ictal from the whole analysis,
     % according to config (some 'patients' will have
@@ -67,13 +70,12 @@ for ielec = 2 % à définir
     %% perform the analysis after spike sorting 
     
     %read spike data
-    SpikeRaw = readSpikeRaw_Phy(config{ielec}, true);
+    SpikeRaw = readSpikeRaw_Phy(config{ielec}, false);
     
     %read spike waveforms
-    SpikeWaveforms = readSpikeWaveforms(config{ielec}, SpikeRaw, false);
+%     SpikeWaveforms = readSpikeWaveforms(config{ielec}, SpikeRaw, false);
   
     % create sliding timewindows
-    
     % overwrite settings
     for ipart = 1 : size(config{ielec}.directorylist, 2)
         for idir = 1 : size(config{ielec}.directorylist{ipart}, 2)
@@ -94,42 +96,41 @@ for ielec = 2 % à définir
     config{ielec}.spike.name                 = "window";
     config{ielec}.spike.postfix              = '-windowed';
     
-    % 
-    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers(config{ielec}, MuseStruct, SpikeRaw, true);
+    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers(config{ielec}, MuseStruct, SpikeRaw, false);
     
-    SpikeStats_windowed                     = spikeTrialStats(config{ielec}, SpikeTrials_windowed, true);
+    SpikeStats_windowed                     = spikeTrialStats(config{ielec}, SpikeTrials_windowed, false);
+  
+    Spiky_windowed = compute_synchrony_spiky(config{ielec}, SpikeTrials_windowed, false);
 
-    clear CV2_trial FR
-    
-    % look at values
-    SpikeStats_windowed{1}.window;
-     
-    % extract values for each window and combine units in one variable
-    CV2_trial(1,:) = SpikeStats_windowed{1}.window{1}.CV2_trial;
-    FR(1,:) = SpikeStats_windowed{1}.window{1}.trialfreq;
-    for iunit = 2 : size(SpikeStats_windowed{1}.window, 2)
-        CV2_trial(iunit,:) = SpikeStats_windowed{1}.window{iunit}.CV2_trial;
-        FR(iunit,:) = SpikeStats_windowed{1}.window{iunit}.trialfreq;
-    end
-    
     % create time-axis relative to seizures
     time = seconds(SpikeTrials_windowed{1}.window.trialinfo.starttime - MuseStruct{1}{2}.markers.CriseStart.clock);
+    
+    for iunit = 1 : size(SpikeStats_windowed{1}.window, 2)
+        
+        unit_t = 1:size(SpikeStats_windowed{1}.window, 2);
+        unit_t(iunit) = [];
+        
+        clear spike_dist
+        for iwindow = 1 : size(Spiky_windowed{1}.window.trials, 2)
+            spike_dist(iwindow, :) = Spiky_windowed{1}.window.trials{iwindow}.SPIKE.matrix(iunit, unit_t);
+        end
+        
+        clear CV2_trial FR
 
-    % select good units
-    units = strcmp(deblank(SpikeTrials_windowed{1}.window.cluster_group), 'good');
-%     units = strcmp(deblank(SpikeTrials_windowed{1}.window.cluster_group), ',mua');
-    
-
-    % plot selection
-    figure; plot(time, FR(units, :));
-    title('GOOD');
-    ylim([0, 10]);
-    figure; plot(time, CV2_trial(units, :));
-    
-    % plot all
-    figure; plot(time, FR');
-    ylim([0, 10]);
-    figure; plot(time, CV2_trial');
-    
-    
+        % plot selection
+        figure
+        subplot(4,1,1);
+        plot(time, SpikeStats_windowed{1}.window{iunit}.trialfreq); title(sprintf('FR unit %d %s', iunit, deblank(SpikeTrials_windowed{1}.window.cluster_group{iunit})));                  xlim([time(1), time(end)]);  ylim([0, 10]);
+        
+        subplot(4,1,2); hold;
+        plot([time(1), time(end)], [1 1],':k');
+        plot(time, SpikeStats_windowed{1}.window{iunit}.CV2_trial); title('CV2');          xlim([time(1), time(end)]);  ylim([.2, 1.8]);
+        
+        subplot(4,1,3);
+        plot(time, SpikeStats_windowed{1}.window{iunit}.burst_trialsum); title('Nr. of Bursts');   xlim([time(1), time(end)]);  %ylim([.2, 1.8]);
+        
+        subplot(4,1,4);
+        plot(time, spike_dist); title('Spike distance');  xlim([time(1), time(end)]);  ylim([0, 1]);
+        
+    end
 end

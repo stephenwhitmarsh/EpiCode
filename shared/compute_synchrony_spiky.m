@@ -10,8 +10,7 @@ function [spiky_results] = compute_synchrony_spiky(cfg, SpikeTrials, force, suff
 % SPIKY toolbox is available here : 
 % http://www.fi.isc.cnr.it/users/thomas.kreuz/Source-Code/SPIKY.html
 %
-% the 'SPIKY' folder must be added to path, and the 'SPIKY/SPIKE_MEX' 
-% folder must be opened in MATLAB with 'cd'
+% the 'SPIKY' folder must be added to path, including 'SPIKY/SPIKE_MEX' 
 %
 % The 'suffix' argument is optional
 %
@@ -48,12 +47,18 @@ for ipart = 1:size(SpikeTrials, 2)
             for itrial = 1:size(SpikeTrials{ipart}.(markername).trialinfo, 1)
                 idx                         = SpikeTrials{ipart}.(markername).trial{i_unit} == itrial;
                 spikedata{itrial}{i_unit}   = SpikeTrials{ipart}.(markername).time{i_unit}(idx);
+                if any(idx)
+                    fprintf('unit %d trial %d: %d\n', i_unit, itrial, length(find(idx)));
+                else
+                    disp('nothing');
+                end
             end
         end
         
-        %control : merge units from different trials
+        %control : permute units from different trials
         %each unit come from a different trial. There are not several units of
         %the same trial. Except if there are less trials than units
+        % TODO: use PERMUTE function
         clear spikedata_ctrl
         for itrial = 1:length(spikedata)
             trial_list = 1:length(spikedata);
@@ -83,14 +88,17 @@ for ipart = 1:size(SpikeTrials, 2)
             para.tmin   = trialtime(itrial,1);
             para.tmax   = trialtime(itrial,2);
             para.dts    = 1/SpikeTrials{ipart}.(markername).hdr.Fs;
-            para.select_measures        = [1 1 0 0 0 0 1];  % Select measures (0-do not calculate,1-calculate)
-            m_para.all_measures_string  = {'ISI';'SPIKE';'SPIKE_realtime';'SPIKE_forward';'SPIKE_synchro';'SPIKE_order';'PSTH'};  % order of select_measures
+            para.select_measures        = [1 1 0 0 0 0 0 1];  % Select measures (0-do not calculate,1-calculate)
+            
+            %TODO: add in config of function
+            m_para.all_measures_string  = {'ISI';'SPIKE';'RI_SPIKE';'SPIKE_realtime';'SPIKE_forward';'SPIKE_synchro';'SPIKE_order';'PSTH'};  % order of select_measures
             para.num_trains             = length(spikes);
             
             %SPIKY setting of params
             d_para = para;
             SPIKY_check_spikes
             para = d_para;
+            % TODO: add in config of function  
             spiky_results{ipart}.(markername).trials{itrial} = SPIKY_loop_f_distances(spikes,para); 
             
             % for control data with trials merged
@@ -125,37 +133,40 @@ for ipart = 1:size(SpikeTrials, 2)
         end
         ft_progress('close');
         
-        %gather results to average
-        clear temp
-        for ifield = ["trials","ctrl_trials","ctrl_psth", "ctrl_pooled", "ctrl_isi", "ctrl_spikenr"]
-            for idata = ["ISI", "SPIKE", "PSTH"]
-                for itrial = 1:length(spiky_results{ipart}.(markername).ctrl_psth)
-                    temp.(ifield).(idata).time{itrial}  = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).time;% - results{itrial}.SPIKE.time(end); %timelock to the end
-                    temp.(ifield).(idata).trial{itrial} = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).profile;
-                end
-            end
-        end
-        
-        %average profiles and matrix
-        for ifield = ["trials","ctrl_trials","ctrl_psth", "ctrl_pooled", "ctrl_isi", "ctrl_spikenr"]
-            for idata = ["ISI", "SPIKE", "PSTH"]
-                %profiles
-                fprintf('average %s dissimilarity profiles an matrix for %s\n', idata, ifield);
-                [spiky_results{ipart}.(markername).profileavg.(idata).(ifield).time, spiky_results{ipart}.(markername).profileavg.(idata).(ifield).avg] = ...
-                    SPIKY_f_average_pi(temp.(ifield).(idata).time, temp.(ifield).(idata).trial, para.dts);
-                %matrix
-                if ~strcmp(idata, 'PSTH')
-                    for itrial = 1:length(spiky_results{ipart}.(markername).ctrl_psth)
-                        mat{itrial} = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).matrix;
-                    end
-                    mat_concat = cat(3, mat{:});
-                    spiky_results{ipart}.(markername).matrixavg.(idata).(ifield) = mean(mat_concat, 3, 'omitnan');
-                    %remove 1 in the diagonal
-                    spiky_results{ipart}.(markername).matrixavg.(idata).(ifield)(spiky_results{ipart}.(markername).matrixavg.(idata).(ifield) == 1) = NaN;
-                end
-            end
-        end
-        
+%         %gather results to average
+%         clear temp
+%         for ifield = ["trials","ctrl_trials","ctrl_psth", "ctrl_pooled", "ctrl_isi", "ctrl_spikenr"]
+%             for idata = ["ISI", "SPIKE", "PSTH"]
+%                 for itrial = 1:length(spiky_results{ipart}.(markername).ctrl_psth)
+%                     temp.(ifield).(idata).time{itrial}  = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).time;% - results{itrial}.SPIKE.time(end); %timelock to the end
+%                     temp.(ifield).(idata).trial{itrial} = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).profile;
+%                 end
+%             end
+%         end
+%         
+%         %average profiles and matrix
+%         for ifield = ["trials", "ctrl_trials", "ctrl_psth", "ctrl_pooled", "ctrl_isi", "ctrl_spikenr"]
+%             for idata = ["ISI", "SPIKE", "PSTH"]
+%                 %profiles
+%                 fprintf('average %s dissimilarity profiles an matrix for %s\n', idata, ifield);
+%                 
+%                 sel = ~cellfun(@(c) all(c==0), temp.(ifield).(idata).trial);
+%                 
+%                 [spiky_results{ipart}.(markername).profileavg.(idata).(ifield).time, spiky_results{ipart}.(markername).profileavg.(idata).(ifield).avg] = ...
+%                     SPIKY_f_average_pi(temp.(ifield).(idata).time(sel), temp.(ifield).(idata).trial(sel), para.dts);
+%                 %matrix
+%                 if ~strcmp(idata, 'PSTH')
+%                     for itrial = 1:length(spiky_results{ipart}.(markername).ctrl_psth)
+%                         mat{itrial} = spiky_results{ipart}.(markername).(ifield){itrial}.(idata).matrix;
+%                     end
+%                     mat_concat = cat(3, mat{:});
+%                     spiky_results{ipart}.(markername).matrixavg.(idata).(ifield) = mean(mat_concat, 3, 'omitnan');
+%                     %remove 1 in the diagonal
+%                     spiky_results{ipart}.(markername).matrixavg.(idata).(ifield)(spiky_results{ipart}.(markername).matrixavg.(idata).(ifield) == 1) = NaN;
+%                 end
+%             end
+%         end
+%         
         %keep infos for later analysis
         for ifield = ["trialinfo", "trialtime", "label", "hdr", "channelname"]
             spiky_results{ipart}.(markername).(ifield) = SpikeTrials{ipart}.(markername).(ifield);

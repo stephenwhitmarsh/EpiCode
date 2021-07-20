@@ -51,6 +51,8 @@ config{1}.imagesavedir        = fullfile(imagesavedir, 'pat_02256_0700_Crise1_m2
 config{1}.prefix              = 'pat_02256_0700_Crise1_m2mCi-';                                                        %patient name. Must end by "-". namepatient-
 config{1}.rawdir              = fullfile(rootpath_data,'pat_02256_0700','eeg');                       %path to patient data
 config{1}.directorylist{1}    = {'02256_2015-05-09_05-37','02256_2015-05-09_07-37'};                                               %list of folders to analyse
+config{1}.LFP.channel         = {'_2mCi_5'}; % TODO: 
+
 config{1}.circus.channel      = {'m2mCi_2','m2mCi_5','m2mCi_6','m2mCi_8'};       %name of the first electrode
 config{1}.circus.reref        = 'yes';
 config{1}.circus.refchan      = 'm2mCi_7';
