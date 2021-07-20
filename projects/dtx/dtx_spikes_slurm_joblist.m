@@ -40,5 +40,4 @@ for ipatient = 1:size(config,2)
     end
 end
 
-close('all')
-    
+close('all')    

@@ -4,6 +4,12 @@ function [config] = dtx_eegvideo_setparams(config)
 %not use the header created by ft_read_header, but the header saved with
 %the data (data_header, for each file) 
 
+if ispc
+    addpath \\lexport\iss01.charpier\analyses\lgi1\Git-Paul\natsort
+elseif isunix
+    addpath /network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/natsort
+end
+
 disp('setting parameters for EEG-video');
 
 if ismac
@@ -24,14 +30,13 @@ end
 %% Congig common for all rats
 
 datasavedir = fullfile(rootpath_analysis, 'data');
-imagesavedir = fullfile(rootpath_analysis);
+imagesavedir = fullfile(rootpath_analysis,'image');
 
 configcommon.os                        = os;
-% SlowWave_begin
-% SlowWave_peak
-configcommon.name                      = {'SlowWave','SlowWave_EMG_begin','SlowWave_begin','Crise_End','SlowWave_not_aligned'};
+configcommon.name                      = {'SlowWave','SlowWave_EMG_begin','Crise_End', 'Seizure'};
 configcommon.datasavedir               = datasavedir;         % where to write data
 configcommon.continous                 = true;
+configcommon.group                     = 'dtx';
 
 configcommon.missingdata = datetime.empty;%set for rats 4 and 7 for whom data is missing (one because unplug, the other because ampli was shut down on the first night of recording)
 
@@ -45,20 +50,22 @@ configcommon.muse.endmarker.SlowWave_EMG_begin        = 'SlowWave_EMG__START__';
 configcommon.epoch.toi.SlowWave_EMG_begin             = [-10, 5];
 configcommon.epoch.pad.SlowWave_EMG_begin             = 0;
 
-configcommon.muse.startmarker.SlowWave_begin      = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.muse.endmarker.SlowWave_begin        = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.epoch.toi.SlowWave_begin             = [-10, 5];
-configcommon.epoch.pad.SlowWave_begin             = 0;
-
 configcommon.muse.startmarker.Crise_End      = 'Crise_End';   % start and end Muse marker. For defining trials
 configcommon.muse.endmarker.Crise_End        = 'Crise_End';   % start and end Muse marker. For defining trials
 configcommon.epoch.toi.Crise_End             = [0, 5];
 configcommon.epoch.pad.Crise_End             = 5;
 
-configcommon.muse.startmarker.SlowWave_not_aligned      = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.muse.endmarker.SlowWave_not_aligned        = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.epoch.toi.SlowWave_not_aligned             = [-10, 5];
-configcommon.epoch.pad.SlowWave_not_aligned             = 0;
+configcommon.muse.startmarker.Seizure      = 'SlowWave';   % start and end Muse marker. For defining trials
+configcommon.muse.endmarker.Seizure        = 'Crise_End';   % start and end Muse marker. For defining trials
+configcommon.epoch.toi.Seizure             = [-10, 10];
+configcommon.epoch.pad.Seizure             = 0;
+
+configcommon.minbadtime.SlowWave_EMG_begin  = 0;
+configcommon.minbadtime.SlowWave            = 0;
+configcommon.minbadtime.SlowWave_begin      = 0;
+configcommon.minbadtime.Crise_End           = 0;
+configcommon.minbadtime.SlowWave_not_aligned=0;
+configcommon.minbadtime.Seizure             = 1;
 
 configcommon.seizuretimings.marker_start = 'Crise_Start';
 configcommon.seizuretimings.marker_end   = 'Crise_End';
@@ -75,7 +82,7 @@ configcommon.emgtimings.analysis_end   = 'Analysis_End';
 configcommon.emgtimings.winsize        = 3600;%s
 configcommon.emgtimings.winstep        = 1200;%s
 
-configcommon.LFP.name                  = {'SlowWave','SlowWave_EMG_begin','SlowWave_begin','SlowWave_not_aligned'};
+configcommon.LFP.name                  = {'SlowWave','SlowWave_EMG_begin','SlowWave_begin','SlowWave_not_aligned', 'Seizure'};
 configcommon.labels.macro              = {'M1G','M1D','PtA'};%do not put the emg channels here
 configcommon.LFP.channel               = {};%set for each rat %do not put the emg channels here
 configcommon.LFP.electrodetoplot       = {'PtA','M1D','M1G'};
@@ -93,21 +100,19 @@ configcommon.LFP.lpfilter              = 'no';
 configcommon.LFP.lpfreq                = 30;
 configcommon.LFP.lpfilttype            = 'fir';
 configcommon.LFP.keepcfg               = 'no';
-configcommon.LFP.write                 = false; %do not save after readLFP but after having detected artefacts, flipped, and corrected baseline
+configcommon.LFP.write                 = false; %do not save after readLFP but after having removed artefacts, flipped, and corrected baseline
 
 configcommon.LFP.baseline                          = 'yes';
 configcommon.LFP.baselinewindow.SlowWave           = [-2 -1];
-configcommon.LFP.baselinewindow.SlowWave_begin     = [-2 -1];
 configcommon.LFP.baselinewindow.SlowWave_EMG_begin = [-2 -1];
 configcommon.LFP.baselinewindow.Crise_End          = [3 5];
-configcommon.LFP.baselinewindow.SlowWave_not_aligned = [-2 -1];
+configcommon.LFP.baselinewindow.Seizure = [-10 -5];
 
-configcommon.EMG.SlowWave              = 'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.EMG.SlowWave_begin        = 'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.EMG.SlowWave_EMG_begin    = 'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.EMG.Crise_End             = [];%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.EMG.SlowWave_not_aligned  = 'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
-configcommon.EMG.reref                 = 'yes';
+configcommon.EMG.SlowWave              = {'EMG1', 'EMG2'};%'EMG1';%name of EMG channel associated with marker LFP.name. 'no' if no EMG associated to this seizure side 
+configcommon.EMG.SlowWave_EMG_begin    = {'EMG1', 'EMG2'};
+configcommon.EMG.Crise_End             = [];
+configcommon.EMG.Seizure               = {'EMG1', 'EMG2'};
+configcommon.EMG.reref                 = 'no';
 configcommon.EMG.rerefmethod           = 'bipolar';
 configcommon.EMG.refchannel            = 'EMG2';
 configcommon.EMG.hpfilter              = 'yes';
@@ -116,7 +121,7 @@ configcommon.EMG.bsfilter              = 'yes';
 configcommon.EMG.bsfreq                = [49 51];
 configcommon.EMG.bsfiltord             = 3;
 configcommon.EMG.envmethod             = 'rms';
-configcommon.EMG.envparam              = 50;%30 à tester
+configcommon.EMG.envparam              = 50;
 configcommon.EMG.toi                   = [-5 5];
 
 configcommon.align.name                = {'SlowWave','SlowWave_begin'};
@@ -124,7 +129,7 @@ configcommon.align.reref               = 'no';
 configcommon.align.channel.SlowWave             = 'M1G';
 configcommon.align.method.SlowWave              = [];%SET FOR EACH RAT 'nearestmin';      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
 configcommon.align.filter.SlowWave              = 'bp';
-configcommon.align.freq.SlowWave                = [1, 2];          % lowpass filter freq to smooth peak detection (Hz)
+configcommon.align.freq.SlowWave                = [1, 2];          
 configcommon.align.demean.SlowWave              = 'yes';
 configcommon.align.thresh.value.SlowWave        = 0;
 configcommon.align.thresh.method.SlowWave       = 'trial';%'medianbl','both';
@@ -133,24 +138,7 @@ configcommon.align.toiplot.SlowWave             = [-1,  1];
 configcommon.align.toiactive.SlowWave           = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
 configcommon.align.toibaseline.SlowWave         = [-10, -1];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
 
-
-%SlowWave_begin : only when plotting seizures
-configcommon.align.reref               = 'no';
-configcommon.align.channel.SlowWave_begin             = 'M1G';
-configcommon.align.method.SlowWave_begin              = [];%SET FOR EACH RAT 'nearestmin';      % whether to align to max, first-after-zero, or nearest-to-t-zero peak, maxabs {'max','first', 'nearest', 'maxabs'}
-configcommon.align.filter.SlowWave_begin              = 'bp';
-configcommon.align.freq.SlowWave_begin                = [1, 2];          % lowpass filter freq to smooth peak detection (Hz)
-configcommon.align.demean.SlowWave_begin              = 'yes';
-configcommon.align.thresh.value.SlowWave_begin        = 0;
-configcommon.align.thresh.method.SlowWave_begin       = 'trial';%'medianbl','both';
-configcommon.align.maxtimeshift.SlowWave_begin        = 0.5;
-configcommon.align.toiplot.SlowWave_begin             = [-1,  1]; 
-configcommon.align.toiactive.SlowWave_begin           = [-0.5, 0.5];  % active period in which to search for peaks [ -0.1,  30;  0, 30;  -0.1, 0.1;0,  0.1];
-configcommon.align.toibaseline.SlowWave_begin         = [-10, -1];   % baseline period in which to search for peaks [ -1,  0; -1,  0;  -1,  -0.1;  -1, -0.1];
-configcommon.align.findbegin.SlowWave_begin          = 'yes';
-configcommon.align.beginthresh.SlowWave_begin        = 0.1; % percent of peak %FIXME à vérifier
-
-configcommon.morpho.channame           = []; %set for each patient, use align.channel
+configcommon.morpho.channame           = []; 
 configcommon.morpho.negpeak            = 'yes';
 configcommon.morpho.toiplot            = [-2 2];
 configcommon.morpho.measurehalfwidth   = 'yes';
@@ -160,34 +148,12 @@ configcommon.morpho.toiac              = []; %set for each rat
 configcommon.morpho.toibl              = []; %set for each rat
 configcommon.morpho.raw_facealpha      = 0.1;
 configcommon.morpho.plotavg            = 'no';
-configcommon.morpho.winsize            = 3600;
-configcommon.morpho.winstep            = 1200;
 
-configcommon.TFR.name                  = {'SlowWave_begin', 'Crise_End'};
-configcommon.TFR.foi                   = 3:0.1:200;
+configcommon.TFR.foi                   = 3:2:200;
 configcommon.TFR.tapsmofrq             = 5.02;
 configcommon.TFR.timewinsize           = 0.35;
-configcommon.TFR.timewinstep           = 0.01;
-% configcommon.TFR.baseline.marker   = "SlowWave_begin";
-% configcommon.TFR.baseline.toi      = [-5 -2];
-configcommon.TFR.toi.SlowWave      =[-2 2];
-configcommon.TFR.toi.SlowWave_begin=[-2 2];
-configcommon.TFR.toi.Crise_End     =[0 5];
-configcommon.TFR.toi.Baseline      =[-7 -2];
-% configcommon.TFR.toi.SlowWave_begin    = 'all';
-% configcommon.TFR.toi.Crise_End         = 'all';
-% configcommon.TFR.baseline                 = [-10 -5];
-% configcommon.TFR.baselinetype             = 'relchange';
-
-% configcommon.stats.toibaseline                  = {[-10.5, -0.5],[-10.5, -0.5],[-10.5, -0.5]};%{[-4 -1],[-4 -1],[-4 -1],[-4 -1]};
-% configcommon.stats.alpha                        = 0.025;
-% configcommon.stats.toiploteeg                   = [-5 5];
-% configcommon.stats.toilatency                   = [-0.2 0.2];
-% configcommon.topoplot.timestep                  = 0.1;
-% configcommon.topoplot.toi                       = [-0.5 0.5];
 
 %% Rodent 1
-%12
 config{1}                           = configcommon;
 config{1}.prefix                    = 'Rat-2020_02_19-1-';
 config{1}.rawdir                    = fullfile(rootpath_data,'Rat-2020_02_19-1');
@@ -206,13 +172,13 @@ config{1}.morpho.toiac              = [-0.5 1];
 config{1}.morpho.toibl              = [-2 -0.5];
 
 %% Rodent 2 
-%14
+
 config{2}                           = configcommon;
 config{2}.prefix                    = 'Rat-2020_02_19-2-';
 config{2}.rawdir                    = fullfile(rootpath_data,'Rat-2020_02_19-2');
 config{2}.rawlabels.oldnames        = {'57','55','56','59'}; %for conversion deltamed to brainvision
 config{2}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{2}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_02_19-2');       % where to print images
+config{2}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_02_19-2'); % where to print images
 
 config{2}.injectiontime             = datetime('19-Feb-2020 15:20:00');
 config{2}.align.method.SlowWave     = 'nearestmin';
@@ -224,7 +190,7 @@ config{2}.morpho.toiac              = [-0.4 0.6];
 config{2}.morpho.toibl              = [-2 -0.4];
 
 %% Rodent 3
-%16
+
 config{3}                           = configcommon;
 config{3}.prefix                    = 'Rat-2020_06_03-1-';
 config{3}.rawdir                    = fullfile(rootpath_data,'Rat-2020_06_03-1');
@@ -234,17 +200,17 @@ config{3}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_06_03-1');
 
 config{3}.injectiontime             = datetime('03-Jun-2020 16:15:00');
 config{3}.align.method.SlowWave     = 'nearestmin';
-config{3}.align.method.SlowWave_begin     = 'nearestmin';
+config{3}.align.method.SlowWave_begin  = 'nearestmin';
 config{3}.LFP.channel               = {'M1G','M1D'};%set for each rat %do not put the emg channels here
 config{3}.LFP.flip                  = 'no';
 config{3}.plotseizure.h             = 20000;
 config{3}.morpho.toiac              = [-0.9 1.2]; 
 config{3}.morpho.toibl              = [-2 -0.9];
 
-%% Rodent 4 - DC après 24h
+%% Rodent 4 
 % début à 17h00, 5h30 post injection, car changement de position à ce moment
-% là. Pas enregistré en DC
-% 18
+% là. 
+
 config{4}                           = configcommon;
 config{4}.prefix                    = 'Rat-2020_06_09-1-';
 config{4}.rawdir                    = fullfile(rootpath_data,'Rat-2020_06_09-1');
@@ -263,9 +229,8 @@ config{4}.plotseizure.h             = 10000;
 config{4}.morpho.toiac              = [-0.4 0.5]; 
 config{4}.morpho.toibl              = [-2 -0.5];
 
+%% Rodent 5
 
-%% Rodent 5 AMPLI DC
-%22
 % l'électrode M1G lache pendant le fichier 2020_06_30_19-37. On voit quand
 % même les crises sur l'électrode M1D
 config{5}                           = configcommon;
@@ -285,10 +250,8 @@ config{5}.morpho.toiac              = [-0.3 0.5];
 config{5}.morpho.toiac              = [-0.5 0.5]; 
 config{5}.morpho.toibl              = [-2 -0.5];
 
-%% Rodent  AMPLI DC
-%23
-%EMG1 sans reréférencer. EMG pas ample mais il se verra bien en temps
-%fréquence
+%% Rodent 
+
 config{6}                           = configcommon;
 config{6}.prefix                    = 'Rat-2020_06_29-2-';
 config{6}.rawdir                    = fullfile(rootpath_data,'Rat-2020_06_29-2');
@@ -306,11 +269,9 @@ config{6}.align.method.SlowWave     = 'nearestmax';
 config{6}.align.method.SlowWave_begin     = 'nearestmax';
 config{6}.plotseizure.h             = 2000;
 config{6}.morpho.toiac              = [-1 0.9]; 
-config{6}.morpho.toibl              = [-2 -1];
+config{6}.morpho.toibl              = [-2 -1];;
 
 %% Rodent 7
-%25
-%EMG1 sans reréférencer
 
 config{7}                           = configcommon;
 config{7}.prefix                    = 'Rat-2020_09_24-1-';
@@ -334,54 +295,52 @@ config{7}.morpho.toiac              = [-0.5 1];
 config{7}.morpho.toibl              = [-2 -0.5];
 
 %% Rodent 8
-%26
+
 config{8}                           = configcommon;
-config{8}.prefix                    = 'Rat-2020_09_24-2-';
-config{8}.rawdir                    = fullfile(rootpath_data,'Rat-2020_09_24-2');
+config{8}.prefix                    = 'Rat-2020_10_09-1-';
+config{8}.rawdir                    = fullfile(rootpath_data,'Rat-2020_10_09-1');
 config{8}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'};  %for conversion deltamed to brainvision
 config{8}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{8}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_09_24-2');       % where to print images
+config{8}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_10_09-1');       % where to print images
 
-config{8}.injectiontime             = datetime('23-Sep-2020 10:54:00');
-config{8}.LFP.flip                  = 'yes';
+config{8}.injectiontime             = datetime('09-Oct-2020 11:36:00');
 config{8}.LFP.channel               = {'M1G','M1D'};%set for each rat %do not put the emg channels here
+config{8}.LFP.flip                  = 'yes';
+config{8}.EMG.hpfreq                = 50;
 config{8}.align.method.SlowWave     = 'nearestmax';
 config{8}.align.method.SlowWave_begin     = 'nearestmax';
 config{8}.plotseizure.h             = 2000;
-config{8}.morpho.toiac              = [-0.5 0.6]; 
+config{8}.morpho.toiac              = [-0.5 0.7]; 
 config{8}.morpho.toibl              = [-2 -0.5];
 
 %% Rodent 9
-%FILTRER L'EMG A 50Hz car bcp de bruit lent
-%28
+
 config{9}                           = configcommon;
-config{9}.prefix                    = 'Rat-2020_10_09-1-';
-config{9}.rawdir                    = fullfile(rootpath_data,'Rat-2020_10_09-1');
+config{9}.prefix                    = 'Rat-2020_09_24-2-';
+config{9}.rawdir                    = fullfile(rootpath_data,'Rat-2020_09_24-2');
 config{9}.rawlabels.oldnames        = {'2-S1L','2-S1R','2-M1L','2-NTS'};  %for conversion deltamed to brainvision
 config{9}.rawlabels.newnames        = {'M1G','M1D', 'EMG1', 'EMG2'};
-config{9}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_10_09-1');       % where to print images
+config{9}.imagesavedir              = fullfile(imagesavedir,'Rat-2020_09_24-2');       % where to print images
 
-config{9}.injectiontime             = datetime('09-Oct-2020 11:36:00');
-config{9}.LFP.channel               = {'M1G','M1D'};%set for each rat %do not put the emg channels here
+config{9}.injectiontime             = datetime('23-Sep-2020 10:54:00');
 config{9}.LFP.flip                  = 'yes';
-config{9}.EMG.hpfreq                = 50;
+config{9}.LFP.channel               = {'M1G','M1D'};%set for each rat %do not put the emg channels here
 config{9}.align.method.SlowWave     = 'nearestmax';
 config{9}.align.method.SlowWave_begin     = 'nearestmax';
 config{9}.plotseizure.h             = 2000;
-config{9}.morpho.toiac              = [-0.5 0.7]; 
+config{9}.morpho.toiac              = [-0.5 0.6]; 
 config{9}.morpho.toibl              = [-2 -0.5];
-
 
 %% find files
 for irat = 1:size(config,2)
-    %config{irat}.directorylist
     filelist = dir(config{irat}.rawdir);
+    filelist = natsort({filelist.name});
     i=0;
     for ifile = 1:length(filelist)
-        [~,~,file_extension] = fileparts(filelist(ifile).name);
+        [~,~,file_extension] = fileparts(filelist{ifile});
         if strncmp(file_extension,'.eeg',4)
             i=i+1;
-            config{irat}.directorylist{1}{i}          =  filelist(ifile).name(1:end-4);
+            config{irat}.directorylist{1}{i} =  filelist{ifile}(1:end-4);
         end
     end
     clear filelist

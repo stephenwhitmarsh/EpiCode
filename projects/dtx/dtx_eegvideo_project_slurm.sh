@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=batch
+#SBATCH --job-name=avg
 #SBATCH --partition=normal,bigmem
 #SBATCH --time=99:99:99
 #SBATCH --mem=8G
@@ -11,5 +11,5 @@
 #SBATCH --mail-type=ALL
 
 module load MATLAB/R2019b
-matlab -nodesktop -softwareopengl -nosplash -nodisplay < dtx_project_eegvideo.m
+matlab -nodesktop -softwareopengl -nosplash -nodisplay < dtx_eegvideo_project.m
 sleep 5;
