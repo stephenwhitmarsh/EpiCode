@@ -30,6 +30,8 @@ preictal_spikes_slurm_joblist
 
 for ielec = 3 % à définir
     
+    ipart = 1; 
+
     % read muse markers
     MuseStruct = readMuseMarkers(config{ielec}, false);
     
@@ -41,9 +43,9 @@ for ielec = 3 % à définir
     % write artefacts to file
     writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true, '_SeizuresNotRemoved');
     
-%     %%
-%     % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresNotRemoved
-%     %%
+    %%
+    % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresNotRemoved
+    %%
     
     % add arteafct marker from seizure start to seizure end  
     cfgtemp                       = [];
@@ -53,9 +55,9 @@ for ielec = 3 % à définir
     
     writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true, '_SeizuresRemoved');
    
-%     %%
-%     % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresRemoved
-%     %%
+    %%
+    % NOW RENAME SpykingCircus_artefacts_sample -> SpykingCircus_artefacts_samples_SeizuresRemoved
+    %%
     
     % write parameters file for spyking circus 
     writeSpykingCircusParameters(config{ielec});
@@ -74,9 +76,9 @@ for ielec = 3 % à définir
     
     %read spike waveforms
 %     SpikeWaveforms = readSpikeWaveforms(config{ielec}, SpikeRaw, false);
-  
+    config{ielec}.spikewin.windowoverlap = 0;
+    
     % create sliding timewindows
-    % overwrite settings
     for ipart = 1 : size(config{ielec}.directorylist, 2)
         for idir = 1 : size(config{ielec}.directorylist{ipart}, 2)
             temp = dir(fullfile(config{ielec}.rawdir, config{ielec}.directorylist{ipart}{idir}, ['*', config{ielec}.circus.channel{1}, '.ncs']));
@@ -89,48 +91,22 @@ for ielec = 3 % à définir
             MuseStruct{ipart}{idir}.markers.window__END__.events     = size(MuseStruct{ipart}{idir}.markers.window__END__.synctime, 2);  
         end
     end
-    config{ielec}.muse.startmarker.window    = 'window__START__';
-    config{ielec}.muse.endmarker.window      = 'window__END__';
-    config{ielec}.spike.toi.window           = [0 0];
-    config{ielec}.spike.pad.window           = 0;
-    config{ielec}.spike.name                 = "window";
-    config{ielec}.spike.postfix              = '-windowed';
+    config{ielec}.muse.startmarker.window   = 'window__START__';
+    config{ielec}.muse.endmarker.window     = 'window__END__';
+    config{ielec}.spike.toi.window          = [0 0];
+    config{ielec}.spike.pad.window          = 0;
+    config{ielec}.spike.name                = "window";
+    config{ielec}.spike.postfix             = '-windowed';
     
-    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers(config{ielec}, MuseStruct, SpikeRaw, false);
+    % epoch data into windows
+    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers_new(config{ielec}, MuseStruct, SpikeRaw, true);
     
-    SpikeStats_windowed                     = spikeTrialStats(config{ielec}, SpikeTrials_windowed, false);
-  
-    Spiky_windowed = compute_synchrony_spiky(config{ielec}, SpikeTrials_windowed, false);
-
-    % create time-axis relative to seizures
-    time = seconds(SpikeTrials_windowed{1}.window.trialinfo.starttime - MuseStruct{1}{2}.markers.CriseStart.clock);
+    % calculate statistics per window
+    SpikeStats_windowed                     = spikeTrialStats(config{ielec}, SpikeTrials_windowed, true);
     
-    for iunit = 1 : size(SpikeStats_windowed{1}.window, 2)
-        
-        unit_t = 1:size(SpikeStats_windowed{1}.window, 2);
-        unit_t(iunit) = [];
-        
-        clear spike_dist
-        for iwindow = 1 : size(Spiky_windowed{1}.window.trials, 2)
-            spike_dist(iwindow, :) = Spiky_windowed{1}.window.trials{iwindow}.SPIKE.matrix(iunit, unit_t);
-        end
-        
-        clear CV2_trial FR
-
-        % plot selection
-        figure
-        subplot(4,1,1);
-        plot(time, SpikeStats_windowed{1}.window{iunit}.trialfreq); title(sprintf('FR unit %d %s', iunit, deblank(SpikeTrials_windowed{1}.window.cluster_group{iunit})));                  xlim([time(1), time(end)]);  ylim([0, 10]);
-        
-        subplot(4,1,2); hold;
-        plot([time(1), time(end)], [1 1],':k');
-        plot(time, SpikeStats_windowed{1}.window{iunit}.CV2_trial); title('CV2');          xlim([time(1), time(end)]);  ylim([.2, 1.8]);
-        
-        subplot(4,1,3);
-        plot(time, SpikeStats_windowed{1}.window{iunit}.burst_trialsum); title('Nr. of Bursts');   xlim([time(1), time(end)]);  %ylim([.2, 1.8]);
-        
-        subplot(4,1,4);
-        plot(time, spike_dist); title('Spike distance');  xlim([time(1), time(end)]);  ylim([0, 1]);
-        
-    end
+    % plot overview
+    config{ielec}.plot.artthresh            = 1; % threshold artefacted based on total time artefacted per window (in seconds)
+    config{ielec}.imagesavedir              = '\\lexport\iss01.charpier\analyses\vn_preictal\images'; % 
+    plotOverviewPreictal(config{ielec}, MuseStruct, SpikeTrials_windowed, SpikeStats_windowed)
+    
 end
