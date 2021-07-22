@@ -221,9 +221,93 @@ for ipart = 1 : size(SpikeTrials, 2)
                 if isnan(nanmean(amps))
                     stats{ipart}.(markername){itemp}.burst_trialsum(itrial) = nan;
                 end
-            end
+            end % itrial
+        end % itemp
+        
+        %%%%%%%%%%%
+        %% SPIKY %%
+        %%%%%%%%%%%
+
+        if ~exist('SPIKY_check_spikes', 'file')
+            disp('SPIKY is not in your path. Skipping SPIKY calculations');
+            continue
         end
-    end
-end
+        
+        %create spike structure to use with spiky, with shuffled control
+        clear spikedata
+        for iunit = 1:size(SpikeTrials{ipart}.(markername).label, 2)
+            shuffled = SpikeTrials{ipart}.(markername).trial{iunit}(randperm(size(SpikeTrials{ipart}.(markername).trial{iunit}, 2)));
+            for itrial = 1:size(SpikeTrials{ipart}.(markername).trialinfo, 1)
+                idx                             = SpikeTrials{ipart}.(markername).trial{iunit} == itrial;
+                spikedata{itrial}{iunit}        = SpikeTrials{ipart}.(markername).time{iunit}(SpikeTrials{ipart}.(markername).trial{iunit} == itrial);
+                spikedata_ctrl{itrial}{iunit}   = SpikeTrials{ipart}.(markername).time{iunit}(shuffled == itrial);
+            end
+        end               
+
+        ft_progress('init','text', sprintf('Compute spike synchrony with Spiky \n%s p%d : %s', cfg.prefix(1:end-1), ipart, markername));
+        for itrial = 1 : length(spikedata)
+            
+            ft_progress(0, 'processing trial %d from %d', itrial, length(spikedata));
+            
+            % For trial data
+            spikes                  = spikedata{itrial};
+            ori_spikes              = spikes; %used to create control spikes data
+            para.tmin               = SpikeTrials{ipart}.(markername).trialtime(itrial,1);
+            para.tmax               = SpikeTrials{ipart}.(markername).trialtime(itrial,2);
+            para.dts                = 1/SpikeTrials{ipart}.(markername).hdr.Fs;           
+            para.select_measures    = [0 1 0 0 0 0 0 0];  % {'ISI';'SPIKE';'RI_SPIKE';'SPIKE_realtime';'SPIKE_forward';'SPIKE_synchro';'SPIKE_order';'PSTH'};
+            para.num_trains         = length(spikes);
+            d_para                  = para;
+            SPIKY_check_spikes
+            para                    = d_para; 
+            spiky_ori               = SPIKY_loop_f_distances(spikes, para); 
+
+            % for control data with permuted trials 
+            % use same parameters
+            spikes       = spikedata_ctrl{itrial};
+            d_para       = para;
+            SPIKY_check_spikes
+            para         = d_para;
+            ctrl_trials  = SPIKY_loop_f_distances(spikes, para);
+            
+            % for control data with random distribution, same spike numbers
+            para.choice  = 1; 
+            spikes       = SPIKY_f_spike_train_surrogates(ori_spikes, para);
+            ctrl_spikenr = SPIKY_loop_f_distances(spikes, para);
+
+            % for control data with same ISI distribution
+            para.choice = 2; 
+            spikes      = SPIKY_f_spike_train_surrogates(ori_spikes, para);
+            ctrl_isi = SPIKY_loop_f_distances(spikes, para);
+            
+            % for control data with same pool of spikes
+            para.choice = 3; 
+            spikes      = SPIKY_f_spike_train_surrogates(ori_spikes, para);
+            ctrl_pooled = SPIKY_loop_f_distances(spikes, para);
+         
+            % for control data with same psth
+            para.choice = 4; 
+            spikes      = SPIKY_f_spike_train_surrogates(ori_spikes, para);
+            ctrl_psth   = SPIKY_loop_f_distances(spikes, para);
+            
+            % reshape to unit-by-unit, and retain only spike distance 
+            for itemp = 1 : size(SpikeTrials{ipart}.(markername).label, 2)
+                sel         = 1 : size(SpikeTrials{ipart}.(markername).label, 2);
+                sel(itemp)  = [];
+                stats{ipart}.(markername){itemp}.dist(itrial, :)            = spiky_ori.SPIKE.matrix(itemp, sel);
+                stats{ipart}.(markername){itemp}.dist_label                 = SpikeTrials{ipart}.(markername).label(sel);
+                stats{ipart}.(markername){itemp}.dist_perm(itrial, :)       = ctrl_trials.SPIKE.matrix(itemp, sel);
+                stats{ipart}.(markername){itemp}.dist_spikenr(itrial, :)    = ctrl_spikenr.SPIKE.matrix(itemp, sel);
+                stats{ipart}.(markername){itemp}.dist_isi(itrial, :)        = ctrl_isi.SPIKE.matrix(itemp, sel);
+                stats{ipart}.(markername){itemp}.dist_pooled(itrial, :)     = ctrl_pooled.SPIKE.matrix(itemp, sel);
+                stats{ipart}.(markername){itemp}.dist_psth(itrial, :)       = ctrl_psth.SPIKE.matrix(itemp, sel);
+            end
+
+            clear spikes ori_spikes
+        end
+        ft_progress('close');
+  
+    end % markername
+end % ipart 
 
 save(fname, 'stats', '-v7.3');
