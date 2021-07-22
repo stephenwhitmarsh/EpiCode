@@ -32,6 +32,33 @@ cfg.spike.overlap           = ft_getopt(cfg.spike,  'overlap', []);
 cfg.circus.part_list        = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname      = ft_getopt(cfg.circus, 'channelname', []);
 
+% add markers to always look for overlap for
+cfg.spike.overlap               = unique([cfg.spike.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"], 'stable');
+cfg.muse.startmarker.BAD        = 'BAD__START__';
+cfg.muse.endmarker.BAD          = 'BAD__END__';
+cfg.muse.startmarker.PHASE_1    = 'PHASE_1__START__';
+cfg.muse.endmarker.PHASE_1      = 'PHASE_1__END__';
+cfg.muse.startmarker.PHASE_2    = 'PHASE_2__START__';
+cfg.muse.endmarker.PHASE_2      = 'PHASE_2__END__';
+cfg.muse.startmarker.PHASE_3    = 'PHASE_3__START__';
+cfg.muse.endmarker.PHASE_3      = 'PHASE_3__END__';
+cfg.muse.startmarker.REM        = 'REM__START__';
+cfg.muse.endmarker.REM          = 'REM__END__';
+cfg.muse.startmarker.AWAKE      = 'AWAKE__START__';
+cfg.muse.endmarker.AWAKE        = 'AWAKE__END__';
+cfg.muse.startmarker.NO_SCORE   = 'NO_SCORE__START__';
+cfg.muse.endmarker.NO_SCORE     = 'NO_SCORE__END__'; 
+
+% used later to determine sleepstage
+hyplabels                       = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
+hypindex                        = false(length(cfg.spike.overlap), 1);
+for i = 1 : length(cfg.spike.overlap)
+    if any(strcmp(cfg.spike.overlap{i}, hyplabels)) 
+        hypindex(i) = true;
+    end
+end
+
+
 fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, "SpikeTrials_Timelocked", cfg.spike.postfix, ".mat"));
 
 if nargin == 1
@@ -81,7 +108,6 @@ else
     fprintf('(re-)computing SpikeTrials_MuseMarkers for %s\n', cfg.prefix);
 end
 
-hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
 
 % start loop
 for ipart = cfg.circus.part_list
@@ -110,7 +136,7 @@ for ipart = cfg.circus.part_list
 
         SpikeTrials{ipart}.(markername) = []; %initialize 
 
-        hyplabels_trl   = [];
+%         hyplabels_trl   = [];
         Startsample     = int64([]);
         Endsample       = int64([]);
         Startsample_dir = int64([]);
@@ -128,17 +154,19 @@ for ipart = cfg.circus.part_list
         TrialDirOnset   = int64([]);
         t0              = [];
         t1              = [];
+        
         % first sample starts at 0, add cumulative directory along the way        
         dirOnset        = int64(0);
         trialcount      = 1;
         StartTrialnr    = [];
         EndTrialnr      = [];
-        overlapcount    = [];
         
-        for othermarkername = string(cfg.spike.overlap)
-            overlapping.(othermarkername) = [];
-        end
+%         for othermarkername = string(cfg.spike.overlap)
+%             overlapping.(othermarkername) = [];
+%         end
         
+        itrial = 1;
+
         % loop over directories
         for idir = 1 : size(MuseStruct{ipart}, 2)
             
@@ -189,15 +217,12 @@ for ipart = cfg.circus.part_list
             MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr       = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(sidx);      
 
             % loop over events 
+%             overlap = zeros( size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2), size(cfg.spike.overlap, 2));
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
 
                 ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * hdr{idir}.Fs);
                 es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) * hdr{idir}.Fs);
-                
-                % idx = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * hdr{idir}.Fs) >= ss, 1, 'first');
-                % idx = ievent;                
-%                 if isempty(es); continue; end
-                
+     
                 Startsample     = [Startsample;  int64(ss + (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
                 Endsample       = [Endsample;    int64(es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
                 Offset          = [Offset;       int64(     (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs)];
@@ -227,91 +252,61 @@ for ipart = cfg.circus.part_list
                 trlend          = Endsec_dir(ievent);
                 
                 % find overlap with hypnogram markers
-                overlap         = zeros(size(hyplabels));
-                for ihyplabel = 1 : size(hyplabels, 2)
+                
+                for iother = 1 : size(cfg.spike.overlap, 2)
 
                     % if no hypnogram label is present continue
-                    if ~isfield(MuseStruct{ipart}{idir}.markers, strcat(hyplabels{ihyplabel}, '__START__'))
+                    if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(cfg.spike.overlap{iother}))
+                        continue
+                    end
+                    if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.spike.overlap{iother})), 'synctime')
                         continue
                     end
                     
-                    for ihyp = 1 : size(MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).synctime, 2)
-                        
-                        hypstart = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__START__')).synctime(ihyp);
-                        hypend   = MuseStruct{ipart}{idir}.markers.(strcat(hyplabels{ihyplabel}, '__END__')).synctime(ihyp);
-                        
-                        % end of trial overlaps with beginning of sleepstate
-                        if hypstart > trlstart && hypstart < trlend
-                            overlap(ievent, ihyplabel) = (trlend - hypstart);
-                        end
-                        
-                        % sleepstage falls fully within trial
-                        if hypstart > trlstart && hypend < trlend
-                            overlap(ievent, ihyplabel) = (hypend - hypstart);
-                        end
-                        
-                        % beginning of trial overlaps with end of sleepstate
-                        if hypstart < trlstart && hypend > trlstart
-                            overlap(ievent, ihyplabel) = (hypend - trlstart);
-                        end
-                        
-                        % trial falls fully within sleepstate
-                        if hypstart < trlstart && hypend > trlend && ~(hypend > trlstart)
-                            overlap(ievent, ihyplabel) = (trlend - trlstart);
-                        end
-                    end % ihyp
-                end % ihyplabel
+                    overlap_sec(itrial, :) = zeros(1, size(cfg.spike.overlap, 2));  
+                    overlap_cnt(itrial, :) = zeros(1, size(cfg.spike.overlap, 2));  
 
-                % add sleep stage to trialinfo
-                [val, indx] = max(overlap, [], 2);
+                    for i = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.spike.overlap{iother})).synctime, 2)
+                        
+                        other_start = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.spike.overlap{iother})).synctime(i);
+                        other_end   = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(cfg.spike.overlap{iother})).synctime(i);
+                        
+                        % trial falls fully within other
+                        if other_start < trlstart && other_end > trlend
+                            overlap_sec(itrial, iother) = overlap_sec(itrial, iother) + (trlend - trlstart);
+                            overlap_cnt(itrial, iother) = overlap_cnt(itrial, iother) + 1; 
+                        % other falls fully within trial
+                        elseif other_start > trlstart && other_end < trlend
+                            overlap_sec(itrial, iother) = overlap_sec(itrial, iother) + (other_end - other_start);
+                            overlap_cnt(itrial, iother) = overlap_cnt(itrial, iother) + 1;                             
+                        % trial overlaps with beginning of other
+                        elseif other_start > trlstart && other_start < trlend 
+                            overlap_sec(itrial, iother) = overlap_sec(itrial, iother) + (trlend - other_start);
+                            overlap_cnt(itrial, iother) = overlap_cnt(itrial, iother) + 1;                             
+                        % trial overlaps with end of other
+                        elseif other_start < trlstart && other_end > trlstart
+                            overlap_sec(itrial, iother) = overlap_sec(itrial, iother) + (other_end - trlstart);
+                            overlap_cnt(itrial, iother) = overlap_cnt(itrial, iother) + 1;                             
+                        end 
+
+                    end % i
+                end % iother
+
+                % add sleep stage to trialinfo   
+                sel = overlap_sec(itrial, hypindex);
+                [val, indx] = max(sel);
                 if val > 0
-                    hyplabels_trl = [hyplabels_trl, hyplabels(indx)];
+                    hyplabels_trl(itrial) = hyplabels(indx);
                 else
-                    hyplabels_trl = [hyplabels_trl, "NO_SCORE"];
+                    hyplabels_trl(itrial) = "NO_SCORE";
                 end
                 
-                % overlap with other events
-                for othermarkername = string(cfg.spike.overlap)
-                    
-                    overlap = 0;
-
-                    % dont check overlap with itself
-                    if strcmp(othermarkername, markername)
-                        overlapping.(othermarkername) = [overlapping.(othermarkername), 0];
-                        continue
-                    end
-                    
-                    % if it doesn't exist
-                    if ~isfield(MuseStruct{ipart}{idir}.markers, cfg.muse.startmarker.(othermarkername))
-                        overlapping.(othermarkername) = [overlapping.(othermarkername), 0];                        
-                        continue
-                    end
-                    
-                    % if it doesn't have any events
-                    if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(othermarkername)), 'synctime')
-                        overlapping.(othermarkername) = [overlapping.(othermarkername), 0];                        
-                        continue
-                    end
-                    
-                    for iIED = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(othermarkername)).synctime, 2)
-                        
-                        IEDstart = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(othermarkername)).synctime(iIED); %% TODO: add toi 
-                        IEDend   = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(othermarkername)).synctime(iIED);
-                        
-                        % other either before or after marker period
-                        if ~(IEDend < trlstart || IEDstart > trlend)
-                            overlap = overlap + 1;
-                            fprintf('*** Found overlap with %s and %s, dir %d, trial %d \n', markername, othermarkername, idir, ievent);
-                        end
-       
-                    end % iIED
-                    
-                    overlapping.(othermarkername) = [overlapping.(othermarkername), overlap];
-                end % othermarkername
+                itrial = itrial + 1;
+                
             end % ievent
         end %idir
-        
-        full_trial = Startsample > 0 & Endsample < SpikeRaw{ipart}.trialinfo.endsample;
+
+        full_trial  = Startsample > 0 & Endsample < SpikeRaw{ipart}.trialinfo.endsample;
         cfgtemp     = [];
         cfgtemp.trl = [Startsample, Endsample, Offset];
         cfgtemp.trl = cfgtemp.trl(full_trial, :); % so not to read before BOF or after EOF
@@ -356,54 +351,13 @@ for ipart = cfg.circus.part_list
         SpikeTrials{ipart}.(markername).trialinfo.t1            = t1(full_trial);
         SpikeTrials{ipart}.(markername).trialinfo.overlapcount  = zeros(height(SpikeTrials{ipart}.(markername).trialinfo), 1);
         
-        for othermarkername = string(cfg.spike.overlap)
-            SpikeTrials{ipart}.(markername).trialinfo.(othermarkername) = overlapping.(othermarkername)(full_trial)';
-            SpikeTrials{ipart}.(markername).trialinfo.overlapcount = SpikeTrials{ipart}.(markername).trialinfo.overlapcount + overlapping.(othermarkername)(full_trial)';
+        for ioverlap = 1 : size(cfg.spike.overlap, 2)
+            othermarkername = cfg.spike.overlap{ioverlap};
+            SpikeTrials{ipart}.(markername).trialinfo.([othermarkername '_sec']) = overlap_sec(full_trial, ioverlap);
+            SpikeTrials{ipart}.(markername).trialinfo.([othermarkername '_cnt']) = overlap_cnt(full_trial, ioverlap);
         end
-        
-        %% Detect artefacts
-        artefact        = false(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
-        artefact_length = zeros(size(SpikeTrials{ipart}.(markername).trialinfo, 1), 1);
-        ft_progress('init','text')
-        
-        for ievent = 1 : size(SpikeTrials{ipart}.(markername).trialinfo, 1)
-            ft_progress(ievent/size(SpikeTrials{ipart}.(markername).trialinfo, 1), 'Looking for overlap with artefacts in trial %d of %d \n', ievent, size(SpikeTrials{ipart}.(markername).trialinfo, 1))
-            trlstart = SpikeTrials{ipart}.(markername).trialinfo.begsample_dir(ievent) / hdr{ipart}.Fs;
-            trlend   = SpikeTrials{ipart}.(markername).trialinfo.endsample_dir(ievent) / hdr{ipart}.Fs;
 
-            for idir = 1 : size(MuseStruct{ipart}, 2)
-
-                if ~isfield(MuseStruct{ipart}{idir}.markers, 'BAD__START__')
-                    continue
-                end
-
-                if ~isfield(MuseStruct{ipart}{idir}.markers.BAD__START__, 'synctime')
-                    continue
-                end
-
-                for iart = 1 : size(MuseStruct{ipart}{idir}.markers.BAD__START__.synctime, 2)
-                    artstart = MuseStruct{ipart}{idir}.markers.BAD__START__.synctime(iart);
-                    artend   = MuseStruct{ipart}{idir}.markers.BAD__END__.synctime(iart);
-
-                    % full trial is before or after artefact
-                    if trlend < artstart || trlstart > artend
-                        continue
-                    else
-                        artefact(ievent) = true;
-                        % overlap in ms precision
-                        C = intersect(round(artstart, 3):0.001:round(artend, 3), round(double(trlstart), 3):0.001:round(double(trlend), 3));
-                        artefact_length(ievent) = artefact_length(ievent) + length(C) / 1000; 
-                    end
-
-                end % iart
-            end % idir
-        end % ievent
-        
         ft_progress('close');
-
-        % add artefact to trialinfo
-        SpikeTrials{ipart}.(markername).trialinfo.artefact = artefact;
-        SpikeTrials{ipart}.(markername).trialinfo.artefact_length = artefact_length;
 
     end % markername
 end % ipart
