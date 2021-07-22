@@ -99,7 +99,7 @@ for ielec = 3 % à définir
     config{ielec}.spike.postfix             = '-windowed';
     
     % epoch data into windows
-    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers_new(config{ielec}, MuseStruct, SpikeRaw, true);
+    SpikeTrials_windowed                    = readSpikeTrials_MuseMarkers(config{ielec}, MuseStruct, SpikeRaw, true);
     
     % calculate statistics per window
     SpikeStats_windowed                     = spikeTrialStats(config{ielec}, SpikeTrials_windowed, true);
