@@ -51,8 +51,6 @@ config{1}.imagesavedir        = fullfile(imagesavedir, 'pat_02256_0700_Crise1_m2
 config{1}.prefix              = 'pat_02256_0700_Crise1_m2mCi-';                                                        %patient name. Must end by "-". namepatient-
 config{1}.rawdir              = fullfile(rootpath_data,'pat_02256_0700','eeg');                       %path to patient data
 config{1}.directorylist{1}    = {'02256_2015-05-09_05-37','02256_2015-05-09_07-37'};                                               %list of folders to analyse
-config{1}.LFP.channel         = {'_2mCi_5'}; % TODO: 
-
 config{1}.circus.channel      = {'m2mCi_2','m2mCi_5','m2mCi_6','m2mCi_8'};       %name of the first electrode
 config{1}.circus.reref        = 'yes';
 config{1}.circus.refchan      = 'm2mCi_7';
@@ -64,8 +62,6 @@ config{1}.circus.postfix      = []; % after using circus-gui-matlab's SAVE numbe
 config{1}.circus.params.detection.spike_thresh  = '6';
 config{1}.circus.params.clustering.nb_repeats   = '10';
 config{1}.circus.params.clustering.max_elts     = '20000';
-
-config{1}.lfp.channel         = {'_2mCi_'};       %name the macro contact in the SOZ
 
 config{1}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{1}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
@@ -93,8 +89,6 @@ config{2}.circus.params.detection.spike_thresh  = '6';
 config{2}.circus.params.clustering.nb_repeats   = '10';
 config{2}.circus.params.clustering.max_elts     = '20000';
 
-config{2}.lfp.channel         = {'_2mCi_'};       %name the macro contact in the SOZ
-
 config{2}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{2}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{2}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
@@ -120,8 +114,6 @@ config{3}.circus.postfix                        = []; % after using circus-gui-m
 config{3}.circus.params.detection.spike_thresh  = '6';
 config{3}.circus.params.clustering.nb_repeats   = '10';
 config{3}.circus.params.clustering.max_elts     = '20000';
-
-config{3}.lfp.channel         = {'_HaBg_'};       %name the macro contact in the SOZ
 
 config{3}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{3}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
@@ -149,8 +141,6 @@ config{4}.circus.params.detection.spike_thresh  = '6';
 config{4}.circus.params.clustering.nb_repeats   = '10';
 config{4}.circus.params.clustering.max_elts     = '20000';
 
-config{4}.lfp.channel         = {'_Ha2d_'};       %name the macro contact in the SOZ
-
 config{4}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{4}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{4}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
@@ -176,8 +166,6 @@ config{5}.circus.postfix      = []; % after using circus-gui-matlab's SAVE numbe
 config{5}.circus.params.detection.spike_thresh  = '6';
 config{5}.circus.params.clustering.nb_repeats   = '10';
 config{5}.circus.params.clustering.max_elts     = '20000';
-
-config{5}.lfp.channel         = {'_HaBg_'};       %name the macro contact in the SOZ
 
 config{5}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{5}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
@@ -205,8 +193,6 @@ config{6}.circus.params.detection.spike_thresh  = '6';
 config{6}.circus.params.clustering.nb_repeats   = '10';
 config{6}.circus.params.clustering.max_elts     = '20000';
 
-config{6}.lfp.channel         = {'_Ha2d_'};       %name the macro contact in the SOZ
-
 config{6}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{6}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{6}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
@@ -232,8 +218,6 @@ config{7}.circus.postfix      = []; % after using circus-gui-matlab's SAVE numbe
 config{7}.circus.params.detection.spike_thresh  = '6';
 config{7}.circus.params.clustering.nb_repeats   = '10';
 config{7}.circus.params.clustering.max_elts     = '20000';
-
-config{7}.lfp.channel         = {'_HaT2_'};       %name the macro contact in the SOZ
 
 config{7}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{7}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
@@ -261,8 +245,6 @@ config{8}.circus.params.detection.spike_thresh  = '6';
 config{8}.circus.params.clustering.nb_repeats   = '10';
 config{8}.circus.params.clustering.max_elts     = '20000';
 
-config{8}.lfp.channel         = {'_HaT2_'};       %name the macro contact in the SOZ
-
 config{8}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{8}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
 config{8}.bad.markerEnd       = 'end'; % BAD jusque fin du fichier
@@ -288,8 +270,6 @@ config{9}.circus.postfix      = []; % after using circus-gui-matlab's SAVE numbe
 config{9}.circus.params.detection.spike_thresh  = '6';
 config{9}.circus.params.clustering.nb_repeats   = '10';
 config{9}.circus.params.clustering.max_elts     = '20000';
-
-config{9}.lfp.channel         = {'_HaT2_'};       %name the macro contact in the SOZ
 
 config{9}.seizure_index       = 'last'; %Optional. index of the seizure to analyze, on the LAST dir. can be 'last' (default)
 config{9}.bad.markerStart     = 'CriseEnd'; %BAD à partir crise end
