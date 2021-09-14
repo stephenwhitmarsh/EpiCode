@@ -85,8 +85,8 @@ for ipart = cfg.spike.part_list
         continue
     end
     
-    for markername = string(fields(SpikeTrials{ipart}))'
-        
+    for markername = string(cfg.spike.psth.name)
+               
         if isempty(SpikeTrials{ipart}.(markername))
             continue
         end
@@ -152,7 +152,7 @@ for ipart = cfg.spike.part_list
             cfgtemp.uvar                                    = 2;
             
             % do stats on data without artefacts
-            cleanindx                                       = ~SpikeTrials{ipart}.(markername).trialinfo.artefact;
+            cleanindx                                       = ~SpikeTrials{ipart}.(markername).trialinfo.BAD_cnt;
             trialcount                                      = sum(cleanindx);
             
             if trialcount <= 1
