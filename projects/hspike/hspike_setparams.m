@@ -68,7 +68,7 @@ config{1}.muse.endmarker.combined1      = "combined1";
 config{1}.muse.startmarker.combined2    = "combined2";
 config{1}.muse.endmarker.combined2      = "combined2";
 config{1}.muse.startmarker.combined3    = "combined3";
-config{1}.muse.startmarker.combined3    = "combined3";
+config{1}.muse.endmarker.combined3      = "combined3";
 config{1}.muse.backupdir                = fullfile(rootpath_analysis, 'markerbackup');
 
 config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hspike');
@@ -101,6 +101,9 @@ config{1}.epoch.pad.template5       = 1;
 config{1}.epoch.toi.template6       = [-0.5  1];
 config{1}.epoch.pad.template6       = 1;
 
+config{1}.window.length             = 10;
+config{1}.window.overlap            = 0;
+
 config{1}.LFP.name                      = {'Hspike'};
 config{1}.LFP.channel                   = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
 config{1}.LFP.hpfilter                  = 'no';
@@ -117,6 +120,10 @@ config{1}.LFP.baselinewindow.template3  = [-1, -0.5];
 config{1}.LFP.baselinewindow.template4  = [-1, -0.5];
 config{1}.LFP.baselinewindow.template5  = [-1, -0.5];
 config{1}.LFP.baselinewindow.template6  = [-1, -0.5];
+config{1}.LFP.baselinewindow.window     = [];
+
+config{1}.FFT.name                      = {'window'};
+config{1}.FFT.foi.window                = 1:40;
 
 config{1}.TFR.name                      = {'Hspike'};
 config{1}.TFR.channel                   = 'all';
@@ -209,7 +216,7 @@ config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
 
 config{1}.spike.name                = {'combined1', 'combined2'};
-config{1}.spike.overlap             = [];                                    
+config{1}.spike.overlap             = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6',};                                    
 config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
 config{1}.spike.toi.combined1       = [-0.5, 1];          
 config{1}.spike.toi.combined2       = [-0.5, 1];           
@@ -282,8 +289,8 @@ config{1}.spike.sdftimwin.template4 = [-0.01 0.01]; % depends a lot on pattern, 
 config{1}.spike.sdftimwin.template5 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template6 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 
-config{1}.spikewin.windowsize       = 10; % to prevent too much data lost on overlaps with IEDs
-config{1}.spikewin.windowoverlap    = 0.5;
+% config{1}.spikewin.windowsize       = 10; % to prevent too much data lost on overlaps with IEDs
+% config{1}.spikewin.windowoverlap    = 0.5;
 
 config{1}.stats.toi.combined1       = [-0.5, 1];
 config{1}.stats.toi.combined2       = [-0.5, 1];
@@ -511,7 +518,7 @@ config{6}.template.threshold        = 3;
 config{6}.template.reref            = 'no';
 config{6}.template.refmethod        = 'bipolar';
 config{6}.circus.channel            = {'mHaT2_6','mHaT2_7','mHaT2_8','mHmT2_3','mHmT2_4','mHmT2_5','mHmT2_6'};
-config{6}.circus.channelname        = {'mHaT2','mHaT2','mHaT2','mHmT2','mHmT2','mHmT2','mHmT2'};
+config{6}.circus.channelname        = {'mHaT2',  'mHaT2',  'mHaT2',  'mHmT2',  'mHmT2'  ,'mHmT2',  'mHmT2'};
 config{6}.circus.params.detection.spike_thresh  = '6';
 config{6}.circus.params.filtering.remove_median = 'False';
 config{6}.editmarkerfile.torename   = { 'template1', 'combined1';
@@ -882,7 +889,7 @@ config{7}.directorylist{1}          = { '02619_2018-07-03_16-40'...
                                         '02619_2018-07-04_02-40'...
                                         '02619_2018-07-04_04-40'... % bursty neuron on mAmT2_6
                                         '02619_2018-07-04_06-40'...
-                                        '02619_2018-07-04_08-40'...
+                                        '02619_2018-07-04_08-40'... %% Next time period data missing
                                         '02619_2018-07-04_12-45'... % pretty artefacted
                                         '02619_2018-07-04_14-45'};  % pretty artefacted
 config{7}.directorylist{2}          = { '02619_2018-07-04_16-45'...
