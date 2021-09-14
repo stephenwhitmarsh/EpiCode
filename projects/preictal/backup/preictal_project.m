@@ -28,10 +28,11 @@ MuseStruct = readMuseMarkers(config{ipatient}, true);
 
 %remove the end of the file, after the seizure to analyse (because we do
 %not use the post-ictal data, so better to remove it of the spike sorting)
-MuseStruct                  = addMuseBAD(config{ipatient},MuseStruct);
+MuseStruct = addMuseBAD(config{ipatient},MuseStruct);
 
 %read spike data
 SpikeRaw = readSpikeRaw_Phy(config{ipatient},true);
+
 %adapt spike structure to be consistent with spike trial structure in other projects
 SpikeRaw{1}.(config{ipatient}.name{1}) = SpikeRaw{1}; 
 SpikeRaw{1} = keepfields(SpikeRaw{1}, (config{ipatient}.name{1}));
