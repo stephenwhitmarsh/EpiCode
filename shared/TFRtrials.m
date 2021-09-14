@@ -71,7 +71,7 @@ elseif ~force
             end
         else
             fprintf('(re-) computing TFR data for %s\n', markername);
-            missing = [missing; markername];
+            missing = [missing, markername];
         end
     end
     cfg.TFR.name = missing;
