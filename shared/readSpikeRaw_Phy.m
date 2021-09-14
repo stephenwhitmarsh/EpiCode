@@ -276,7 +276,12 @@ for ipart = cfg.circus.part_list
         % start with first electrode bundle...
         SpikeRaw{ipart} = SpikeRaw_chan{ipart}.(fn{1});
         
-        % ...then add the rest
+        % ...and if that's it, continue...
+        if size(fn, 1) == 1
+            continue
+        end
+
+        % ...else add the rest
         for chandir = string(fn(2:end))'
             for field = string(fields(SpikeRaw{ipart}))'
                 if ~any(strcmp(field,{'hdr', 'cfg', 'trialinfo', 'trialtime'})) && ~contains(field, 'dimord')
