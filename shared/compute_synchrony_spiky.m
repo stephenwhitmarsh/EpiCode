@@ -43,15 +43,10 @@ for ipart = 1:size(SpikeTrials, 2)
 
         %create spike structure to use with spiky
         clear spikedata
-        for i_unit = 1:size(SpikeTrials{ipart}.(markername).label, 2)
+        for iunit = 1:size(SpikeTrials{ipart}.(markername).label, 2)
             for itrial = 1:size(SpikeTrials{ipart}.(markername).trialinfo, 1)
-                idx                         = SpikeTrials{ipart}.(markername).trial{i_unit} == itrial;
-                spikedata{itrial}{i_unit}   = SpikeTrials{ipart}.(markername).time{i_unit}(idx);
-                if any(idx)
-                    fprintf('unit %d trial %d: %d\n', i_unit, itrial, length(find(idx)));
-                else
-                    disp('nothing');
-                end
+                idx                      = SpikeTrials{ipart}.(markername).trial{iunit} == itrial;
+                spikedata{itrial}{iunit} = SpikeTrials{ipart}.(markername).time{iunit}(SpikeTrials{ipart}.(markername).trial{iunit} == itrial);
             end
         end
         
@@ -62,7 +57,7 @@ for ipart = 1:size(SpikeTrials, 2)
         clear spikedata_ctrl
         for itrial = 1:length(spikedata)
             trial_list = 1:length(spikedata);
-            trial_list(trial_list==itrial) = []; %remove the current trial of the random selection of trials
+            trial_list(trial_list==itrial) = []; % remove the current trial of the random selection of trials
             for i_unit = 1:length(spikedata{itrial})
                 if isempty(trial_list) %if more trials than units, start again the random selection 
                     trial_list = 1:length(spikedata);
