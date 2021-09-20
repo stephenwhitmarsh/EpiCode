@@ -31,18 +31,18 @@ function [config, MuseStruct] = addSlidingWindows(config, MuseStruct)
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 % get the default cfg options
-config.window                  = ft_getopt(config, 'window', []);
-config.window.length           = ft_getopt(config.window,  'length', 60);
-config.window.overlap          = ft_getopt(config.window,  'overlap', 0);
+config.window                  = ft_getopt(config,        'window', []);
+config.window.length           = ft_getopt(config.window, 'length', 60);
+config.window.overlap          = ft_getopt(config.window, 'overlap', 0);
 
 % window is symmetrical around 0
-length = config.window.length / 2;
+length = config.window.length;
 
 for ipart = 1 : size(config.directorylist, 2)
     for idir = 1 : size(config.directorylist{ipart}, 2)
         temp = dir(fullfile(config.rawdir, config.directorylist{ipart}{idir}, ['*', config.circus.channel{1}, '.ncs']));
         hdr  = ft_read_header(fullfile(config.rawdir, config.directorylist{ipart}{idir}, temp.name));
-        MuseStruct{ipart}{idir}.markers.window__START__.synctime = 0 : (length - length * config.window.overlap) : hdr.nSamples/hdr.Fs - (length);
+        MuseStruct{ipart}{idir}.markers.window__START__.synctime = 0 : (length - length * config.window.overlap) : (hdr.nSamples / hdr.Fs - length / 2);
         MuseStruct{ipart}{idir}.markers.window__START__.clock    = seconds(MuseStruct{ipart}{idir}.markers.window__START__.synctime) + MuseStruct{ipart}{idir}.starttime;
         MuseStruct{ipart}{idir}.markers.window__START__.events   = size(MuseStruct{ipart}{idir}.markers.window__START__.synctime, 2);
         MuseStruct{ipart}{idir}.markers.window__END__.synctime   = MuseStruct{ipart}{idir}.markers.window__START__.synctime + length;
