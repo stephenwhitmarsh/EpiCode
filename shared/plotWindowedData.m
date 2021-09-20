@@ -499,7 +499,7 @@ function plot_hyp_colors(h, cm, y)
 for im = 1 : height(h)
     switch h.hyplabel{im}
         case 'NO_SCORE'
-            ci = 1;
+            ci = 6;
         case 'REM'
             ci = 1;
         case 'AWAKE'
@@ -520,13 +520,7 @@ function plot_hyp_lines(h)
 X = [];
 Y = [];
 for im = 1 : height(h)
-    if ~isempty(X)
-        % if there's a gap, 'fill' with 0
-        if h.starttime(im) ~= X(end)
-            X = [X, X(end) h.starttime(im)];
-            Y = [Y, 0,  0];
-        end
-    end
+
     X = [X, h.starttime(im), h.endtime(im)];
     
     % height in hypnogram is based on order of cfg.hyp.contains
@@ -544,6 +538,15 @@ for im = 1 : height(h)
         case 'PHASE_3'
             y = 1;
     end
+    
+    if ~isempty(X)
+        % if there's a gap, 'fill' with 0
+        if h.endtime(im) ~= X(end)
+            X = [X, X(end) h.starttime(im)];
+            Y = [Y, y,  y];
+        end
+    end
+    
     Y = [Y, y, y];
 end
 
