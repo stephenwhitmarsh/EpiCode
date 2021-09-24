@@ -63,6 +63,8 @@ if isfield(config, 'LFP')
     if isfield(config.LFP, 'name')
         config.LFP.toi.window           = [0 0];
         config.LFP.pad.window           = 0;
+        config.epoch.toi.window         = [0 0];
+        config.epoch.pad.window         = 0;        
     end
 end
 
