@@ -54,7 +54,7 @@ eventnr = 0;
 marker  = table;
 
 % include NO_SCORE
-hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
+hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE", "PRESLEEP", "POSTSLEEP"];
 
 % excluse NO_SCORE
 % hyplabels = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE"];
@@ -164,9 +164,9 @@ for markername = string(cfg.hyp.markers)
         s = 0;
         for hyplabel = hyplabels
             stats{ipart}.(markername).duration.(hyplabel)   = hours(sum(hypnogram.duration(hypnogram.hyplabel == hyplabel & hypnogram.part == ipart)));
-            stats{ipart}.(markername).sum.(hyplabel)        =  sum(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
-%             stats{ipart}.(markername).avg.(hyplabel)        = mean(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
-            stats{ipart}.(markername).std.(hyplabel)        =  std(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+            stats{ipart}.(markername).sum.(hyplabel)        = sum(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+%           stats{ipart}.(markername).avg.(hyplabel)        = mean(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
+%           stats{ipart}.(markername).std.(hyplabel)        = std(marker.hyplabel == hyplabel & strcmp(marker.name, markername) & marker.ipart == ipart);
             s = s + stats{ipart}.(markername).sum.(hyplabel);
         end
         for hyplabel = hyplabels
