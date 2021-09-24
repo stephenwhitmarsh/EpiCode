@@ -118,9 +118,10 @@ if ~isempty(cfg.FFT.name)
             
             % average over time (Welch method)
             fprintf('Averaging data over time (Welch method)')            
-            cfgtemp = [];
-            cfgtemp.avgovertime = 'yes';
-            FFT{ipart}.(markername) = ft_selectdata(cfgtemp,  FFT{ipart}.(markername));
+            cfgtemp                         = [];
+            cfgtemp.avgovertime             = 'yes';
+            cfgtemp.nanmean                 = 'yes';            
+            FFT{ipart}.(markername)         = ft_selectdata(cfgtemp,  FFT{ipart}.(markername));
             
         end % ipart
     end % markername
