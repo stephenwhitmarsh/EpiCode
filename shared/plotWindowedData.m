@@ -205,7 +205,7 @@ for irow = 1 : nrows
             plot_hyp_lines(hypnogram);
             axis tight;
             plot_hyp_colors(hypnogram, cm_hyp, ylim);
-            fill([cfg.xlim(1), cfg.xlim(2), cfg.xlim(2), cfg.xlim(1)], [1 1 5 5], [0.9, 0.9, 0.9] ,'edgecolor', 'none');
+            fill([cfg.xlim(1), cfg.xlim(2), cfg.xlim(2), cfg.xlim(1)], [1 1 5 5], [1, 1, 1] ,'edgecolor', 'none');
             set(gca, 'children', flipud(get(gca, 'children'))); % flip order of images
 
             % legend
@@ -500,6 +500,10 @@ for im = 1 : height(h)
     switch h.hyplabel{im}
         case 'NO_SCORE'
             ci = 6;
+        case 'PRESLEEP'
+            ci = 6;
+        case 'POSTSLEEP'
+            ci = 6;            
         case 'REM'
             ci = 1;
         case 'AWAKE'
@@ -526,6 +530,10 @@ for im = 1 : height(h)
     % height in hypnogram is based on order of cfg.hyp.contains
     switch cell2mat(h.hyplabel(im))
         case 'NO_SCORE'
+            y = 5;
+        case 'PRESLEEP'
+            y = 5;            
+        case 'POSTSLEEP'
             y = 5;
         case 'AWAKE'
             y = 5;
