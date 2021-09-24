@@ -1,5 +1,4 @@
-function MuseStruct = alignTemplates(cfg, MuseStruct, LFP)
-
+function [cfg, MuseStruct] = alignTemplates(cfg, MuseStruct, LFP)
 
 % t-zero LFPs
 fig = figure;
@@ -34,3 +33,41 @@ disp(['Exporting figure ', fname])
 % exportgraphics(fig, [fname, '.pdf']);
 exportgraphics(fig, [fname, '.tiff'], 'resolution', 150);
 close(fig)
+
+for ipart = 1 : 3
+    for imarker = 1 : size(LFP{ipart}, 2)
+        if isempty(LFP{ipart}{imarker})
+            continue
+        end
+        chani       = find(strcmp(LFP{ipart}{imarker}.label, cfg.align.zerochannel));
+        dat(ipart, imarker, :) = LFP{ipart}{imarker}.avg(chani, :);
+        
+    end
+end
+
+% select templates
+dat                             = permute(mean(dat, 1), [2, 3, 1]);
+x                               = corr(dat', mean(dat)');
+labels = [];
+for i = 1 : size(LFP{ipart}, 2)
+    labels{i} = ['template', num2str(i)];
+end
+
+for ipart = 1 : 3
+    cfg.template.selected   = labels(x > 0.7);
+    cfg.template.corr       = x;
+end
+
+% x = corr(dat');
+% 
+% for itemp = 1 : size(x, 1)
+%     t = x(itemp, :);
+%     t(itemp) = [];
+%     c(itemp) = mean(t);
+%     s(itemp) = std(t);
+% % end
+% 
+% x = corr(dat', mean(dat)');
+% t = mean(x) - std(x) 
+
+
