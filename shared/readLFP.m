@@ -60,7 +60,7 @@ cfg.LFP.postfix     = ft_getopt(cfg.LFP, 'postfix', []);
 cfg.LFP.overlap     = ft_getopt(cfg.LFP, 'overlap', []);
 
 % add markers to always look for overlap for
-cfg.LFP.overlap     = unique([cfg.LFP.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"], 'stable');
+cfg.LFP.overlap                 = unique([cfg.spike.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"], 'stable');
 cfg.muse.startmarker.BAD        = 'BAD__START__';
 cfg.muse.endmarker.BAD          = 'BAD__END__';
 cfg.muse.startmarker.PHASE_1    = 'PHASE_1__START__';
@@ -73,11 +73,13 @@ cfg.muse.startmarker.REM        = 'REM__START__';
 cfg.muse.endmarker.REM          = 'REM__END__';
 cfg.muse.startmarker.AWAKE      = 'AWAKE__START__';
 cfg.muse.endmarker.AWAKE        = 'AWAKE__END__';
-cfg.muse.startmarker.NO_SCORE   = 'NO_SCORE__START__';
-cfg.muse.endmarker.NO_SCORE     = 'NO_SCORE__END__';
+cfg.muse.startmarker.PRESLEEP   = 'PRESLEEP__START__';
+cfg.muse.endmarker.PRESLEEP     = 'PRESLEEP__END__';
+cfg.muse.startmarker.POSTSLEEP  = 'POSTSLEEP__START__';
+cfg.muse.endmarker.POSTSLEEP    = 'POSTSLEEP__END__';
 
 % used later to determine sleepstage
-hyplabels                       = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "NO_SCORE"];
+hyplabels                       = ["PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"];
 hypindex                        = false(length(cfg.LFP.overlap), 1);
 for i = 1 : length(cfg.LFP.overlap)
     if any(strcmp(cfg.LFP.overlap{i}, hyplabels))
