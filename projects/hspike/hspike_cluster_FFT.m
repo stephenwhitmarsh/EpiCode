@@ -9,35 +9,7 @@ function hspike_cluster(ipatient)
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
 
-%% Add path
-
-restoredefaultpath
-if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/sigstar-master
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/SPIKY_apr_2021'))
-end
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\SPIKY_apr_2021'));
-end
-
-ft_defaults
+hspike_setpaths;
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 

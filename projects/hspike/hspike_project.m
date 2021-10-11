@@ -3,38 +3,9 @@
 % (c) Stephen Whitmarsh, stephen.whitmarsh@gmail.com
 %
 set(0, 'DefaultFigurePosition', [2500 100  1000 1000]);
-set(0, 'DefaultFigurePosition', [200 300  1000 500]);
+set(0, 'DefaultFigurePosition', [200  300  1000 500]);
 
-%% Add path
-
-restoredefaultpath
-if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis    
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip    
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/sigstar-master
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));    
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/epishare-master'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/SPIKY_apr_2021'))    
-end
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis    
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\epishare-master'));
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\SPIKY_apr_2021'));
-end
-ft_defaults
+hspike_setpaths;
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
 
@@ -47,8 +18,13 @@ labels = ["BAD__START__", "BAD__END__", ...
     "PRESLEEP__START__", "PRESLEEP__END__", ...
     "POSTSLEEP__START__", "POSTSLEEP__END__"];
 
+disp('Settings loaded');
+
 % TODO:
-% (un)select templates based on crosscorrelation with rest - CHECK RESULTS
+% (un)select templates based on crosscorrelation with rest based on realigned templates
+% Add scalp EEG (for slow wave synchronization?)?
+% Add amplitude of IED to trialinfo (is not alra
+% Power polarplot
 
 %% General analyses, looping over patients
 MuseStruct{7} = [];
@@ -56,30 +32,42 @@ clusterindx{7} = [];
 LFP_cluster{7} = [];
 LFP_cluster_detected{7} = [];
 
-config = hspike_setparams;
 
-for ipatient = 1:7
+for ipatient = [4,8]
+    config                                                          = hspike_setparams;
+    config{ipatient}                                                = addparts(config{ipatient});
+    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, true);
+%     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
+    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+    LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}                     = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}(config{ipatient}.template.selection);
+    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
     
-    MuseStruct{ipatient}                                        = readMuseMarkers(config{ipatient}, false);
-    MuseStruct{ipatient}                                        = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-    [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
-    [config{ipatient}, MuseStruct{ipatient}]                    = alignTemplates(config{ipatient}, MuseStruct{ipatient}, LFP_cluster_detected{ipatient});
-    MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
+    switch ipatient
+        case 7
+            LFP_cluster{ipatient}{1}.Hspike.kmedoids{6} = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}([1,2,4,5]);
+    end
+    
+    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true); 
+    plotTimingPolar(config{ipatient}, MuseStruct{ipatient});
+end
 
-    % move from manually annotated to analysis of automatically annotated
+
+    
+    
+%     MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
+    MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
 
     % export hypnogram data
     % exportHypnogram(config{ipatient})
  
     % get hypnogram data
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct2{ipatient}, true);
+    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
     
     % add (sliding) timewindow
     [config{ipatient}, MuseStruct{ipatient}] = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
   
-%     % template LFP
+    % template LFP
     config{ipatient}.LFP.name   = {'window'};    
     LFP{ipatient}               = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
     
@@ -129,8 +117,9 @@ for ipatient = 1:7
     clear LFP FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
 end
 
-t = table;
+%% Create table for R 
 
+t = table;
 for ipatient = 1:7
     config = hspike_setparams;
     MuseStruct{ipatient}                                        = readMuseMarkers(config{ipatient}, false);
@@ -139,34 +128,24 @@ for ipatient = 1:7
     [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
     [config{ipatient}, MuseStruct{ipatient}]                    = alignTemplates(config{ipatient}, MuseStruct{ipatient}, LFP_cluster_detected{ipatient});
     MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    MuseStruct2{ipatient}                                       = padHypnogram(MuseStruct{ipatient});
+    MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
  
-    % move from manually annotated to analysis of automatically annotated
-    
-    % export hypnogram data
-    % exportHypnogram(config{ipatient})
-    
     % get hypnogram data
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct2{ipatient}, true);
+    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
     
-    % calculate FFT on sliding timewindow
+    % FFT  sliding timewindow
     config{ipatient}.FFT.name  = {'window'};
     FFT{ipatient}              = FFTtrials(config{ipatient}, false);
-    
-    SpikeRaw{ipatient}          = readSpikeRaw_Phy(config{ipatient}, false); 
-    
-    % segment into trials/segments
+       
+    % spike data trials/segments
+    SpikeRaw{ipatient}          = readSpikeRaw_Phy(config{ipatient}, false);     
     config{ipatient}.spike.name = {'window'};
     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient});
     
-    % statistics
+    % spike stats
     config{ipatient}.spike.name = {'window'};
     SpikeStats{ipatient}        = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
     
-    % spike density
-    % don't calculate on window
-%     config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-%     SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, false);
     for ipart = 1 : 3
  
         for iunit = 1 : size(SpikeStats{ipatient}{ipart}.window, 2)
@@ -208,49 +187,35 @@ for ipatient = 1:7
             temp            = ft_selectdata(cfg, FFT{ipatient}{ipart}.window);
             pow.gamma       = log(temp.powspctrm);
             
-            % combine
-%             spk.ID = spk.idir * 10000 + spk.trialnr_dir;
-%             pow.ID = pow.idir * 10000 + pow.trialnr;
-            
-%             [a, i] = setdiff(spk.ID, pow.ID);
-%             spk(i, :)
-%             trialnr = spk.trialnr_dir(i(1));
-%             dirnr = spk.idir(i(1));
-%             
-%             i2 = find(pow.trialnr == trialnr-1 & pow.idir == dirnr);
-%             pow(1426:1446, :)
-            
-            t_temp = innerjoin(spk, pow, 'Keys', 'starttime');
-
-%             t_temp = outerjoin(spk, pow, 'Keys', 'ID');
-%             t_temp2 = join(spk, pow, 'Keys', 'ID');
-            t_temp.part = ones(height(t_temp), 1) * ipart;
-            t_temp.patient = ones(height(t_temp), 1) * ipatient;
-            
-            t = [t; t_temp];
+            % combine            
+            t_temp          = innerjoin(spk, pow, 'Keys', 'starttime');
+            t_temp.part     = ones(height(t_temp), 1) * ipart;
+            t_temp.patient  = ones(height(t_temp), 1) * ipatient;
+            t               = [t; t_temp];
         end
     end
     clear FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
 end 
 
-fname   = fullfile(config{ipatient}.datasavedir, ['alldata_table']);
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'alldata_table');
 writetable(t, fname);
 
-fname   = fullfile(config{ipatient}.datasavedir, ['alldata_table_nonan']);
-toclear = isnan(t.trialfreq_corrected);
-writetable(t(~toclear, :), fname);    
-t2      = t(~toclear, :);
+%% plotting overview of each patient / night
 
-
-% plotting overview of each patient / night
-
-for ipatient = 1 : 7
+for ipatient = 3 : 7
     config = hspike_setparams;
     MuseStruct{ipatient}                                        = readMuseMarkers(config{ipatient}, false);
     MuseStruct{ipatient}                                        = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
     [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-    [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
+    [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
+    
+    
+    
     [config{ipatient}, MuseStruct{ipatient}]                    = alignTemplates(config{ipatient}, MuseStruct{ipatient}, LFP_cluster_detected{ipatient});
+    
+    
+    
     MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
     MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
         
@@ -328,57 +293,57 @@ for ipatient = 1 : 7
         cfg.PSGcolors(4)    = true;
         cfg.hideart(4)      = false;
         
-        %         cfg.type{5}         = 'trialinfo';
-        %         cfg.title{5}        = sprintf('IED rate');
-        %         cfg.metric{5}       = 'IEDrate';
-        %         cfg.plotart(5)      = true;
-        %         cfg.log(5)          = false;
-        %         cfg.PSGcolors(5)    = true;
-        %         cfg.hideart(5)      = false;
-        %
-        %         cfg.type{6}         = 'trialinfo';
-        %         cfg.title{6}        = sprintf('BAD count');
-        %         cfg.metric{6}       = 'BAD_cnt';
-        %         cfg.plotart(6)      = true;
-        %         cfg.log(6)          = false;
-        %         cfg.PSGcolors(6)    = false;
-        %         cfg.hideart(6)      = false;
-        %
-        %         cfg.type{7}         = 'spike';
-        %         cfg.title{7}        = sprintf('Firing rate (corrected) unit %d-%d', iunit(1), iunit(end));
-        %         cfg.metric{7}       = 'trialfreq_corrected';
-        %         cfg.unit{7}         = iunit;
-        %         cfg.plotart(7)      = true;
-        %         cfg.log(7)          = true;
-        %         cfg.PSGcolors(7)    = false;
-        %         cfg.hideart(7)      = false;
-        %
-        %         cfg.type{8}         = 'spike';
-        %         cfg.title{8}        = sprintf('Nr. bursts unit %d-%d', iunit(1), iunit(end));
-        %         cfg.metric{8}       = 'burst_trialsum';
-        %         cfg.unit{8}         = iunit;
-        %         cfg.plotart(8)      = true;
-        %         cfg.log(8)          = false;
-        %         cfg.PSGcolors(8)    = false;
-        %         cfg.hideart(8)      = false;
-        %
-        %         cfg.type{9}         = 'spike';
-        %         cfg.title{9}        = sprintf('CV unit %d-%d', iunit(1), iunit(end));
-        %         cfg.metric{9}       = 'CV_trial';
-        %         cfg.unit{9}         = iunit;
-        %         cfg.plotart(9)      = true;
-        %         cfg.log(9)          = false;
-        %         cfg.PSGcolors(9)    = false;
-        %         cfg.hideart(9)      = false;
-        %
-        %         cfg.type{10}        = 'spike';
-        %         cfg.title{10}       = sprintf('CV2 unit %d-%d', iunit(1), iunit(end));
-        %         cfg.metric{10}      = 'CV2_trial';
-        %         cfg.unit{10}        = iunit;
-        %         cfg.plotart(10)     = true;
-        %         cfg.log(10)         = false;
-        %         cfg.PSGcolors(10)   = false;
-        %         cfg.hideart(10)     = false;
+        cfg.type{5}         = 'trialinfo';
+        cfg.title{5}        = sprintf('IED rate');
+        cfg.metric{5}       = 'IEDrate';
+        cfg.plotart(5)      = true;
+        cfg.log(5)          = false;
+        cfg.PSGcolors(5)    = true;
+        cfg.hideart(5)      = false;
+        
+        cfg.type{6}         = 'trialinfo';
+        cfg.title{6}        = sprintf('BAD count');
+        cfg.metric{6}       = 'BAD_cnt';
+        cfg.plotart(6)      = true;
+        cfg.log(6)          = false;
+        cfg.PSGcolors(6)    = false;
+        cfg.hideart(6)      = false;
+        
+        cfg.type{7}         = 'spike';
+        cfg.title{7}        = sprintf('Firing rate (corrected) unit %d-%d', iunit(1), iunit(end));
+        cfg.metric{7}       = 'trialfreq_corrected';
+        cfg.unit{7}         = iunit;
+        cfg.plotart(7)      = true;
+        cfg.log(7)          = true;
+        cfg.PSGcolors(7)    = false;
+        cfg.hideart(7)      = false;
+        
+        cfg.type{8}         = 'spike';
+        cfg.title{8}        = sprintf('Nr. bursts unit %d-%d', iunit(1), iunit(end));
+        cfg.metric{8}       = 'burst_trialsum';
+        cfg.unit{8}         = iunit;
+        cfg.plotart(8)      = true;
+        cfg.log(8)          = false;
+        cfg.PSGcolors(8)    = false;
+        cfg.hideart(8)      = false;
+        
+        cfg.type{9}         = 'spike';
+        cfg.title{9}        = sprintf('CV unit %d-%d', iunit(1), iunit(end));
+        cfg.metric{9}       = 'CV_trial';
+        cfg.unit{9}         = iunit;
+        cfg.plotart(9)      = true;
+        cfg.log(9)          = false;
+        cfg.PSGcolors(9)    = false;
+        cfg.hideart(9)      = false;
+        
+        cfg.type{10}        = 'spike';
+        cfg.title{10}       = sprintf('CV2 unit %d-%d', iunit(1), iunit(end));
+        cfg.metric{10}      = 'CV2_trial';
+        cfg.unit{10}        = iunit;
+        cfg.plotart(10)     = true;
+        cfg.log(10)         = false;
+        cfg.PSGcolors(10)   = false;
+        cfg.hideart(10)     = false;
         
         
         plotWindowedData(cfg, MuseStruct{ipatient}, SpikeTrials{ipatient}, SpikeStats{ipatient}, FFT{ipatient}, hypnogram{ipatient});
@@ -389,12 +354,10 @@ for ipatient = 1 : 7
         
     end % ipart
     % to not bloat memory
-    clear SpikeRaw SpikeTrials SpikeStats SpikeDensity
+%     clear SpikeRaw SpikeTrials SpikeStats SpikeDensity
     
 end
-
-
-
+%%
 
 % plot eventrelated LFP, TFR, raster and psth
 config{ipatient}.plot.ncols         = 6;

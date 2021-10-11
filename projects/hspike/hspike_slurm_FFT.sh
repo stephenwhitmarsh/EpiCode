@@ -7,7 +7,7 @@
 #SBATCH --chdir=.
 #SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_error.txt
 #SBATCH --output=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_output.txt
-#SBATCH --array=3
+#SBATCH --array=4
 
 module load MATLAB/R2020b
 matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "hspike_cluster_FFT($SLURM_ARRAY_TASK_ID);"
