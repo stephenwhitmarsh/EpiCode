@@ -6,7 +6,7 @@ MuseStruct_new     = readMuseMarkers(cfg, true);
 
 for ipart = 1 : size(MuseStruct_new, 2)
     for idir = 1 : size(MuseStruct_new{ipart}, 2)
-        for label = labels
+        for label = string(labels)
             if isfield(MuseStruct_new{ipart}{idir}.markers, label)
                 MuseStruct_updated{ipart}{idir}.markers.(label)  = MuseStruct_new{ipart}{idir}.markers.(label);
                 MuseStruct_updated{ipart}{idir}.markers.(label)  = MuseStruct_new{ipart}{idir}.markers.(label);
