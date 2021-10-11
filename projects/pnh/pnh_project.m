@@ -8,29 +8,33 @@
 %% Add path
 
 restoredefaultpath
-
 if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/fieldtrip
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/git/fieldtrip
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/pnh/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
     addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/binaries'));
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/altmany-export_fig-8b0ba13/
-    ft_defaults
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis    
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip    
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/sigstar-master
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));    
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epishare-master'));
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/SPIKY_apr_2021'))    
 end
 
 if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\fieldtrip
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\git\fieldtrip
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\pnh
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\MatlabImportExport_v6.0.0 
     addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    ft_defaults
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis    
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
+    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
+    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epishare-master'));
+    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
+    addpath          \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
 end
+ft_defaults
 
 % initialise
 MuseStruct{4}               = [];
@@ -43,7 +47,7 @@ LFP{4}                      = [];
 intervals{4}                = [];
 
 % analyses
-for ipatient = [1, 2, 3, 4]
+for ipatient = 1 : 4
     
 %     % load settings
     config = pnh_setparams;
@@ -53,7 +57,6 @@ for ipatient = [1, 2, 3, 4]
     
     % align markers
     MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient});
 
     % add seizures 
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, {'CriseStart', 'CriseEnd'});
@@ -61,11 +64,11 @@ for ipatient = [1, 2, 3, 4]
 %     % intervals between IEDs
 %     intervals{ipatient} = inter_trial_intervals(config{ipatient}, MuseStruct{ipatient}, true);
 % 
-%     % read hypnogram for combining with windowed data (neccecary for stats but not used in article)
-%     hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, false);
-% 
-%     % read LFP data (trial-by-trial)
-%     LFP{ipatient} = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    % read LFP data (trial-by-trial)
+    config{ipatient}.LFP.name = "SEIZURE";
+    LFP{ipatient} = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
+    
+    
 % 
 %     % Time-frequency of IEDs
 %     TFR{ipatient} = TFRtrials(config{ipatient}, false);
@@ -184,7 +187,6 @@ config                  = pnh_setparams;
 config{1}.plot.name     = 'ES';
 config{1}.plot.macro    = {'_1pNs_1', '_1pNs_2', '_1pNs_3'};
 config{1}.plot.micro    = {'m1pNs_4', 'm1pNs_6'};
-config{1}.plot.name     = 'ES';
 config{1}.plot.ipart    = 1;
 config{1}.plot.postfix  = [];
 config{1}.plot.ievent   = 14;
@@ -192,7 +194,6 @@ config{1}.plot.ievent   = 14;
 config{2}.plot.name     = 'ES';
 config{2}.plot.macro    = {'_Casd_1', '_Casd_2', '_Casd_3'};
 config{2}.plot.micro    = {'mCasd_1', 'mCasd_2'};
-config{2}.plot.name     = 'ES';
 config{2}.plot.ipart    = 1;
 config{2}.plot.postfix  = [];
 config{2}.plot.ievent   = 14;
@@ -200,7 +201,6 @@ config{2}.plot.ievent   = 14;
 config{3}.plot.name     = 'ES';
 config{3}.plot.macro    = {'_TNmi_1', '_TNmi_2', '_TNmi_3'};
 config{3}.plot.micro    = {'mTNmi_2', 'mTNmi_3'};
-config{3}.plot.name     = 'ES';
 config{3}.plot.ipart    = 1;
 config{3}.plot.postfix  = [];
 config{3}.plot.ievent   = 1;
@@ -208,13 +208,34 @@ config{3}.plot.ievent   = 1;
 config{4}.plot.name     = 'ES';
 config{4}.plot.macro    = {'_LMI1_1', '_LMI1_2', '_LMI1_3'};
 config{4}.plot.micro    = {'mLMI1_1', 'mLMI1_7'};
-config{4}.plot.name     = 'ES';
 config{4}.plot.ipart    = 1;
 config{4}.plot.postfix  = [];
 config{4}.plot.ievent   = 14;
 
+config                  = pnh_setparams;
+config{5} = config{1};
+config{5}.plot.name     = 'SEIZURE';
+config{5}.plot.macro    = {'_1pNs_1', '_1pNs_2', '_1pNs_3'};
+config{5}.plot.micro    = {'m1pNs_4', 'm1pNs_6'};
+config{5}.plot.ipart    = 1;
+config{5}.plot.postfix  = [];
+config{5}.plot.ievent   = 1;
+Figure0(config{5}, MuseStruct{1});
+
+config                  = pnh_setparams;
+config{6} = config{4};
+config{6}.plot.name     = 'SEIZURE';
+config{6}.plot.macro    = {'_LMI1_1', '_LMI1_2', '_LMI1_3'};
+config{6}.plot.micro    = {'mLMI1_1', 'mLMI1_7'};
+config{6}.plot.ipart    = 1;
+config{6}.plot.postfix  = [];
+config{6}.plot.ievent   = 2;
+Figure0(config{6}, MuseStruct{4});
+
+
 for ipatient = 1 : 4
     for ievent = 10 : 10 : 100
+        
         config{ipatient}.plot.ievent = ievent;
         % read muse markers
         MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
@@ -224,6 +245,7 @@ for ipatient = 1 : 4
         
         Figure0(config{ipatient}, MuseStruct{ipatient});
         close all
+        
     end
 end
 
@@ -234,6 +256,9 @@ Figure2(cfg_fig);
 
 % Figure 3 for article
 Figure3;
+
+% Figure 4 for article
+Figure4;
 
 % Table 2 for article
 T = Table2(config, true);
