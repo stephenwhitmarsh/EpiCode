@@ -1,0 +1,2 @@
+function plotHypnogramPolar(config, MuseStruct)
+
