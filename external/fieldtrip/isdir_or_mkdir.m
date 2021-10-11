@@ -6,6 +6,7 @@ function isdir_or_mkdir(p)
 % See also FOPEN_OR_ERROR
 
 % add trailing file separator (slash or backslash)
+p = char(p);
 p_full=[p filesep];
 
 % we are looking for strings not containing the file separator, these are
