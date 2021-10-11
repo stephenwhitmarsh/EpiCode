@@ -505,7 +505,7 @@ config{1}.plot.scale.seizureA{4}          = [-200 200];
 config{1}.plot.scale.seizureA{5}          = [-muscale muscale];
 config{1}.plot.scale.seizureA{6}          = [-muscale muscale];
 
-%% nodule 3
+%% nodule 2
 config{2}.plot                            = config{1}.plot;
 config{2}.plot.toi                        = rmfield(config{2}.plot.toi, 'patternC');
 config{2}.plot.toi.patternA               = [1181, 1185, 0];
@@ -562,7 +562,7 @@ config{3}.plot.refname.patternC{2}        = fullfile(config{3}.rawdir, '02614_20
 
 
 
-%% nodule 3
+%% nodule 4
 config{4}.plot                            = config{1}.plot;
 config{4}.plot.toi.patternA               = [919.979, 927.535, 0];
 config{4}.plot.fname.patternA{1}          = fullfile(config{4}.rawdir, '02689_2019-02-15_02-25', '02689_2019-02-15_02-25_LMI1_2.ncs');
