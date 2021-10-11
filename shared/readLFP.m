@@ -446,7 +446,7 @@ for markername = string(cfg.LFP.name)
         
         % concatinate data of different datasets (over trials)
         LFP{ipart}.(markername)         = ft_appenddata([], dirdat{hasmarker});
-        LFP{ipart}.(markername).fsample = dirdat{1}.fsample;
+        LFP{ipart}.(markername).fsample = dirdat{find(hasmarker, 1)}.fsample;
         clear dirdat*
         
         %remove cfg to save space on disk, if required
