@@ -21,11 +21,9 @@ cfg.cluster.resamplefs      = ft_getopt(cfg.cluster, 'resamplefs', []);
 cfg.cluster.channel         = ft_getopt(cfg.cluster, 'channel', 'all');
 cfg.cluster.align           = ft_getopt(cfg.cluster, 'align', []);
 cfg.cluster.align.latency   = ft_getopt(cfg.cluster.align, 'latency', 'all');
-%% IF ALL THEN RETRIEVE MAX LATENCY FROM LFP
 
 % load data if requested, and return
 fname = fullfile(cfg.datasavedir,[cfg.prefix, 'clusterindx.mat']);
-
 
 if nargin == 1
     if exist(fname, 'file')
@@ -162,8 +160,11 @@ if strcmp(cfg.cluster.dbscan, 'yes')
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_knn_', cfg.name{imarker}, '.pdf')), '-r600');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_knn_', cfg.name{imarker}, '.png')), '-r600');
+            
+            fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p', num2str(ipart), '_knn_', cfg.name{imarker}, '.png'));
+            isdir_or_mkdir(fileparts(fname_fig));
+            exportgraphics(fig, fname_fig);       
+            
             close all
 
             [indx_dbscan, ~] = DBSCAN(LFP_concatinated, cfg.cluster.epsilon, cfg.cluster.MinPts);
@@ -232,11 +233,13 @@ if strcmp(cfg.cluster.dbscan, 'yes')
                 LFP_cluster{ipart}.(markername).dbscan{icluster} = sel;
             end
 
+            
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', markername, '_LFP.pdf')), '-r600');
-            print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', markername, '_LFP.png')), '-r600');
+            fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', markername, '_LFP.png'));
+            isdir_or_mkdir(fileparts(fname_fig));
+            exportgraphics(fig, fname_fig);
             close all
 
         end
@@ -345,14 +348,16 @@ if strcmp(cfg.cluster.kmeans, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', markername, '_N', num2str(eva.OptimalK), '_LFP.pdf')), '-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', markername, '_N', num2str(eva.OptimalK), '_LFP.png')), '-r600');
+                fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', markername, '_N', num2str(eva.OptimalK), '_LFP.png'));
+                isdir_or_mkdir(fileparts(fname_fig));
+                exportgraphics(fig, fname_fig);
+                
                 close all
-%
-%                 % plot silhouette
-%                 fig = figure('visible', 'off'); hold;
-%                 [silh,h] = silhouette(LFP_concatinated, indx_kmeans, 'sqeuclidean');
-%                 set(fig,'PaperOrientation', 'landscape');
+                %
+                %                 % plot silhouette
+                %                 fig = figure('visible', 'off'); hold;
+                %                 [silh,h] = silhouette(LFP_concatinated, indx_kmeans, 'sqeuclidean');
+                %                 set(fig,'PaperOrientation', 'landscape');
 %                 set(fig,'PaperUnits', 'normalized');
 %                 set(fig,'PaperPosition', [0 0 1 1]);
 %                 print(fig, '-dpdf', fullfile(cfg.imagesavedir, [cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', cfg.name{imarker}, '_N', num2str(N), '_silhouette.pdf']));
@@ -480,9 +485,11 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
 
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
-                set(fig,'PaperPosition', [0 0 1 1]);
-                print(fig, '-dpdf', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', markername, '_N', num2str(N), '_LFP.pdf')), '-r600');
-                print(fig, '-dpng', fullfile(cfg.imagesavedir, strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', markername, '_N', num2str(N), '_LFP.png')), '-r600');
+                set(fig,'PaperPosition', [0 0 1 1]);            
+                fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', markername, '_N', num2str(N), '_LFP.png'));
+                isdir_or_mkdir(fileparts(fname_fig));
+                exportgraphics(fig, fname_fig);
+                
                 close all
 
 %                 % plot silhouette
