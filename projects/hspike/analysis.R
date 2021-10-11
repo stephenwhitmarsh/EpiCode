@@ -69,10 +69,75 @@ l1 <- lmer(trialfreq_corrected ~ hyplabel + delta + theta + beta + gamma + (1 | 
 
 
 
+## POLAR ##
+
+
+#install.packages("ggplot2")
+library("ggplot2")
+library(RColorBrewer)
+
+# load data: Patients x Units x timewindow
+data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypdata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+
+# prepare data
+data$patient      <- factor(data$patient, levels = c(8:1))
+data$radian       <- data$theta / (pi*2) * 360
+data$hour         <- data$minute / (60)
+#data              <- data[data$part > 3, ]
+data$part         <- factor(data$part,)
+
+# graphics.off()
+
+#display.brewer.all(colorblindFriendly = TRUE)
+
+pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_combined.pdf")
+
+ggplot(data=data, aes(x=hour, fill=patient, col=patient)) +
+  ggtitle("Circadian interictal density") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_histogram(position = 'stack', aes(y = stat(density)), binwidth=0.2, center = 0.1) + # make sure binwidth is multiple of 24/60
+  coord_polar(theta = "x") +
+  geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), labels = c("0" = "00:00", "3" = "03:00", "6" = "06:00", "9" = "09:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
+  coord_polar(theta = "x", start = 0, direction = 1) + 
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        legend.key = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid  = element_blank(),
+        ) + 
+  ylim(-0.2, 0.9);
+
+dev.off()
+
+
+ggplot(data=data, aes(x=hour, fill=patient, col=patient)) +
+  ggtitle("Circadian interictal density per patient") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_histogram(position = 'stack', aes(y = stat(density)), binwidth=0.2, center = 0.1) + # make sure binwidth is multiple of 24/60
+  coord_polar(theta = "x") +
+  geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), labels = c("0" = "00:00", "3" = "03:00", "6" = "06:00", "9" = "09:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
+  coord_polar(theta = "x", start = 0, direction = 1) + 
+  theme_bw() +
+  
+  theme(panel.border = element_blank(),
+        legend.key = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid  = element_blank(),
+        strip.background = element_blank(),
+  ) + facet_wrap(~patient)
 
 
 
 
+
+
+# get ylim and xlim from plot
+#layer_scales(p)$y$range$range
+#layer_scales(p)$x$range$range
 
 
 
@@ -98,8 +163,6 @@ l1 <- lmer(EEG ~ NSE + S100 + (1 | P) + (1 | Time), data); summary(l1)
 l1 <- lmer(EEG ~ NSE + S100 + (1 | P), data); summary(l1)
 
 l1 <- lm(EEG ~ NSE + S100, data); summary(l1)
-
-
 
 
 
