@@ -9,7 +9,7 @@ ncols   = 2;
 nrows   = 6;
         
 % get file and samplinfo to recover trials
-SpikeTrials_timelocked  = readSpikeTrials_MuseMarkers(cfg);
+SpikeTrials_timelocked  = readSpikeTrials(cfg);
 SpikeDensity_timelocked = spikeTrialDensity(cfg);
 SpikeWaveforms          = readSpikeWaveforms(cfg);
 cfg.spike.postfix       = '-windowed';
@@ -253,12 +253,16 @@ set(yl, 'Units', 'normalized');
 yl.Position(1) = -0.08;
 
 % raster
+
 subaxis(nrows, ncols, [9, 11], 'SpacingVert', 0.02, 'SpacingHoriz', 0.01); hold;
 
-cfgtemp = [];
-cfgtemp.trials = 100:200;
-sel = ft_spike_select_rmfulltrials(cfgtemp, SpikeTrials_timelocked{cfg.plot.ipart}.(cfg.plot.name));
-
+if size(SpikeTrials_timelocked{cfg.plot.ipart}.(cfg.plot.name).trialinfo, 1) >= 200
+    cfgtemp = [];
+    cfgtemp.trials = 100:200;
+    sel = ft_spike_select_rmfulltrials(cfgtemp, SpikeTrials_timelocked{cfg.plot.ipart}.(cfg.plot.name));
+else
+    sel = SpikeTrials_timelocked{cfg.plot.ipart}.(cfg.plot.name);
+end
 cfg_raster              = [];
 cfg_raster.trialborders = 'no';
 cfg_raster.cmapneurons  = cm;
