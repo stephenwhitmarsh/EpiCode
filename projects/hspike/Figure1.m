@@ -5,7 +5,8 @@ LFP_cluster{8}          = [];
 LFP_cluster_detected{8} = [];
 clusterindx{8}          = [];
 
-for ipatient = 1:8
+%% WHY patient 5 does not have template 6?
+for ipatient = 6:8
     config                                                      = hspike_setparams;
     [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient});
     [config{ipatient}, LFP_cluster{ipatient}]                   = alignClusters(config{ipatient},  LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
@@ -20,6 +21,7 @@ for ipatient = 1:8
     
     % rereference to bipolar
     for markername = ["template1", "template2", "template3", "template4", "template5", "template6"]
+        try
         labels_nonum    = regexprep(LFP{ipatient}{ipart}.(markername).label, '[0-9_]', '');
         [~,~,indx]      = unique(labels_nonum);
         for i = 1 : max(indx)
@@ -31,6 +33,8 @@ for ipatient = 1:8
         end
         LFP{ipatient}{ipart}.(markername) = ft_appenddata([],group{:});
         clear group
+        catch
+        end
     end
 end
     
