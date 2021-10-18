@@ -43,7 +43,7 @@ if nargin == 1
         err_count = 0;
         while count == err_count
             try
-                load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
+                load(fname_out, 'MuseStruct', 'Tindx_unique', 'LFP_avg');
             catch ME
                 err_count = err_count + 1;
                 disp('Something went wrong loading the file. Trying again...')
@@ -64,7 +64,7 @@ if exist(fname_out,'file') && force == false
     err_count = 0;
     while count == err_count
         try
-            load(fname_out, 'MuseStruct', 'C_norm', 'Tindx_unique', 'LFP_avg');
+            load(fname_out, 'MuseStruct', 'Tindx_unique', 'LFP_avg');
         catch ME
             err_count = err_count + 1;
         end

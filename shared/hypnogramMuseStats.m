@@ -131,14 +131,16 @@ for ipart = 1 : size(cfg.directorylist, 2)
     for idir = 1 : size(cfg.directorylist{ipart}, 2)
         for hyplabel = hyplabels
             if isfield(MuseStruct{ipart}{idir}.markers, [cell2mat(hyplabel), '__START__'])
-                for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']).clock, 2)
-                    hypnogram.starttime(ihyp)   = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']).clock(i);
-                    hypnogram.endtime(ihyp)     = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__END__']).clock(i);
-                    hypnogram.duration(ihyp)    = hypnogram.endtime(ihyp) - hypnogram.starttime(ihyp);
-                    hypnogram.part(ihyp)        = ipart;
-                    hypnogram.directory(ihyp)   = {MuseStruct{ipart}{idir}.directory};
-                    hypnogram.hyplabel(ihyp)    = string(hyplabel);
-                    ihyp = ihyp + 1;                    
+                if isfield(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']), 'clock')
+                    for i = 1 : size(MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']).clock, 2)
+                        hypnogram.starttime(ihyp)   = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__START__']).clock(i);
+                        hypnogram.endtime(ihyp)     = MuseStruct{ipart}{idir}.markers.([cell2mat(hyplabel), '__END__']).clock(i);
+                        hypnogram.duration(ihyp)    = hypnogram.endtime(ihyp) - hypnogram.starttime(ihyp);
+                        hypnogram.part(ihyp)        = ipart;
+                        hypnogram.directory(ihyp)   = {MuseStruct{ipart}{idir}.directory};
+                        hypnogram.hyplabel(ihyp)    = string(hyplabel);
+                        ihyp = ihyp + 1;
+                    end
                 end
             end
         end

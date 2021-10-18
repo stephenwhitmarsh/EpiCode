@@ -71,7 +71,7 @@ if nargin == 1
             while count == err_count
                 try
                     temp = load(fname);
-                    for ipart = 1 : size(cfg.directorylist, 2)
+                    for ipart = 1 : size(temp.SpikeTrials, 2)
                         SpikeTrials{ipart}.(markername) = temp.SpikeTrials{ipart}.(markername);
                     end
                 catch ME
@@ -95,7 +95,7 @@ elseif ~force
             while count == err_count
                 try
                     temp = load(fname);
-                    for ipart = 1 : size(cfg.directorylist, 2)
+                    for ipart = 1 : size(temp.SpikeTrials, 2)
                         SpikeTrials{ipart}.(markername) = temp.SpikeTrials{ipart}.(markername);
                     end
                 catch ME

@@ -4,13 +4,23 @@ function Figure4
 cfg         = pnh_setparams;
 nodulenr    = [1, 4];
 seizurenr   = [1, nan, nan, 2];
+% seizurenr   = [1, nan, nan, 1];
 channelnr   = [1, nan, nan, 1];
 ipart       = 1;
 xlimits     = [-1, 5];
 
+
+
 % load data
+x = load("\\lexport\iss01.charpier\analyses\vn_pnh\data\pnh\2230-SpikeTrials_Timelocked.mat");
+SpikeTrials{1}  = x.SpikeTrials;
+
+x = load("\\lexport\iss01.charpier\analyses\vn_pnh\data\pnh\2689-SpikeTrials_Timelocked.mat");
+SpikeTrials{4}  = x.SpikeTrials;
+
 for inodule = nodulenr
-    SpikeTrials{inodule}  = readSpikeTrials_MuseMarkers(cfg{inodule});
+
+%     SpikeTrials{inodule}  = readSpikeTrials(cfg{inodule});
     LFP{inodule}          = readLFP(cfg{inodule});
 end
 

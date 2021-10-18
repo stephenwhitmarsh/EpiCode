@@ -5,6 +5,9 @@
 set(0, 'DefaultFigurePosition', [2500 100  1000 1000]);
 set(0, 'DefaultFigurePosition', [200  300  1000 500]);
 
+addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+
 hspike_setpaths;
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
@@ -21,24 +24,22 @@ labels = ["BAD__START__", "BAD__END__", ...
 disp('Settings loaded');
 
 % TODO:
-% (un)select templates based on crosscorrelation with rest based on realigned templates
 % Add scalp EEG (for slow wave synchronization?)?
-% Add amplitude of IED to trialinfo (is not alra
-% Power polarplot
+% Add amplitude of IED to trialinfo
+% Different loops for templates (first 3 days) and window (whole recording)
 
 %% General analyses, looping over patients
-MuseStruct{7} = [];
-clusterindx{7} = [];
-LFP_cluster{7} = [];
-LFP_cluster_detected{7} = [];
+MuseStruct{8} = [];
+clusterindx{8} = [];
+LFP_cluster{8} = [];
+LFP_cluster_detected{8} = [];
 
-
-for ipatient = [4,8]
+for ipatient = 1:8
     config                                                          = hspike_setparams;
     config{ipatient}                                                = addparts(config{ipatient});
-    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, true);
-%     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
+    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
     LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}                     = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}(config{ipatient}.template.selection);
     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
@@ -48,17 +49,12 @@ for ipatient = [4,8]
             LFP_cluster{ipatient}{1}.Hspike.kmedoids{6} = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}([1,2,4,5]);
     end
     
-    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true); 
-    plotTimingPolar(config{ipatient}, MuseStruct{ipatient});
-end
-
-
-    
+    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
+    plotTimingPolar(config{ipatient}, MuseStruct{ipatient});  
     
 %     MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
+    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
 
-    % export hypnogram data
     % exportHypnogram(config{ipatient})
  
     % get hypnogram data
@@ -83,7 +79,7 @@ end
 %     writeSpykingCircusFileList(config{ipatient}, true);
 %     writeSpykingCircusParameters(config{ipatient});
 
-    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
+%    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
 %     
 %     if ipatient == 3
 %         SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
@@ -93,45 +89,70 @@ end
     % figure; plot(mean(vertcat(SpikeWaveforms{ipatient}{1}{4}.trial{:})))
 
     % segment into trials/segments   
-    config{ipatient}.spike.name = {'window'};       
-    SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
-
-    for ipart = 1 : 3
-        SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = zeros(height(SpikeTrials{ipatient}{ipart}.window.trialinfo), 1);
-        for fn = ["template1_cnt", "template2_cnt", "template3_cnt", "template4_cnt", "template5_cnt", "template6_cnt"]
-          SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = ...
-              SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate + ...
-              SpikeTrials{ipatient}{ipart}.window.trialinfo.(fn) * 6;
-        end
-    end
-
-    % statistics
-    config{ipatient}.spike.name         = {'window'};            
-    SpikeStats{ipatient}                 = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
-    
-    % spike density
-    % don't calculate on window
-    config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};        
-    SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, false);
+%     config{ipatient}.spike.name = {'window'};       
+%     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+% 
+%     for ipart = 1 : 3
+%         SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = zeros(height(SpikeTrials{ipatient}{ipart}.window.trialinfo), 1);
+%         for fn = ["template1_cnt", "template2_cnt", "template3_cnt", "template4_cnt", "template5_cnt", "template6_cnt"]
+%           SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = ...
+%               SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate + ...
+%               SpikeTrials{ipatient}{ipart}.window.trialinfo.(fn) * 6;
+%         end
+%     end
+% 
+%     % statistics
+%     config{ipatient}.spike.name         = {'window'};            
+%     SpikeStats{ipatient}                 = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
+%     
+%     % spike density
+%     % don't calculate on window
+%     config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};        
+%     SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, false);
     
     clear LFP FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
 end
 
-%% Create table for R 
+
+%% Create table for R: IEDs over time
+
+config  = hspike_setparams;
+
+for ipatient = 1:8
+    [MuseStruct{ipatient}, ~, ~]       = detectTemplate(config{ipatient});
+end
+plotTimingPolar_all(config, MuseStruct);
 
 t = table;
-for ipatient = 1:7
-    config = hspike_setparams;
-    MuseStruct{ipatient}                                        = readMuseMarkers(config{ipatient}, false);
-    MuseStruct{ipatient}                                        = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]              = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-    [MuseStruct{ipatient}, ~,~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
-    [config{ipatient}, MuseStruct{ipatient}]                    = alignTemplates(config{ipatient}, MuseStruct{ipatient}, LFP_cluster_detected{ipatient});
-    MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    MuseStruct{ipatient}                                        = padHypnogram(MuseStruct{ipatient});
+for ipatient = 1:8
+    t_temp = table;
+    t_temp.datetime = config{ipatient}.seizures';
+    t_temp.patient  = ones(height(t_temp), 1) * ipatient;
+    t_temp.minute   = hour(t_temp.datetime)*60 + minute(t_temp.datetime);
+    t = [t; t_temp];
+end
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'seizuredata_table');
+writetable(t, fname);
+
+
+%% Create table for R: UNITS
+
+t       = table;
+config  = hspike_setparams;
+
+for ipatient = 8
+    config{ipatient}                                                = addparts(config{ipatient});
+    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+    LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}                     = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}(config{ipatient}.template.selection);
+    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
  
     % get hypnogram data
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
+    [markers{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
     
     % FFT  sliding timewindow
     config{ipatient}.FFT.name  = {'window'};
@@ -161,7 +182,7 @@ for ipatient = 1:7
             spk.cluster_group = repmat(string(deblank(SpikeTrials{ipatient}{ipart}.window.cluster_group{iunit})), height(spk), 1);
             
             IEDsum = 0;
-            for fn = config{ipatient}.template.selected
+            for fn = ["template1", "template2", "template3", "template4", "template5", "template6"]
                 IEDsum = IEDsum + spk.(sprintf('%s_cnt', fn{1}));
             end
             spk.IEDsum = IEDsum;
@@ -195,11 +216,61 @@ for ipatient = 1:7
         end
     end
     clear FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
-end 
+end
+
+t.minute = hour(t.starttime + (t.endtime_spk-t.starttime)/2)*60 + minute(t.starttime + (t.endtime_spk-t.starttime)/2);
 
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'alldata_table');
 writetable(t, fname);
+t = readtable(fname);
+
+for ipatient = 1 : 7
+    i = t.patient == ipatient;
+    t.zAlpha(i) = (t.alpha(i) - mean(t.alpha(i))) ./ std(t.alpha(i));
+    t.zDelta(i) = (t.delta(i) - mean(t.delta(i))) ./ std(t.delta(i));
+    t.zTheta(i) = (t.theta(i) - mean(t.theta(i))) ./ std(t.theta(i));
+    t.zBeta(i)  = (t.beta(i)  - mean(t.beta(i)))  ./ std(t.beta(i));
+end
+
+[~, ~, t.bin] = histcounts(t.minute, [0:24*60]);
+
+t_binned = table;
+
+for ipatient = 1 : 7
+    for ibin = unique(t.bin)'
+        t_temp          = table;
+        t_temp.patient  = ipatient;
+        t_temp.bin      = ibin;
+        t_temp.alpha    = mean(t.alpha(t.bin == ibin & t.patient == ipatient));
+        t_temp.beta     = mean(t.beta( t.bin == ibin & t.patient == ipatient));
+        t_temp.theta    = mean(t.theta(t.bin == ibin & t.patient == ipatient));
+        t_temp.delta    = mean(t.delta(t.bin == ibin & t.patient == ipatient));        
+        t_temp.zAlpha   = mean(t.zAlpha(t.bin == ibin & t.patient == ipatient));
+        t_temp.zBeta    = mean(t.zBeta( t.bin == ibin & t.patient == ipatient));
+        t_temp.zTheta   = mean(t.zTheta(t.bin == ibin & t.patient == ipatient));
+        t_temp.zDelta   = mean(t.zDelta(t.bin == ibin & t.patient == ipatient));
+        t_binned = [t_binned; t_temp];
+    end
+end
+
+for ipatient = 1 : 7
+    i = t_binned.patient == ipatient;
+    t_binned.nAlpha(i) = t_binned.alpha(i) + min(t_binned.alpha(i));
+    t_binned.nAlpha(i) = t_binned.nAlpha(i) ./ max(t_binned.nAlpha(i));
+    t_binned.nBeta(i)  = t_binned.beta(i) + min(t_binned.beta(i));
+    t_binned.nBeta(i)  = t_binned.nBeta(i) ./ max(t_binned.nBeta(i));
+    t_binned.nTheta(i) = t_binned.theta(i) + min(t_binned.theta(i));
+    t_binned.nTheta(i) = t_binned.nTheta(i) ./ max(t_binned.nTheta(i));
+    t_binned.nDelta(i) = t_binned.delta(i) + min(t_binned.delta(i));
+    t_binned.nDelta(i) = t_binned.nDelta(i) ./ max(t_binned.nDelta(i));
+end
+
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'alldata_binned_table');
+writetable(t_binned, fname);
+t_binned = readtable(fname);
 
 %% plotting overview of each patient / night
 
