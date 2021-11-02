@@ -8,10 +8,10 @@ for i = 1 : size(temp, 1)
     flist(i, :) = temp(i).name;
 end
 
-[~, locb]  = ismember(config.directorylist{3}{end}, flist, 'rows');
-flist = flist(locb+1:end, :);
-flist_datetime = datetime(flist(:, 7:end), 'inputformat', 'yyyy-MM-dd_HH-mm', 'Format', 'd-MMM-y HH:mm:ss');
-ipart_list     = floor(hours(flist_datetime - flist_datetime(1)) / 24) + 4;
+[~, locb]       = ismember(config.directorylist{3}{end}, flist, 'rows');
+flist           = flist(locb+1:end, :);
+flist_datetime  = datetime(flist(:, 7:end), 'inputformat', 'yyyy-MM-dd_HH-mm', 'Format', 'd-MMM-y HH:mm:ss');
+ipart_list      = floor(hours(flist_datetime - flist_datetime(1)) / 24) + 4;
 
 % get file format
 [isNeuralynx, isMicromed, isBrainvision] = get_data_format(config);
@@ -20,12 +20,12 @@ for ipart = unique(ipart_list)'
     config.directorylist{ipart} = cellstr(flist(ipart_list == ipart, :))';
 end
 
-
 % check parts for data
-for ipart = 1 :  size(config.directorylist, 2)
+for ipart = 1 : size(config.directorylist, 2)
     
     % loop over directories
     hasdata_dir{ipart} = false(size(config.directorylist{ipart}, 2), 1);
+    
     for idir = 1 : size(config.directorylist{ipart}, 2)
         
         if isNeuralynx
@@ -67,7 +67,7 @@ for ipart = 1 :  size(config.directorylist, 2)
     end  
 end
 % 
-for ipart = 1 :  size(config.directorylist, 2)
+for ipart = 1 : size(config.directorylist, 2)
     config.directorylist{ipart} = config.directorylist{ipart}(hasdata_dir{ipart});
     hasdata_part(ipart) = any(hasdata_dir{ipart})    ; 
 end

@@ -270,6 +270,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                 
             end
         end
+        
         %% correct MuseStruct
         i = 1;
         for idir = 1 : length(MuseStruct{ipart})

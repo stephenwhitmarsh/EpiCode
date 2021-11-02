@@ -161,7 +161,7 @@ if strcmp(cfg.cluster.dbscan, 'yes')
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
             
-            fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p', num2str(ipart), '_knn_', cfg.name{imarker}, '.png'));
+            fname_fig = fullfile(cfg.imagesavedir, 'cluster', strcat(cfg.prefix, 'p', num2str(ipart), '_knn_', cfg.name{imarker}, '.png'));
             isdir_or_mkdir(fileparts(fname_fig));
             exportgraphics(fig, fname_fig);       
             
@@ -237,7 +237,7 @@ if strcmp(cfg.cluster.dbscan, 'yes')
             set(fig,'PaperOrientation','landscape');
             set(fig,'PaperUnits','normalized');
             set(fig,'PaperPosition', [0 0 1 1]);
-            fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', markername, '_LFP.png'));
+            fname_fig = fullfile(cfg.imagesavedir, 'cluster', strcat(cfg.prefix, 'p', num2str(ipart), '_DBSCAN_', markername, '_LFP.png'));
             isdir_or_mkdir(fileparts(fname_fig));
             exportgraphics(fig, fname_fig);
             close all
@@ -348,7 +348,7 @@ if strcmp(cfg.cluster.kmeans, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
-                fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', markername, '_N', num2str(eva.OptimalK), '_LFP.png'));
+                fname_fig = fullfile(cfg.imagesavedir, 'cluster', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmeans_', markername, '_N', num2str(eva.OptimalK), '_LFP.png'));
                 isdir_or_mkdir(fileparts(fname_fig));
                 exportgraphics(fig, fname_fig);
                 
@@ -486,7 +486,7 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                 set(fig,'PaperOrientation', 'landscape');
                 set(fig,'PaperUnits', 'normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);            
-                fname_fig = fullfile(cfg.imagesavedir, 'templates', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', markername, '_N', num2str(N), '_LFP.png'));
+                fname_fig = fullfile(cfg.imagesavedir, 'cluster', strcat(cfg.prefix, 'p' ,num2str(ipart), '_kmedoids_', markername, '_N', num2str(N), '_LFP.png'));
                 isdir_or_mkdir(fileparts(fname_fig));
                 exportgraphics(fig, fname_fig);
                 

@@ -17,13 +17,14 @@ function [FFT] = FFTtrials(cfg, force)
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 
+
 cfg.FFT             = ft_getopt(cfg, 'FFT', []);
 cfg.FFT.postfix     = ft_getopt(cfg.FFT, 'postfix', []);
 cfg.FFT.keeptrials  = ft_getopt(cfg.FFT, 'keeptrials', 'yes');
 write               = ft_getopt(cfg.FFT, 'write', true);
 
 if nargin == 1
-    for markername = string(cfg.TFR.name)
+    for markername = string(cfg.FFT.name)
         fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'FFT_', markername, cfg.FFT.postfix, '.mat'));
         if exist(fname, 'file')
             fprintf('Reading %s\n', fname);

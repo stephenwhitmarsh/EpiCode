@@ -38,93 +38,294 @@ for ipatient = 1:8
     config                                                          = hspike_setparams;
     config{ipatient}                                                = addparts(config{ipatient});
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
     [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
-    LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}                     = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}(config{ipatient}.template.selection);
-    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
-    
-    switch ipatient
-        case 7
-            LFP_cluster{ipatient}{1}.Hspike.kmedoids{6} = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}([1,2,4,5]);
-    end
     
     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
-    plotTimingPolar(config{ipatient}, MuseStruct{ipatient});  
     
-%     MuseStruct{ipatient}                                        = updateMarkers(config{ipatient}, MuseStruct{ipatient}, labels);
-    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
-
     % exportHypnogram(config{ipatient})
- 
+    
     % get hypnogram data
-    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
+    [marker{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, false);
     
     % add (sliding) timewindow
     [config{ipatient}, MuseStruct{ipatient}] = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
-  
+    
     % template LFP
-    config{ipatient}.LFP.name   = {'window'};    
+    config{ipatient}.LFP.name   = {'window'};
     LFP{ipatient}               = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
     
     % template TFR
-%     config{ipatient}.TFR.name   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-%     TFR{ipatient}             = TFRtrials(config{ipatient}, false);
+    %     config{ipatient}.TFR.name   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+    %     TFR{ipatient}             = TFRtrials(config{ipatient}, false);
     
     % calculate FFT on sliding timewindow
-    config{ipatient}.FFT.name  = {'window'};                
+    config{ipatient}.FFT.name  = {'window'};
     FFT{ipatient}              = FFTtrials(config{ipatient}, false);
     
-%     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
-%     writeSpykingCircusFileList(config{ipatient}, true);
-%     writeSpykingCircusParameters(config{ipatient});
-
-%    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
-%     
-%     if ipatient == 3
-%         SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
-%     end
-
-%     SpikeWaveforms{ipatient} = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
+    %     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
+    %     writeSpykingCircusFileList(config{ipatient}, true);
+    %     writeSpykingCircusParameters(config{ipatient});
+    
+    %    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
+    %
+    %     if ipatient == 3
+    %         SpikeRaw{ipatient}{1}.template_maxchan(1) = 1;
+    %     end
+    
+    %     SpikeWaveforms{ipatient} = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
     % figure; plot(mean(vertcat(SpikeWaveforms{ipatient}{1}{4}.trial{:})))
-
-    % segment into trials/segments   
-%     config{ipatient}.spike.name = {'window'};       
-%     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
-% 
-%     for ipart = 1 : 3
-%         SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = zeros(height(SpikeTrials{ipatient}{ipart}.window.trialinfo), 1);
-%         for fn = ["template1_cnt", "template2_cnt", "template3_cnt", "template4_cnt", "template5_cnt", "template6_cnt"]
-%           SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = ...
-%               SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate + ...
-%               SpikeTrials{ipatient}{ipart}.window.trialinfo.(fn) * 6;
-%         end
-%     end
-% 
-%     % statistics
-%     config{ipatient}.spike.name         = {'window'};            
-%     SpikeStats{ipatient}                 = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
-%     
-%     % spike density
-%     % don't calculate on window
-%     config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};        
-%     SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, false);
+    
+    % segment into trials/segments
+    %     config{ipatient}.spike.name = {'window'};
+    %     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+    %
+    %     for ipart = 1 : 3
+    %         SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = zeros(height(SpikeTrials{ipatient}{ipart}.window.trialinfo), 1);
+    %         for fn = ["template1_cnt", "template2_cnt", "template3_cnt", "template4_cnt", "template5_cnt", "template6_cnt"]
+    %           SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate = ...
+    %               SpikeTrials{ipatient}{ipart}.window.trialinfo.IEDrate + ...
+    %               SpikeTrials{ipatient}{ipart}.window.trialinfo.(fn) * 6;
+    %         end
+    %     end
+    %
+    %     % statistics
+    %     config{ipatient}.spike.name         = {'window'};
+    %     SpikeStats{ipatient}                 = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
+    %
+    %     % spike density
+    %     % don't calculate on window
+    %     config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+    %     SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, false);
     
     clear LFP FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
 end
 
 
-%% Create table for R: IEDs over time
+%% create table for R: hypnograms
+
+t_summary = table;
+for ipatient = 1 : 8
+    for ipart = 1 : 3
+    [hypmarkers{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient});
+    
+    t_temp = table;
+    for fn = ["template1", "template2", "template3", "template4", "template5", "template6"]
+        
+        t_temp.duration = hypmusestat{ipatient}{ipart}.(fn).duration
+    t_summary.duration
+    
+    
+end
+
+t_position = table;
+
+for ipatient = 1 : 8
+    for ipart = 1 : 3
+        disp(ipart)
+        hypnogram{ipatient}.epochtime   = convertTo(hypnogram{ipatient}.starttime ,'epochtime','Epoch','2001-01-01','TicksPerSecond',1);
+        indx                            = hypnogram{ipatient}.part == ipart;        
+        hypnogram{ipatient}.x(indx)     = hypnogram{ipatient}.epochtime(indx) - hypnogram{ipatient}.epochtime(find(indx, 1));
+        [dt, X, Y, label]               = plot_hyp_lines(hypnogram{ipatient}(hypnogram{ipatient}.part == ipart, :));
+        
+        if X(1).Hour < 12
+            X0 = datetime(X.Year,X.Month,X.Day-1,0,0,0, 'Format', 'dd/MM/yyyy HH:mm');
+        else
+            X0 = datetime(X.Year,X.Month,X.Day,0,0,0, 'Format', 'dd/MM/yyyy HH:mm');
+        end
+
+        t_temp          = table;
+        t_temp.X        = X';
+        t_temp.Y        = Y';
+        t_temp.dt       = dt';
+        t_temp.label    = label';
+        t_temp.part     = ones(height(t_temp), 1) * ipart;
+        t_temp.patient  = ones(height(t_temp), 1) * ipatient;
+        t_temp.hour     = (X.Hour/24 + X.Minute/24/60 + X.Second/24/60/60)';
+        t_temp.hour0    = double(convertTo(X','epochtime','Epoch',X0(1),'TicksPerSecond',1))/24/60/60-1;
+        t_temp.radian   = t_temp.hour * pi * 2;
+        t_temp.degree   = t_temp.hour * 360;
+
+        t_temp_position             = table;
+        t_temp_position.offset      = X.Hour(1)/24 + X.Minute(1)/24/60 + X.Second(1)/24/60/60;
+        t_temp_position.duration    = double(convertTo(X(end),'epochtime','Epoch',X(1),'TicksPerSecond',1))/24/60/60;
+        t_temp_position.part        = ones(height(t_temp_position), 1) * ipart;
+        t_temp_position.patient     = ones(height(t_temp_position), 1) * ipatient;
+
+        t           = [t; t_temp];
+        t_position  = [t_position; t_temp_position];
+    end
+end
+
+fname   = fullfile(config{ipatient}.datasavedir, 'hypnogram_table');
+writetable(t, fname);
+fname   = fullfile(config{ipatient}.datasavedir, 'offset_table');
+writetable(t_position, fname);
+
+
+%% create table for R: LFP power values over time + IED sum
 
 config  = hspike_setparams;
+t_long  = table;
+t_wide  = table;
 
-for ipatient = 1:8
-    [MuseStruct{ipatient}, ~, ~]       = detectTemplate(config{ipatient});
+for ipatient = 1 : 8   
+    config{ipatient}.FFT.name  = {'window'};
+    FFT = FFTtrials(config{ipatient});
+    for ipart = 1 : size(FFT, 2)
+        
+        IEDsum = 0;
+        for fn = ["template1", "template2", "template3", "template4", "template5", "template6"]
+            IEDsum = IEDsum + FFT{ipart}.window.trialinfo.(sprintf('%s_cnt', fn{1}));
+        end
+        
+        t_wide_temp         = FFT{ipart}.window.trialinfo;
+        t_wide_temp.IEDsum  = IEDsum;
+        t_wide_temp.part    = ones(height(t_wide_temp), 1) * ipart;
+        t_wide_temp.patient = ones(height(t_wide_temp), 1) * ipatient;
+        
+        cfg                 = [];
+        cfg.avgoverfreq     = 'yes';
+        cfg.avgoverchan     = 'yes';
+        freq_band           = {[1, 4], [5, 7], [8, 14], [15, 25], [26, 40]};
+        freq_name           = ["delta", "theta", "alpha", "beta"];
+
+        for ifreq = 1 : length(freq_name)    
+            cfg.frequency        = freq_band{ifreq};
+            power                = ft_selectdata(cfg, FFT{ipart}.window);
+            
+            t_long_temp          = FFT{ipart}.window.trialinfo;
+            t_long_temp.power    = power.powspctrm;
+            t_long_temp.band     = repmat(freq_name(ifreq), height(t_long_temp), 1);
+            t_long_temp.part     = ones(height(t_long_temp), 1) * ipart;
+            t_long_temp.patient  = ones(height(t_long_temp), 1) * ipatient;
+            t_long_temp.IEDsum   = IEDsum;
+            t_long               = [t_long; t_long_temp];
+            
+            t_wide_temp.(freq_name(ifreq)) = power.powspctrm;            
+        end
+        t_wide = [t_wide; t_wide_temp];
+
+    end
 end
-plotTimingPolar_all(config, MuseStruct);
 
-t = table;
+t_long.minute = hour(t_long.starttime + (t_long.endtime-t_long.starttime)/2)*60 + minute(t_long.starttime + (t_long.endtime-t_long.starttime)/2);
+t_wide.minute = hour(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2)*60 + minute(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2);
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'power_table_long');
+writetable(t_long, fname);
+% t_long = readtable(fname);
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'power_table_wide');
+writetable(t_wide, fname);
+% t_wide = readtable(fname);
+
+
+%% create table for R: IED timing list: MuseStruct only - all data (nights)
+
+config  = hspike_setparams;
+t       = table;
+
+for ipatient = 1 : 8
+       
+    [MuseStruct{ipatient}, ~, ~] = detectTemplate(config{ipatient});
+
+    for ipart = 1 : size(MuseStruct{ipatient}, 2)
+        for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
+            for marker = ["template1", "template2", "template3", "template4", "template5", "template6"]
+                fprintf('Concatinating Patient %d, part %d, dir %d, marker %s\n', ipatient, ipart, idir, marker);
+                if isfield(MuseStruct{ipatient}{ipart}{idir}.markers, marker)
+                    if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers.(marker), 'clock')
+                        continue
+                    end
+                    h = size(MuseStruct{ipatient}{ipart}{idir}.markers.(marker).clock, 2);
+                    if h > 0
+                        t_temp          = table;
+                        t_temp.clock    = MuseStruct{ipatient}{ipart}{idir}.markers.(marker).clock';
+                        t_temp.marker   = repmat(marker,   height(t_temp), 1);
+                        t_temp.part     = repmat(ipart,    height(t_temp), 1);
+                        t_temp.patient  = repmat(ipatient, height(t_temp), 1);
+                        t               = [t; t_temp];
+                    end
+                end
+            end
+        end
+    end
+end
+
+t.minute = hour(t.clock)*60 + minute(t.clock);
+t.theta  = t.minute / (24*60) * 2 * pi;
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'IED_table');
+writetable(t, fname);
+
+
+
+%% create table for R: IED timing list 2: based on LFP (3 nights with sleep stage)
+
+config  = hspike_setparams;
+t       = table;
+
+for ipatient = 1 : 8
+    
+    config{ipatient}.LFP.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    LFP = readLFP(config{ipatient});
+    
+    for ipart = 1 : size(LFP, 2)
+        for marker = ["template1", "template2", "template3", "template4", "template5", "template6"]
+            if isempty(LFP{ipart}.(marker))
+                continue
+            end
+            fprintf('Concatinating Patient %d, part %d, marker %s\n', ipatient, ipart, marker);
+            t_temp          = LFP{ipart}.(marker).trialinfo;
+            t_temp.marker   = repmat(marker,   height(t_temp), 1);
+            t_temp.part     = repmat(ipart,    height(t_temp), 1);
+            t_temp.patient  = repmat(ipatient, height(t_temp), 1);
+            t               = [t; t_temp];
+        end
+    end
+end
+
+t.minute = hour(t.starttime)*60 + minute(t.starttime);
+t.hour   = hour(t.starttime) + minute(t.starttime) / 60;
+t.theta  = t.minute / (24*60) * 2 * pi;
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'IED_table_PSG');
+
+writetable(t, fname);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% Create table for R: seizure timings
+
+config  = hspike_setparams;
+t       = table;
+
 for ipatient = 1:8
+    [MuseStruct{ipatient}, ~, ~] = detectTemplate(config{ipatient});    
     t_temp = table;
     t_temp.datetime = config{ipatient}.seizures';
     t_temp.patient  = ones(height(t_temp), 1) * ipatient;
@@ -135,6 +336,8 @@ end
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'seizuredata_table');
 writetable(t, fname);
+
+
 
 
 %% Create table for R: UNITS
@@ -150,16 +353,16 @@ for ipatient = 8
     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
     LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}                     = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}(config{ipatient}.template.selection);
     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
- 
+    
     % get hypnogram data
     [markers{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient}, MuseStruct{ipatient}, true);
     
     % FFT  sliding timewindow
-    config{ipatient}.FFT.name  = {'window'};
-    FFT{ipatient}              = FFTtrials(config{ipatient}, false);
-       
+    config{ipatient}.FFT.name   = {'window'};
+    FFT{ipatient}               = FFTtrials(config{ipatient}, false);
+    
     % spike data trials/segments
-    SpikeRaw{ipatient}          = readSpikeRaw_Phy(config{ipatient}, false);     
+    SpikeRaw{ipatient}          = readSpikeRaw_Phy(config{ipatient}, false);
     config{ipatient}.spike.name = {'window'};
     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient});
     
@@ -168,7 +371,7 @@ for ipatient = 8
     SpikeStats{ipatient}        = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
     
     for ipart = 1 : 3
- 
+        
         for iunit = 1 : size(SpikeStats{ipatient}{ipart}.window, 2)
             
             % spike data
@@ -208,7 +411,7 @@ for ipatient = 8
             temp            = ft_selectdata(cfg, FFT{ipatient}{ipart}.window);
             pow.gamma       = log(temp.powspctrm);
             
-            % combine            
+            % combine
             t_temp          = innerjoin(spk, pow, 'Keys', 'starttime');
             t_temp.part     = ones(height(t_temp), 1) * ipart;
             t_temp.patient  = ones(height(t_temp), 1) * ipatient;
@@ -224,6 +427,22 @@ t.minute = hour(t.starttime + (t.endtime_spk-t.starttime)/2)*60 + minute(t.start
 fname   = fullfile(config{ipatient}.datasavedir, 'alldata_table');
 writetable(t, fname);
 t = readtable(fname);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 for ipatient = 1 : 7
     i = t.patient == ipatient;
@@ -488,7 +707,7 @@ end
 config              = hspike_setparams;
 fname_slurm_joblist = fullfile('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/slurm_job_list.txt');
 delete(fname_slurm_joblist);
-for ipatient = 3:7
+for ipatient = 1:7
     for ipart = 1 : size(config{ipatient}.directorylist, 2)
         subjdir     = config{ipatient}.prefix(1:end-1);
         partdir     = ['p', num2str(ipart)];
@@ -517,10 +736,6 @@ for ipatient = 3:7
         end
     end
 end
-
-
-
-
 
 % 
 % 
@@ -561,13 +776,14 @@ end
 % end
 
 %% BrainNetViewer
-addpath '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\BrainNetViewer_20191031'
 
-config  = hspike_setparams;
-nodes_all = [];
+config      = hspike_setparams;
+nodes_all   = [];
+clear elec
+t = table;
 
 % Separate per patient
-for ipatient = 1 : 7
+for ipatient = 1 : 8
     
     cfg     = config{ipatient};
     fname   = cfg.locfile;
@@ -575,59 +791,81 @@ for ipatient = 1 : 7
     dat     = textscan(fid, '%s%d%s%f%f%f%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s', 'Headerlines', 4, 'delimiter', ';');
     fclose(fid);
     
-    clear elec
-    toclear = [];
-    
     for i = 1 : size(dat{1}, 1)
-        elec(i).name = string(dat{1}{i});
-        if isempty(dat{1}{i})
-            elec(i).name = elec(i-1).name;
+
+        if ~isempty(dat{1}{i})
+            elecname = string(dat{1}{i});
         end
-        elec(i).plotnr = dat{2}(i);
-        elec(i).MNI_x = dat{4}(i);
-        elec(i).MNI_y = dat{5}(i);
-        elec(i).MNI_z = dat{6}(i);
-        elec(i).name_cat = strcat('_', elec(i).name, '_',  num2str(elec(i).plotnr));
-        elec(i).color = 0;
         
+        t_temp          = table;
+        t_temp.name     = strcat('_', elecname, '_',  num2str(dat{2}(i)));
+        t_temp.plotnr   = dat{2}(i);
+        t_temp.X        = dat{4}(i);
+        t_temp.Y        = dat{5}(i);
+        t_temp.Z        = dat{6}(i);
+        t_temp.patient  = ipatient;
+        t_temp.color    = 0;
+        t_temp.size     = 3;
+        t_temp.used     = dat{2}(i) ;
         for name = string(cfg.LFP.channel)
-            if contains(name, elec(i).name_cat)
-                elec(i).color = 1;
+            if contains(name, t_temp.name)
+                t_temp.color = 1;
             end
-        end
-        
-        if elec(i).plotnr == 0
-            toclear = [toclear, i];
-        end
+        end    
+        t = [t; t_temp];
     end
-    elec(toclear) = [];
-    
-    clear nodes
-    for i = 1 : size(elec, 2)
-        nodes(i, :) = [elec(i).MNI_x, elec(i).MNI_y, elec(i).MNI_z, elec(i).color, 3, ipatient];
-    end
-    
-    fname_node  = fullfile(cfg.datasavedir, [cfg.prefix, 'brainnet.node']);
-    fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
-    fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
-    fname_image = fullfile(cfg.imagesavedir, [cfg.prefix, 'brainnet.jpg']);
-    
-    dlmwrite(fname_node, nodes, '\t');
-    
-    % concatinate over patients
-    nodes_all   = [nodes_all; nodes];
-    
-    BrainNet_MapCfg(fname_node, fname_surf, fname_cfg, fname_image);
 end
 
-fname_nodes_all = fullfile(cfg.datasavedir, 'brainnet_all.node');
-fname_image_all = fullfile(cfg.imagesavedir, 'brainnet_all.jpg');
+% write to table and plot
+for ipatient = 1 : 8
+
+    sel         = t(t.patient == ipatient, :);
+    nodes       = [sel.X, sel.Y, sel.Z, sel.color, sel.size, sel.patient];
+    
+    fname_node  = fullfile(cfg.datasavedir, [cfg.prefix, 'brainnet.node']);
+    fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
+    fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
+    fname_image = fullfile(cfg.imagesavedir, [cfg.prefix, 'brainnet.jpg']);
+    dlmwrite(fname_node, nodes, '\t');
+
+    % draw image with BrainNet
+    BrainNet_MapCfg(fname_node, fname_surf, fname_cfg, fname_image)
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 % resize nodes that are not analyzed
-nodes_all(nodes_all(:, 4) == 0, 5) = 1;
+nodes_all(nodes_all(:, 4) == 1, 5) = 2;
+nodes_all(nodes_all(:, 4) == 0, 5) = 2;
+
+fname_nodes_all = fullfile(cfg.datasavedir,  'brainnet_all.node');
+fname_image_all = fullfile(cfg.imagesavedir, 'brainnet_all.jpg');
 
 dlmwrite(fname_nodes_all, nodes_all, '\t');
 BrainNet_MapCfg(fname_nodes_all, fname_surf, fname_cfg, fname_image_all);
+
+% resize nodes that are not analyzed
+nodes_sel = nodes_all;
+nodes_sel(nodes_sel(:, 4) == 0, :) = [];
+
+fname_nodes_sel = fullfile(cfg.datasavedir,  'brainnet_all_analysed.node');
+fname_image_sel = fullfile(cfg.imagesavedir, 'brainnet_all_analysed.jpg');
+
+dlmwrite(fname_nodes_sel, nodes_sel, '\t');
+BrainNet_MapCfg(fname_nodes_sel, fname_surf, fname_cfg, fname_image_sel);
+
 
 % https://www.nitrc.org/docman/view.php/504/1190/BrainNet%20Viewer%20Manual%201.41.pdf
 % The node file is defined as an ASCII text file with the suffix ‘node’. In the node file, there

@@ -327,12 +327,10 @@ for markername = string(cfg.LFP.name)
                     EndTrialnr(ievent)      = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(ievent);
                     Starttime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.epoch.toi.(markername)(1));
                     Endtime(ievent)         = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent)   + seconds(cfg.epoch.toi.(markername)(2));
-                    Startsec_dir            = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent);
-                    Endsec_dir              = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent);
                     
                     % will be used to find overlap between events
-                    trlstart        = Startsec_dir;
-                    trlend          = Endsec_dir;
+                    trlstart                = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(1) * dat.fsample;
+                    trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2) * dat.fsample;       
 
                     % find overlap
                     for iother = 1 : size(cfg.LFP.overlap, 2)
