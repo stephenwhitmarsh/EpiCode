@@ -25,7 +25,6 @@ disp('Settings loaded');
 
 % TODO:
 % Add scalp EEG (for slow wave synchronization?)?
-% Add amplitude of IED to trialinfo
 % Different loops for templates (first 3 days) and window (whole recording)
 
 %% General analyses, looping over patients
@@ -103,22 +102,131 @@ for ipatient = 1:8
     clear LFP FFT SpikeRaw SpikeTrials SpikeStats SpikeDensity
 end
 
+%% Create figures
 
-%% create table for R: hypnograms
+Figure_hypnograms
+Figure_templates
+Figure_FFT
+Figure_LFP_stages % also writes data for 
 
-t_summary = table;
+%% Plot locations with BrainNetViewer
+
+% per patient
 for ipatient = 1 : 8
-    for ipart = 1 : 3
-    [hypmarkers{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient});
     
-    t_temp = table;
-    for fn = ["template1", "template2", "template3", "template4", "template5", "template6"]
-        
-        t_temp.duration = hypmusestat{ipatient}{ipart}.(fn).duration
-    t_summary.duration
+    t_sel       = t(t.patient == ipatient, :);
+    nodes       = [t_sel.X, t_sel.Y, t_sel.Z, t_sel.color, t_sel.size, t_sel.patient];
     
+    % resize nodes that are not analyzed
+    nodes(nodes(:, 4) == 1, 5) = 2;
+    nodes(nodes(:, 4) == 0, 5) = 2;
+    
+    fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
+    fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
+    fname_image = fullfile(cfg.imagesavedir, [cfg.prefix, 'brainnet.jpg']);
+    fname_nodes = fullfile(cfg.datasavedir,  'brainnet_all.node');
+    dlmwrite(fname_nodes, nodes, '\t');
+    
+    BrainNet_MapCfg(fname_nodes, fname_surf, fname_cfg, fname_image);
     
 end
+
+% all
+t_sel  = t(t.color > 0, :);
+nodes  = [t_sel.X, t_sel.Y, t_sel.Z, t_sel.color, t_sel.size, t_sel.patient];
+
+% resize nodes that are not analyzed
+nodes(nodes(:, 4) == 1, 5) = 2;
+nodes(nodes(:, 4) == 0, 5) = 2;
+
+fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
+fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
+fname_image = fullfile(cfg.imagesavedir, ['brainnet_all.jpg']);
+fname_nodes = fullfile(cfg.datasavedir,  'brainnet_all.node');
+dlmwrite(fname_nodes, nodes, '\t');
+
+BrainNet_MapCfg(fname_nodes, fname_surf, fname_cfg, fname_image);
+
+% https://www.nitrc.org/docman/view.php/504/1190/BrainNet%20Viewer%20Manual%201.41.pdf
+% The node file is defined as an ASCII text file with the suffix ‘node’. In the node file, there
+% are 6 columns: columns 1-3 represent node coordinates, column 4 represents node
+% colors, column 5 represents node sizes, and the last column represents node labels.
+% Please note, a symbol ‘-‘(no ‘’) in column 6 means no labels. The user may put the
+% modular information of the nodes into column 4, like ‘1, 2, 3…’ or other information to
+% be shown by color. Column 5 could be set as nodal degree, centrality, T-value, etc. to
+% emphasize nodal differences by size. You can generate your nodal file according to the
+% requirements.
+
+%% Create table for R: location of electrodes in MNI
+
+config      = hspike_setparams;
+nodes_all   = [];
+
+t = table;
+for ipatient = 1 : 8
+    
+    cfg     = config{ipatient};
+    fname   = cfg.locfile;
+    fid     = fopen(fname);
+    dat     = textscan(fid, '%s%d%s%f%f%f%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s', 'Headerlines', 4, 'delimiter', ';');
+    fclose(fid);
+    
+    for i = 1 : size(dat{1}, 1)
+
+        if ~isempty(dat{1}{i})
+            elecname = string(dat{1}{i});
+        end
+        
+        t_temp           = table;
+        t_temp.electrode = strcat('_', elecname, '_',  num2str(dat{2}(i)));
+        t_temp.contact   = dat{2}(i);
+        t_temp.X         = dat{4}(i);
+        t_temp.Y         = dat{5}(i);
+        t_temp.Z         = dat{6}(i);
+        t_temp.patient   = ipatient;
+        t_temp.color     = 0;
+        t_temp.size      = 3;
+        for name = string(cfg.LFP.channel)
+            if contains(name, t_temp.electrode)
+                t_temp.color = 1;
+            end
+        end    
+        t_temp.electrode{1}  = t_temp.electrode{1}(2:end-2);
+        t = [t; t_temp];
+    end
+end
+
+t = t(t.contact > 0, :);
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'MNI_table');
+writetable(t, fname);
+
+%% Create table for R: summary of hypnogram
+
+% durations for normalization
+t_summary = table;
+
+for ipatient = 1 : 8
+    [hypmarkers{ipatient}, hypnogram{ipatient}, hypmusestat{ipatient}] = hypnogramMuseStats(config{ipatient});
+    
+    for ipart = 1 : 3
+        
+        temp    = fields(hypmusestat{ipatient}{ipart});
+        fn      = temp{1}; % just take the first, they all contain the same durations
+        
+        t_temp  = struct2table(hypmusestat{ipatient}{ipart}.(fn).duration);
+        t_temp.part = ipart;
+        t_temp.patient = ipatient;
+        t_summary = [t_summary; t_temp];
+        
+    end
+end
+
+fname   = fullfile(config{ipatient}.datasavedir, 'hypnogram_duration');
+writetable(t_summary, fname);
+
+%% Create table for R: hypnograms
 
 t_position = table;
 
@@ -164,21 +272,22 @@ writetable(t, fname);
 fname   = fullfile(config{ipatient}.datasavedir, 'offset_table');
 writetable(t_position, fname);
 
-
-%% create table for R: LFP power values over time + IED sum
+%% Create table for R: LFP power values over time + IED sum
 
 config  = hspike_setparams;
 t_long  = table;
 t_wide  = table;
 
-for ipatient = 1 : 8   
+for ipatient = 1 : 8
     config{ipatient}.FFT.name  = {'window'};
     FFT = FFTtrials(config{ipatient});
     for ipart = 1 : size(FFT, 2)
         
         IEDsum = 0;
-        for fn = ["template1", "template2", "template3", "template4", "template5", "template6"]
-            IEDsum = IEDsum + FFT{ipart}.window.trialinfo.(sprintf('%s_cnt', fn{1}));
+        for itemplate = 1 : 6
+            if ~any(itemplate == config{ipatient}.template.rejected)
+                IEDsum = IEDsum + FFT{ipart}.window.trialinfo.(sprintf('template%d_cnt', itemplate));
+            end
         end
         
         t_wide_temp         = FFT{ipart}.window.trialinfo;
@@ -186,16 +295,17 @@ for ipatient = 1 : 8
         t_wide_temp.part    = ones(height(t_wide_temp), 1) * ipart;
         t_wide_temp.patient = ones(height(t_wide_temp), 1) * ipatient;
         
+        % average over frequency bands
         cfg                 = [];
         cfg.avgoverfreq     = 'yes';
         cfg.avgoverchan     = 'yes';
         freq_band           = {[1, 4], [5, 7], [8, 14], [15, 25], [26, 40]};
         freq_name           = ["delta", "theta", "alpha", "beta"];
 
-        for ifreq = 1 : length(freq_name)    
+        for ifreq = 1 : length(freq_name)   
+            
             cfg.frequency        = freq_band{ifreq};
             power                = ft_selectdata(cfg, FFT{ipart}.window);
-            
             t_long_temp          = FFT{ipart}.window.trialinfo;
             t_long_temp.power    = power.powspctrm;
             t_long_temp.band     = repmat(freq_name(ifreq), height(t_long_temp), 1);
@@ -207,66 +317,34 @@ for ipatient = 1 : 8
             t_wide_temp.(freq_name(ifreq)) = power.powspctrm;            
         end
         t_wide = [t_wide; t_wide_temp];
-
     end
 end
 
+% adding ratio low vs high
+for ipatient = unique(t_long.patient)'
+    for ipart =  unique(t_long.part)'
+        i1 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "delta");
+        i2 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "alpha");        
+        t_long_temp         = t_long(i1, :);
+        t_long_temp.power   = t_long.power(i1) ./ t_long.power(i2);
+        t_long_temp.band    = repmat("delta_div_alpha", height(t_long_temp), 1);   
+        t_long              = [t_long; t_long_temp];        
+    end
+end
+
+t_wide.delta_div_alpha = t_wide.delta ./ t_wide.alpha;
 t_long.minute = hour(t_long.starttime + (t_long.endtime-t_long.starttime)/2)*60 + minute(t_long.starttime + (t_long.endtime-t_long.starttime)/2);
 t_wide.minute = hour(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2)*60 + minute(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2);
 
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'power_table_long');
 writetable(t_long, fname);
-% t_long = readtable(fname);
 
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'power_table_wide');
 writetable(t_wide, fname);
-% t_wide = readtable(fname);
 
-
-%% create table for R: IED timing list: MuseStruct only - all data (nights)
-
-config  = hspike_setparams;
-t       = table;
-
-for ipatient = 1 : 8
-       
-    [MuseStruct{ipatient}, ~, ~] = detectTemplate(config{ipatient});
-
-    for ipart = 1 : size(MuseStruct{ipatient}, 2)
-        for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
-            for marker = ["template1", "template2", "template3", "template4", "template5", "template6"]
-                fprintf('Concatinating Patient %d, part %d, dir %d, marker %s\n', ipatient, ipart, idir, marker);
-                if isfield(MuseStruct{ipatient}{ipart}{idir}.markers, marker)
-                    if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers.(marker), 'clock')
-                        continue
-                    end
-                    h = size(MuseStruct{ipatient}{ipart}{idir}.markers.(marker).clock, 2);
-                    if h > 0
-                        t_temp          = table;
-                        t_temp.clock    = MuseStruct{ipatient}{ipart}{idir}.markers.(marker).clock';
-                        t_temp.marker   = repmat(marker,   height(t_temp), 1);
-                        t_temp.part     = repmat(ipart,    height(t_temp), 1);
-                        t_temp.patient  = repmat(ipatient, height(t_temp), 1);
-                        t               = [t; t_temp];
-                    end
-                end
-            end
-        end
-    end
-end
-
-t.minute = hour(t.clock)*60 + minute(t.clock);
-t.theta  = t.minute / (24*60) * 2 * pi;
-
-% save data to table for R
-fname   = fullfile(config{ipatient}.datasavedir, 'IED_table');
-writetable(t, fname);
-
-
-
-%% create table for R: IED timing list 2: based on LFP (3 nights with sleep stage)
+%% Create table for R: IED timing list based on LFP (3 nights with sleep stage)
 
 config  = hspike_setparams;
 t       = table;
@@ -278,6 +356,9 @@ for ipatient = 1 : 8
     
     for ipart = 1 : size(LFP, 2)
         for marker = ["template1", "template2", "template3", "template4", "template5", "template6"]
+            if any(str2double(marker{1}(end)) == config{ipatient}.template.rejected)
+                continue
+            end
             if isempty(LFP{ipart}.(marker))
                 continue
             end
@@ -297,27 +378,7 @@ t.theta  = t.minute / (24*60) * 2 * pi;
 
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'IED_table_PSG');
-
 writetable(t, fname);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 %% Create table for R: seizure timings
 
@@ -337,8 +398,48 @@ end
 fname   = fullfile(config{ipatient}.datasavedir, 'seizuredata_table');
 writetable(t, fname);
 
+%% Create slurm job list
 
+config = hspike_setparams;
+for ipatient = 1:8
+    MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
+    MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, ["BAD__START__", "BAD__END__"]);
+    writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
+    writeSpykingCircusFileList(config{ipatient}, true);
+    writeSpykingCircusParameters(config{ipatient});
+end
 
+fname_slurm_joblist = fullfile('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/slurm_job_list.txt');
+delete(fname_slurm_joblist);
+for ipatient = 1:8
+    for ipart = 1 : size(config{ipatient}.directorylist, 2)
+        subjdir     = config{ipatient}.prefix(1:end-1);
+        partdir     = ['p', num2str(ipart)];
+        if ~isfield(config{ipatient}.circus, 'channelname')
+            fid = fopen(fname_slurm_joblist, 'a');
+            if fid == -1
+                error('Could not create/open %s', fname_slurm_joblist);
+            end
+            filename    = 'SpykingCircus.params';
+            dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir);
+            fprintf(fid,'module load spyking-circus/1.0.8 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
+            fclose(fid);
+        else
+            for chandir = unique(config{ipatient}.circus.channelname)
+                fid = fopen(fname_slurm_joblist, 'a');
+                if fid == -1
+                    error('Could not create/open %s', fname_slurm_joblist);
+                end
+                temp        = strcmp(config{ipatient}.circus.channelname, chandir);
+                firstchan   = string(config{ipatient}.circus.channel(find(temp,1,'first')));
+                filename    = 'SpykingCircus.params';
+                dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir, '/', string(chandir));
+                fprintf(fid,'module load spyking-circus/1.0.8 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
+                fclose(fid);
+            end
+        end
+    end
+end
 
 %% Create table for R: UNITS
 
@@ -428,68 +529,52 @@ fname   = fullfile(config{ipatient}.datasavedir, 'alldata_table');
 writetable(t, fname);
 t = readtable(fname);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for ipatient = 1 : 7
-    i = t.patient == ipatient;
-    t.zAlpha(i) = (t.alpha(i) - mean(t.alpha(i))) ./ std(t.alpha(i));
-    t.zDelta(i) = (t.delta(i) - mean(t.delta(i))) ./ std(t.delta(i));
-    t.zTheta(i) = (t.theta(i) - mean(t.theta(i))) ./ std(t.theta(i));
-    t.zBeta(i)  = (t.beta(i)  - mean(t.beta(i)))  ./ std(t.beta(i));
-end
-
-[~, ~, t.bin] = histcounts(t.minute, [0:24*60]);
-
-t_binned = table;
-
-for ipatient = 1 : 7
-    for ibin = unique(t.bin)'
-        t_temp          = table;
-        t_temp.patient  = ipatient;
-        t_temp.bin      = ibin;
-        t_temp.alpha    = mean(t.alpha(t.bin == ibin & t.patient == ipatient));
-        t_temp.beta     = mean(t.beta( t.bin == ibin & t.patient == ipatient));
-        t_temp.theta    = mean(t.theta(t.bin == ibin & t.patient == ipatient));
-        t_temp.delta    = mean(t.delta(t.bin == ibin & t.patient == ipatient));        
-        t_temp.zAlpha   = mean(t.zAlpha(t.bin == ibin & t.patient == ipatient));
-        t_temp.zBeta    = mean(t.zBeta( t.bin == ibin & t.patient == ipatient));
-        t_temp.zTheta   = mean(t.zTheta(t.bin == ibin & t.patient == ipatient));
-        t_temp.zDelta   = mean(t.zDelta(t.bin == ibin & t.patient == ipatient));
-        t_binned = [t_binned; t_temp];
-    end
-end
-
-for ipatient = 1 : 7
-    i = t_binned.patient == ipatient;
-    t_binned.nAlpha(i) = t_binned.alpha(i) + min(t_binned.alpha(i));
-    t_binned.nAlpha(i) = t_binned.nAlpha(i) ./ max(t_binned.nAlpha(i));
-    t_binned.nBeta(i)  = t_binned.beta(i) + min(t_binned.beta(i));
-    t_binned.nBeta(i)  = t_binned.nBeta(i) ./ max(t_binned.nBeta(i));
-    t_binned.nTheta(i) = t_binned.theta(i) + min(t_binned.theta(i));
-    t_binned.nTheta(i) = t_binned.nTheta(i) ./ max(t_binned.nTheta(i));
-    t_binned.nDelta(i) = t_binned.delta(i) + min(t_binned.delta(i));
-    t_binned.nDelta(i) = t_binned.nDelta(i) ./ max(t_binned.nDelta(i));
-end
-
-
-% save data to table for R
-fname   = fullfile(config{ipatient}.datasavedir, 'alldata_binned_table');
-writetable(t_binned, fname);
-t_binned = readtable(fname);
+% for ipatient = 1 : 7
+%     i = t.patient == ipatient;
+%     t.zAlpha(i) = (t.alpha(i) - mean(t.alpha(i))) ./ std(t.alpha(i));
+%     t.zDelta(i) = (t.delta(i) - mean(t.delta(i))) ./ std(t.delta(i));
+%     t.zTheta(i) = (t.theta(i) - mean(t.theta(i))) ./ std(t.theta(i));
+%     t.zBeta(i)  = (t.beta(i)  - mean(t.beta(i)))  ./ std(t.beta(i));
+% end
+% 
+% [~, ~, t.bin] = histcounts(t.minute, [0:24*60]);
+% 
+% t_binned = table;
+% 
+% for ipatient = 1 : 7
+%     for ibin = unique(t.bin)'
+%         t_temp          = table;
+%         t_temp.patient  = ipatient;
+%         t_temp.bin      = ibin;
+%         t_temp.alpha    = mean(t.alpha(t.bin == ibin & t.patient == ipatient));
+%         t_temp.beta     = mean(t.beta( t.bin == ibin & t.patient == ipatient));
+%         t_temp.theta    = mean(t.theta(t.bin == ibin & t.patient == ipatient));
+%         t_temp.delta    = mean(t.delta(t.bin == ibin & t.patient == ipatient));        
+%         t_temp.zAlpha   = mean(t.zAlpha(t.bin == ibin & t.patient == ipatient));
+%         t_temp.zBeta    = mean(t.zBeta( t.bin == ibin & t.patient == ipatient));
+%         t_temp.zTheta   = mean(t.zTheta(t.bin == ibin & t.patient == ipatient));
+%         t_temp.zDelta   = mean(t.zDelta(t.bin == ibin & t.patient == ipatient));
+%         t_binned = [t_binned; t_temp];
+%     end
+% end
+% 
+% for ipatient = 1 : 7
+%     i = t_binned.patient == ipatient;
+%     t_binned.nAlpha(i) = t_binned.alpha(i) + min(t_binned.alpha(i));
+%     t_binned.nAlpha(i) = t_binned.nAlpha(i) ./ max(t_binned.nAlpha(i));
+%     t_binned.nBeta(i)  = t_binned.beta(i) + min(t_binned.beta(i));
+%     t_binned.nBeta(i)  = t_binned.nBeta(i) ./ max(t_binned.nBeta(i));
+%     t_binned.nTheta(i) = t_binned.theta(i) + min(t_binned.theta(i));
+%     t_binned.nTheta(i) = t_binned.nTheta(i) ./ max(t_binned.nTheta(i));
+%     t_binned.nDelta(i) = t_binned.delta(i) + min(t_binned.delta(i));
+%     t_binned.nDelta(i) = t_binned.nDelta(i) ./ max(t_binned.nDelta(i));
+% end
+% 
+% 
+% % save data to table for R
+% fname   = fullfile(config{ipatient}.datasavedir, 'alldata_binned_table');
+% writetable(t_binned, fname);
+% t_binned = readtable(fname);
 
 %% plotting overview of each patient / night
 
@@ -647,8 +732,6 @@ for ipatient = 3 : 7
 %     clear SpikeRaw SpikeTrials SpikeStats SpikeDensity
     
 end
-%%
-
 % plot eventrelated LFP, TFR, raster and psth
 config{ipatient}.plot.ncols         = 6;
 config{ipatient}.plot.name          = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
@@ -702,41 +785,6 @@ for ipatient = 1 : 7
 end
 
 
-
-%% Create slurm job list
-config              = hspike_setparams;
-fname_slurm_joblist = fullfile('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/slurm_job_list.txt');
-delete(fname_slurm_joblist);
-for ipatient = 1:7
-    for ipart = 1 : size(config{ipatient}.directorylist, 2)
-        subjdir     = config{ipatient}.prefix(1:end-1);
-        partdir     = ['p', num2str(ipart)];
-        if ~isfield(config{ipatient}.circus, 'channelname')
-            fid = fopen(fname_slurm_joblist, 'a');
-            if fid == -1
-                error('Could not create/open %s', fname_slurm_joblist);
-            end
-            filename    = 'SpykingCircus.params';
-            dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir);
-            fprintf(fid,'module load spyking-circus/1.0.8 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
-            fclose(fid);
-        else
-            for chandir = unique(config{ipatient}.circus.channelname)
-                fid = fopen(fname_slurm_joblist, 'a');
-                if fid == -1
-                    error('Could not create/open %s', fname_slurm_joblist);
-                end
-                temp        = strcmp(config{ipatient}.circus.channelname, chandir);
-                firstchan   = string(config{ipatient}.circus.channel(find(temp,1,'first')));
-                filename    = 'SpykingCircus.params';
-                dirname     = strcat('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/data/hspike/', subjdir, '/', partdir, '/', string(chandir));
-                fprintf(fid,'module load spyking-circus/1.0.8 ; cd %s; spyking-circus %s -c 28; spyking-circus %s -m converting -c 28; echo DONE!!! \n', dirname, filename, filename);
-                fclose(fid);
-            end
-        end
-    end
-end
-
 % 
 % 
 % %% Create slurm job list
@@ -775,63 +823,6 @@ end
 %     end
 % end
 
-%% BrainNetViewer
-
-config      = hspike_setparams;
-nodes_all   = [];
-clear elec
-t = table;
-
-% Separate per patient
-for ipatient = 1 : 8
-    
-    cfg     = config{ipatient};
-    fname   = cfg.locfile;
-    fid     = fopen(fname);
-    dat     = textscan(fid, '%s%d%s%f%f%f%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s', 'Headerlines', 4, 'delimiter', ';');
-    fclose(fid);
-    
-    for i = 1 : size(dat{1}, 1)
-
-        if ~isempty(dat{1}{i})
-            elecname = string(dat{1}{i});
-        end
-        
-        t_temp          = table;
-        t_temp.name     = strcat('_', elecname, '_',  num2str(dat{2}(i)));
-        t_temp.plotnr   = dat{2}(i);
-        t_temp.X        = dat{4}(i);
-        t_temp.Y        = dat{5}(i);
-        t_temp.Z        = dat{6}(i);
-        t_temp.patient  = ipatient;
-        t_temp.color    = 0;
-        t_temp.size     = 3;
-        t_temp.used     = dat{2}(i) ;
-        for name = string(cfg.LFP.channel)
-            if contains(name, t_temp.name)
-                t_temp.color = 1;
-            end
-        end    
-        t = [t; t_temp];
-    end
-end
-
-% write to table and plot
-for ipatient = 1 : 8
-
-    sel         = t(t.patient == ipatient, :);
-    nodes       = [sel.X, sel.Y, sel.Z, sel.color, sel.size, sel.patient];
-    
-    fname_node  = fullfile(cfg.datasavedir, [cfg.prefix, 'brainnet.node']);
-    fname_surf  = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031\Data\SurfTemplate\BrainMesh_Ch2.nv';
-    fname_cfg   = '\\lexport\iss01.charpier\analyses\stephen.whitmarsh\data\hspike\brainnet_config.mat';
-    fname_image = fullfile(cfg.imagesavedir, [cfg.prefix, 'brainnet.jpg']);
-    dlmwrite(fname_node, nodes, '\t');
-
-    % draw image with BrainNet
-    BrainNet_MapCfg(fname_node, fname_surf, fname_cfg, fname_image)
-
-end
 
 
 
@@ -843,39 +834,6 @@ end
 
 
 
-
-
-
-% resize nodes that are not analyzed
-nodes_all(nodes_all(:, 4) == 1, 5) = 2;
-nodes_all(nodes_all(:, 4) == 0, 5) = 2;
-
-fname_nodes_all = fullfile(cfg.datasavedir,  'brainnet_all.node');
-fname_image_all = fullfile(cfg.imagesavedir, 'brainnet_all.jpg');
-
-dlmwrite(fname_nodes_all, nodes_all, '\t');
-BrainNet_MapCfg(fname_nodes_all, fname_surf, fname_cfg, fname_image_all);
-
-% resize nodes that are not analyzed
-nodes_sel = nodes_all;
-nodes_sel(nodes_sel(:, 4) == 0, :) = [];
-
-fname_nodes_sel = fullfile(cfg.datasavedir,  'brainnet_all_analysed.node');
-fname_image_sel = fullfile(cfg.imagesavedir, 'brainnet_all_analysed.jpg');
-
-dlmwrite(fname_nodes_sel, nodes_sel, '\t');
-BrainNet_MapCfg(fname_nodes_sel, fname_surf, fname_cfg, fname_image_sel);
-
-
-% https://www.nitrc.org/docman/view.php/504/1190/BrainNet%20Viewer%20Manual%201.41.pdf
-% The node file is defined as an ASCII text file with the suffix ‘node’. In the node file, there
-% are 6 columns: columns 1-3 represent node coordinates, column 4 represents node
-% colors, column 5 represents node sizes, and the last column represents node labels.
-% Please note, a symbol ‘-‘(no ‘’) in column 6 means no labels. The user may put the
-% modular information of the nodes into column 4, like ‘1, 2, 3…’ or other information to
-% be shown by color. Column 5 could be set as nodal degree, centrality, T-value, etc. to
-% emphasize nodal differences by size. You can generate your nodal file according to the
-% requirements.
 
 
 

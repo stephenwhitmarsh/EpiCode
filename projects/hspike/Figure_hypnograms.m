@@ -1,4 +1,4 @@
-function Figure2
+function Figure_hypnograms
 
 restoredefaultpath
 if isunix
@@ -88,14 +88,14 @@ end
 
 % parameters for subplots
 nrows       = 24;
-w           = 0.92;
+w           = 0.82;
 hratio      = 1/3;
 vratio      = 1/nrows * 0.95;
 htop        = 1/nrows * 0.8;
 hbottom     = 1/nrows * 0.8;
 spacehor    = 0.1;
 rshift      = 0.02;
-upshift     = -0.00;
+upshift     = -0.010;
 imarker     = 1;
 
 
@@ -117,8 +117,9 @@ for ipatient = 1 : 8
         
         s1 = axes('Position', [hratio*(imarker-1) + w*(spacehor/2) + rshift, 1-(vratio*row) + upshift, w, htop]);
         sel = t(t.patient == ipatient & t.part == ipart & t.label ~= "NO_SCORE", :);
-        plot(sel.hour0*24, sel.Y, 'color', cmap(ipatient, :));
-        hold on
+        
+        hold on 
+        plot(sel.hour0*24, sel.Y, 'color', cmap(ipatient, :), 'linewidth', 1);
         sel_REM = t(t.patient == ipatient & t.part == ipart & t.label == "REM", :);
         for i = 1 : 2 : size(sel_REM)
             plot([sel_REM.hour0(i)*24, sel_REM.hour0(i+1)*24], [sel_REM.Y(i), sel_REM.Y(i+1)], 'linewidth', 2, 'color', cmap(ipatient, :));
@@ -141,21 +142,44 @@ for ipatient = 1 : 8
         if ipatient == 1 && ipart == 1 
             set(gca,'YColor', 'k');
             yticks(1:5);
-            yticklabels(["S3","S2","S1","REM","AWAKE"]);
+            yticklabels(["S3","S2","S1","REM","Wake"]);
             for i = 1 : 5
                 lh = plot(range, [i, i], 'k');
                 lh.Color    = [lh.Color 0.1];
             end
         end    
-%         title(sprintf('Patient%d Night %d', ipatient, ipart));
         row = row + 1;
     end
+    
+    % plot for legend
+    if ipatient == 1
+        ic = 1;
+        clear h
+        for ilabel = 1 : 8
+            h(ic) = patch([0, 0], [0,0], cmap(ic, :), 'facealpha', 1, 'edgecolor', 'none');
+            ic = ic + 1;
+        end
+        
+        spos = get(gca, 'Position');
+        l = legend(h, ["1","2","3","4","5","6","7","8"], 'box', 'off', 'location', 'eastoutside');
+        l.Title.FontWeight = 'normal';
+        l.Title.FontSize = 10;
+        pos = get(l, 'Position');
+        pos(1) = 0.88;
+        pos(2) = 0.5;
+        set(l,'Position', pos);
+        title(l, "Patient");
+        set(gca, 'Position', spos);
+    end
+    
 end
 
-set(findall(gcf, '-property', 'FontSize'), 'FontSize', 6)
+%set(findall(gcf, '-property', 'FontSize'), 'FontSize', 6)
 
 % write to figure
 fname = fullfile('D:\Dropbox\Apps\Overleaf\Hspike', 'hypnograms');
-exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
+exportgraphics(fig, strcat(fname, '.pdf'));
+
+fname = fullfile(config{1}.imagesavedir, 'hypnograms');
 exportgraphics(fig, strcat(fname, '.pdf'));
 

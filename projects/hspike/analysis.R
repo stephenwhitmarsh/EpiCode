@@ -5,15 +5,20 @@
 #install.packages("circlize")
 #install.packages("ggthemes")
 #install.packages("lemon")
+#install.packages("egg")
+#install.packages("readxl")
+#install.packages('Rcpp')
+#install.packages("equatiomatic")
+#install.packages("kableExtra")
 #if(!require(devtools)) install.packages("devtools")
 #devtools::install_github("kassambara/ggpubr")
 #setTimeLimit(100000); setSessionTimeLimit(10000)
 #devtools::install_github("strengejacke/sjPlot")
+#install.packages("CircStats")
 
 library(ggplot2)
 #library("cowplot")
 #library("gridExtra")
-library(ggpubr)
 library(plyr)
 library(reshape)
 library(RColorBrewer)
@@ -21,342 +26,907 @@ library(RColorBrewer)
 #library(lemon)
 library("sjPlot")
 library(emmeans)
+library(gridExtra)
+library(gtable)
+library(grid)
+library(egg)
+library(ggpubr)
+require(dplyr)
+library(xtable)
+library("readxl")
+library(Rcpp)
+library(equatiomatic)
+# library(CircStats)
+library(circular)
+library(kableExtra)
+
+#####################
+## Support function #
+#####################
+
+# replace subsequent fields with NAN for visualization purposes
+cleanf <- function(x){
+  oldx <- c(FALSE, x[-1]==x[-length(x)])  # is the value equal to the previous?
+  res <- x
+  res[oldx] <- NA
+  res}
+
+###############################
+# Latex table: Clinical table #
+###############################
+
+data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.csv")
+data$ID <- NULL
+data$Label <- NULL
+colnames(data) <- c("Patient","Sex","Age","Onset","Type","SOZ","MRI","PET","SPECT","Medication","Implantation","Pre-implantation surgery" )
+kbl(data, "latex", booktabs = T, label = "clinical",
+    caption = "Clinical summary. 
+    AED: Antiepileptic drugs,
+    IEDs: Interictal Epileptiform discharges,
+    FSWLA:  Focal seizures without loss of awareness,
+    FSLA: Focal seizures with loss of awareness,
+    FTBS: Focal to bilateral seizures, 
+    PNH: Periventricular Nodular Heterotopia. 
+    PMG: Polymicrogyria, 
+    SNH: Subcortical Nodular Heterotopia,
+    CBZ: Carbamazepine,
+    LCS: Lacosamide,
+    LTG: Lamotrigine, 
+    ZNG: Zonisamide,
+    ESL: Eslicarabazepine, 
+    VPA: Valproic Acid,
+    OXC: Oxicarbazepine,
+    PER: Perampanel, 
+    TPM: Topiramate",
+    )%>%
+  kable_styling(latex_options = c("scale_down"))%>%
+  kable_styling(latex_options = c("hold_position"))%>%
+  column_spec(1, width = "3em")  %>%
+  column_spec(2, width = "1em")  %>%
+  column_spec(3, width = "1em")  %>%
+  column_spec(4, width = "2em")  %>%
+  column_spec(5, width = "5em")  %>%
+  column_spec(6, width = "5em")  %>%
+  column_spec(7, width = "5em")  %>%
+  column_spec(8, width = "5em")  %>%
+  column_spec(9, width = "5em")  %>%
+  column_spec(10, width = "5em")  %>%
+  column_spec(11, width = "5em")  %>%
+  collapse_rows(columns = 1) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.tex")
+
+#####################################################
+# Latex table: MACRO electrode anatomical locations #
+#####################################################
+options(knitr.kable.NA = '')
+
+data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv")
+data$ID <- NULL
+data$Label <- NULL
+clean.cols <- c("Patient")
+data[clean.cols] <- lapply(data[clean.cols], cleanf)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'macro_anatomical',
+    caption = "Anatomical locations of macro electrode contacts")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.tex")
+
+#####################################################
+# Latex table: MICRO electrode anatomical locations #
+#####################################################
+
+data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.csv")
+data$ID <- NULL
+data$Label <- NULL
+clean.cols <- c("Patient")
+data[clean.cols] <- lapply(data[clean.cols], cleanf)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'micro_anatomical',
+    caption = "Anatomical locations of micro electrodes")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.tex")
+
+########################################
+# Latex table: Electrode locations MNI #
+########################################
+
+data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/MNI_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data  <- data[!data$color == 0, ] # only make table of used contacts
+data  <- data[, c('patient','electrode','contact','X','Y','Z')]
+colnames(data) = c('Patient','Electrode','Contact', 'X', 'Y', 'Z')
+rownames(data) <- NULL
+clean.cols <- c("Patient","Electrode")
+data[clean.cols] <- lapply(data[clean.cols], cleanf)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'MNI',
+    caption = "Anatomical locations of micro electrodes") %>%
+    kable_styling(font_size = 6) %>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  
+    # collapse_rows(columns = 1:2) %>%
+  # column_spec(1, bold=T) %>%
+ # collapse_rows(columns = 1:2)%>%
+  # kable_styling(latex_options = c("repeat_header"),
+                # repeat_header_continued = "\\textit{(Continued on Next Page...)}")%>%
+  row_spec(5,  extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(10, extra_latex_after = "\\cline{2-6}") %>%
+  row_spec(14, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(19, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(24, extra_latex_after = "\\cline{2-6}") %>%
+  row_spec(29, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(34, extra_latex_after = "\\cline{2-6}") %>%
+  row_spec(39, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(44, extra_latex_after = "\\cline{2-6}") %>%
+  row_spec(49, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(54, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(59, extra_latex_after = "\\cline{2-6}") %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/MNI.tex")
+
+###################################
+# Latex table: Time in sleepstage #
+###################################
+
+# normalize by time spend in sleep stages
+data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data <- data[, c("patient", "part", "PHASE_3", "PHASE_2", "PHASE_1", "AWAKE", "REM")] 
+colnames(data) = c("Patient", "Night","S3", "S2", "S1", "Wake", "REM")
+clean.cols <- c("Patient")
+data[clean.cols] <- lapply(data[clean.cols], cleanf)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration',
+    caption = "Time spend in sleep stages (hrs.)", digits=2) %>%
+    kable_styling(latex_options = c("hold_position")) %>%
+    add_header_above(c(" " = 2, "Sleep stage" = 5)) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stageduration.tex")
+
+#######################
+# LFP power circadian #
+#######################
+
+# prepare data - only first three nights
+data_power          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_power$hyplabel <- factor(data_power$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
+data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
+data_power$Patient  <- factor(data_power$patient, levels = c(8:1))
+data_power$part     <- factor(data_power$part)
+
+# bin for polar representation
+data_power$bin <- as.integer(cut(data_power$minute, seq(0, 24*60, by = 60)))
+# duplicate midnight to connect in figure
+
+temp <- subset(data_power, bin == 24)
+temp$bin <- 0
+data_power <- bind_rows(data_power, temp)
+
+data_binned <- setNames(aggregate(data_power$power, c(list(data_power$Patient), list(data_power$bin), list(data_power$band)), mean), c("Patient", "bin", "band", "power"))
+data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(Npower = (power-min(power))/max(power-min(power)))) 
+
+###
+# data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(Npower = (mean(power)-power)/sd(power))) 
+
+####
+# getCentroid <- function(x, width = 1) {
+#   A  <- x * width                  # area of each bar
+#   xc <- seq(width/2, length(x), 1) # x coordinates of center of bars
+#   yc <- x/2                        # y coordinatey
+#   
+#   cx <- sum(xc * A) / sum(A)
+#   cy <- sum(yc * A) / sum(A)
+#   return(list(x = cx, y = cy))
+# }
+# points(getCentroid(x), col = 'red', pch = 19)
+####
+
+# plot
+data_binned$title1 = "Delta (1-4Hz)"
+data_binned$title2 = "Theta (5-7Hz)"
+data_binned$title3 = "Alpha (8-14Hz)"
+data_binned$title4 = "Delta (1-4Hz) / Alpha (8-14Hz)"
+
+polarpowerplots <- list()
+
+polarpowerplots[[1]] <- 
+  ggplot(data=data_binned[data_binned$band == "delta", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*2+(9-as.numeric(Patient))), alpha=0.8, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(0, 10) +
+  facet_wrap(~title1)
+
+polarpowerplots[[2]] <- 
+  ggplot(data=data_binned[data_binned$band == "theta", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*2+(9-as.numeric(Patient))), alpha=0.8, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(0, 10) +
+  facet_wrap(~title2)
+
+polarpowerplots[[3]] <- 
+  ggplot(data=data_binned[data_binned$band == "alpha", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*2+(9-as.numeric(Patient))), alpha=0.8, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(0, 10) +
+  facet_wrap(~title3)
+
+polarpowerplots[[4]] <-
+  ggplot(data=data_binned[data_binned$band == "delta_div_alpha", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*2+(9-as.numeric(Patient))), alpha=0.8, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(0, 10) +
+  facet_wrap(~title4)
+
+powerplots <- ggarrange(plotlist=polarpowerplots[c(1,2,3)], widths = c(1,1,1,1), heights = c(1,1,1,1), nrow = 1, 
+          labels = c("D","E","F"), vjust = 18, hjust = -1, 
+          legend = "right", common.legend = TRUE, 
+          font.label = list(size = 14, color = "black", face = "bold"))
+
+ggarrange(plotlist=polarpowerplots[c(1,2,3)], widths = c(1,1,1,1), heights = c(1,1,1,1), nrow = 1, 
+                        labels = c("A","B","C"), vjust = 18, hjust = -1, 
+                        legend = "right", common.legend = TRUE, 
+                        font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_power_band.pdf")
+
+
+######################
+# IED rate circadian #
+######################
+
+data_IED                <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_IED[data_IED$hyplabel == "PRE_SLEEP", ] = "AWAKE"
+data_IED[data_IED$hyplabel == "POST_SLEEP", ] = "AWAKE"
+data_IED$hyplabel       <- factor(data_IED$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
+
+data_IED$Patient        <- factor(data_IED$patient, levels = c(8:1)) # same order in plot
+data_IED$part           <- factor(data_IED$part)
+data_IED$marker         <- factor(data_IED$marker)
+data_IED$hour           <- data_IED$minute / (60)
+data_IED$rad            <- data_IED$theta
+
+# extract distribution statistics
+library(circular)
+dist_IED <- data.frame()  
+d <- list()
+stat_IED <- list()
+for (ipatient in 1:8) {
+  d <- density.circular(data_IED$rad[data_IED$patient == ipatient], bw = 100)
+  temp = list()
+  temp$x = as.numeric(d$x)
+  temp$y = d$y
+  le <- lengths(temp)
+  temp$patient <- rep(ipatient,le[1])
+  tempdf <- as.data.frame(temp)
+  colnames(tempdf)           = c('rad','density','Patient')
+  dist_IED <- bind_rows(dist_IED, tempdf)
+  temp                       = list()
+  
+  # Rayleigh Test of Uniformity: General Unimodal Alternative
+  temp                       <- rayleigh.test(data_IED$rad[data_IED$patient == ipatient])
+  stat_IED$Patient[ipatient]    = ipatient
+  stat_IED$p[ipatient]          = temp$p.value
+  stat_IED$Rayleigh_stat[ipatient]   = temp$statistic
+  
+  # Rayleigh Test of Uniformity: General Unimodal Alternative
+  stat_IED$median[ipatient] <- as.numeric(median(circular(data_IED$rad[data_IED$patient == ipatient]))) / (pi * 2) * 24
+  if (stat_IED$median[ipatient] < 0) {
+    stat_IED$median[ipatient] = stat_IED$median[ipatient] + 24
+  }
+}
+
+# format data for plotting
+dist_IED$Khour = dist_IED$rad / (pi * 2) * 24
+dist_IED$Patient = factor(dist_IED$Patient, levels = c(1:8)) # reversed order in plot
+stat_IED <- as.data.frame(stat_IED)
+stat_IED$Patient <- factor(stat_IED$Patient, levels = c(1:8))
+stat_IED$median[6] = stat_IED$median[6] + (pi*2/360) * 4 # add some offset in degrees
+stat_IED$median[1] = stat_IED$median[1] - (pi*2/360) * 4 # add some offset in degrees
+stat_IED$median[stat_IED$p >= 0.05] = NA # all are significant though
+
+IEDpolarplot <-
+  ggplot(data=data_IED, aes(x=hour, y = as.numeric(Patient), fill=Patient)) + 
+  geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
+  geom_hline(yintercept = seq(1, 8, by = 1),  colour = "grey90") +  
+  geom_ribbon(data=dist_IED, alpha = 1, colour = NA, aes(x = Khour, 
+                                                   ymin = (9-as.numeric(Patient)),
+                                                   ymax = density*3 + (9-as.numeric(Patient)), 
+                                                   col = Patient), show.legend = TRUE) +
+  
+  geom_segment(data=stat_IED, aes(x=median, y=9.5, xend=median, yend=10, col=Patient), 
+               arrow = arrow(length = unit(0.25, "cm"), type="closed"), size = 0.5, show.legend = FALSE) + 
+  
+  coord_polar(theta = "x", start = 0, direction = 1, clip = 'off') + 
+  scale_x_continuous(breaks = seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  scale_fill_brewer(palette = "Set2", direction=-1) + scale_color_brewer(palette = "Set2", direction=-1) +
+  theme_article() +
+  theme(panel.border = element_blank(),
+        #legend.key   = element_blank(),
+        axis.ticks   = element_blank(),
+        axis.text.y  = element_blank(),
+        #axis.text.x  = element_blank(),
+        panel.grid   = element_blank(),
+        axis.title.x = element_blank(),
+        #legend.text  = element_blank(),
+        axis.title.y = element_blank()) + 
+  ylim(-2, 10)
+
+##########################
+# IED seizures circadian #
+########################## 
+
+# load data: Patients x Units x time window
+data_seizures           <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+
+# prepare data
+data_seizures$Patient   <- factor(data_seizures$patient, levels = c(1:8))
+data_seizures$hour      <- data_seizures$minute / 60
+data_seizures$rad       <- data_seizures$minute / 60 / 24 * pi * 2
+
+# extract distribution statistics
+library(circular)
+dist_seizures <- data.frame()  
+d <- list()
+stat_seizures <- list()
+for (ipatient in 1:8) {
+  d <- density.circular(data_seizures$rad[data_seizures$patient == ipatient], bw = 50)
+  temp = list()
+  temp$x = as.numeric(d$x)
+  temp$y = d$y
+  le <- lengths(temp)
+  temp$patient <- rep(ipatient,le[1])
+  tempdf <- as.data.frame(temp)
+  colnames(tempdf) = c('rad','density','Patient')
+  dist_seizures <- bind_rows(dist_seizures, tempdf)
+  
+  # Rayleigh Test of Uniformity: General Unimodal Alternative
+  temp = list()
+  temp <- rayleigh.test(data_seizures$rad[data_seizures$patient == ipatient])
+  stat_seizures$Patient[ipatient]    = ipatient
+  stat_seizures$p[ipatient]          = temp$p.value
+  stat_seizures$Rayleigh_stat[ipatient] = temp$statistic
+  
+  # Rayleigh Test of Uniformity: General Unimodal Alternative
+  stat_seizures$median[ipatient] <- as.numeric(median(circular(data_seizures$rad[data_seizures$patient == ipatient]))) / (pi * 2) * 24
+  if (stat_seizures$median[ipatient] < 0) {
+    stat_seizures$median[ipatient] = stat_seizures$median[ipatient] + 24
+  }
+}
+
+# format data for plotting
+dist_seizures$Khour = dist_seizures$rad / (pi * 2) * 24
+dist_seizures$Patient = factor(dist_seizures$Patient, levels = c(8:1))
+stat_seizures <- as.data.frame(stat_seizures)
+stat_seizures$Patient = factor(stat_seizures$Patient, levels = c(8:1))
+stat_seizures$significant = stat_seizures$p < 0.05
+stat_seizures$median[stat_seizures$p >= 0.05] = NA
+
+# tiny adjustment to make axes line out properly and arrows not overlap
+data_seizures$hour[which(data_seizures$hour==max(data_seizures$hour))] = 24
+
+# add jitter function for points
+jitter <- position_jitter(width = 0, height = 0.4)
+
+# plot
+Seizurepolarplot  <-
+  ggplot(data=data_seizures, aes(x=hour, y = as.numeric(Patient), fill=Patient)) + 
+  geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
+  geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90") +  
+  geom_ribbon(data=dist_seizures, alpha = 1, colour = NA, aes(x=Khour, 
+                                                   ymin = (9-as.numeric(Patient)),
+                                                   ymax = density*1.3 + (9-as.numeric(Patient)), 
+                                                   col = Patient), show.legend = FALSE) +
+  
+  geom_segment(data=stat_seizures, aes(x=median, y=9.5, xend=median, yend=10, col=Patient), 
+               arrow = arrow(length = unit(0.25, "cm"), type="closed"), size = 1, show.legend = FALSE) + 
+  
+  geom_point(colour="black", pch=21, size=1, position = jitter) +
+  coord_polar(theta = "x", start = 0, direction = 1, clip = 'off') + 
+  scale_x_continuous(breaks = seq(0, 21, by = 3),
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  theme_article() +
+  theme(panel.border = element_blank(),
+        #legend.key   = element_blank(),
+        axis.ticks   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.text.x  = element_blank(),
+        panel.grid   = element_blank(),
+        axis.title.x = element_blank(),
+        #legend.text  = element_blank(),
+        axis.title.y = element_blank()) + 
+  ylim(-2, 10)
+
+# save combined to pdf
+ggarrange(IEDpolarplot, Seizurepolarplot, 
+          labels = c("A","B"), 
+          vjust = 15, hjust = -1, 
+          legend = "right", 
+          common.legend = TRUE, 
+          font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
 
 #############################
 # LFP power per sleep stage #
 #############################
 
 # prepare data
-data          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data          <- data[!data$part > 3, ] # hypnogram is only scored on first three nights
-data$hyplabel <- factor(data$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data$band     <- factor(data$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta"))
-data$patient  <- factor(data$patient, levels = c(8:1))
-data$part     <- factor(data$part)
+data_pow  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow          <- data_pow[!data_pow$part > 3, ] # hypnogram is only scored on first three nights
+data_pow          <- data_pow[!data_pow$hyplabel == "NO_SCORE", ]
+data_pow$hyplabel[data_pow$hyplabel == "PHASE_1"]   = "S1"
+data_pow$hyplabel[data_pow$hyplabel == "PHASE_2"]   = "S2"
+data_pow$hyplabel[data_pow$hyplabel == "PHASE_3"]   = "S3"
+data_pow$hyplabel[data_pow$hyplabel == "AWAKE"]     = "Wake"
+data_pow$hyplabel[data_pow$hyplabel == "PRESLEEP"]  = "Pre"
+data_pow$hyplabel[data_pow$hyplabel == "POSTSLEEP"] = "Post"
+data_pow$hyplabel <- factor(data_pow$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3"))
+data_pow$band     <- factor(data_pow$band, ordered = TRUE, levels = c("delta", "theta", "alpha"))
+data_pow$patient  <- factor(data_pow$patient, levels = c(8:1))
+data_pow$part     <- factor(data_pow$part)
 
 # scale data over windows
-m             <- setNames(aggregate(data$power, by = list(data$patient, data$band, data$hyplabel), median), c("patient", "band", "hyplabel", "power_median"))
-data          <- merge(data, m)
-m             <- setNames(aggregate(data$power, by = list(data$patient, data$band), mean), c("patient", "band", "power_avg"))
-s             <- setNames(aggregate(data$power, by = list(data$patient, data$band), sd),   c("patient", "band", "power_sd"))
-data          <- merge(data, m)
-data          <- merge(data, s)
-data$Zpower   <- (data$power-data$power_avg)/data$power_sd
-
-# clean data
-data          <- data[!data$hyplabel == "NO_SCORE", ]
-data          <- data[!is.na(data$hyplabel), ]
-data$hyplabel <- factor(data$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-
-# rename levels for plotting
-levels(data$hyplabel)[levels(data$hyplabel) == "PHASE_1"] <- "S1"
-levels(data$hyplabel)[levels(data$hyplabel) == "PHASE_2"] <- "S2"
-levels(data$hyplabel)[levels(data$hyplabel) == "PHASE_3"] <- "S3"
-
-# plot patients separately
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/boxplot_power_combined.pdf")
-pdf(file="D:/Dropbox/Apps/Overleaf/Hspike/boxplot_power_combined.pdf")
-
-  ggplot(data=data, aes(x = hyplabel, y = Zpower, fill = patient)) +
-    geom_boxplot(outlier.shape = NA) +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    theme_bw() +
-    coord_cartesian(ylim = c(-1.2, 3)) +
-    theme(
-      panel.border = element_blank(),
-          legend.key = element_blank(),
-          axis.ticks = element_blank(),
-          #axis.text.y = element_blank(),
-          panel.grid.major.x  = element_blank(),
-          #axis.title.x = element_blank(),
-          #axis.title.y = element_blank(),
-          strip.background = element_blank()) +
-    xlab("Sleep stage") + ylab("Power (z-scored)") +
-    facet_wrap(~band, scales = "fixed", labeller = labeller(band = c("delta" = "Delta (1-4Hz)",
-                                                                     "theta" = "Theta (5-7Hz)",
-                                                                     "alpha" = "Alpha (8-14Hz)",
-                                                                     "beta"  = "Beta  (15-24Hz)")))
-dev.off()
-  
-
-# plot average per patient
-#pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/boxplot_power_patient.pdf")
-pdf(file="D:/Dropbox/Apps/Overleaf/Hspike/boxplot_power_patient.pdf")
-
-  ggplot(data=data, aes(x = hyplabel, y = Zpower)) +
-    geom_boxplot(outlier.shape = NA) +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    theme_bw() +
-    coord_cartesian(ylim = c(-1.2, 3)) +
-    theme(
-      panel.border = element_blank(),
-      legend.key = element_blank(),
-      axis.ticks = element_blank(),
-      #axis.text.y = element_blank(),
-      panel.grid.major.x  = element_blank(),
-      #axis.title.x = element_blank(),
-      #axis.title.y = element_blank(),
-      strip.background = element_blank()) +
-    xlab("Sleep stage") + ylab("Power (z-scored)") +
-    facet_wrap(~band, scales = "fixed", labeller = labeller(band = c("delta" = "Delta (1-4Hz)",
-                                                                     "theta" = "Theta (5-7Hz)",
-                                                                     "alpha" = "Alpha (8-14Hz)",
-                                                                     "beta"  = "Beta  (15-24Hz)")))
-dev.off()
-
-# plot average per patient
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/boxplot_power_band.pdf")
-pdf(file="D:/Dropbox/Apps/Overleaf/Hspike/boxplot_power_band.pdf")
-
-  ggplot(data=data, aes(x = hyplabel, y = Zpower, fill = band)) +
-    geom_boxplot(outlier.shape = NA) +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    theme_bw() +
-    coord_cartesian(ylim = c(-1.2, 3)) +
-    theme(
-      panel.border = element_blank(),
-      legend.key = element_blank(),
-      axis.ticks = element_blank(),
-      #axis.text.y = element_blank(),
-      panel.grid.major.x  = element_blank(),
-      #axis.title.x = element_blank(),
-      #axis.title.y = element_blank(),
-      strip.background = element_blank()) +
-    xlab("Sleep stage") + ylab("Power (z-scored)") 
-dev.off()
-
-
-#######################
-# LFP power circadian #
-#######################
-
-# prepare data
-data          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data$hyplabel <- factor(data$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data$band     <- factor(data$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta"))
-data$patient  <- factor(data$patient, levels = c(8:1))
-data$part     <- factor(data$part)
-
-# bin for polar representation
-data$bin    <- as.integer(cut(data$minute, seq(0, 24*60, by = 60)))
-data_binned <- setNames(aggregate(data$power, c(list(data$patient), list(data$bin), list(data$band)), mean), c("patient", "bin", "band", "power"))
-data_binned <- as.data.frame(data_binned %>% group_by(patient, band) %>% mutate(Npower = power/max(power))) 
+m               <- setNames(aggregate(data_pow$power, by = list(data_pow$patient, data_pow$band, data_pow$hyplabel), median), c("patient", "band", "hyplabel", "power_median"))
+data_pow        <- merge(data_pow, m)
+m               <- setNames(aggregate(data_pow$power, by = list(data_pow$patient, data_pow$band), mean), c("patient", "band", "power_avg"))
+s               <- setNames(aggregate(data_pow$power, by = list(data_pow$patient, data_pow$band), sd),   c("patient", "band", "power_sd"))
+data_pow        <- merge(data_pow, m)
+data_pow        <- merge(data_pow, s)
+data_pow$Zpower <- (data_pow$power-data_pow$power_avg)/data_pow$power_sd
+m               <- setNames(aggregate(data_pow$Zpower, by = list(data_pow$patient, data_pow$part, data_pow$band, data_pow$hyplabel), mean), c("patient", "part", "band", "hyplabel", "power_avg"))
+m$patient       <- factor(m$patient,  levels = c(8:1))
+m$hyplabel      <- factor(m$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3")) # data$hyplabel <- factor(data$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
+m$part          <- factor(m$part)
 
 # plot
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_power_band.pdf")
-pdf(file="D:/Dropbox/Apps/Overleaf/Hspike/polar_power_band.pdf")
+data_pow$title1 = "Normalized delta power (1-4Hz)"
+data_pow$title2 = "Normalized theta power (5-7Hz)"
+data_pow$title3 = "Normalized alpha power (8-14Hz)"
 
-  ggplot(data=data_binned, aes(x = bin, y = Npower, fill=patient, col=patient)) +
-    ggtitle("Circadian power") +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    geom_vline(xintercept = seq(0.5, 21.5, by = 3), colour = "grey90") + 
-    geom_hline(yintercept = seq(1, 7, by = 1), colour = "grey90") + 
-    geom_bar(stat="identity", width = 1) +
-    theme_bw() +
-    theme(
-      panel.border = element_blank(),
-      legend.key = element_blank(),
-      axis.ticks = element_blank(),
-      axis.text.y = element_blank(),
-      panel.grid.major.x  = element_blank(),
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      strip.background = element_blank()) +
-    scale_x_continuous(breaks=seq(0.5, 21.5, by = 3), labels = c("0" = "00:00", "3" = "03:00", "6" = "06:00", "9" = "09:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
-    coord_polar(theta = "x", start = 0) +
-    ylim(0, 7) +
-    facet_wrap(~band, scales = "fixed", labeller = labeller(band = c("delta" = "Delta (1-4Hz)",
-                                                                     "theta" = "Theta (5-7Hz)",
-                                                                     "alpha" = "Alpha (8-14Hz)",
-                                                                     "beta"  = "Beta  (15-24Hz)")))
-dev.off()
+plots_pow <- list()
+plots_pow[[1]] <- 
+  ggplot(data=data_pow[data_pow$band == "delta",], aes(y = hyplabel, x = Zpower)) +
+  geom_boxplot(outlier.shape = NA) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_point(data = m[m$band == "delta",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5,
+             position=position_dodge(width=0.5)) +
+  guides(colour = "none") +
+  coord_cartesian(xlim = c(-1.2, 2)) +
+  theme_article() +
+  ylab(NULL) + xlab(NULL) +
+  facet_wrap(~title1)
 
+plots_pow[[2]] <- 
+  ggplot(data=data_pow[data_pow$band == "theta",], aes(y = hyplabel, x = Zpower)) +
+  geom_boxplot(outlier.shape = NA) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_point(data = m[m$band == "theta",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5, 
+             position=position_dodge(width=0.5)) +
+  guides(colour = "none") +
+  coord_cartesian(xlim = c(-1.2, 2)) +
+  theme_article() +
+  ylab(NULL) + xlab(NULL) +
+  facet_wrap(~title2)
 
-#################################
-# IED rate & seizures circadian #
-#################################
-
-data_IED                <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_IED[data_IED$hyplabel == "PRE_SLEEP", ] = "AWAKE"
-data_IED[data_IED$hyplabel == "POST_SLEEP", ] = "AWAKE"
-data_IED$hyplabel       <- factor(data_IED$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data_IED$patient        <- factor(data_IED$patient, levels = c(8:1))
-data_IED$part           <- factor(data_IED$part)
-data_IED$marker         <- factor(data_IED$marker)
-data_IED$hour           <- data_IED$minute / (60)
-
-# load data: Patients x Units x time window
-data_seizures           <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-
-# prepare data
-data_seizures$patient   <- factor(data_seizures$patient, levels = c(8:1))
-data_seizures$hour      <- data_seizures$minute / (60)
-
-# plot
-pdf(file="D:/Dropbox/Apps/Overleaf/Hspike/polar_density_combined.pdf")
-
-  ggplot(data=data_IED, aes(x=hour, fill=patient, col=patient)) +
-    ggtitle("Circadian interictal density & seizure occurance") +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
-    #geom_segment(aes(x = 0, xend = 0, y = 1, yend = 0.1)) +
-    geom_hline(yintercept = seq(-0.25+0.025, -0.05, by = 0.025), colour = "grey90") +
-    geom_histogram(position = 'stack', aes(y = stat(density)), binwidth=0.1, center = 0.05) + # make sure binwidth is multiple of 24/60
-    coord_polar(theta = "x") +
-    scale_x_continuous(breaks=seq(0, 21, by = 3), labels = c("0" = "00:00", "3" = "3:00", "6" = "6:00", "9" = "9:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
-    coord_polar(theta = "x", start = 0, direction = 1) + 
-    theme_bw() +
-    theme(panel.border = element_blank(),
-          legend.key   = element_blank(),
-          axis.ticks   = element_blank(),
-          axis.text.y  = element_blank(),
-          panel.grid   = element_blank(),
-    ) + 
-    geom_point(size=1, data = data_seizures, aes(x = hour, y = -0.05 - as.numeric(patient)*0.025+0.025, fill = patient, col = patient)) + ylim(-0.3, 0.85)
-
-dev.off()
-
+plots_pow[[3]] <- 
+  ggplot(data=data_pow[data_pow$band == "alpha",], aes(y = hyplabel, x = Zpower)) +
+  geom_boxplot(outlier.shape = NA) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_point(data = m[m$band == "alpha",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5, 
+             position=position_dodge(width=0.5)) +
+  guides(colour = "none") +
+  coord_cartesian(xlim = c(-1.2, 2)) +
+  theme_article() +
+  ylab(NULL) + xlab(NULL) +
+  facet_wrap(~title3)
 
 ##########################
 # IED rate & sleep stage #
 ##########################
 
 # prepare data
-data_IED                <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_IED                <- data_IED[!data_IED$hyplabel == "NO_SCORE", ]
-data_IED[data_IED$hyplabel == "PRE_SLEEP", ] = "AWAKE"
-data_IED[data_IED$hyplabel == "POST_SLEEP", ] = "AWAKE"
-data_IED$hyplabel       <- factor(data_IED$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data_IED$patient        <- factor(data_IED$patient, levels = c(8:1))
-data_IED$part           <- factor(data_IED$part)
-data_IED$marker         <- factor(data_IED$marker)
-data_IED$hour           <- data_IED$minute / (60)
+data_IED <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_IED <- data_IED[!data_IED$hyplabel == "NO_SCORE", ]
+data_IED$hyplabel[data_IED$hyplabel == "PHASE_1"]   = "S1"
+data_IED$hyplabel[data_IED$hyplabel == "PHASE_2"]   = "S2"
+data_IED$hyplabel[data_IED$hyplabel == "PHASE_3"]   = "S3"
+data_IED$hyplabel[data_IED$hyplabel == "AWAKE"]     = "Wake"
+data_IED$hyplabel[data_IED$hyplabel == "PRESLEEP"]  = "Pre"
+data_IED$hyplabel[data_IED$hyplabel == "POSTSLEEP"] = "Post"
+data_IED$hyplabel <- factor(data_IED$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3"))
+data_IED$patient  <- factor(data_IED$patient, levels = c(8:1))
+data_IED$part     <- factor(data_IED$part)
+data_IED$marker   <- factor(data_IED$marker)
+data_IED$hour     <- data_IED$minute / (60)
 
-# create table time spend in sleep stages
+# normalize by time spend in sleep stages
+data_duration <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_duration <- data_duration %>% rename(
+  'S1' = 'PHASE_1',
+  'S2' = 'PHASE_2',
+  'S3' = 'PHASE_3',
+  'Wake' = 'AWAKE',
+  'Pre' = 'PRESLEEP',
+  'Post' = 'POSTSLEEP')
 
-# normalize by time spend in 
+data_duration <- melt(data_duration, id = c('patient','part'))
+colnames(data_duration) = c('patient','part','hyplabel','duration')
 
+# count IEDs per sleepstage
+s <- na.omit(data_IED %>% dplyr::count(patient, part, hyplabel)) # library conflict of count 
 
-ggplot(data=data_IED, aes(x=hyplabel, fill=patient, col=patient)) +
+# normalize by time spend in sleep stages
+s <- merge(s, data_duration)
+s$IEDrate = s$n / s$duration / 60 # count is per 10 seconds
+
+# normalize rate by REM rate 
+i <- s[s$hyplabel == 'REM',]
+i <- i[, c('patient','part','IEDrate')]
+colnames(i) = c('patient','part','REMrate')
+s <- merge(s, i)
+s$IEDrateNorm <- s$IEDrate / s$REMrate
+
+# plot
+s$title1 = "IED count"
+s$title2 = "IED rate (count/min)"
+s$title3 = "IED normalized to REM"
+plots_IED<- list()
+plots_IED[[1]] <- ggplot(data=s, aes(y=hyplabel, x=n)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-  #geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
-  #geom_segment(aes(x = 0, xend = 0, y = 1, yend = 0.1)) +
-  #geom_hline(yintercept = seq(-0.25+0.025, -0.05, by = 0.025), colour = "grey90") +
-  geom_bar(position = 'stack', aes(stat = "count")) # make sure binwidth is multiple of 24/60
-  
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) +
+  guides(colour = "none") +
+  ylab(NULL) + xlab(NULL) + 
+  theme_article() + 
+  coord_cartesian(xlim = c(1, 4000)) +
+  facet_wrap(~title1)
 
+plots_IED[[2]] <- ggplot(data=s, aes(y=hyplabel, x=IEDrate)) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) +
+  guides(colour = "none") +
+  ylab(NULL) + xlab(NULL) +
+  coord_cartesian(xlim = c(0, 20)) +
+  theme_article() + 
+  facet_wrap(~title2)
 
-## STOPPED HERE
+plots_IED[[3]] <- ggplot(data=s, aes(y=hyplabel, x=IEDrateNorm)) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) + 
+  ylab(NULL) + xlab(NULL) +
+  theme(axis.text.y = element_blank()) +
+  coord_cartesian(xlim = c(0, 20)) +
+  theme_article() +
+  theme(legend.position ="bottom") +
+  guides(colour = guide_legend(ncol = 1)) +
+  guides(fill=guide_legend(title="Patient")) + 
+  labs(color='Patient') + 
+  facet_wrap(~title3) 
 
-
-
-
-######################
-# IED STATISTICS 
-######################
+#################################
+# IED rate vs. power STATISTICS #
+#################################
 
 # prepare data
-data          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data          <- data[!data$hyplabel == "NO_SCORE", ]
-data[data$hyplabel == "PRE_SLEEP", ] = "AWAKE"
-data[data$hyplabel == "POST_SLEEP", ] = "AWAKE"
-    
-data$hyplabel <- factor(data$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data$patient  <- factor(data$patient, levels = c(8:1))
-data$part     <- factor(data$part)
+data_pow_wide <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow_wide <- data_pow_wide[!data_pow_wide$hyplabel == "NO_SCORE", ]
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_1"]   = "S1"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_2"]   = "S2"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_3"]   = "S3"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "Wake"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PRESLEEP"]  = "Pre"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "POSTSLEEP"] = "Post"
+data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_pow_wide$stage    <- data_pow_wide$hyplabel
+data_pow_wide$patient  <- factor(data_pow_wide$patient, levels = c(8:1))
+data_pow_wide$night    <- factor(data_pow_wide$part)
 
 # normalize 
-y1   <- setNames(aggregate(data$alpha, by = c(list(data$patient)), mean), c("patient", "Malpha"))
-y2   <- setNames(aggregate(data$theta, by = c(list(data$patient)), mean), c("patient", "Mtheta"))
-y3   <- setNames(aggregate(data$beta,  by = c(list(data$patient)), mean), c("patient", "Mbeta"))
-y4   <- setNames(aggregate(data$delta, by = c(list(data$patient)), mean), c("patient", "Mdelta"))
-y1sd <- setNames(aggregate(data$alpha, by = c(list(data$patient)), sd),   c("patient", "SDalpha"))
-y2sd <- setNames(aggregate(data$theta, by = c(list(data$patient)), sd),   c("patient", "SDtheta"))
-y3sd <- setNames(aggregate(data$beta,  by = c(list(data$patient)), sd),   c("patient", "SDbeta"))
-y4sd <- setNames(aggregate(data$delta, by = c(list(data$patient)), sd),   c("patient", "SDdelta"))
+y1   <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), mean), c("patient", "Malpha"))
+y2   <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mtheta"))
+y3   <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), mean), c("patient", "Mbeta"))
+y4   <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta"))
+y1sd <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDalpha"))
+y2sd <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDtheta"))
+y3sd <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDbeta"))
+y4sd <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDdelta"))
 
-data <- merge(data,y1)
-data <- merge(data,y2)
-data <- merge(data,y3)
-data <- merge(data,y4)
-data <- merge(data,y1sd)
-data <- merge(data,y2sd)
-data <- merge(data,y3sd)
-data <- merge(data,y4sd)
+data_pow_wide <- merge(data_pow_wide,y1)
+data_pow_wide <- merge(data_pow_wide,y2)
+data_pow_wide <- merge(data_pow_wide,y3)
+data_pow_wide <- merge(data_pow_wide,y4)
+data_pow_wide <- merge(data_pow_wide,y1sd)
+data_pow_wide <- merge(data_pow_wide,y2sd)
+data_pow_wide <- merge(data_pow_wide,y3sd)
+data_pow_wide <- merge(data_pow_wide,y4sd)
 
-data$Zdelta <- (data$delta-data$Mdelta)/data$SDdelta
-data$Ztheta <- (data$theta-data$Mtheta)/data$SDtheta
-data$Zalpha <- (data$alpha-data$Malpha)/data$SDalpha
-data$Zbeta  <- (data$beta -data$Mbeta)/data$SDbeta
+data_pow_wide$Zdelta <- (data_pow_wide$delta-data_pow_wide$Mdelta)/data_pow_wide$SDdelta
+data_pow_wide$Ztheta <- (data_pow_wide$theta-data_pow_wide$Mtheta)/data_pow_wide$SDtheta
+data_pow_wide$Zalpha <- (data_pow_wide$alpha-data_pow_wide$Malpha)/data_pow_wide$SDalpha
+data_pow_wide$Zbeta  <- (data_pow_wide$beta -data_pow_wide$Mbeta)/data_pow_wide$SDbeta
 
 # to create p-values
 detach(package:lmerTest)
 library(lmerTest)
 library(lme4)
-library(xtable)
 
-# effect of sleep stage and EEG power for IED rate
-l1 <- lmer(IEDsum ~ hyplabel + Zdelta + Ztheta + Zalpha + Zbeta + (1 | part) + (1 | patient), data)
+# determine reference level
+data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
+l1 <- lmer(IEDsum ~ stage + Zdelta + Ztheta + Zalpha + (1 | night) + (1 | patient), data_pow_wide)
+summary(l1)
 plot_model(l1)
 
-# write model coefficients to table for LaTeX
+# # get mathematical description of the model and write to latex
+# eq <- equatiomatic::extract_eq(l1)
+# fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
+# writeLines(c("$$",eq,"$$"), fileConn)
+# close(fileConn)
+
+# Coefficients to LaTeX table
 temp = summary(l1)
-s1            <- temp$coefficients
-rownames(s1)  <- c("Intercept", "Sleepstage (linear)", "Sleepstage (quadratic)", "Sleepstage (Cubic)", "Sleepstage (^4)", "Delta power", "Theta power", "Alpha power", "Beta power")
-s1            <- data.frame(Predictor = row.names(s1), s1);
-rownames(s1)  <- NULL
-colnames(s1)  <- c("Predictor","Estimate","SD","df","t","p")
-fname <- "D:/Dropbox/Apps/Overleaf/Hspike/IEDsum_coefficients.tex"
-print(xtable(s1, type = "latex", 
-             digits = c(0, 0,3,3,1,3,3), 
-             caption = "Effect of sleep stage on IED rate",
-             label = 'tab:IEDcoef'),
-             caption.placement = "top", 
-             include.rownames = FALSE,
-             file = fname)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "Delta", "Theta", "Alpha")
+kbl(coefs, "latex", booktabs = T, linesep = "", label = 'IED_coef',
+    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Fixed effect coefficients for effect of sleep stages on IED rate")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+    pack_rows("Sleep stages", 2, 7) %>% # latex_gap_space = "2em"
+    pack_rows("LFP power", 8, 11) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/IEDsum_coefficients.tex")
 
-# posthoc tests
-temp = emmeans(l1, list(pairwise ~ hyplabel), adjust = "tukey")
-ph1 <- as.data.frame(temp$`pairwise differences of hyplabel`)
-colnames(ph1) <- c("Comparison","Estimate","SE","df","Z ratio","p")
+# Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
 ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
 
-# write posthoc comparisons to table for LaTeX
-fname <- "D:/Dropbox/Apps/Overleaf/Hspike/IEDsum_coefficients_posthoc.tex"
-print(xtable(ph1, type = "latex", 
-             digits = c(0,0,3,3,3,3), 
-             caption = "Posthoc Tukey comparison of sleep stages on IED rate",
-             label = 'tab:IEDposthoc'),
-      caption.placement = "top",
-      include.rownames = FALSE,
-      file = fname)
+kbl(ph1, "latex", booktabs = T, linesep = "", label = 'IED_posthoc',
+    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Posthoc Tukey comparison of sleep stages on IED rate")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/IEDsum_coefficients_posthoc.tex")
 
+###############################
+# IED amplitude & sleep stage #
+###############################
 
+# prepare data
+data_amp <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/amplitude_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
+data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
+data_amp$hyplabel[data_amp$hyplabel == "PHASE_1"]   = "S1"
+data_amp$hyplabel[data_amp$hyplabel == "PHASE_2"]   = "S2"
+data_amp$hyplabel[data_amp$hyplabel == "PHASE_3"]   = "S3"
+data_amp$hyplabel[data_amp$hyplabel == "AWAKE"]     = "Wake"
+data_amp$hyplabel[data_amp$hyplabel == "PRESLEEP"]  = "Pre"
+data_amp$hyplabel[data_amp$hyplabel == "POSTSLEEP"] = "Post"
+data_amp$hyplabel <- factor(data_amp$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3"))
+data_amp$Patient  <- factor(data_amp$patient, levels = c(8:1))
+data_amp$part     <- factor(data_amp$part)
 
+# average over label for plotting
+posamp   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$part, data_amp$hyplabel)), mean), c("Patient", "part", "hyplabel", "posamp"))
+negamp   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$part, data_amp$hyplabel)), mean), c("Patient", "part", "hyplabel", "negamp"))
+data_amp_mean <- merge(posamp,negamp)
 
+y1   <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient)), mean), c("Patient", "Mposamp"))
+y1sd <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient)), sd),   c("Patient", "SDposamp"))
+y2   <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient)), mean), c("Patient", "Mnegamp"))
+y2sd <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient)), sd),   c("Patient", "SDnegamp"))
 
+data_amp_mean <- merge(data_amp_mean,y1)
+data_amp_mean <- merge(data_amp_mean,y2)
+data_amp_mean <- merge(data_amp_mean,y1sd)
+data_amp_mean <- merge(data_amp_mean,y2sd)
 
+data_amp_mean$Zposamp <- (data_amp_mean$posamp-data_amp_mean$Mposamp)/data_amp_mean$SDposamp
+data_amp_mean$Znegamp <- (data_amp_mean$negamp-data_amp_mean$Mnegamp)/data_amp_mean$SDnegamp
+data_amp_mean$Patient <- as.factor(data_amp_mean$Patient)
+data_amp_mean$hyplabel <- factor(data_amp_mean$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3"))
 
+# plot
+data_amp_mean$title1 = "Normalized amplitude positive peaks"
+data_amp_mean$title2 = "Normalized amplitude negative peaks"
 
+plots_amp <- list()
+plots_amp[[1]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Zposamp)) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.3), alpha = 0.5) +
+  # guides(colour = "none") +
+  ylab(NULL) + xlab(NULL) + 
+  theme_article() + 
+  theme(legend.position="bottom") +
+  # coord_cartesian(xlim = c(0, 1500)) +
+  facet_wrap(~title1)
 
+plots_amp[[2]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Znegamp)) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.3), alpha = 0.5) +
+  # guides(colour = "none") +
+  ylab(NULL) + xlab(NULL) + 
+  theme_article() + 
+  theme(legend.position="bottom") +
+  # coord_cartesian(xlim = c(0, 1500)) +
+  facet_wrap(~title2)
 
+###############################
+# Boxplots together in Figure #
+###############################
 
+ggarrange(plotlist = c(plots_pow[1], plots_IED[1], plots_pow[2],  plots_IED[2], plots_pow[3], plots_IED[3], plots_amp[2], plots_amp[1]), 
+          ncol = 2, nrow = 4,
+          vjust = 1.5, hjust = -1, 
+          widths = c(1,1,1,1,1,1), 
+          heights = c(1,1,1,1,1,1),  
+          labels = c("A","B","C","D","E","F","G","H"), 
+          legend = "right", 
+          common.legend = TRUE, 
+          # legend = "none",
+          font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/all_boxplots.pdf")
 
+##############################
+## STATISTICS Positive peaks #
+##############################
 
+# Normalize 
+y1   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient)), mean), c("patient", "Mposamp"))
+y2   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient)), mean), c("patient", "Mnegamp"))
+y1sd <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient)), sd),   c("patient", "SDposamp"))
+y2sd <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient)), sd),   c("patient", "SDnegamp"))
+data_amp <- merge(data_amp,y1)
+data_amp <- merge(data_amp,y2)
+data_amp <- merge(data_amp,y1sd)
+data_amp <- merge(data_amp,y2sd)
+data_amp$Zposamp <- (data_amp$posamp-data_amp$Mposamp)/data_amp$SDposamp
+data_amp$Znegamp <- (data_amp$negamp-data_amp$Mnegamp)/data_amp$SDnegamp
 
+# Rename for plotting
+data_amp$night <- factor(data_amp$part)
+data_amp$stage <- factor(data_amp$hyplabel)
 
+# fit model
+data_amp$stage <- factor(data_amp$stage, levels =  c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_amp$stage = relevel(data_amp$stage, ref="Pre")
 
+lpos <- lmer(Zposamp ~ stage + (1 | night) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 
+summary(lpos)
+plot_model(lpos)
 
+# Mathematical description of the model and write to latex
+eq <- equatiomatic::extract_eq(lpos)
+fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model_posamp.tex")
+writeLines(c("$$",eq,"$$"), fileConn)
+close(fileConn)
 
+# Model coefficients to table for LaTeX
+temp = summary(lpos)
+spos            <- temp$coefficients
+rownames(spos)  <- c("\\textit{Intercept}", "Pre","S3", "S2", "S1", "Wake", "REM", "Post")
+spos            <- data.frame(Predictor = row.names(spos), spos);
+rownames(spos)  <- NULL
+colnames(spos)  <- c("Predictor","Estimate","SD","df","t","p")
 
+# Post-hoc tests
+temp = emmeans(lpos, list(pairwise ~ stage), adjust = "tukey")
+phpos <- as.data.frame(temp$`pairwise differences of stage`)
+colnames(phpos) <- c("Comparison","Estimate","SE","df","Z ratio","p")
+phpos <- phpos[, -4] # remove df since they are at inf
 
+##############################
+## STATISTICS Negative peaks #
+##############################
 
+lneg <- lmer(Znegamp ~ stage + (1 | night) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 
+summary(lneg)
+plot_model(lneg)
 
+# Mathematical description of the model and write to latex
+# eq <- equatiomatic::extract_eq(lneg)
+# fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model_negamp.tex")
+# writeLines(c("$$",eq,"$$"), fileConn)
+# close(fileConn)
 
+# Coefficients for table
+temp = summary(lneg)
+sneg            <- temp$coefficients
+rownames(sneg)  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "REM", "Post")
+sneg            <- data.frame(Predictor = row.names(sneg), sneg);
+rownames(sneg)  <- NULL
+colnames(sneg)  <- c("Predictor","EstimateNeg","SDNeg","dfNeg","tNeg","pNeg")
 
+# Post-hoc tests
+temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
+phneg <- as.data.frame(temp$`pairwise differences of stage`)
+colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
+phneg <- phneg[, -4] # remove df since they are at inf
 
+# Coefficients to LaTeX table
+coef <- merge(sneg, spos)
+fname <- "D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_coef.tex"
+kbl(coef, "latex", booktabs = T, linesep = "", label = 'amp_coef', digits=2, escape = FALSE,
+    col.names = c("", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}"),
+    caption = "Effect of sleep stage on ERP peak amplitudes")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  add_header_above(c(" ", "Negative peaks" = 5, "Positive peaks" = 5)) %>%
+  save_kable(fname)
+
+# Post-hoc comparisons to LaTeX table 
+ph <- merge(phneg,phpos)
+ph[,5] = ifelse(ph[,5] > .05, paste(round(ph[,5],digits=2),sep=""), ifelse(ph[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+ph[,9] = ifelse(ph[,9] > .05, paste(round(ph[,9],digits=2),sep=""), ifelse(ph[,9] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,9] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,9] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+
+kbl(ph, "latex", booktabs = T, linesep = "", label = 'amp_posthoc', digits=2, escape = FALSE,
+    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+    caption = "Posthoc Tukey comparison of sleep stage on ERP peak amplitude")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  add_header_above(c(" ", "Negative peaks" = 4, "Positive peaks" = 4)) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_posthoc.tex")
+
+#########
+# Units #
+#########
 
 # effect of sleep stage and for firing rate units: strong negative correlation with depth of sleep
 data_clean <- na.omit(data) # removing missing data
@@ -390,6 +960,10 @@ l1 <- lmer(trialfreq_corrected ~ hyplabel + delta + theta + beta + gamma + (1 | 
 
 
 
+
+
+
+
 ## POLAR ##
 
 library("ggplot2")
@@ -402,7 +976,6 @@ data_binned <- setNames(aggregate(data$alpha, c(list(data$patient), list(data$bi
 data_binned <- as.data.frame(data_binned %>% group_by(patient) %>% mutate(Nalpha = alpha/max(alpha))) 
 
 ggplot(data=data_binned, aes(x = bin, y = alpha, fill=patient, col=patient)) +
-  ggtitle("Circadian alpha power") +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_bar(stat="identity", width = 1) +
   geom_vline(xintercept = seq(0.5, 21.5, by = 3), colour = "grey90")  + 
@@ -445,28 +1018,28 @@ data_binned_melt$patient  <- factor(data_binned_melt$patient, levels = c(8:1))
 
 pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_power_combined.pdf")
 
-  ggplot(data=data_binned_melt, aes(x = bin, y = value, fill=patient, col=patient)) +
-    ggtitle("Normalized circadian LFP power") +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    geom_vline(xintercept = seq(0.5, 21.5 * bindivision, by = 3 * bindivision), colour = "grey90")  + 
-    geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90")  + 
-    geom_bar(stat="identity", width = 1) +
-    theme_bw() +
-    theme(panel.border = element_blank(),
-          legend.key = element_blank(),
-          axis.ticks = element_blank(),
-          axis.text.y = element_blank(),
-          panel.grid  = element_blank(),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          strip.background = element_blank(),
-    ) + 
-    scale_x_continuous(breaks=seq(0.5, 21.5*bindivision, by = 3 * bindivision), 
-                       labels = c("0" = "00:00", "3" = "3:00", "6" = "6:00", "9" = "9:00", 
-                                  "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
-    coord_polar(theta = "x", start = 0) +
-    ylim(-1, 7) +
-    facet_wrap(~variable)
+ggplot(data=data_binned_melt, aes(x = bin, y = value, fill=patient, col=patient)) +
+  ggtitle("Normalized circadian LFP power") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_vline(xintercept = seq(0.5, 21.5 * bindivision, by = 3 * bindivision), colour = "grey90")  + 
+  geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90")  + 
+  geom_bar(stat="identity", width = 1) +
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        legend.key = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid  = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.background = element_blank(),
+  ) + 
+  scale_x_continuous(breaks=seq(0.5, 21.5*bindivision, by = 3 * bindivision), 
+                     labels = c("0" = "00:00", "3" = "3:00", "6" = "6:00", "9" = "9:00", 
+                                "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
+  coord_polar(theta = "x", start = 0) +
+  ylim(-1, 7) +
+  facet_wrap(~variable)
 
 dev.off()
 
@@ -498,24 +1071,24 @@ data_seizures$hour     <- data_seizures$minute / (60)
 
 pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_combined.pdf")
 
-  ggplot(data=data_IED, aes(x=hour, fill=patient, col=patient)) +
-    ggtitle("Circadian interictal density & seizure occurance") +
-    scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-    geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
-    geom_hline(yintercept = seq(-0.25+0.025, -0.05, by = 0.025), colour = "grey90") +
-    geom_histogram(position = 'stack', aes(y = stat(density)), binwidth=0.1, center = 0.05) + # make sure binwidth is multiple of 24/60
-    coord_polar(theta = "x") +
-    scale_x_continuous(breaks=seq(0, 21, by = 3), labels = c("0" = "00:00", "3" = "3:00", "6" = "6:00", "9" = "9:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
-    coord_polar(theta = "x", start = 0, direction = 1) + 
-    theme_bw() +
-    theme(panel.border = element_blank(),
-          legend.key = element_blank(),
-          axis.ticks = element_blank(),
-          axis.text.y = element_blank(),
-          panel.grid  = element_blank(),
-          ) + 
-    geom_point(size=1, data = data_seizures, aes(x = hour, y = -0.05 - as.numeric(patient)*0.025+0.025, fill = patient, col = patient)) +
-    ylim(-0.3, 0.85)
+ggplot(data=data_IED, aes(x=hour, fill=patient, col=patient)) +
+  ggtitle("Circadian interictal density & seizure occurance") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
+  geom_hline(yintercept = seq(-0.25+0.025, -0.05, by = 0.025), colour = "grey90") +
+  geom_histogram(position = 'stack', aes(y = stat(density)), binwidth=0.1, center = 0.05) + # make sure binwidth is multiple of 24/60
+  coord_polar(theta = "x") +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), labels = c("0" = "00:00", "3" = "3:00", "6" = "6:00", "9" = "9:00", "12" = "12:00", "15" = "15:00", "18" = "18:00", "21" = "21:00")) +
+  coord_polar(theta = "x", start = 0, direction = 1) + 
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        legend.key = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid  = element_blank(),
+  ) + 
+  geom_point(size=1, data = data_seizures, aes(x = hour, y = -0.05 - as.numeric(patient)*0.025+0.025, fill = patient, col = patient)) +
+  ylim(-0.3, 0.85)
 
 dev.off()
 
@@ -562,12 +1135,12 @@ library(circular)
 library(units)
 
 plot.circular(data_seizures$radian, pch = 16, cex = 1, stack = TRUE,
-     axes = TRUE, start.sep=0, sep = 0.025, shrink = 1,
-     bins = 23, ticks = TRUE, tcl = 0.025, tcl.text = 0.125,
-     col = NULL, tol = 0.04, uin = NULL,
-     xlim = c(-1, 1), ylim = c(-1, 1), digits = 2, units = "rad",
-     template = NULL, zero = 0.1, rotation = NULL,
-     main = NULL, sub=NULL, xlab = "", ylab = "")
+              axes = TRUE, start.sep=0, sep = 0.025, shrink = 1,
+              bins = 23, ticks = TRUE, tcl = 0.025, tcl.text = 0.125,
+              col = NULL, tol = 0.04, uin = NULL,
+              xlim = c(-1, 1), ylim = c(-1, 1), digits = 2, units = "rad",
+              template = NULL, zero = 0.1, rotation = NULL,
+              main = NULL, sub=NULL, xlab = "", ylab = "")
 
 
 plot(sin, -pi, 2*pi) # see ?plot.function

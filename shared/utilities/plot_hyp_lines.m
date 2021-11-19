@@ -47,7 +47,6 @@ dt = X;
 t = convertTo(X,'epochtime','Epoch','2001-01-01','TicksPerSecond', 1);
 dt = t - t(1);
 
-
 for i = 1 : length(X)-1
     if Y(i) ~= 0 && Y(i+1) ~= 0
         if Y(i) == 4 && Y(i+1) == 4 % REM gets thicker line

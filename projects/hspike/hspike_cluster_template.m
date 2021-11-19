@@ -28,6 +28,10 @@ MuseStruct{ipatient}                        = padHypnogram(MuseStruct{ipatient})
 [MuseStruct{ipatient}, ~, ~]                = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
 [config{ipatient}, MuseStruct{ipatient}]    = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
 
+%% LFP averages of templates
+config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+LFPavg{ipatient}                            = readLFPavg(config{ipatient}, MuseStruct{ipatient}, true);
+
 % %% LFP of sliding timewindow
 % config{ipatient}.LFP.name                   = {'window'};
 % config{ipatient}.LFP.postfix                = {'_all'};
@@ -38,10 +42,10 @@ MuseStruct{ipatient}                        = padHypnogram(MuseStruct{ipatient})
 % config{ipatient}.FFT.postfix                = {'_all'};
 % FFT{ipatient}                               = FFTtrials(config{ipatient}, true);
 
-%% read LFP of only first three parts
-config{ipatient}.directorylist              = config{ipatient}.directorylist(1:3);
-MuseStruct{ipatient}                        = MuseStruct{ipatient}(1:3);
-config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-LFP{ipatient}                               = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
+% %% read LFP of only first three parts
+% config{ipatient}.directorylist              = config{ipatient}.directorylist(1:3);
+% MuseStruct{ipatient}                        = MuseStruct{ipatient}(1:3);
+% config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+% LFP{ipatient}                               = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
 
 

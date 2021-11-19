@@ -92,7 +92,7 @@ for ipatient = 1:8
                 cfgtemp.channel     = LFP_cluster{ipatient}{itemplate}.label(indx==i);
                 group{i}            = ft_preprocessing(cfgtemp, LFP_cluster{ipatient}{itemplate});
             end
-            LFP_cluster{ipatient}{itemplate} = ft_appenddata([],group{:});
+            LFP_cluster{ipatient}{itemp 297,39late} = ft_appenddata([],group{:});
         end
     end
     
@@ -125,7 +125,7 @@ for ipatient = 1:7
 %         end
 %         
 %         cfgtemp = [];
-%         cfgtemp.channel = maxchan;
+%         cfgtemp.channel = maxchan; 297,39
 %         temp = ft_selectdata(cfgtemp, LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)));
 %         temp = vertcat(temp.trial{:});
 %         maxrange = max(max(max(abs(temp))), maxrange);
