@@ -103,7 +103,6 @@ for ipatient = 1:8
 end
 
 %% Create figures
-
 Figure_hypnograms
 Figure_templates
 Figure_FFT
@@ -398,17 +397,19 @@ end
 fname   = fullfile(config{ipatient}.datasavedir, 'seizuredata_table');
 writetable(t, fname);
 
-%% Create slurm job list
+%% Create spyking-circus parameters
 
 config = hspike_setparams;
-for ipatient = 1:8
-    MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
+for ipatient = 8
+    MuseStruct{ipatient} = readMuseMarkers(config{ipatient});
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, ["BAD__START__", "BAD__END__"]);
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
     writeSpykingCircusFileList(config{ipatient}, true);
     writeSpykingCircusParameters(config{ipatient});
 end
 
+%% Create slurm job list
+config = hspike_setparams;
 fname_slurm_joblist = fullfile('//network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/slurm_job_list.txt');
 delete(fname_slurm_joblist);
 for ipatient = 1:8

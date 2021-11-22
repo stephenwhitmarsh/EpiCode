@@ -523,7 +523,7 @@ config{8}.cluster.refmethod         = 'bipolar';
 config{8}.template.threshold        = 2.5;
 config{8}.template.reref            = 'yes';
 config{8}.template.refmethod        = 'bipolar';
-config{8}.circus.channel            =  {'_mHaT2_1','_mHaT2_2','_mHaT2_7','_mHmT2_5','_HmT2_6','_HmT2_7'};
+config{8}.circus.channel            =  {'_mHaT2_1','_mHaT2_2','_mHaT2_7','_mHmT2_5','_mHmT2_6','_HmT2_7'};
 config{8}.circus.reref              = 'no';
 
 % Rejected templates

@@ -80,7 +80,7 @@ kbl(data, "latex", booktabs = T, label = "clinical",
     TPM: Topiramate",
     )%>%
   kable_styling(latex_options = c("scale_down"))%>%
-  kable_styling(latex_options = c("hold_position"))%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
   column_spec(1, width = "3em")  %>%
   column_spec(2, width = "1em")  %>%
   column_spec(3, width = "1em")  %>%
@@ -108,7 +108,7 @@ data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
 kbl(data, "latex", booktabs = T, linesep = "", label = 'macro_anatomical',
     caption = "Anatomical locations of macro electrode contacts")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.tex")
 
 #####################################################
@@ -123,7 +123,7 @@ data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
 kbl(data, "latex", booktabs = T, linesep = "", label = 'micro_anatomical',
     caption = "Anatomical locations of micro electrodes")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.tex")
 
 ########################################
@@ -141,13 +141,7 @@ data[clean.cols] <- lapply(data[clean.cols], cleanf)
 kbl(data, "latex", booktabs = T, linesep = "", label = 'MNI',
     caption = "Anatomical locations of micro electrodes") %>%
     kable_styling(font_size = 6) %>%
-    kable_styling(latex_options = c("hold_position"))%>%
-  
-    # collapse_rows(columns = 1:2) %>%
-  # column_spec(1, bold=T) %>%
- # collapse_rows(columns = 1:2)%>%
-  # kable_styling(latex_options = c("repeat_header"),
-                # repeat_header_continued = "\\textit{(Continued on Next Page...)}")%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
   row_spec(5,  extra_latex_after = "\\cline{1-6}") %>%
   row_spec(10, extra_latex_after = "\\cline{2-6}") %>%
   row_spec(14, extra_latex_after = "\\cline{1-6}") %>%
@@ -175,7 +169,7 @@ data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
 kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration',
     caption = "Time spend in sleep stages (hrs.)", digits=2) %>%
-    kable_styling(latex_options = c("hold_position")) %>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
     add_header_above(c(" " = 2, "Sleep stage" = 5)) %>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stageduration.tex")
 
@@ -183,7 +177,7 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration',
 # LFP power circadian #
 #######################
 
-# prepare data - only first three nights
+# prepare data
 data_power          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_power$hyplabel <- factor(data_power$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
 data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
@@ -357,7 +351,7 @@ for (ipatient in 1:8) {
   temp                       <- rayleigh.test(data_IED$rad[data_IED$patient == ipatient])
   stat_IED$Patient[ipatient]    = ipatient
   stat_IED$p[ipatient]          = temp$p.value
-  stat_IED$Rayleigh_stat[ipatient]   = temp$statistic
+  stat_IED$Rayleigh_stat[ipatient] = temp$statistic
   
   # Rayleigh Test of Uniformity: General Unimodal Alternative
   stat_IED$median[ipatient] <- as.numeric(median(circular(data_IED$rad[data_IED$patient == ipatient]))) / (pi * 2) * 24
@@ -403,9 +397,22 @@ IEDpolarplot <-
         axis.title.y = element_blank()) + 
   ylim(-2, 10)
 
-##########################
-# IED seizures circadian #
-########################## 
+# LaTeX table
+library(stringr)
+stat_IED$time = paste(str_pad( floor(stat_IED$median), 2, pad = "0"), ":", str_pad(floor((stat_IED$median- floor(stat_IED$median)) * 60), 2, pad = "0"), sep = "")
+stat_IED <- stat_IED[, c("Patient", "time", "Rayleigh_stat", "p")]
+stat_IED[,4] = ifelse(stat_IED[,4] > .05, paste(round(stat_IED[,4],digits=2),sep=""), ifelse(stat_IED[,4] < .0001, "<.0001\\textsuperscript{***}", ifelse(stat_IED[,4] < .001,"<.001\\textsuperscript{**}", ifelse(stat_IED[,4] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+kbl(stat_IED, "latex", booktabs = T, linesep = "", label = 'circstat_IED',
+    col.names = c("Patient","Median angle (HH:mm)","Rayleigh", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Circular statistics of circadian IED rate")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_IED.tex")
+
+######################
+# Seizures circadian #
+###################### 
 
 # load data: Patients x Units x time window
 data_seizures           <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
@@ -451,7 +458,8 @@ dist_seizures$Patient = factor(dist_seizures$Patient, levels = c(8:1))
 stat_seizures <- as.data.frame(stat_seizures)
 stat_seizures$Patient = factor(stat_seizures$Patient, levels = c(8:1))
 stat_seizures$significant = stat_seizures$p < 0.05
-stat_seizures$median[stat_seizures$p >= 0.05] = NA
+stat_seizures$median_sel = stat_seizures$median
+stat_seizures$median_sel[stat_seizures$p >= 0.05] = NA # all are significant though
 
 # tiny adjustment to make axes line out properly and arrows not overlap
 data_seizures$hour[which(data_seizures$hour==max(data_seizures$hour))] = 24
@@ -469,7 +477,7 @@ Seizurepolarplot  <-
                                                    ymax = density*1.3 + (9-as.numeric(Patient)), 
                                                    col = Patient), show.legend = FALSE) +
   
-  geom_segment(data=stat_seizures, aes(x=median, y=9.5, xend=median, yend=10, col=Patient), 
+  geom_segment(data=stat_seizures, aes(x=median_sel, y=9.5, xend=median_sel, yend=10, col=Patient), 
                arrow = arrow(length = unit(0.25, "cm"), type="closed"), size = 1, show.legend = FALSE) + 
   
   geom_point(colour="black", pch=21, size=1, position = jitter) +
@@ -497,6 +505,20 @@ ggarrange(IEDpolarplot, Seizurepolarplot,
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
   ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
+
+# LaTeX table
+library(stringr)
+stat_seizures$time = paste(str_pad( floor(stat_seizures$median), 2, pad = "0"), ":", str_pad(floor((stat_seizures$median- floor(stat_seizures$median)) * 60), 2, pad = "0"), sep = "")
+stat_seizures <- stat_seizures[, c("Patient", "time", "Rayleigh_stat", "p")]
+stat_seizures[,4] = ifelse(stat_seizures[,4] > .05, paste(round(stat_seizures[,4],digits=2),sep=""), ifelse(stat_seizures[,4] < .0001, "<.0001\\textsuperscript{***}", ifelse(stat_seizures[,4] < .001,"<.001\\textsuperscript{**}", ifelse(stat_seizures[,4] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+kbl(stat_seizures, "latex", booktabs = T, linesep = "", label = 'circstat_seizures',
+    col.names = c("Patient","Median angle (HH:mm)","Rayleigh", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Circular statistics of circadian seizure occurance")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_seizures.tex")
+
 
 #############################
 # LFP power per sleep stage #
@@ -704,6 +726,106 @@ detach(package:lmerTest)
 library(lmerTest)
 library(lme4)
 
+# Delta explained by sleep stage
+l1 <- lmer(Zdelta ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+summary(l1)
+plot_model(l1)
+
+# DELTA Coefficients to LaTeX table
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+kbl(coefs, "latex", booktabs = T, linesep = "", label = 'delta_coef',
+    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Fixed effect coefficients for effect of sleep stages on Delta power")%>%
+    kable_styling(latex_options = c("hold_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/delta_coef.tex")
+
+# DELTA Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+kbl(ph1, "latex", booktabs = T, linesep = "", label = 'delta_posthoc',
+    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Posthoc Tukey comparison of sleep stages on Delta power")%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/delta_posthoc.tex")
+
+# THETA explained by sleep stage
+l1 <- lmer(Ztheta ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+summary(l1)
+plot_model(l1)
+
+# THETA Coefficients to LaTeX table
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+kbl(coefs, "latex", booktabs = T, linesep = "", label = 'theta_coef',
+    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Fixed effect coefficients for effect of sleep stages on Theta power")%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/theta_coef.tex")
+
+# THETA Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+kbl(ph1, "latex", booktabs = T, linesep = "", label = 'theta_posthoc',
+    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Posthoc Tukey comparison of sleep stages on Theta power")%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/theta_posthoc.tex")
+
+# ALPHA explained by sleep stage
+l1 <- lmer(Zalpha ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+summary(l1)
+plot_model(l1)
+
+# ALPHA Coefficients to LaTeX table
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+kbl(coefs, "latex", booktabs = T, linesep = "", label = 'alpha_coef',
+    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Fixed effect coefficients for effect of sleep stages on Alpha power")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/alpha_coef.tex")
+
+# ALPHA Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+kbl(ph1, "latex", booktabs = T, linesep = "", label = 'alpha_posthoc',
+    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Posthoc Tukey comparison of sleep stages on Alpha power")%>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/alpha_posthoc.tex")
+
+
+###################################################################
+# Mixed model with both sleep stage and power explaining IED rate #
+###################################################################
+
+# to create p-values
+detach(package:lmerTest)
+library(lmerTest)
+library(lme4)
+
 # determine reference level
 data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
 l1 <- lmer(IEDsum ~ stage + Zdelta + Ztheta + Zalpha + (1 | night) + (1 | patient), data_pow_wide)
@@ -842,10 +964,11 @@ data_amp$Znegamp <- (data_amp$negamp-data_amp$Mnegamp)/data_amp$SDnegamp
 
 # Rename for plotting
 data_amp$night <- factor(data_amp$part)
-data_amp$stage <- factor(data_amp$hyplabel)
+
+# Reorder for table
+data_amp$stage <- factor(data_amp$hyplabel, levels =  c("Pre","S3", "S2", "S1", "Wake", "Post", "REM"))
 
 # fit model
-data_amp$stage <- factor(data_amp$stage, levels =  c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
 data_amp$stage = relevel(data_amp$stage, ref="Pre")
 
 lpos <- lmer(Zposamp ~ stage + (1 | night) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
@@ -854,15 +977,14 @@ summary(lpos)
 plot_model(lpos)
 
 # Mathematical description of the model and write to latex
-eq <- equatiomatic::extract_eq(lpos)
-fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model_posamp.tex")
-writeLines(c("$$",eq,"$$"), fileConn)
-close(fileConn)
+# eq <- equatiomatic::extract_eq(lpos)
+# fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model_posamp.tex")
+# writeLines(c("$$",eq,"$$"), fileConn)
+# close(fileConn)
 
 # Model coefficients to table for LaTeX
 temp = summary(lpos)
 spos            <- temp$coefficients
-rownames(spos)  <- c("\\textit{Intercept}", "Pre","S3", "S2", "S1", "Wake", "REM", "Post")
 spos            <- data.frame(Predictor = row.names(spos), spos);
 rownames(spos)  <- NULL
 colnames(spos)  <- c("Predictor","Estimate","SD","df","t","p")
@@ -891,29 +1013,41 @@ plot_model(lneg)
 # Coefficients for table
 temp = summary(lneg)
 sneg            <- temp$coefficients
-rownames(sneg)  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "REM", "Post")
-sneg            <- data.frame(Predictor = row.names(sneg), sneg);
-rownames(sneg)  <- NULL
+sneg            <- data.frame(Predictor = row.names(sneg), sneg)
 colnames(sneg)  <- c("Predictor","EstimateNeg","SDNeg","dfNeg","tNeg","pNeg")
 
-# Post-hoc tests
-temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
-phneg <- as.data.frame(temp$`pairwise differences of stage`)
-colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
-phneg <- phneg[, -4] # remove df since they are at inf
-
-# Coefficients to LaTeX table
+# Coefficients to LaTeX table (and reorder)
+sneg$id  <- 1:nrow(sneg)
 coef <- merge(sneg, spos)
-fname <- "D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_coef.tex"
+coef <- coef[order(coef$id), ]
+coef <- coef[, -7] 
+coef[,4] = round(coef[,4],digits=0)
+coef[,9] = round(coef[,9],digits=0)
+
+coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "Post", "REM")
+rownames(coef)  <- NULL
+coef[,6] = ifelse(coef[,6] > .05, paste(round(coef[,6],digits=2),sep=""), ifelse(coef[,6] < .0001, "<.0001\\textsuperscript{***}", ifelse(coef[,6] < .001,"<.001\\textsuperscript{**}", ifelse(coef[,6] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+coef[,11] = ifelse(coef[,11] > .05, paste(round(coef[,11],digits=2),sep=""), ifelse(coef[,11] < .0001, "<.0001\\textsuperscript{***}", ifelse(coef[,11] < .001,"<.001\\textsuperscript{**}", ifelse(coef[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+
 kbl(coef, "latex", booktabs = T, linesep = "", label = 'amp_coef', digits=2, escape = FALSE,
     col.names = c("", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}"),
     caption = "Effect of sleep stage on ERP peak amplitudes")%>%
     kable_styling(latex_options = c("hold_position"))%>%
   add_header_above(c(" ", "Negative peaks" = 5, "Positive peaks" = 5)) %>%
-  save_kable(fname)
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_coef.tex")
 
 # Post-hoc comparisons to LaTeX table 
+temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
+phneg <- as.data.frame(temp$`pairwise differences of stage`)
+colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
+phneg <- phneg[, -4] # remove df since they are at inf
+
+phneg$id  <- 1:nrow(phneg)
 ph <- merge(phneg,phpos)
+ph <- ph[order(ph$id), ]
+ph <- ph[, -6] 
+rownames(ph)  <- NULL
+
 ph[,5] = ifelse(ph[,5] > .05, paste(round(ph[,5],digits=2),sep=""), ifelse(ph[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 ph[,9] = ifelse(ph[,9] > .05, paste(round(ph[,9],digits=2),sep=""), ifelse(ph[,9] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,9] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,9] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 
