@@ -174,37 +174,36 @@ end
 
 %% rereference average data
 for ipatient = 1:8
-     if strcmp(config{ipatient}.template.reref, 'yes')
-        for ipart = 1 : size(LFP_cluster_detected{ipatient}, 2)
-            for markername = ["template1", "template2", "template3", "template4", "template5", "template6"]
+    for ipart = 1 : size(LFP_cluster_detected{ipatient}, 2)
+        for markername = ["template1", "template2", "template3", "template4", "template5", "template6"]
+            
+            LFPavg_reref{ipatient}{ipart}.(markername) = LFPavg{ipatient}{ipart}.(markername);
+            if isempty(LFPavg{ipatient}{ipart}.(markername))
+                continue
+            end
+            if strcmp(config{ipatient}.template.reref, 'yes') & ~contains(LFPavg{ipatient}{ipart}.(markername).label{1}, '-')
                 
-                if isempty(LFPavg{ipatient}{ipart}.(markername))
-                    continue
+                labels_nonum    = regexprep(LFPavg{ipatient}{ipart}.(markername).label, '[0-9_]', '');
+                [~, ~, indx]    = unique(labels_nonum);
+                
+                % average per part (day) then reref
+                clear group
+                for i = 1 : max(indx)
+                    cfgtemp             = [];
+                    cfgtemp.reref       = 'yes';
+                    cfgtemp.refmethod   = 'bipolar';
+                    cfgtemp.demean      = 'yes';
+                    %                     cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
+                    cfgtemp.baselinewindow = [-0.3, -0.1];
+                    cfgtemp.channel     = LFPavg{ipatient}{ipart}.(markername).label(indx==i);
+                    group{i}            = ft_preprocessing(cfgtemp, LFPavg{ipatient}{ipart}.(markername));
                 end
-                if ~contains(LFPavg{ipatient}{ipart}.(markername).label{1}, '-')
-                    
-                    labels_nonum    = regexprep(LFPavg{ipatient}{ipart}.(markername).label, '[0-9_]', '');
-                    [~, ~, indx]    = unique(labels_nonum);
-                    
-                    % average per part (day) then reref
-                    clear group
-                    for i = 1 : max(indx)
-                        cfgtemp             = [];
-                        cfgtemp.reref       = 'yes';
-                        cfgtemp.refmethod   = 'bipolar';
-                        cfgtemp.demean      = 'yes';
-                        %                     cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
-                        cfgtemp.baselinewindow = [-0.3, -0.1];
-                        cfgtemp.channel     = LFPavg{ipatient}{ipart}.(markername).label(indx==i);
-                        group{i}            = ft_preprocessing(cfgtemp, LFPavg{ipatient}{ipart}.(markername));
-                    end
-                    LFPavg_reref{ipatient}{ipart}.(markername) = ft_appenddata([], group{:});
-                end
+                LFPavg_reref{ipatient}{ipart}.(markername) = ft_appenddata([], group{:});
             end
         end
-     end
+    end
 end
-    
+
 %% rereference cluster
 for ipatient = 1 : 8
     % rereference to bipolar
@@ -251,7 +250,7 @@ for ipatient = 1:8
     maxrange(ipatient) = 0;
     for itemplate = 1 : 6
         cfgtemp = [];
-        cfgtemp.channel = find(~cellfun(@isempty, strfind(LFP_cluster{ipatient}{itemplate}.label, config{ipatient}.align.zerochannel)));
+        cfgtemp.channel = find(~cellfun(@isempty, strfind(LFP_cluster{ipatient}{itemplate}.label, config{ipatient}.align.zerochannel)), 1, 'first');
         cfgtemp.latency = [0, 0.5];
         temp = ft_selectdata(cfgtemp, LFP_cluster{ipatient}{itemplate});
         maxrange(ipatient) = max(max(abs(temp.avg)), maxrange(ipatient));
@@ -267,7 +266,9 @@ for ipatient = 1 : 8
     for itemplate = 1 : 6
         for ipart = 1 : size(LFPavg_reref{ipatient}, 2)
             if isfield(LFPavg_reref{ipatient}{ipart}, sprintf('template%d', itemplate))
+                if ~isempty(LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)))
                 LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)) = ft_selectdata(cfgtemp, LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)));
+                end
             end
         end
         LFP_cluster{ipatient}{itemplate} = ft_selectdata(cfgtemp, LFP_cluster{ipatient}{itemplate});
@@ -286,15 +287,6 @@ for showrejected = [false, true]
     set(fig, 'PaperUnits', 'normalized');
     set(fig, 'PaperPosition', [0 0 1 1]);
     set(fig, 'Renderer', 'Painters');
-    
-    config{1}.template.rejected = [1];
-    config{2}.template.rejected = [1,3,4,5];
-    config{3}.template.rejected = [1];
-    config{4}.template.rejected = [4];
-    config{5}.template.rejected = [2,5];
-    config{6}.template.rejected = [1,3,5,6];
-    config{7}.template.rejected = [1,6];
-    config{8}.template.rejected = [1];
     
     if showrejected
         ncol = 7;
@@ -392,7 +384,7 @@ for showrejected = [false, true]
                 if isempty(LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)))
                     continue
                 end
-                maxchan     = find(~cellfun(@isempty, strfind(LFP_cluster{ipatient}{itemplate}.label, config{ipatient}.align.zerochannel)));
+                maxchan     = find(~cellfun(@isempty, strfind(LFP_cluster{ipatient}{itemplate}.label, config{ipatient}.align.zerochannel)), 1, 'first');
                 x           = LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)).time{1};
                 y           = LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)).trial{1}(maxchan, :) / 1000; % go to mV
                 lh          = plot(x, y, 'color', cm(ipart, :));

@@ -40,6 +40,7 @@ length = config.window.length;
 
 for ipart = 1 : size(config.directorylist, 2)
     for idir = 1 : size(config.directorylist{ipart}, 2)
+        sprintf('Adding part %d, dir %d\n', ipart, idir)
         temp = dir(fullfile(config.rawdir, config.directorylist{ipart}{idir}, ['*', config.circus.channel{1}, '.ncs']));
         hdr  = ft_read_header(fullfile(config.rawdir, config.directorylist{ipart}{idir}, temp.name));
         MuseStruct{ipart}{idir}.markers.window__START__.synctime = 0 : (length - length * config.window.overlap) : (hdr.nSamples / hdr.Fs - length / 2);

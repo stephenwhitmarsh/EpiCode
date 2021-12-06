@@ -108,6 +108,8 @@ Figure_templates
 Figure_FFT
 Figure_LFP_stages % also writes data for 
 
+ 
+    
 %% Plot locations with BrainNetViewer
 
 % per patient
@@ -271,6 +273,161 @@ writetable(t, fname);
 fname   = fullfile(config{ipatient}.datasavedir, 'offset_table');
 writetable(t_position, fname);
 
+%% Hitrate template detection
+
+config = hspike_setparams;
+
+for ipatient = 1 : 8
+    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient});
+end
+
+ipart = 1; % where there are both Hspike and detected markers
+for ipatient = 1 : 8
+    
+    for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
+        Hspike{ipatient}{idir}          = [];
+        Hspike_sel{ipatient}{idir}          = [];
+        template{ipatient}{idir}        = [];
+        template_sel{ipatient}{idir}    = [];
+        
+        if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers, 'Hspike')
+            continue
+        end
+        if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers.Hspike, 'synctime')
+            continue
+        end
+        Hspike{ipatient}{idir} = [Hspike{ipatient}{idir}, MuseStruct{ipatient}{ipart}{idir}.markers.Hspike.synctime];
+        
+        for tempname = ["template1", "template", "template3", "template4", "template5", "template6"]
+
+            if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers, tempname)
+                continue
+            end
+            if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers.(tempname), 'synctime')
+                continue
+            end
+            
+            template{ipatient}{idir} = [template{ipatient}{idir}, MuseStruct{ipatient}{ipart}{idir}.markers.(tempname).synctime];
+            
+            if any(str2double(tempname{1}(end)) == config{ipatient}.template.rejected)
+                fprintf('Removing %s in patient %d\n', tempname, ipatient);
+            else
+                template_sel{ipatient}{idir} = [template_sel{ipatient}{idir}, MuseStruct{ipatient}{ipart}{idir}.markers.(tempname).synctime];
+            end
+        end
+    end
+end
+
+
+Fs = 4096;
+tolerance = 0.020 / 2 * Fs; % total search window in seconds
+clear hit FA temp
+
+for ipatient = 1 : 8
+    hit{ipatient} = [];
+    hit_sel{ipatient} = [];
+    FA{ipatient} = [];
+    FA_sel{ipatient} = [];
+    
+    for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
+        
+        temp = false(1, size(Hspike{ipatient}{idir}, 2));
+        for ispike = 1 : size(Hspike{ipatient}{idir}, 2)
+            if any(template{ipatient}{idir} > Hspike{ipatient}{idir}(ispike) - tolerance ...
+                    & template{ipatient}{idir} < Hspike{ipatient}{idir}(ispike) + tolerance)
+                temp(ispike) = true;
+            end
+        end
+        hit{ipatient} = [hit{ipatient}, temp];
+        
+        temp = false(1, size(Hspike{ipatient}{idir}, 2));
+        for ispike = 1 : size(Hspike{ipatient}{idir}, 2)
+            if any(template_sel{ipatient}{idir} > Hspike{ipatient}{idir}(ispike) - tolerance ...
+                    & template_sel{ipatient}{idir} < Hspike{ipatient}{idir}(ispike) + tolerance)
+                temp(ispike) = true;
+            end
+        end
+        hit_sel{ipatient} = [hit_sel{ipatient}, temp];
+
+        temp = true(1, size(template{ipatient}{idir}, 2));
+        for itemp = 1 : size(template{ipatient}{idir}, 2)
+            if any(template{ipatient}{idir}(itemp) > Hspike{ipatient}{idir} - tolerance ...
+                    & template{ipatient}{idir}(itemp) < Hspike{ipatient}{idir} + tolerance)
+                temp(itemp) = false;
+            end
+        end
+        FA{ipatient} = [FA{ipatient}, temp];
+        
+        temp = true(1, size(template_sel{ipatient}{idir}, 2));
+        for itemp = 1 : size(template_sel{ipatient}{idir}, 2)
+            if any(template_sel{ipatient}{idir}(itemp) > Hspike{ipatient}{idir} - tolerance ...
+                    & template_sel{ipatient}{idir}(itemp) < Hspike{ipatient}{idir} + tolerance)
+                temp(itemp) = false;
+            end
+        end
+        FA_sel{ipatient} = [FA_sel{ipatient}, temp];
+        
+    end
+end
+
+for ipatient = 1 : 8
+    tempsum(ipatient) = 0;
+    tempsum_sel(ipatient) = 0;
+    for ipart = 1 : size(MuseStruct{ipatient}, 2)
+        for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
+            for tempname = ["template1", "template", "template3", "template4", "template5", "template6"]
+                
+                if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers, tempname)
+                    continue
+                end
+                if ~isfield(MuseStruct{ipatient}{ipart}{idir}.markers.(tempname), 'synctime')
+                    continue
+                end
+                
+                tempsum(ipatient) = tempsum(ipatient) + size(MuseStruct{ipatient}{ipart}{idir}.markers.(tempname).synctime, 2);
+                
+                if any(str2double(tempname{1}(end)) == config{ipatient}.template.rejected)
+                    fprintf('Removing %s in patient %d\n', tempname, ipatient);
+                else
+                    tempsum_sel(ipatient) = tempsum_sel(ipatient) + size(MuseStruct{ipatient}{ipart}{idir}.markers.(tempname).synctime, 2);
+                end
+            end
+        end
+    end
+end
+
+for ipatient = 1 : 8
+    %     config{ipatient} = addparts(config{ipatient});
+    %     MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
+    totalHours(ipatient) = hours(MuseStruct{ipatient}{end}{end}.endtime - MuseStruct{ipatient}{1}{1}.starttime);
+end
+
+t = table;
+for ipatient = 1 : 8
+    t.Patient(ipatient) = ipatient;
+    t.Visual(ipatient)  = size(hit{ipatient}, 2);
+    
+    t.Detections(ipatient) = size(FA{ipatient}, 2);
+    t.Hitrate(ipatient) = mean(hit{ipatient})*100;
+    t.FArate(ipatient)  = mean(FA{ipatient})*100;
+    t.TotalDetections(ipatient) = tempsum(ipatient);
+
+    t.DetectionsSelection(ipatient) = sum(hit_sel{ipatient}, 2);
+    t.HitrateSelection(ipatient) = mean(hit_sel{ipatient})*100;
+    t.FArateSelection(ipatient)  = mean(FA_sel{ipatient})*100;
+    t.TotalDetectionsSelection(ipatient) = tempsum_sel(ipatient);
+    
+
+    t.totalHours(ipatient) = totalHours(ipatient);
+end
+for fname = string(t.Properties.VariableNames)
+    t.(fname)(9) = mean(t.(fname)(1:8));
+    t.(fname)(10) = std(t.(fname)(1:8));
+end
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'performance');
+writetable(t, fname);
+
 %% Create table for R: LFP power values over time + IED sum
 
 config  = hspike_setparams;
@@ -278,18 +435,21 @@ t_long  = table;
 t_wide  = table;
 
 for ipatient = 1 : 8
+    
     config{ipatient}.FFT.name  = {'window'};
-    FFT = FFTtrials(config{ipatient});
-    for ipart = 1 : size(FFT, 2)
+    config{ipatient}.FFT.postfix  = {'_noWelch'};
+    FFT{ipatient} = FFTtrials(config{ipatient});
+    
+    for ipart = 1 : size(FFT{ipatient}, 2)
         
         IEDsum = 0;
         for itemplate = 1 : 6
             if ~any(itemplate == config{ipatient}.template.rejected)
-                IEDsum = IEDsum + FFT{ipart}.window.trialinfo.(sprintf('template%d_cnt', itemplate));
+                IEDsum = IEDsum + FFT{ipatient}{ipart}.window.trialinfo.(sprintf('template%d_cnt', itemplate));
             end
         end
         
-        t_wide_temp         = FFT{ipart}.window.trialinfo;
+        t_wide_temp         = FFT{ipatient}{ipart}.window.trialinfo;
         t_wide_temp.IEDsum  = IEDsum;
         t_wide_temp.part    = ones(height(t_wide_temp), 1) * ipart;
         t_wide_temp.patient = ones(height(t_wide_temp), 1) * ipatient;
@@ -298,14 +458,16 @@ for ipatient = 1 : 8
         cfg                 = [];
         cfg.avgoverfreq     = 'yes';
         cfg.avgoverchan     = 'yes';
-        freq_band           = {[1, 4], [5, 7], [8, 14], [15, 25], [26, 40]};
-        freq_name           = ["delta", "theta", "alpha", "beta"];
+%         freq_band           = {[1, 4], [5, 7], [8, 14], [15, 25], [26, 40]};
+%         freq_name           = ["delta", "theta", "alpha", "beta"];
+        freq_band           = {[0, 2.5], [2.5, 4]};
+        freq_name           = ["Delta1", "Delta2"];
 
         for ifreq = 1 : length(freq_name)   
             
             cfg.frequency        = freq_band{ifreq};
-            power                = ft_selectdata(cfg, FFT{ipart}.window);
-            t_long_temp          = FFT{ipart}.window.trialinfo;
+            power                = ft_selectdata(cfg, FFT{ipatient}{ipart}.window);
+            t_long_temp          = FFT{ipatient}{ipart}.window.trialinfo;
             t_long_temp.power    = power.powspctrm;
             t_long_temp.band     = repmat(freq_name(ifreq), height(t_long_temp), 1);
             t_long_temp.part     = ones(height(t_long_temp), 1) * ipart;
@@ -319,19 +481,19 @@ for ipatient = 1 : 8
     end
 end
 
-% adding ratio low vs high
-for ipatient = unique(t_long.patient)'
-    for ipart =  unique(t_long.part)'
-        i1 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "delta");
-        i2 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "alpha");        
-        t_long_temp         = t_long(i1, :);
-        t_long_temp.power   = t_long.power(i1) ./ t_long.power(i2);
-        t_long_temp.band    = repmat("delta_div_alpha", height(t_long_temp), 1);   
-        t_long              = [t_long; t_long_temp];        
-    end
-end
+% % adding ratio low vs high
+% for ipatient = unique(t_long.patient)'
+%     for ipart =  unique(t_long.part)'
+%         i1 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "delta");
+%         i2 = find(t_long.patient == ipatient & t_long.part == ipart & t_long.band == "alpha");        
+%         t_long_temp         = t_long(i1, :);
+%         t_long_temp.power   = t_long.power(i1) ./ t_long.power(i2);
+%         t_long_temp.band    = repmat("delta_div_alpha", height(t_long_temp), 1);   
+%         t_long              = [t_long; t_long_temp];        
+%     end
+% end
 
-t_wide.delta_div_alpha = t_wide.delta ./ t_wide.alpha;
+% t_wide.delta_div_alpha = t_wide.delta ./ t_wide.alpha;
 t_long.minute = hour(t_long.starttime + (t_long.endtime-t_long.starttime)/2)*60 + minute(t_long.starttime + (t_long.endtime-t_long.starttime)/2);
 t_wide.minute = hour(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2)*60 + minute(t_wide.starttime + (t_wide.endtime-t_wide.starttime)/2);
 
@@ -398,9 +560,8 @@ fname   = fullfile(config{ipatient}.datasavedir, 'seizuredata_table');
 writetable(t, fname);
 
 %% Create spyking-circus parameters
-
 config = hspike_setparams;
-for ipatient = 8
+for ipatient = [1,2,3,8]
     MuseStruct{ipatient} = readMuseMarkers(config{ipatient});
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, ["BAD__START__", "BAD__END__"]);
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
@@ -441,6 +602,51 @@ for ipatient = 1:8
         end
     end
 end
+
+%% Spike analysis
+
+for ipatient = 3 : 4
+    
+    config                                                          = hspike_setparams;
+    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
+    MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
+    [config{ipatient}, MuseStruct{ipatient}]                        = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
+    
+    % read spyke data 
+    SpikeRaw{ipatient}                                              = readSpikeRaw_Phy(config{ipatient}, true);
+    
+    % epoch to IEDs and sliding windows
+    config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
+    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
+    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
+%     plot_patterns_multilevel(config{ipatient});
+    SpikeWaveforms{ipatient}                                        = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
+end
+
+
+for ipatient = 1 : 7
+    for ipart = 1 : 3
+        figure;
+        n = size(SpikeWaveforms{ipatient}{ipart}, 2);
+        for iunit = 1 : n
+            subplot(ceil(sqrt(n)), ceil(sqrt(n)), iunit);hold on;  
+            y = vertcat(SpikeWaveforms{ipatient}{ipart}{iunit}.trial{:});
+            i = randperm(size(y, 1), 20);
+            plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, y(i, :), 'color', [0.5, 0.5, 0.5]);
+            plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, mean(y), 'k');
+            title(sprintf('P%d, p%d, u%d', ipatient, ipart, iunit));
+        end
+    end
+end
+
+
+
+
+
 
 %% Create table for R: UNITS
 
@@ -823,11 +1029,6 @@ end
 %         end
 %     end
 % end
-
-
-
-
-
 
 
 

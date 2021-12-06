@@ -194,21 +194,22 @@ config{1}.template.resamplefs       = 250;
 config{1}.template.threshold        = 2.7;
 config{1}.template.selection        = [1:6];
 
-config{1}.circus.correct_chunk{1}               = true;
-config{1}.circus.correct_chunk{2}               = true;
-config{1}.circus.correct_chunk{3}               = true;
+config{1}.circus.correct_chunk{1}               = false;
+config{1}.circus.correct_chunk{2}               = false;
+config{1}.circus.correct_chunk{3}               = false;
+
 config{1}.circus.channel                        = {'mHaT2_1', 'mHaT2_3', 'mHaT2_4','mHaT2_6', 'mHaT2_7', 'mHaT2_8'};
 config{1}.circus.reref                          = 'no';
 config{1}.circus.refchan                        = '';
-config{1}.circus.outputdir                      = 'SpykingCircus_new';
+config{1}.circus.outputdir                      = 'SpykingCircus';
 config{1}.circus.paramfile                      = fullfile(rootpath_analysis, 'EpiCode', 'projects', 'hspike', 'SpykingCircus.params');
 config{1}.circus.params.detection.spike_thresh  = '6';
 config{1}.circus.params.filtering.cut_off       = '300, auto';
 config{1}.circus.params.filtering.remove_median = 'False';
 config{1}.circus.params.clustering.max_elts     = '20000';
-config{1}.circus.params.detection.peaks         = 'negative';
 config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
+config{1}.circus.params.detection.peaks         = 'negative';
 
 config{1}.spike.name                = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};  
 config{1}.spike.overlap             = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};                                    
@@ -359,14 +360,13 @@ config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
 
-config{2}.circus.correct_chunk{1}      = false;
-config{2}.circus.correct_chunk{2}      = true;
-config{2}.circus.correct_chunk{3}      = true;
+% config{2}.circus.correct_chunk{1}   = false;
+% config{2}.circus.correct_chunk{2}   = true;
+% config{2}.circus.correct_chunk{3}   = true;
 config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
 config{2}.circus.params.filtering.remove_median = 'False';
 config{2}.circus.params.detection.spike_thresh  = '6';
-config{2}.circus.params.detection.peaks         = 'negative';
 
 config{2}.spike.name                = {'combined1'};
 % config{2}.spike.name                = {'Hspike'};
@@ -523,7 +523,7 @@ config{8}.cluster.refmethod         = 'bipolar';
 config{8}.template.threshold        = 2.5;
 config{8}.template.reref            = 'yes';
 config{8}.template.refmethod        = 'bipolar';
-config{8}.circus.channel            =  {'_mHaT2_1','_mHaT2_2','_mHaT2_7','_mHmT2_5','_mHmT2_6','_HmT2_7'};
+config{8}.circus.channel            =  {'_mHaT2_1','_mHaT2_2','_mHaT2_7','_mHmT2_2','_mHmT2_5','_mHmT2_6','_HmT2_7','_HmT2_8'};
 config{8}.circus.reref              = 'no';
 
 % Rejected templates
@@ -531,7 +531,6 @@ config{1}.template.rejected         = [1];
 config{2}.template.rejected         = [1];
 config{3}.template.rejected         = [1];
 config{4}.template.rejected         = [4];
-% config{5}.template.rejected         = [2,5];
 config{5}.template.rejected         = [2,3,5,6];
 config{6}.template.rejected         = [1,3,5,6];
 config{7}.template.rejected         = [1,5,6];

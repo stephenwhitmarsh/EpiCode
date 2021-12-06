@@ -16,6 +16,10 @@
 #devtools::install_github("strengejacke/sjPlot")
 #install.packages("CircStats")
 
+# ggpval
+
+install.packages("spiralize")
+library(spiralize)
 library(ggplot2)
 #library("cowplot")
 #library("gridExtra")
@@ -55,12 +59,14 @@ cleanf <- function(x){
 # Latex table: Clinical table #
 ###############################
 
-data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.csv")
-data$ID <- NULL
-data$Label <- NULL
-colnames(data) <- c("Patient","Sex","Age","Onset","Type","SOZ","MRI","PET","SPECT","Medication","Implantation","Pre-implantation surgery" )
-kbl(data, "latex", booktabs = T, label = "clinical",
-    caption = "Clinical summary. 
+data_clinical <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.csv")
+data_clinical$ID <- NULL
+data_clinical$Label <- NULL
+colnames(data_clinical) <- c("Patient","Sex","Age","Onset","Type","SOZ","MRI","PET","SPECT","Medication","Implantation","Pre-implantation surgery" )
+kbl(data_clinical, "latex", booktabs = T, label = "clinical",
+    caption = "Clinical summary.
+    SOZ: Seizure Onset Zone,
+    MRI: Indications from Magnetic Resonance Imaging ,
     AED: Antiepileptic drugs,
     IEDs: Interictal Epileptiform discharges,
     FSWLA:  Focal seizures without loss of awareness,
@@ -95,36 +101,60 @@ kbl(data, "latex", booktabs = T, label = "clinical",
   collapse_rows(columns = 1) %>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.tex")
 
-#####################################################
-# Latex table: MACRO electrode anatomical locations #
-#####################################################
+###############################################
+# Latex table: electrode anatomical locations #
+###############################################
 options(knitr.kable.NA = '')
 
-data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv")
-data$ID <- NULL
-data$Label <- NULL
+macro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv")
+macro$ID <- NULL
+macro$Label <- NULL
 clean.cols <- c("Patient")
-data[clean.cols] <- lapply(data[clean.cols], cleanf)
+macro[clean.cols] <- lapply(macro[clean.cols], cleanf)
 
-kbl(data, "latex", booktabs = T, linesep = "", label = 'macro_anatomical',
-    caption = "Anatomical locations of macro electrode contacts")%>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.tex")
-
-#####################################################
-# Latex table: MICRO electrode anatomical locations #
-#####################################################
-
-data <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.csv")
-data$ID <- NULL
-data$Label <- NULL
+micro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.csv")
+micro$ID <- NULL
+micro$Label <- NULL
 clean.cols <- c("Patient")
-data[clean.cols] <- lapply(data[clean.cols], cleanf)
+micro[clean.cols] <- lapply(micro[clean.cols], cleanf)
 
-kbl(data, "latex", booktabs = T, linesep = "", label = 'micro_anatomical',
-    caption = "Anatomical locations of micro electrodes")%>%
+locations <- bind_rows(macro,micro)
+
+kbl(locations, "latex", booktabs = T, linesep = "", label = 'anatomical',
+    caption = "Anatomical locations of macro and micro electrodes")%>%
     kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.tex")
+    pack_rows("Macro contacts", 1, 14) %>% # latex_gap_space = "2em"
+    pack_rows("Micro electrodes", 15, 27) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/anatomical.tex")
+
+
+#########################
+# Detection performance #
+#########################
+options(knitr.kable.NA = '')
+data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/performance.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data$Patient[9] = "\\textit{Mean}"
+data$Patient[10] = "\\textit{Std.}"
+data[,1]  = round(data[,1],digits=1)
+data[,2]  = round(data[,2],digits=0)
+data[,3]  = round(data[,3],digits=0)
+data[,4]  = round(data[,4],digits=1)
+data[,5]  = round(data[,5],digits=1)
+data[,6]  = round(data[,6],digits=0)
+data[,7]  = round(data[,7],digits=0)
+data[,8]  = round(data[,8],digits=1)
+data[,9]  = round(data[,9],digits=1)
+data[,10] = round(data[,10],digits=0)
+data[,11] = round(data[,11],digits=1)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'performance', escape = FALSE,
+    col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total","24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
+    caption = "Template detection performance")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  kable_styling(latex_options = c("scale_down"))%>%
+  row_spec(8, hline_after = TRUE)%>%
+  add_header_above(c(" " = 1, "Visual" = 1, "All templates" = 4, "Selected templates" = 4)) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/performance.tex")
 
 ########################################
 # Latex table: Electrode locations MNI #
@@ -180,20 +210,26 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration',
 # prepare data
 data_power          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_power$hyplabel <- factor(data_power$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
-data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
+# data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
+data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("Delta1", "Delta2"))
 data_power$Patient  <- factor(data_power$patient, levels = c(8:1))
 data_power$part     <- factor(data_power$part)
 
 # bin for polar representation
 data_power$bin <- as.integer(cut(data_power$minute, seq(0, 24*60, by = 60)))
+  
 # duplicate midnight to connect in figure
-
 temp <- subset(data_power, bin == 24)
 temp$bin <- 0
 data_power <- bind_rows(data_power, temp)
 
 data_binned <- setNames(aggregate(data_power$power, c(list(data_power$Patient), list(data_power$bin), list(data_power$band)), mean), c("Patient", "bin", "band", "power"))
 data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(Npower = (power-min(power))/max(power-min(power)))) 
+
+# data_binned$rad <- data_binned$bin / 24 * pi
+# c <- circular(control, units = "degrees", template = "geographics") 
+# data_binned$rad
+# d <- density.circular(data_binned$bin[data_binned$patient == 1], bw = 50)
 
 ###
 # data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(Npower = (mean(power)-power)/sd(power))) 
@@ -212,10 +248,11 @@ data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(
 ####
 
 # plot
-data_binned$title1 = "Delta (1-4Hz)"
-data_binned$title2 = "Theta (5-7Hz)"
-data_binned$title3 = "Alpha (8-14Hz)"
-data_binned$title4 = "Delta (1-4Hz) / Alpha (8-14Hz)"
+data_binned$title1 = "Delta1 (0.1-2.5 Hz)"
+data_binned$title2 = "Delta2 (2.5-4 Hz)"
+# data_binned$title2 = "Theta (5-7Hz)"
+# data_binned$title3 = "Alpha (8-14Hz)"
+# data_binned$title4 = "Delta (1-4Hz) / Alpha (8-14Hz)"
 
 polarpowerplots <- list()
 
@@ -223,7 +260,7 @@ polarpowerplots[[1]] <-
   ggplot(data=data_binned[data_binned$band == "delta", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
   scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
   geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
-  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90") + 
   geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*2+(9-as.numeric(Patient))), alpha=0.8, colour = NA) +
   theme_article() +
   theme(
@@ -237,8 +274,49 @@ polarpowerplots[[1]] <-
   scale_x_continuous(breaks=seq(0, 21, by = 3), 
                      labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
   coord_polar(theta = "x", start = 0, clip="off") +
-  ylim(0, 10) +
+  ylim(-2, 10) +
   facet_wrap(~title1)
+
+polardelta1power <- 
+  ggplot(data=data_binned[data_binned$band == "Delta1", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*1.5+(9-as.numeric(Patient))), alpha=1, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(-2, 10)
+
+polardelta2power <- 
+  ggplot(data=data_binned[data_binned$band == "Delta2", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
+  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  geom_vline(xintercept = seq(0, 24, by = 3), colour = "grey90") + 
+  geom_hline(yintercept = seq(0, 8, by = 1), colour = "grey90") + 
+  geom_ribbon(aes(ymin = (9-as.numeric(Patient)), ymax=Npower*1.5+(9-as.numeric(Patient))), alpha=1, colour = NA) +
+  theme_article() +
+  theme(
+    panel.border = element_blank(),
+    legend.text  = element_blank(),
+    axis.ticks   = element_blank(),
+    axis.text.x  = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()) +
+  scale_x_continuous(breaks=seq(0, 21, by = 3), 
+                     labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
+  coord_polar(theta = "x", start = 0, clip="off") +
+  ylim(-1, 10)
+
 
 polarpowerplots[[2]] <- 
   ggplot(data=data_binned[data_binned$band == "theta", ], aes(x = bin, y = Npower, fill=Patient, col=Patient)) +
@@ -331,7 +409,6 @@ data_IED$hour           <- data_IED$minute / (60)
 data_IED$rad            <- data_IED$theta
 
 # extract distribution statistics
-library(circular)
 dist_IED <- data.frame()  
 d <- list()
 stat_IED <- list()
@@ -365,9 +442,12 @@ dist_IED$Khour = dist_IED$rad / (pi * 2) * 24
 dist_IED$Patient = factor(dist_IED$Patient, levels = c(1:8)) # reversed order in plot
 stat_IED <- as.data.frame(stat_IED)
 stat_IED$Patient <- factor(stat_IED$Patient, levels = c(1:8))
-stat_IED$median[6] = stat_IED$median[6] + (pi*2/360) * 4 # add some offset in degrees
-stat_IED$median[1] = stat_IED$median[1] - (pi*2/360) * 4 # add some offset in degrees
-stat_IED$median[stat_IED$p >= 0.05] = NA # all are significant though
+
+# add some offset in degrees so it shows up from behind the rest
+stat_IED$medianplot <- stat_IED$median
+stat_IED$medianplot[1] = stat_IED$median[1] - 0.18 
+stat_IED$medianplot[6] = stat_IED$median[6] + 0.2
+stat_IED$medianplot[stat_IED$p >= 0.05] = NA # all are significant though
 
 IEDpolarplot <-
   ggplot(data=data_IED, aes(x=hour, y = as.numeric(Patient), fill=Patient)) + 
@@ -378,7 +458,7 @@ IEDpolarplot <-
                                                    ymax = density*3 + (9-as.numeric(Patient)), 
                                                    col = Patient), show.legend = TRUE) +
   
-  geom_segment(data=stat_IED, aes(x=median, y=9.5, xend=median, yend=10, col=Patient), 
+  geom_segment(data=stat_IED, aes(x=medianplot, y=9.5, xend=medianplot, yend=10, col=Patient), 
                arrow = arrow(length = unit(0.25, "cm"), type="closed"), size = 0.5, show.legend = FALSE) + 
   
   coord_polar(theta = "x", start = 0, direction = 1, clip = 'off') + 
@@ -423,7 +503,6 @@ data_seizures$hour      <- data_seizures$minute / 60
 data_seizures$rad       <- data_seizures$minute / 60 / 24 * pi * 2
 
 # extract distribution statistics
-library(circular)
 dist_seizures <- data.frame()  
 d <- list()
 stat_seizures <- list()
@@ -462,14 +541,15 @@ stat_seizures$median_sel = stat_seizures$median
 stat_seizures$median_sel[stat_seizures$p >= 0.05] = NA # all are significant though
 
 # tiny adjustment to make axes line out properly and arrows not overlap
-data_seizures$hour[which(data_seizures$hour==max(data_seizures$hour))] = 24
+data_seizures$hourplot <- data_seizures$hour
+data_seizures$hourplot[which(data_seizures$hour==max(data_seizures$hour))] = 24
 
 # add jitter function for points
 jitter <- position_jitter(width = 0, height = 0.4)
 
 # plot
 Seizurepolarplot  <-
-  ggplot(data=data_seizures, aes(x=hour, y = as.numeric(Patient), fill=Patient)) + 
+  ggplot(data=data_seizures, aes(x=hourplot, y = as.numeric(Patient), fill=Patient)) + 
   geom_vline(xintercept = seq(0, 21, by = 3), colour = "grey90") +
   geom_hline(yintercept = seq(1, 8, by = 1), colour = "grey90") +  
   geom_ribbon(data=dist_seizures, alpha = 1, colour = NA, aes(x=Khour, 
@@ -506,6 +586,17 @@ ggarrange(IEDpolarplot, Seizurepolarplot,
           font.label = list(size = 14, color = "black", face = "bold")) %>%
   ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
 
+
+# save combined to pdf
+ggarrange(IEDpolarplot, Seizurepolarplot, polardelta1power,
+          labels = c("A","B","C"), 
+          vjust = 3, hjust = -1, 
+          legend = "right", 
+          common.legend = TRUE, 
+          font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar.pdf") 
+
+
 # LaTeX table
 library(stringr)
 stat_seizures$time = paste(str_pad( floor(stat_seizures$median), 2, pad = "0"), ":", str_pad(floor((stat_seizures$median- floor(stat_seizures$median)) * 60), 2, pad = "0"), sep = "")
@@ -519,6 +610,18 @@ kbl(stat_seizures, "latex", booktabs = T, linesep = "", label = 'circstat_seizur
   kable_styling(latex_options = c("HOLD_position"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_seizures.tex")
 
+# combined table 
+temp <- stat_seizures
+colnames(temp) <- c("Patient","time2","Rayleigh_stat2","p2")
+combined = merge(stat_IED,temp)
+
+kbl(combined, "latex", booktabs = T, linesep = "", label = 'circstats',
+    col.names = c("Patient","Time","Rayleigh", "\\textit{p}","Time","Rayleigh", "\\textit{p}"),
+    escape = FALSE, digits = 2,
+    caption = "Circular statistics of circadian epileptic activity")%>%
+    add_header_above(c(" ", "Interictal activity" = 3, "Seizures" = 3)) %>%
+    kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstats.tex")
 
 #############################
 # LFP power per sleep stage #
@@ -526,8 +629,8 @@ kbl(stat_seizures, "latex", booktabs = T, linesep = "", label = 'circstat_seizur
 
 # prepare data
 data_pow  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_pow          <- data_pow[!data_pow$part > 3, ] # hypnogram is only scored on first three nights
-data_pow          <- data_pow[!data_pow$hyplabel == "NO_SCORE", ]
+data_pow  <- data_pow[!data_pow$part > 3, ] # hypnogram is only scored on first three nights
+data_pow  <- data_pow[!data_pow$hyplabel == "NO_SCORE", ]
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_1"]   = "S1"
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_2"]   = "S2"
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_3"]   = "S3"
@@ -535,9 +638,14 @@ data_pow$hyplabel[data_pow$hyplabel == "AWAKE"]     = "Wake"
 data_pow$hyplabel[data_pow$hyplabel == "PRESLEEP"]  = "Pre"
 data_pow$hyplabel[data_pow$hyplabel == "POSTSLEEP"] = "Post"
 data_pow$hyplabel <- factor(data_pow$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "S1", "S2", "S3"))
-data_pow$band     <- factor(data_pow$band, ordered = TRUE, levels = c("delta", "theta", "alpha"))
+# data_pow$band     <- factor(data_pow$band, ordered = TRUE, levels = c("delta", "theta", "alpha"))
+data_pow$band     <- factor(data_pow$band, ordered = TRUE, levels = c("Delta1", "Delta2"))
 data_pow$patient  <- factor(data_pow$patient, levels = c(8:1))
 data_pow$part     <- factor(data_pow$part)
+
+# add clinical data (not yet used here)
+data_clinical$patient <- data_clinical$Patient
+data_pow <- merge(data_pow, data_clinical)
 
 # scale data over windows
 m               <- setNames(aggregate(data_pow$power, by = list(data_pow$patient, data_pow$band, data_pow$hyplabel), median), c("patient", "band", "hyplabel", "power_median"))
@@ -553,22 +661,35 @@ m$hyplabel      <- factor(m$hyplabel, levels = c("REM", "Post", "Pre", "Wake", "
 m$part          <- factor(m$part)
 
 # plot
-data_pow$title1 = "Normalized delta power (1-4Hz)"
-data_pow$title2 = "Normalized theta power (5-7Hz)"
-data_pow$title3 = "Normalized alpha power (8-14Hz)"
+data_pow$title1 = "Normalized power Delta1 (0.1-2.5 Hz)"
+data_pow$title2 = "Normalized power Delta2 (2.5-4 Hz)"
+# data_pow$title2 = "Normalized theta power (5-7Hz)"
+# data_pow$title3 = "Normalized alpha power (8-14Hz)"
 
 plots_pow <- list()
-plots_pow[[1]] <- 
-  ggplot(data=data_pow[data_pow$band == "delta",], aes(y = hyplabel, x = Zpower)) +
+plots_delta1 <- 
+  ggplot(data=data_pow[data_pow$band == "Delta1",], aes(y = hyplabel, x = Zpower)) +
   geom_boxplot(outlier.shape = NA) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
-  geom_point(data = m[m$band == "delta",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5,
+  geom_point(data = m[m$band == "Delta1",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5,
              position=position_dodge(width=0.5)) +
   guides(colour = "none") +
   coord_cartesian(xlim = c(-1.2, 2)) +
   theme_article() +
   ylab(NULL) + xlab(NULL) +
   facet_wrap(~title1)
+
+plots_delta2 <- 
+  ggplot(data=data_pow[data_pow$band == "Delta2",], aes(y = hyplabel, x = Zpower)) +
+  geom_boxplot(outlier.shape = NA) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  geom_point(data = m[m$band == "Delta2",], aes(group = interaction(patient, part), x = power_avg, y = hyplabel, col = patient), alpha = 0.5,
+             position=position_dodge(width=0.5)) +
+  guides(colour = "none") +
+  coord_cartesian(xlim = c(-1.2, 2)) +
+  theme_article() +
+  ylab(NULL) + xlab(NULL) +
+  facet_wrap(~title2)
 
 plots_pow[[2]] <- 
   ggplot(data=data_pow[data_pow$band == "theta",], aes(y = hyplabel, x = Zpower)) +
@@ -644,8 +765,7 @@ s$IEDrateNorm <- s$IEDrate / s$REMrate
 s$title1 = "IED count"
 s$title2 = "IED rate (count/min)"
 s$title3 = "IED normalized to REM"
-plots_IED<- list()
-plots_IED[[1]] <- ggplot(data=s, aes(y=hyplabel, x=n)) +
+plot_IED_count <- ggplot(data=s, aes(y=hyplabel, x=n)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) +
@@ -655,7 +775,7 @@ plots_IED[[1]] <- ggplot(data=s, aes(y=hyplabel, x=n)) +
   coord_cartesian(xlim = c(1, 4000)) +
   facet_wrap(~title1)
 
-plots_IED[[2]] <- ggplot(data=s, aes(y=hyplabel, x=IEDrate)) +
+plot_IED_rate <- ggplot(data=s, aes(y=hyplabel, x=IEDrate)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) +
@@ -665,7 +785,7 @@ plots_IED[[2]] <- ggplot(data=s, aes(y=hyplabel, x=IEDrate)) +
   theme_article() + 
   facet_wrap(~title2)
 
-plots_IED[[3]] <- ggplot(data=s, aes(y=hyplabel, x=IEDrateNorm)) +
+plot_IED_norm <- ggplot(data=s, aes(y=hyplabel, x=IEDrateNorm)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(group = interaction(patient, part), col = patient), position=position_dodge(width=0.3), alpha = 0.5) + 
@@ -697,124 +817,194 @@ data_pow_wide$stage    <- data_pow_wide$hyplabel
 data_pow_wide$patient  <- factor(data_pow_wide$patient, levels = c(8:1))
 data_pow_wide$night    <- factor(data_pow_wide$part)
 
+# add clinical data (not yet used here)
+data_clinical$patient <- data_clinical$Patient
+data_pow_wide <- merge(data_pow_wide, data_clinical)
+data_pow_wide$duration <- data_pow_wide$Age - data_pow_wide$Onset
+
+
 # normalize 
-y1   <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), mean), c("patient", "Malpha"))
-y2   <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mtheta"))
-y3   <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), mean), c("patient", "Mbeta"))
-y4   <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta"))
-y1sd <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDalpha"))
-y2sd <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDtheta"))
-y3sd <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDbeta"))
-y4sd <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDdelta"))
+d1   <- setNames(aggregate(data_pow_wide$Delta1, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta1"))
+d1sd <- setNames(aggregate(data_pow_wide$Delta1, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDdelta1"))
+d2   <- setNames(aggregate(data_pow_wide$Delta2, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta2"))
+d2sd <- setNames(aggregate(data_pow_wide$Delta2, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDdelta2"))
 
-data_pow_wide <- merge(data_pow_wide,y1)
-data_pow_wide <- merge(data_pow_wide,y2)
-data_pow_wide <- merge(data_pow_wide,y3)
-data_pow_wide <- merge(data_pow_wide,y4)
-data_pow_wide <- merge(data_pow_wide,y1sd)
-data_pow_wide <- merge(data_pow_wide,y2sd)
-data_pow_wide <- merge(data_pow_wide,y3sd)
-data_pow_wide <- merge(data_pow_wide,y4sd)
+data_pow_wide <- merge(data_pow_wide,d1)
+data_pow_wide <- merge(data_pow_wide,d2)
+data_pow_wide <- merge(data_pow_wide,d1sd)
+data_pow_wide <- merge(data_pow_wide,d2sd)
 
-data_pow_wide$Zdelta <- (data_pow_wide$delta-data_pow_wide$Mdelta)/data_pow_wide$SDdelta
-data_pow_wide$Ztheta <- (data_pow_wide$theta-data_pow_wide$Mtheta)/data_pow_wide$SDtheta
-data_pow_wide$Zalpha <- (data_pow_wide$alpha-data_pow_wide$Malpha)/data_pow_wide$SDalpha
-data_pow_wide$Zbeta  <- (data_pow_wide$beta -data_pow_wide$Mbeta)/data_pow_wide$SDbeta
+data_pow_wide$Zdelta1 <- (data_pow_wide$Delta1-data_pow_wide$Mdelta1)/data_pow_wide$SDdelta1
+data_pow_wide$Zdelta2 <- (data_pow_wide$Delta2-data_pow_wide$Mdelta2)/data_pow_wide$SDdelta2
+
+#   
+# # normalize 
+# y1   <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), mean), c("patient", "Malpha"))
+# y2   <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mtheta"))
+# y3   <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), mean), c("patient", "Mbeta"))
+# y4   <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta"))
+# y1sd <- setNames(aggregate(data_pow_wide$alpha, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDalpha"))
+# y2sd <- setNames(aggregate(data_pow_wide$theta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDtheta"))
+# y3sd <- setNames(aggregate(data_pow_wide$beta,  by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDbeta"))
+# y4sd <- setNames(aggregate(data_pow_wide$delta, by = c(list(data_pow_wide$patient)), sd),   c("patient", "SDdelta"))
+# 
+# data_pow_wide <- merge(data_pow_wide,y1)
+# data_pow_wide <- merge(data_pow_wide,y2)
+# data_pow_wide <- merge(data_pow_wide,y3)
+# data_pow_wide <- merge(data_pow_wide,y4)
+# data_pow_wide <- merge(data_pow_wide,y1sd)
+# data_pow_wide <- merge(data_pow_wide,y2sd)
+# data_pow_wide <- merge(data_pow_wide,y3sd)
+# data_pow_wide <- merge(data_pow_wide,y4sd)
+# 
+# data_pow_wide$Zdelta <- (data_pow_wide$delta-data_pow_wide$Mdelta)/data_pow_wide$SDdelta
+# data_pow_wide$Ztheta <- (data_pow_wide$theta-data_pow_wide$Mtheta)/data_pow_wide$SDtheta
+# data_pow_wide$Zalpha <- (data_pow_wide$alpha-data_pow_wide$Malpha)/data_pow_wide$SDalpha
+# data_pow_wide$Zbeta  <- (data_pow_wide$beta -data_pow_wide$Mbeta)/data_pow_wide$SDbeta
 
 # to create p-values
 detach(package:lmerTest)
 library(lmerTest)
 library(lme4)
 
-# Delta explained by sleep stage
-l1 <- lmer(Zdelta ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+####
+# Delta1 explained by sleep stage
+####
+
+l1 <- lmer(Zdelta1 ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+# l1 <- lm(Zdelta ~ stage + duration, data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
 summary(l1)
 plot_model(l1)
 
-# DELTA Coefficients to LaTeX table
+# Coefficients
 temp = summary(l1)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
-kbl(coefs, "latex", booktabs = T, linesep = "", label = 'delta_coef',
-    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
-    escape = FALSE, digits = 2,
-    caption = "Fixed effect coefficients for effect of sleep stages on Delta power")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/delta_coef.tex")
 
-# DELTA Post-hoc tests to LaTeX table
+# Post-hoc tests
 temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
 ph1 <- as.data.frame(temp$`pairwise differences of stage`)
 ph1 <- ph1[, -4] # remove df since they are at inf
 ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
 
-kbl(ph1, "latex", booktabs = T, linesep = "", label = 'delta_posthoc',
-    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+# Concatenate in one LaTeX table
+coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+rownames(coefs) <- NULL
+colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+stats_delta1   <- bind_rows(coefs,ph1)
+
+options(knitr.kable.NA = '')
+
+kbl(stats_delta1, "latex", booktabs = T, linesep = "", label = 'stats_delta1',
     escape = FALSE, digits = 2,
-    caption = "Posthoc Tukey comparison of sleep stages on Delta power")%>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/delta_posthoc.tex")
-
-# THETA explained by sleep stage
-l1 <- lmer(Ztheta ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
-summary(l1)
-plot_model(l1)
-
-# THETA Coefficients to LaTeX table
-temp = summary(l1)
-coefs <- as.data.frame(temp$coefficients)
-coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
-kbl(coefs, "latex", booktabs = T, linesep = "", label = 'theta_coef',
-    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
-    escape = FALSE, digits = 2,
-    caption = "Fixed effect coefficients for effect of sleep stages on Theta power")%>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/theta_coef.tex")
-
-# THETA Post-hoc tests to LaTeX table
-temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
-ph1 <- as.data.frame(temp$`pairwise differences of stage`)
-ph1 <- ph1[, -4] # remove df since they are at inf
-ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
-
-kbl(ph1, "latex", booktabs = T, linesep = "", label = 'theta_posthoc',
-    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
-    escape = FALSE, digits = 2,
-    caption = "Posthoc Tukey comparison of sleep stages on Theta power")%>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/theta_posthoc.tex")
-
-# ALPHA explained by sleep stage
-l1 <- lmer(Zalpha ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
-summary(l1)
-plot_model(l1)
-
-# ALPHA Coefficients to LaTeX table
-temp = summary(l1)
-coefs <- as.data.frame(temp$coefficients)
-coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
-kbl(coefs, "latex", booktabs = T, linesep = "", label = 'alpha_coef',
-    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
-    escape = FALSE, digits = 2,
-    caption = "Fixed effect coefficients for effect of sleep stages on Alpha power")%>%
+    caption = "Effect of sleep stages on Delta1 (0.1-2.5Hz) power")%>%
+    pack_rows("Coefficients", 1, 7) %>%
+    pack_rows("Post-hoc comparisons", 8, 28) %>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/alpha_coef.tex")
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_delta1.tex")
 
-# ALPHA Post-hoc tests to LaTeX table
+####
+# Delta2 explained by sleep stage
+####
+l1 <- lmer(Zdelta2 ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+# l1 <- lm(Zdelta ~ stage + duration, data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+summary(l1)
+plot_model(l1)
+
+# Coefficients
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+
+# Post-hoc tests
 temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
 ph1 <- as.data.frame(temp$`pairwise differences of stage`)
 ph1 <- ph1[, -4] # remove df since they are at inf
 ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
 
-kbl(ph1, "latex", booktabs = T, linesep = "", label = 'alpha_posthoc',
-    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+# Concatenate in one LaTeX table
+coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+rownames(coefs) <- NULL
+colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+stats_delta2   <- bind_rows(coefs,ph1)
+
+options(knitr.kable.NA = '')
+
+kbl(stats_delta2, "latex", booktabs = T, linesep = "", label = 'stats_delta2',
     escape = FALSE, digits = 2,
-    caption = "Posthoc Tukey comparison of sleep stages on Alpha power")%>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/alpha_posthoc.tex")
+    caption = "Effect of sleep stages on Delta2 (2.5-4 Hz) power")%>%
+  pack_rows("Coefficients", 1, 7) %>%
+  pack_rows("Post-hoc comparisons", 8, 28) %>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_delta2.tex")
+
+# # THETA explained by sleep stage
+# l1 <- lmer(Ztheta ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+# summary(l1)
+# plot_model(l1)
+# 
+# # THETA Coefficients to LaTeX table
+# temp = summary(l1)
+# coefs <- as.data.frame(temp$coefficients)
+# coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+# rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+# 
+# # THETA Post-hoc tests to LaTeX table
+# temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+# ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+# ph1 <- ph1[, -4] # remove df since they are at inf
+# ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+# 
+# # Concatenate in one LaTeX table
+# coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+# rownames(coefs) <- NULL
+# colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+# colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+# stats_theta     <- bind_rows(coefs,ph1)
+# 
+# kbl(stats_theta, "latex", booktabs = T, linesep = "", label = 'stats_theta',
+#     escape = FALSE, digits = 2,
+#     caption = "Effect of sleep stages on Theta power")%>%
+#   pack_rows("Coefficients", 1, 7) %>%
+#   pack_rows("Post-hoc comparisons", 8, 28) %>%
+#   kable_styling(latex_options = c("HOLD_position"))%>%
+#   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_theta.tex")
+# 
+# # ALPHA explained by sleep stage
+# l1 <- lmer(Zalpha ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
+# summary(l1)
+# plot_model(l1)
+# 
+# # ALPHA Coefficients to LaTeX table
+# temp = summary(l1)
+# coefs <- as.data.frame(temp$coefficients)
+# coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+# rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+# 
+# # ALPHA Post-hoc tests to LaTeX table
+# temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+# ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+# ph1 <- ph1[, -4] # remove df since they are at inf
+# ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+# 
+# # Concatenate in one LaTeX table
+# coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+# rownames(coefs) <- NULL
+# colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+# colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+# stats_alpha     <- bind_rows(coefs,ph1)
+# 
+# kbl(stats_alpha, "latex", booktabs = T, linesep = "", label = 'stats_alpha',
+#     escape = FALSE, digits = 2,
+#     caption = "Effect of sleep stages on Alpha power")%>%
+#   pack_rows("Coefficients", 1, 7) %>%
+#   pack_rows("Post-hoc comparisons", 8, 28) %>%
+#   kable_styling(latex_options = c("HOLD_position"))%>%
+#   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_alpha.tex")
 
 
 ###################################################################
@@ -828,7 +1018,12 @@ library(lme4)
 
 # determine reference level
 data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
-l1 <- lmer(IEDsum ~ stage + Zdelta + Ztheta + Zalpha + (1 | night) + (1 | patient), data_pow_wide)
+# l1 <- lmer(IEDsum ~ stage + duration + Zdelta + Ztheta + Zalpha + (1 | night) + (1 | patient), data_pow_wide)
+# l1 <- lmer(IEDsum ~ stage + Zdelta + Ztheta + Zalpha + (1 | night) + (1 | patient), data_pow_wide)
+
+l1 <- lmer(IEDsum ~ stage + Zdelta1 + Zdelta2 + (1 | night) + (1 | patient), data_pow_wide)
+# l1 <- lmer(IEDsum ~ stage + (1 | night) + (1 | patient), data_pow_wide) # COMPARE MODELS AS THIS SHOWS DELTA EXPLAINS S2 vs S3
+
 summary(l1)
 plot_model(l1)
 
@@ -843,14 +1038,6 @@ temp = summary(l1)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "Delta", "Theta", "Alpha")
-kbl(coefs, "latex", booktabs = T, linesep = "", label = 'IED_coef',
-    col.names = c("Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}"),
-    escape = FALSE, digits = 2,
-    caption = "Fixed effect coefficients for effect of sleep stages on IED rate")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
-    pack_rows("Sleep stages", 2, 7) %>% # latex_gap_space = "2em"
-    pack_rows("LFP power", 8, 11) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/IEDsum_coefficients.tex")
 
 # Post-hoc tests to LaTeX table
 temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
@@ -858,12 +1045,22 @@ ph1 <- as.data.frame(temp$`pairwise differences of stage`)
 ph1 <- ph1[, -4] # remove df since they are at inf
 ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
 
-kbl(ph1, "latex", booktabs = T, linesep = "", label = 'IED_posthoc',
-    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
+# Concatenate in one LaTeX table
+coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+rownames(coefs) <- NULL
+colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+stats_IEDsum   <- bind_rows(coefs,ph1)
+
+kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum',
     escape = FALSE, digits = 2,
-    caption = "Posthoc Tukey comparison of sleep stages on IED rate")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/IEDsum_coefficients_posthoc.tex")
+    caption = "Effect of sleepstages on IEDrate")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
+  pack_rows("Power", 8, 9) %>%
+  pack_rows("Post-hoc comparisons", 10, 30) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+
 
 ###############################
 # IED amplitude & sleep stage #
@@ -907,8 +1104,7 @@ data_amp_mean$hyplabel <- factor(data_amp_mean$hyplabel, levels = c("REM", "Post
 data_amp_mean$title1 = "Normalized amplitude positive peaks"
 data_amp_mean$title2 = "Normalized amplitude negative peaks"
 
-plots_amp <- list()
-plots_amp[[1]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Zposamp)) +
+plot_amp_pos <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Zposamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.3), alpha = 0.5) +
@@ -919,7 +1115,7 @@ plots_amp[[1]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Zposamp)) +
   # coord_cartesian(xlim = c(0, 1500)) +
   facet_wrap(~title1)
 
-plots_amp[[2]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Znegamp)) +
+plot_amp_neg <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Znegamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.3), alpha = 0.5) +
@@ -934,15 +1130,12 @@ plots_amp[[2]] <- ggplot(data=data_amp_mean, aes(y=hyplabel, x=Znegamp)) +
 # Boxplots together in Figure #
 ###############################
 
-ggarrange(plotlist = c(plots_pow[1], plots_IED[1], plots_pow[2],  plots_IED[2], plots_pow[3], plots_IED[3], plots_amp[2], plots_amp[1]), 
-          ncol = 2, nrow = 4,
+ggarrange(plots_delta1, plot_IED_count, plots_delta2, plot_IED_rate, plot_amp_neg, plot_amp_pos, 
+          ncol = 2, nrow = 3,
           vjust = 1.5, hjust = -1, 
-          widths = c(1,1,1,1,1,1), 
-          heights = c(1,1,1,1,1,1),  
-          labels = c("A","B","C","D","E","F","G","H"), 
+          labels = c("A","B","C","D","E","F","G"), 
           legend = "right", 
           common.legend = TRUE, 
-          # legend = "none",
           font.label = list(size = 14, color = "black", face = "bold")) %>%
   ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/all_boxplots.pdf")
 
@@ -993,7 +1186,7 @@ colnames(spos)  <- c("Predictor","Estimate","SD","df","t","p")
 temp = emmeans(lpos, list(pairwise ~ stage), adjust = "tukey")
 phpos <- as.data.frame(temp$`pairwise differences of stage`)
 colnames(phpos) <- c("Comparison","Estimate","SE","df","Z ratio","p")
-phpos <- phpos[, -4] # remove df since they are at inf
+phpos$df <- NA
 
 ##############################
 ## STATISTICS Negative peaks #
@@ -1020,43 +1213,49 @@ colnames(sneg)  <- c("Predictor","EstimateNeg","SDNeg","dfNeg","tNeg","pNeg")
 sneg$id  <- 1:nrow(sneg)
 coef <- merge(sneg, spos)
 coef <- coef[order(coef$id), ]
-coef <- coef[, -7] 
-coef[,4] = round(coef[,4],digits=0)
-coef[,9] = round(coef[,9],digits=0)
+coef <- coef[, c(-1, -7)] 
+rownames(coef)  <- NULL
+
+coef[,3] = round(coef[,3],digits=0)
+coef[,8] = round(coef[,8],digits=0)
 
 coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "Post", "REM")
-rownames(coef)  <- NULL
-coef[,6] = ifelse(coef[,6] > .05, paste(round(coef[,6],digits=2),sep=""), ifelse(coef[,6] < .0001, "<.0001\\textsuperscript{***}", ifelse(coef[,6] < .001,"<.001\\textsuperscript{**}", ifelse(coef[,6] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-coef[,11] = ifelse(coef[,11] > .05, paste(round(coef[,11],digits=2),sep=""), ifelse(coef[,11] < .0001, "<.0001\\textsuperscript{***}", ifelse(coef[,11] < .001,"<.001\\textsuperscript{**}", ifelse(coef[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-
-kbl(coef, "latex", booktabs = T, linesep = "", label = 'amp_coef', digits=2, escape = FALSE,
-    col.names = c("", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}", "Coef $\\beta$","SD($\\beta$)","df", "t", "\\textit{p}"),
-    caption = "Effect of sleep stage on ERP peak amplitudes")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
-  add_header_above(c(" ", "Negative peaks" = 5, "Positive peaks" = 5)) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_coef.tex")
+coef <- coef[, c(11,1,2,3,4,5,6,7,8,9,10)]
 
 # Post-hoc comparisons to LaTeX table 
 temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
 phneg <- as.data.frame(temp$`pairwise differences of stage`)
 colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
-phneg <- phneg[, -4] # remove df since they are at inf
 
 phneg$id  <- 1:nrow(phneg)
+phneg$dfNeg <- NA
+
 ph <- merge(phneg,phpos)
 ph <- ph[order(ph$id), ]
-ph <- ph[, -6] 
+ph <- ph[, -7] 
 rownames(ph)  <- NULL
 
-ph[,5] = ifelse(ph[,5] > .05, paste(round(ph[,5],digits=2),sep=""), ifelse(ph[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-ph[,9] = ifelse(ph[,9] > .05, paste(round(ph[,9],digits=2),sep=""), ifelse(ph[,9] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph[,9] < .001,"<.001\\textsuperscript{**}", ifelse(ph[,9] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+# Concatenate in one LaTeX table
+colnames(ph)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+colnames(coef) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
 
-kbl(ph, "latex", booktabs = T, linesep = "", label = 'amp_posthoc', digits=2, escape = FALSE,
-    col.names = c("", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","z ratio", "\\textit{p}"),
-    caption = "Posthoc Tukey comparison of sleep stage on ERP peak amplitude")%>%
-    kable_styling(latex_options = c("hold_position"))%>%
-  add_header_above(c(" ", "Negative peaks" = 4, "Positive peaks" = 4)) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/amp_posthoc.tex")
+stats_amp      <- bind_rows(coef,ph)
+colnames(stats_amp) <- c("", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+
+stats_amp[,6] = ifelse(stats_amp[,6] > .05, paste(round(stats_amp[,6],digits=2),sep=""), ifelse(stats_amp[,6] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_amp[,6] < .001,"<.001\\textsuperscript{**}", ifelse(stats_amp[,6] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_amp[,11] = ifelse(stats_amp[,11] > .05, paste(round(stats_amp[,11],digits=2),sep=""), ifelse(stats_amp[,11] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_amp[,11] < .001,"<.001\\textsuperscript{**}", ifelse(stats_amp[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+
+options(knitr.kable.NA = '')
+
+kbl(stats_amp, "latex", booktabs = T, linesep = "", label = 'stats_amp',
+    escape = FALSE, digits = 2,
+    caption = "Effect of sleep stage on ERP peak amplitude")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
+  pack_rows("Post-hoc comparisons", 8, 28) %>%
+  add_header_above(c(" ", "Negative peaks" = 5, "Positive peaks" = 5)) %>%
+  kable_styling(latex_options = c("scale_down"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_amp.tex")
 
 #########
 # Units #

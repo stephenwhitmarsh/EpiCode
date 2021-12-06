@@ -29,7 +29,7 @@ if ispc
     addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
     addpath          \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
 end
-
+ft_defaults
 
 %% load data
 for ipatient = 1:8
@@ -162,21 +162,29 @@ ax = axis;
 l = plot([ax(1), ax(2)], [0, 0], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
 
 % add patches for frequency bands
-l = plot([4, 4],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-l = plot([7, 7],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-l = plot([14, 14], [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-text(2.5,  2.2, 'Delta', 'HorizontalAlignment', 'center');
-text(5.5,  2.2, 'Theta', 'HorizontalAlignment', 'center');
-text(10.5, 2.2, 'Alpha', 'HorizontalAlignment', 'center');
 
-xticks([1, 4, 7, 14, 20]);
+l = plot([2.5, 2.5],    [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+l = plot([4, 4],        [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+text(1.25,  2.2, 'Delta1', 'HorizontalAlignment', 'center');
+text(3.25,  2.2, 'Delta2', 'HorizontalAlignment', 'center');
+xticks([0.1, 2.5, 4, 5]);
+xlim([0.1, 5]);
+
+% l = plot([4, 4],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+% l = plot([7, 7],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+% l = plot([14, 14], [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+% text(2.5,  2.2, 'Delta', 'HorizontalAlignment', 'center');
+% text(5.5,  2.2, 'Theta', 'HorizontalAlignment', 'center');
+% text(10.5, 2.2, 'Alpha', 'HorizontalAlignment', 'center');
+% xticks([1, 4, 7, 14, 20]);
+
 yticks([-1, 0, 1, 2]);
 
 xlabel('Frequency (Hz)');
 ylabel('Log power relative to pre-sleep');
 legend(h, hyplabels, 'box', 'off'); 
 
-xlim([1, 20]);
+% xlim([1, 20]);
 set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out', 'TickLength', [0.01, 0.01])
 set(findall(gcf, '-property', 'FontSize'), 'Fontsize', 18);
 
@@ -186,7 +194,7 @@ if ~ispc
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));
 else
-    fname = fullfile('D:\Dropbox\Apps\Overleaf\images\Hspike', 'FFT');
+    fname = fullfile('D:\Dropbox\Apps\Overleaf\Hspike\images', 'FFT');
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));
 end

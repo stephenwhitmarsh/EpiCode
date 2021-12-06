@@ -16,8 +16,6 @@ function [FFT] = FFTtrials(cfg, force)
 %    You should have received a copy of the GNU General Public License
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
-
-
 cfg.FFT             = ft_getopt(cfg, 'FFT', []);
 cfg.FFT.postfix     = ft_getopt(cfg.FFT, 'postfix', []);
 cfg.FFT.keeptrials  = ft_getopt(cfg.FFT, 'keeptrials', 'yes');
@@ -88,8 +86,8 @@ if ~isempty(cfg.FFT.name)
     % loop over markers
     for markername = string(cfg.FFT.name)
         
-        fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'FFT_', markername, '.mat'));
-        
+        fname_out = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'FFT_', markername, cfg.FFT.postfix, '.mat'));
+
         % loop over parts within subject
         for ipart = 1 : size(cfg.directorylist, 2)
             
@@ -100,29 +98,45 @@ if ~isempty(cfg.FFT.name)
                 continue
             end
             
+            
+%             cfgtemp                         = [];
+%             cfgtemp.channel                 = 'all';
+%             cfgtemp.method                  = 'mtmconvol';
+%             cfgtemp.output                  = 'pow';
+%             cfgtemp.taper                   = 'hanning';
+%             cfgtemp.keeptrials              = cfg.FFT.keeptrials;
+%             cfgtemp.foi                     = cfg.FFT.foi.(markername);
+%             cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi, 2));
+%             cfgtemp.toi                     = 0.5 : 1 : cfg.window.length-0.5;
+%             cfgtemp.pad                     = 'nextpow2';
+%             FFT{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
+            
+                        
             cfgtemp                         = [];
             cfgtemp.channel                 = 'all';
-            cfgtemp.method                  = 'mtmconvol';
+            cfgtemp.method                  = 'mtmfft';
             cfgtemp.output                  = 'pow';
             cfgtemp.taper                   = 'hanning';
             cfgtemp.keeptrials              = cfg.FFT.keeptrials;
-            cfgtemp.foi                     = cfg.FFT.foi.(markername);
-            cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi, 2));
-            cfgtemp.toi                     = 0.5 : 1 : cfg.window.length-0.5;
+            cfgtemp.foi                     = 0:0.1:5;
             cfgtemp.pad                     = 'nextpow2';
             FFT{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
+            
             
             % to save memory, remove cfg if not already done
             if isfield(FFT{ipart},'cfg')
                 FFT{ipart} = rmfield(FFT{ipart}, 'cfg');
             end
             
-            % average over time (Welch method)
-            fprintf('Averaging data over time (Welch method)')            
-            cfgtemp                         = [];
-            cfgtemp.avgovertime             = 'yes';
-            cfgtemp.nanmean                 = 'yes';            
-            FFT{ipart}.(markername)         = ft_selectdata(cfgtemp,  FFT{ipart}.(markername));
+%             % average over time (Welch method)
+%             fprintf('Averaging data over time (Welch method)')            
+%             cfgtemp                         = [];
+%             cfgtemp.avgovertime             = 'yes';
+%             cfgtemp.nanmean                 = 'yes';            
+%             FFT{ipart}.(markername)         = ft_selectdata(cfgtemp,  FFT{ipart}.(markername));
+            
+            
+            
             
         end % ipart
     end % markername
