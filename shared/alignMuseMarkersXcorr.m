@@ -39,10 +39,10 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 %    along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
 % default settings
-write           = ft_getopt(cfg.align, 'write', true);
-cfg.visible     = ft_getopt(cfg, 'visible', 'on');
-cfg.plotpages   = ft_getopt(cfg, 'plotpages', false);
-
+write                = ft_getopt(cfg.align, 'write', true);
+cfg.visible          = ft_getopt(cfg, 'visible', 'on');
+cfg.plotpages        = ft_getopt(cfg, 'plotpages', false);
+cfg.align.refchannel = ft_getopt(cfg.align, 'refchannel', []);
 
 fname       = fullfile(cfg.datasavedir,[cfg.prefix, 'MuseStruct_alignedXcorr.mat']);
 
@@ -83,7 +83,7 @@ fprintf('Aligning with xcorr\n');
 % read LFP - based on epoch latency for plotting later
 cfgtemp                 = rmfield(cfg, 'LFP');
 cfgtemp.LFP.name        = cfg.align.name;
-cfgtemp.LFP.channel     = cfg.align.channel;
+cfgtemp.LFP.channel     = [cfg.align.channel, cfg.align.refchannel];
 cfgtemp.LFP.write       = false;
 cfgtemp.LFP.lpfilter    = ft_getopt(cfg.align, 'lpfilter', 'no');
 cfgtemp.LFP.lpfreq      = ft_getopt(cfg.align, 'lpfreq', '');
@@ -106,8 +106,14 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp.demean          = ft_getopt(cfg.align, 'demean', 'yes');
         cfgtemp.reref           = ft_getopt(cfg.align, 'reref', 'no');
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
+        cfgtemp.refchannel      = cfg.align.refchannel;
         dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
-        
+
+        %remove reference channels
+        cfgtemp         = [];
+        cfgtemp.channel = cfg.align.channel;
+        dat             = ft_selectdata(cfgtemp, dat);
+
         % clear LFP for memory
         LFP{ipart}.(markername) = [];
         
@@ -176,7 +182,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         title('Timeshift');
         axis tight;
         
-        subplot(2, 5, [4 5]); hold
+        subplot(2, 5, [4 5]); hold on;
         plot(dat_avg_orig.time, dat_avg_orig.avg');
         axis tight;
         ax = axis;
@@ -184,7 +190,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         title('Original');
         xlim([dat.time{1}(1), dat.time{1}(end)]);
         
-        subplot(2,5,[9 10]); hold
+        subplot(2,5,[9 10]); hold on;
         plot(dat_avg_shifted.time, dat_avg_shifted.avg');
         axis tight
         ax = axis;
@@ -290,8 +296,8 @@ for ipart = 1 : size(cfg.directorylist,2)
             
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                 if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
-                    timeshift = nshift(i) * 1 / dat.fsample;
-                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(i),timeshift);
+                    timeshift = nshift_clean(i) * 1 / dat.fsample;
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift_clean(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) - timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) - seconds(timeshift); % directtion should be tripple-checked

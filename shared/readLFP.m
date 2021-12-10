@@ -214,7 +214,7 @@ for markername = string(cfg.LFP.name)
                 else
                     cfgtemp             = [];
                     cfgtemp.dataset     = fname;
-                    cfgtemp.channel     = cfg.labels.macro';
+                    cfgtemp.channel     = cfg.LFP.channel;
                     dat                 = ft_preprocessing(cfgtemp);
                 end
                 
