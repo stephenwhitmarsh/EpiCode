@@ -561,7 +561,7 @@ writetable(t, fname);
 
 %% Create spyking-circus parameters
 config = hspike_setparams;
-for ipatient = [1,2,3,8]
+for ipatient = 8
     MuseStruct{ipatient} = readMuseMarkers(config{ipatient});
     MuseStruct{ipatient} = updateMarkers(config{ipatient}, MuseStruct{ipatient}, ["BAD__START__", "BAD__END__"]);
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
@@ -621,8 +621,8 @@ for ipatient = 3 : 4
     
     % epoch to IEDs and sliding windows
     config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
-    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
-    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
+    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
+    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
 %     plot_patterns_multilevel(config{ipatient});
     SpikeWaveforms{ipatient}                                        = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
 end
@@ -633,17 +633,35 @@ for ipatient = 1 : 7
         figure;
         n = size(SpikeWaveforms{ipatient}{ipart}, 2);
         for iunit = 1 : n
-            subplot(ceil(sqrt(n)), ceil(sqrt(n)), iunit);hold on;  
+            subplot(ceil(sqrt(n)), ceil(sqrt(n)), iunit); hold on;  
             y = vertcat(SpikeWaveforms{ipatient}{ipart}{iunit}.trial{:});
             i = randperm(size(y, 1), 20);
             plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, y(i, :), 'color', [0.5, 0.5, 0.5]);
             plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, mean(y), 'k');
             title(sprintf('P%d, p%d, u%d', ipatient, ipart, iunit));
+            try
+            plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, -squeeze(SpikeRaw{ipatient}{ipart}.template{iunit})', 'r');
+            catch
+            end
         end
     end
 end
 
-
+% for ipatient = 1 : 7
+%     for ipart = 1 : 3
+%         figure;
+%         n = size(SpikeRaw{ipatient}{ipart}, 2);
+%         for iunit = 1 : n
+%             subplot(ceil.(sqrt(n)), ceil(sqrt(n)), iunit); hold on;  
+%             for ichan = 1 : size
+%             y = vertcat(SpikeRaw{ipatient}{ipart}.template{iunit}.trial{:});
+%             i = randperm(size(y, 1), 20);
+%             plot(SpikeRaw{ipatient}{ipart}{iunit}.time{1}, y(i, :), 'color', [0.5, 0.5, 0.5]);
+%             plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, mean(y), 'k');
+%             title(sprintf('P%d, p%d, u%d', ipatient, ipart, iunit));
+%         end
+%     end
+% end
 
 
 

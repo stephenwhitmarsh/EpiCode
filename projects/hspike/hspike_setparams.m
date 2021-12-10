@@ -209,7 +209,7 @@ config{1}.circus.params.filtering.remove_median = 'False';
 config{1}.circus.params.clustering.max_elts     = '20000';
 config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
-config{1}.circus.params.detection.peaks         = 'negative';
+config{1}.circus.params.detection.peaks         = 'positive';
 
 config{1}.spike.name                = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};  
 config{1}.spike.overlap             = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};                                    
@@ -421,7 +421,7 @@ config{3}.circus.correct_chunk{3}      = false;
 config{3}.circus.params.filtering.remove_median = 'False';
 config{3}.circus.channel            = {'mHa2g_3','mHa2g_4','mHa2g_7','mHa2g_8','mTBmd_1','mTBmd_2','mTBmd_4','mTBmd_5','mTBmd_6','mTBmd_7','mTBmd_8'}; % Changes over night! Night 1 would have some on ,'mHa2g_2 (current ref) when rereferencing to another; In night 2 ref changes to mHa2g_8; night 3 ref chanes to mHa3g_7
 config{3}.circus.channelname        = {'mHa2g',  'mHa2g',  'mHa2g',  'mHa2g',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd',  'mTBmd', };
-config{3}.circus.params.detection.spike_thresh  = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
+config{3}.circus.params.detection.spike_thresh = '7'; % TOO MUCH 50 HZ contamination -> TRY INCREASING THERSHOLD
                                     
 %% Patient 4
 config{4}                           = config{1};
@@ -523,7 +523,8 @@ config{8}.cluster.refmethod         = 'bipolar';
 config{8}.template.threshold        = 2.5;
 config{8}.template.reref            = 'yes';
 config{8}.template.refmethod        = 'bipolar';
-config{8}.circus.channel            =  {'_mHaT2_1','_mHaT2_2','_mHaT2_7','_mHmT2_2','_mHmT2_5','_mHmT2_6','_HmT2_7','_HmT2_8'};
+config{8}.circus.channel            = {'_mHaT2_2', '_mHaT2_2','_mHaT2_7','_mHmT2_2','_mHmT2_5','_mHmT2_6','_mHmT2_7','_mHmT2_8'};
+config{8}.circus.channelname        = { 'mHaT2',    'mHaT2',   'mHaT2',   'mHmT2',   'mHmT2'   ,'mHmT2',   'mHmT2',   'mHmT2'};
 config{8}.circus.reref              = 'no';
 
 % Rejected templates

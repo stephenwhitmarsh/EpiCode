@@ -1,4 +1,4 @@
-function [SpikeRaw] = readSpikeRaw_Phy_new(cfg, force)
+function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 
 % function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 %
@@ -97,6 +97,14 @@ for ipart = cfg.circus.part_list
         channelname = 'none';
     else
         channelname = unique(cfg.circus.channelname);
+    end
+    
+    % to correct maxchan for multiple channels
+    channelcount(1) = 0; 
+    if size(channelname, 2) > 1
+        for i = 2 : size(channelname, 2)
+            channelcount(i) = channelcount(i-1) + sum(channelname{i-1} == string(cfg.circus.channelname));
+        end
     end
     
     for chandir = string(channelname)
@@ -206,11 +214,13 @@ for ipart = cfg.circus.part_list
             % add Phy group info (good, mua)
             if ischecked
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id  == cluster_list(icluster), :);
-                SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster));
+                SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster)) + channelcount(chandir == string(channelname));
+                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster));
                 try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id   == cluster_list(icluster)); catch; end
             else
                 [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
-                SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1; % -1 because chans idx begin at zero with Phy
+                SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1 + channelcount(chandir == string(channelname)); % -1 because chans idx begin at zero with Phy
+                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = imaxchan - 1; % -1 because chans idx begin at zero with Phy
             end   
         end
         
