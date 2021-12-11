@@ -108,12 +108,14 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp.refmethod       = ft_getopt(cfg.align, 'refmethod', 'bipolar');
         cfgtemp.refchannel      = cfg.align.refchannel;
         dat                     = ft_preprocessing(cfgtemp, LFP{ipart}.(markername));
-
+        
         %remove reference channels
-        cfgtemp         = [];
-        cfgtemp.channel = cfg.align.channel;
-        dat             = ft_selectdata(cfgtemp, dat);
-
+        if ~isempty(cfgtemp.refchannel)
+            cfgtemp         = [];
+            cfgtemp.channel = cfg.align.channel;
+            dat             = ft_selectdata(cfgtemp, dat);
+        end
+        
         % clear LFP for memory
         LFP{ipart}.(markername) = [];
         
