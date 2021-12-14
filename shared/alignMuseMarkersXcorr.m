@@ -91,14 +91,21 @@ cfgtemp.LFP.lpfreq      = ft_getopt(cfg.align, 'lpfreq', '');
 for markername = string(cfg.align.name)
     cfgtemp.epoch.pad.(markername) = 0;
 end
-LFP                     = readLFP(cfgtemp, MuseStruct, true);
+LFP = readLFP(cfgtemp, MuseStruct, true);
 
 for ipart = 1 : size(cfg.directorylist,2)
     
     for markername = string(cfg.align.name)
-        
+                
         if isempty(LFP{ipart}.(markername))
             continue
+        end
+        
+        sel = ft_getopt(cfg.align, 'reject', []);
+        cfgtemp = [];
+        if ~isempty(sel)
+            cfgtemp.trials = ~LFP{ipart}.(markername).trialinfo.(sel);
+            LFP{ipart}.(markername) = ft_selectdata(cfgtemp, LFP{ipart}.(markername));          
         end
         
         % baseline correct & bipolar rereferencing
@@ -162,7 +169,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         cfgtemp             = [];
         cfgtemp.trials      = find(~rejected);
         dat                 = ft_selectdata(cfgtemp, dat);
-        
+
         %% Plot alignment
         fig = figure('visible', cfg.visible);
         fig.Renderer = 'Painters';
@@ -298,12 +305,11 @@ for ipart = 1 : size(cfg.directorylist,2)
             
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                 if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
-                    timeshift = nshift_clean(i) * 1 / dat.fsample;
-                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift_clean(i),timeshift);
+                    timeshift = nshift(ievent) / dat.fsample;
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(ievent),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) - timeshift;
-                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) - seconds(timeshift); % directtion should be tripple-checked
-                    i = i + 1;
+                    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) - seconds(timeshift); % direction should be tripple-checked
                 else
                     fprintf('Removing event %d in part %d\n', ievent, ipart);
                     todelete = [todelete, ievent];
