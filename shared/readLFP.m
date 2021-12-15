@@ -58,11 +58,9 @@ cfg.LFP.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
 cfg.LFP.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
 cfg.LFP.postfix     = ft_getopt(cfg.LFP, 'postfix', []);
 cfg.LFP.overlap     = ft_getopt(cfg.LFP, 'overlap', []);
-cfg.spike           = ft_getopt(cfg, 'spike', []);
-cfg.spike.overlap   = ft_getopt(cfg.spike, 'overlap', []);
 
 % add markers to always look for overlap for
-cfg.LFP.overlap                 = unique([cfg.spike.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"], 'stable');
+cfg.LFP.overlap                 = unique([cfg.LFP.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"], 'stable');
 cfg.muse.startmarker.BAD        = 'BAD__START__';
 cfg.muse.endmarker.BAD          = 'BAD__END__';
 cfg.muse.startmarker.PHASE_1    = 'PHASE_1__START__';
