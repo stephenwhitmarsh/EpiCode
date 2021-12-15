@@ -21,7 +21,9 @@ function [MuseStruct] = alignMuseMarkersXcorr(cfg, MuseStruct, force)
 % config{1}.align.latency.PSW = e.g.: [-0.1 2]; % time period to use for alignment
 % config{1}.align.latency.FA  = e.g.: [-0.1 0.4];
 % config{1}.align.latency.ES  = e.g.: [-0.1 0.4];
-
+% config{1}.align.reject      = e.g.: 'BAD_cnt'; %fieldname in trialinfo used
+%                               to reject trials, see readLFP and cfg.LFP.overlap.
+% 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -287,7 +289,7 @@ for ipart = 1 : size(cfg.directorylist,2)
         end
         
         %% correct MuseStruct
-        i = 1;
+        i = 0;
         for idir = 1 : length(MuseStruct{ipart})
             if ~isfield(MuseStruct{ipart}{idir},'markers')
                 continue
@@ -305,8 +307,9 @@ for ipart = 1 : size(cfg.directorylist,2)
             
             for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                 if any(dat.trialinfo.trialnr == ievent & dat.trialinfo.idir == idir)
-                    timeshift = nshift(ievent) / dat.fsample;
-                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift(ievent),timeshift);
+                    i = i + 1;
+                    timeshift = nshift_clean(i) / dat.fsample;
+                    fprintf('Timeshifting %s #%d in part %d by %d samples (%0.3f seconds) \n', markername, ievent, ipart, nshift_clean(i),timeshift);
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).timeshift(ievent) = timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)  = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) - timeshift;
                     MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent)     = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) - seconds(timeshift); % direction should be tripple-checked
