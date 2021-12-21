@@ -60,7 +60,7 @@ cfg.LFP.postfix     = ft_getopt(cfg.LFP, 'postfix', []);
 cfg.LFP.overlap     = ft_getopt(cfg.LFP, 'overlap', []);
 
 % add markers to always look for overlap for
-cfg.LFP.overlap                 = unique([cfg.spike.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"], 'stable');
+cfg.LFP.overlap                 = unique([cfg.LFP.overlap, "BAD", "PHASE_1", "PHASE_2", "PHASE_3", "REM", "AWAKE", "PRESLEEP", "POSTSLEEP"], 'stable');
 cfg.muse.startmarker.BAD        = 'BAD__START__';
 cfg.muse.endmarker.BAD          = 'BAD__END__';
 cfg.muse.startmarker.PHASE_1    = 'PHASE_1__START__';
@@ -330,7 +330,7 @@ for markername = string(cfg.LFP.name)
                     
                     % will be used to find overlap between events
                     trlstart                = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(1);
-                    trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2);
+                    trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2);       
 
                     % find overlap
                     for iother = 1 : size(cfg.LFP.overlap, 2)
