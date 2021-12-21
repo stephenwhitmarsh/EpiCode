@@ -54,7 +54,7 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
-
+cfg.circus.maxchan       = ft_getopt(cfg.circus, 'maxchan', 'phy');
 % check if depencies is on path, if not add
 w = which('readNPY');
 
@@ -102,7 +102,7 @@ for ipart = cfg.circus.part_list
     % to correct maxchan for multiple channels
     channelcount(1) = 0; 
     if size(channelname, 2) > 1
-        for i = 2 : size(channelname, 2)
+        for i = 2 : size(channelname, 1)
             channelcount(i) = channelcount(i-1) + sum(channelname{i-1} == string(cfg.circus.channelname));
         end
     end
@@ -212,10 +212,10 @@ for ipart = cfg.circus.part_list
             SpikeRaw{ipart}.timestamp{icluster}             = SpikeRaw{ipart}.sample{icluster}; % DUMMY TIMESTAMPS!
 
             % add Phy group info (good, mua)
-            if ischecked
+            if ischecked && strcmp(cfg.circus.maxchan, 'phy')
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id  == cluster_list(icluster), :);
                 SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster)) + channelcount(chandir == string(channelname));
-                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster));
+                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
                 try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id   == cluster_list(icluster)); catch; end
             else
                 [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
