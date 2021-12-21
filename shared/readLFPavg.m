@@ -344,7 +344,9 @@ for markername = string(cfg.LFP.name)
                         if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.LFP.overlap{iother})), 'synctime')
                             continue
                         end
-                 
+                        if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.LFP.overlap{iother})).synctime)
+                            continue
+                        end                 
                         % loop over instances of overlap-event
                         for i = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.LFP.overlap{iother})).synctime, 2)
                             
