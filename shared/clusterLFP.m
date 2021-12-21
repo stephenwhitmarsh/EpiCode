@@ -393,11 +393,40 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                 LFP_concatinated(isnan(LFP_concatinated)) = 0;
             end
 
+            % percentage at which to reject
+            perc = 1;
+            
             for N = cfg.cluster.N
+                
+                [indx_kmedoids, ~] = kmedoids(LFP_concatinated, N, 'Algorithm', 'pam');
+                trialindx = 1:size(indx_kmedoids, 1);
 
-                [indx_kmedoids, ~] = kmedoids(LFP_concatinated, N);
-                clusterindx{ipart}.(markername).kmedoids(:,N) = indx_kmedoids;
+                for rep = 1 : 5
+                    
+                    toremove = false(size(indx_kmedoids));
 
+                    for icluster = 1 : 6
+                        if size(find(indx_kmedoids == icluster), 1) < (size(indx_kmedoids, 1) / 100) * perc
+                            toremove(indx_kmedoids == icluster) = true;
+                            fprintf('Removing cluster %d on run %d\n', icluster, rep);
+                        end 
+                    end
+                    if ~any(toremove)
+                        continue
+                    end
+                    
+                    % remove those that went into a bad cluster
+                    LFP_concatinated = LFP_concatinated(~toremove, :);
+                    trialindx = trialindx(~toremove);
+                    
+                    % redo clustering
+                    [indx_kmedoids, ~] = kmedoids(LFP_concatinated, N, 'Algorithm', 'pam');
+                    
+                end
+                
+                clusterindx{ipart}.(markername).kmedoids(:,N) = indx_kmedoids; % fix due to removed indexes
+                trialindx{ipart}.(markername).kmedoids(:,N) = trialindx; % fix due to removed indexes
+                
                 % plot kmedoids clusters
                 fig = figure('visible', cfg.visible);
                 fig.Renderer = 'Painters';
