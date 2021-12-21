@@ -186,7 +186,6 @@ config{1}.cluster.kmeans            = 'no';
 config{1}.cluster.kmedoids          = 'yes';
 config{1}.cluster.N                 = 6; % can be list, e.g. p2 3 4 6]
 config{1}.cluster.align.latency     = [-0.2, 0.3];
-
 config{1}.template.reref            = 'yes';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
@@ -209,7 +208,8 @@ config{1}.circus.params.filtering.remove_median = 'False';
 config{1}.circus.params.clustering.max_elts     = '20000';
 config{1}.circus.params.data.stream_mode        = 'mapping-file';
 config{1}.circus.params.data.mapping_file       = 'filelist.txt';
-config{1}.circus.params.detection.peaks         = 'positive';
+config{1}.circus.params.detection.peaks         = 'negative';
+config{1}.circus.maxchan                        = 'phy';
 
 config{1}.spike.name                = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};  
 config{1}.spike.overlap             = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};                                    

@@ -28,25 +28,18 @@ if ispc
     addpath          \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
 end
 
-config                                                          = hspike_setparams;
-MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
-MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
-MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-[clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-[config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
-[MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
-[config{ipatient}, MuseStruct{ipatient}]                        = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
+ft_defaults
 
-% read spike data
-SpikeRaw{ipatient}                                              = readSpikeRaw_Phy(config{ipatient}, true);
+config = hspike_setparams;
 
-% epoch to IEDs and sliding windows
-config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
-SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
-SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
-
-config{ipatient}.LFP.name                                       = ["template1", "template2", "template3", "template4", "template5", "template6"];
-LFP{ipatient}                                                   = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
+for ipatient = 1 : 7
+    SpikeRaw{ipatient}           = readSpikeRaw_Phy(config{ipatient}, false);
+    config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
+    SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
+    config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    LFP{ipatient}                = readLFP(config{ipatient});
+end
 
 % 
 % 
@@ -77,31 +70,34 @@ LFP{ipatient}                                                   = readLFP(config
 % SpikeTrials{4}{ipart}.SEIZURE = ft_spike_select_rmfulltrials(cfg_temp, SpikeTrials{4}{ipart}.SEIZURE);
 
 
-for ipatient = 1 : 8
+for ipatient = 1 : 7
     
     % rereference to bipolar
     if strcmp(config{ipatient}.cluster.reref, 'yes')
-        
-        for itemplate = 1 : 6
-            
-            if contains(LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label, '-')
-                disp('Rereferencing already done');
-                continue
+        for ipart = 1 : 3
+            for itemplate = 1 : 6
+                if isempty(LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)))
+                    continue
+                end
+                if contains(LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label, '-')
+                    disp('Rereferencing already done');
+                    continue
+                end
+                disp('Rereferencing');
+                labels_nonum    = regexprep(LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label, '[0-9_]', '');
+                [~,~,indx]      = unique(labels_nonum);
+                clear group
+                for i = 1 : max(indx)
+                    cfgtemp             = [];
+                    cfgtemp.reref       = 'yes';
+                    cfgtemp.refmethod   = 'bipolar';
+                    cfgtemp.demean      = 'yes';
+                    cfgtemp.baselinewindow = [-0.3, -0.1];
+                    cfgtemp.channel     = LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label(indx==i);
+                    group{i}            = ft_preprocessing(cfgtemp, LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)));
+                end
+                LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)) = ft_appenddata([], group{:});
             end
-            disp('Rereferencing');
-            labels_nonum    = regexprep(LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label, '[0-9_]', '');
-            [~,~,indx]      = unique(labels_nonum);
-            clear group
-            for i = 1 : max(indx)
-                cfgtemp             = [];
-                cfgtemp.reref       = 'yes';
-                cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.demean      = 'yes';
-                cfgtemp.baselinewindow = [-0.3, -0.1];
-                cfgtemp.channel     = LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)).label(indx==i);
-                group{i}            = ft_preprocessing(cfgtemp, LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)));
-            end
-            LFP{ipatient}{ipart}.(sprintf('template%d', itemplate)) = ft_appenddata([], group{:});
         end
     end
 end

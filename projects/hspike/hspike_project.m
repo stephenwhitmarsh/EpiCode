@@ -39,7 +39,7 @@ for ipatient = 1:8
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
     
     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
@@ -605,7 +605,7 @@ end
 
 %% Spike analysis
 
-for ipatient = 3 : 4
+for ipatient = 1:7
     
     config                                                          = hspike_setparams;
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
@@ -621,8 +621,8 @@ for ipatient = 3 : 4
     
     % epoch to IEDs and sliding windows
     config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
-    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
-    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
+    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
+    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
 %     plot_patterns_multilevel(config{ipatient});
     SpikeWaveforms{ipatient}                                        = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
 end
