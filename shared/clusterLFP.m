@@ -1,4 +1,4 @@
-function [clusterindx, LFP_cluster] = clusterLFP(cfg, MuseStruct, force_clustering)
+function [clusterindx, trialindx, LFP_cluster] = clusterLFP(cfg, MuseStruct, force_clustering)
 
 % Neccecary fields:
 % cfg.cluster.name
@@ -33,7 +33,7 @@ if nargin == 1
         err_count = 0;
         while count == err_count
             try
-                load(fname, 'clusterindx', 'LFP_cluster');
+                load(fname, 'clusterindx', 'trialindx', 'LFP_cluster');
             catch ME
                 err_count = err_count + 1;
                 disp('Something went wrong loading the file. Trying again...')
@@ -49,10 +49,11 @@ end
 
 if exist(fname, 'file') && force_clustering == false
     fprintf('Loading results clustering\n');
-    load(fname, 'clusterindx', 'LFP_cluster');
+    load(fname, 'clusterindx', 'trialindx', 'LFP_cluster');
     return
 else
     clusterindx = [];
+    trialindx   = [];    
     LFP_cluster = [];
 end
 
@@ -394,12 +395,12 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
             end
 
             % percentage at which to reject
-            perc = 1;
+            perc = 2.5;
             
             for N = cfg.cluster.N
                 
                 [indx_kmedoids, ~] = kmedoids(LFP_concatinated, N, 'Algorithm', 'pam');
-                trialindx = 1:size(indx_kmedoids, 1);
+                indx_trials = 1:size(indx_kmedoids, 1);
 
                 for rep = 1 : 5
                     
@@ -417,15 +418,15 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
                     
                     % remove those that went into a bad cluster
                     LFP_concatinated = LFP_concatinated(~toremove, :);
-                    trialindx = trialindx(~toremove);
+                    indx_trials = indx_trials(~toremove);
                     
                     % redo clustering
                     [indx_kmedoids, ~] = kmedoids(LFP_concatinated, N, 'Algorithm', 'pam');
                     
                 end
                 
-                clusterindx{ipart}.(markername).kmedoids(:,N) = indx_kmedoids; % fix due to removed indexes
-                trialindx{ipart}.(markername).kmedoids(:,N) = trialindx; % fix due to removed indexes
+                clusterindx{ipart}.(markername).kmedoids(:,N) = indx_kmedoids; 
+                trialindx{ipart}.(markername).kmedoids(:,N) = indx_trials;
                 
                 % plot kmedoids clusters
                 fig = figure('visible', cfg.visible);
@@ -535,7 +536,7 @@ if strcmp(cfg.cluster.kmedoids, 'yes')
     end
 end
 
-save(fname, 'clusterindx', 'LFP_cluster');
+save(fname, 'clusterindx', 'trialindx', 'LFP_cluster');
 
 
 %                 %% Dynamic Time Warping

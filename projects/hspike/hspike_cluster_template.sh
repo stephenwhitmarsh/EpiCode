@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=hspike_cluster_template
+#SBATCH --job-name=Hspike_cluster_template
 #SBATCH --partition=normal
 #SBATCH --time=99:00:00
 #SBATCH --mem=64G

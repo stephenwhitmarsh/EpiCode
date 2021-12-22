@@ -24,17 +24,18 @@ config{ipatient}                            = addparts(config{ipatient});
 MuseStruct{ipatient}                        = readMuseMarkers(config{ipatient}, false);
 MuseStruct{ipatient}                        = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
 MuseStruct{ipatient}                        = padHypnogram(MuseStruct{ipatient});
-[~, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
+[~, ~, LFP_cluster{ipatient}]               = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
 [MuseStruct{ipatient}, ~, ~]                = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, true);
 [config{ipatient}, MuseStruct{ipatient}]    = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
 
 %% LFP averages of templates
+config{ipatient}.LFP.postfix                = {'_all'};
 config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
 LFPavg{ipatient}                            = readLFPavg(config{ipatient}, MuseStruct{ipatient}, true);
 
 %% LFP of sliding timewindow
-config{ipatient}.LFP.name                   = {'window'};
 config{ipatient}.LFP.postfix                = {'_all'};
+config{ipatient}.LFP.name                   = {'window'};
 LFP{ipatient}                               = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
 
 %% FFT on sliding timewindow
