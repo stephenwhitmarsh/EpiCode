@@ -9,7 +9,7 @@ function 	stats = spikeWaveformStats(cfg, SpikeWaveforms, force)
 %   stats = spikeWaveformStats(cfg, SpikeWaveforms, force)
 %
 % Note :
-% - spikes must be peak-aligned to zero (automatically done by SpyKING-Circus)
+% - spikes must be aligned so they can be averaged
 % - spikes can be positive or negative
 %
 % This file is part of EpiCode, see
