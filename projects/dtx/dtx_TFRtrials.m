@@ -25,6 +25,7 @@ if exist(fname_out,'file') && force == false
 end
 fprintf('(re-) computing TFR data\n');
 
+TFR = [];
 for ipart = 1 : size(Trialdata,2)
     for markername = string(fields(Trialdata{ipart}))'
         fprintf('For markername %s\n', markername);

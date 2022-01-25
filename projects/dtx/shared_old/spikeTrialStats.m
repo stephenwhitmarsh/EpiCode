@@ -21,6 +21,9 @@ function [stats] = spikeTrialStats(cfg, SpikeTrials, force, postfix)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+if nargin < 4
+    postfix = [];
+end
 cfg.spike.RPV = ft_getopt(cfg.spike, 'RPV', 0.001);
 
 fname = fullfile(cfg.datasavedir, [cfg.prefix, 'spikestats-', postfix, '.mat']);

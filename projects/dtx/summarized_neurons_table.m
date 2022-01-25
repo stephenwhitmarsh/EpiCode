@@ -30,6 +30,7 @@ for itemp = 1:size(SpikeStats_windowed{ipart}.window, 2)
     neurons_table.amplitude{itemp}                  = SpikeWaveforms_stats{ipart}.window.amplitude.val(itemp);
     neurons_table.halfwidth{itemp}                  = SpikeWaveforms_stats{ipart}.window.halfwidth.val(itemp) * 1000;
     neurons_table.peaktrough{itemp}                 = SpikeWaveforms_stats{ipart}.window.peaktrough.val(itemp) * 1000;
+    neurons_table.troughpeak{itemp}                 = SpikeWaveforms_stats{ipart}.window.troughpeak.val(itemp) * 1000;
     neurons_table.select_time{itemp}                = "";
     if istimelocked
         t_sel = SpikeDensity_timelocked{ipart}.sdf_lin.SlowWave.time > 0;

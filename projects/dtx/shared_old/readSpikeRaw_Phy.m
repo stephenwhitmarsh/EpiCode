@@ -89,10 +89,18 @@ for ipart = cfg.circus.part_list
     for chandir = string(channelname)
         
         %% find spiking-circus output path, which is based on the name of the first datafile
-        if strcmp(channelname, 'none')   
-            datadir = fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)]);
+        %FIXME : toremove:
+        [~,datadir] = fileparts(cfg.datasavedir);
+        if ~strcmp(datadir, 'data')
+            datasavedir = fileparts(cfg.datasavedir);
         else
-            datadir = fullfile(cfg.datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], char(chandir));
+            datasavedir = cfg.datasavedir;
+        end
+        
+        if strcmp(channelname, 'none')
+            datadir = fullfile(datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)]);
+        else
+            datadir = fullfile(datasavedir, cfg.prefix(1:end-1), ['p', num2str(ipart)], char(chandir));
         end
         
         temp = dir(fullfile(datadir, 'SpykingCircus', '*.GUI'));
