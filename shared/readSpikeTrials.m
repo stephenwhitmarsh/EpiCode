@@ -195,7 +195,7 @@ for markername = string(cfg.spike.name)
             if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)), 'synctime')
                 continue
             end
-            if isempty(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2))
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
                 continue
             end
             
@@ -223,7 +223,7 @@ for markername = string(cfg.spike.name)
             ft_progress('init', 'text', 'Please wait...')
             
             % loop over events
-            for ievent = 1 :    size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
+            for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                 
                 ft_progress(size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2) / ievent, ...
                     'Processing event %d from %d', ievent, size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2))
@@ -266,6 +266,9 @@ for markername = string(cfg.spike.name)
                         continue
                     end
                     if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.spike.overlap{iother})), 'synctime')
+                        continue
+                    end
+                    if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(cfg.spike.overlap{iother})).synctime)
                         continue
                     end
                     

@@ -41,25 +41,25 @@ for ipart = 1 : size(config.directorylist, 2)
             end
             if all(hasdata_file)
                 hasdata_dir{ipart}(idir) = true;
-                fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                                
+%                 fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                                
             else
-                fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
+%                 fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
             end
         elseif isMicromed
             temp = dir(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.TRC']));
             if ~isempty(temp)
                 hasdata_dir{ipart}(idir) = true;
-                fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                                
+%                 fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                                
             else
-                fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
+%                 fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
             end
         elseif isBrainvision
             temp = dir(fullfile(cfg.rawdir, [cfg.directorylist{ipart}{idir} '.eeg']));
             if ~isempty(temp)
                 hasdata_dir{ipart}(idir) = true;
-                fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                
+%                 fprintf('Part %d, %s contains requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));                
             else
-                fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
+%                 fprintf('Part %d, %s does not contain requested data\n', ipart, fullfile(config.rawdir, config.directorylist{ipart}{idir}));
             end
         end
         

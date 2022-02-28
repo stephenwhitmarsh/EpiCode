@@ -53,7 +53,7 @@ for ipatient = 1:8
     [config{ipatient}, MuseStruct{ipatient}] = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
     
     % template LFP
-    config{ipatient}.LFP.name   = {'window'};
+    config{ipatient}.LFP.name   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'window'};
     LFP{ipatient}               = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
     
     % template TFR
@@ -114,7 +114,6 @@ Figure_LFP_stages % also writes data for
 
 % per patient
 for ipatient = 1 : 8
-    
     t_sel       = t(t.patient == ipatient, :);
     nodes       = [t_sel.X, t_sel.Y, t_sel.Z, t_sel.color, t_sel.size, t_sel.patient];
     
@@ -129,7 +128,6 @@ for ipatient = 1 : 8
     dlmwrite(fname_nodes, nodes, '\t');
     
     BrainNet_MapCfg(fname_nodes, fname_surf, fname_cfg, fname_image);
-    
 end
 
 % all
@@ -282,11 +280,12 @@ for ipatient = 1 : 8
 end
 
 ipart = 1; % where there are both Hspike and detected markers
+clear template template_sel
 for ipatient = 1 : 8
     
     for idir = 1 : size(MuseStruct{ipatient}{ipart}, 2)
         Hspike{ipatient}{idir}          = [];
-        Hspike_sel{ipatient}{idir}          = [];
+        Hspike_sel{ipatient}{idir}      = [];
         template{ipatient}{idir}        = [];
         template_sel{ipatient}{idir}    = [];
         
@@ -412,10 +411,10 @@ for ipatient = 1 : 8
     t.FArate(ipatient)  = mean(FA{ipatient})*100;
     t.TotalDetections(ipatient) = tempsum(ipatient);
 
-    t.DetectionsSelection(ipatient) = sum(hit_sel{ipatient}, 2);
-    t.HitrateSelection(ipatient) = mean(hit_sel{ipatient})*100;
-    t.FArateSelection(ipatient)  = mean(FA_sel{ipatient})*100;
-    t.TotalDetectionsSelection(ipatient) = tempsum_sel(ipatient);
+%     t.DetectionsSelection(ipatient) = sum(hit_sel{ipatient}, 2);
+%     t.HitrateSelection(ipatient) = mean(hit_sel{ipatient})*100;
+%     t.FArateSelection(ipatient)  = mean(FA_sel{ipatient})*100;
+%     t.TotalDetectionsSelection(ipatient) = tempsum_sel(ipatient);
     
 
     t.totalHours(ipatient) = totalHours(ipatient);
@@ -424,6 +423,7 @@ for fname = string(t.Properties.VariableNames)
     t.(fname)(9) = mean(t.(fname)(1:8));
     t.(fname)(10) = std(t.(fname)(1:8));
 end
+
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'performance');
 writetable(t, fname);
@@ -505,6 +505,7 @@ writetable(t_long, fname);
 fname   = fullfile(config{ipatient}.datasavedir, 'power_table_wide');
 writetable(t_wide, fname);
 
+
 %% Create table for R: IED timing list based on LFP (3 nights with sleep stage)
 
 config  = hspike_setparams;
@@ -567,6 +568,7 @@ for ipatient = 8
     writeSpykingCircusDeadfiles(config{ipatient}, MuseStruct{ipatient}, true);
     writeSpykingCircusFileList(config{ipatient}, true);
     writeSpykingCircusParameters(config{ipatient});
+    % for Patient 8, part 1, add: 2359296000.0000 2555904000.0000 (samples)
 end
 
 %% Create slurm job list
@@ -605,42 +607,171 @@ end
 
 %% Spike analysis
 
-for ipatient = 1:7
+for ipatient = 1:8
     
-    config                                                          = hspike_setparams;
-    MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
-    MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
-    MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
-    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
-    [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
-    [config{ipatient}, MuseStruct{ipatient}]                        = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
+    %     config                                                          = hspike_setparams;
+    %     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    %     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});
+    %     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+    %     [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    %     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+    %     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
+    %     [config{ipatient}, MuseStruct{ipatient}]                        = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
+    %
+    %     % read spyke data
+    %     SpikeRaw{ipatient}                                              = readSpikeRaw_Phy(config{ipatient}, false);
     
-    % read spyke data 
-    SpikeRaw{ipatient}                                              = readSpikeRaw_Phy(config{ipatient}, true);
+%     % epoch to IEDs and sliding windows
+%     config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
+%     SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient});
+%     SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient});
+%     
+    % spike density, not for window
+    config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+    SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient});
     
-    % epoch to IEDs and sliding windows
-    config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
-    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
-    SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
-%     plot_patterns_multilevel(config{ipatient});
-    SpikeWaveforms{ipatient}                                        = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
 end
 
 
-for ipatient = 1 : 7
+%% Plot rasters
+Figure_raster;
+
+
+%% Table for R: number of MUA/SUA
+config = hspike_setparams;
+
+for ipatient = 1 : 8
+    MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);    
+    SpikeRaw{ipatient} = readSpikeRaw_Phy(config{ipatient}, false);
+end
+
+% find datetime of first recording
+clear timestring starttime
+
+for ipatient = 1 : 8
+    
+    % get tot the data directory and get first dataset
+    S = dir2(config{ipatient}.rawdir);
+    S = S([S.isdir]);
+    [~,idx] = sort([S.datenum]);
+    
+    % get first file
+    S           = S(1);
+    S           = dir2(fullfile(S.folder, S.name, '*.txt'));
+    
+    
+    [~, f, ~]   = fileparts(fullfile(S(1).folder, S(1).name));
+    f           = fopen(fullfile(S(1).folder,[f,'.txt']));
+
+    if f >= 0
+        % depending on amplifier, there are somewhat different
+        % formats of the txt file
+        ftype       = 'none';
+        while 1
+            tline = fgetl(f);
+            if ~ischar(tline), break, end
+            searchstring1 = '## Time Opened (m/d/y)';
+            searchstring2 = '-TimeCreated';
+            try
+                if length(tline) >= max(length(searchstring1))
+                    if strcmp(tline(1:length(searchstring1)),searchstring1)
+                        timestring = tline;
+                        ftype = 1;
+                        ft_info('Great, found timestamp in header file - Type 1');
+                        break
+                    end
+                end
+                if length(tline) >= max(length(searchstring2))
+                    if strcmp(tline(1:length(searchstring2)),searchstring2)
+                        timestring = tline;
+                        ftype = 2;
+                        ft_info('Great, found timestamp in header file - Type 2');
+                        break
+                    end
+                end
+            catch
+                disp('Warning: something weird happened reading the txt time');
+            end
+        end
+        fclose(f);
+        
+        % add real time of onset of file
+        timestring = strsplit(timestring);
+        switch ftype
+            case 1
+                headerdate = [cell2mat(timestring(5)) ' ' cell2mat(timestring(7))];
+                starttime(ipatient)  = datetime(headerdate,'Format','MM/dd/yy HH:mm:ss.SSS');
+                
+                
+            case 2
+                headerdate = [cell2mat(timestring(2)) ' ' cell2mat(timestring(3))];
+                starttime(ipatient)  = datetime(headerdate,'Format','yy/MM/dd HH:mm:ss.SSS');
+        end
+        
+    else %error while loading katia text file header
+        warning('Clock time not found, they will be ignored');
+    end
+    
+end
+
+t = table;
+i = 1;
+for ipatient = 1 : 8
+    
+    for ipart = 1 : 3
+        t.PatientID(i)      = string(config{ipatient}.prefix(1:end-1));        
+        t.PatientNr(i)      = ipatient;
+        t.Part(i)           = ipart;
+        
+        t.nrSUA(i)          = sum(contains(SpikeRaw{ipatient}{ipart}.cluster_group, 'good'));
+        t.nrMUA(i)          = sum(contains(SpikeRaw{ipatient}{ipart}.cluster_group, 'mua'));
+        
+        t.Year(i)           = MuseStruct{ipatient}{ipart}{1}.starttime.Year;
+        t.HoursFromRecording(i) = hours(MuseStruct{ipatient}{ipart}{1}.starttime - starttime(ipatient));
+
+        t.StartDateTime(i)  = MuseStruct{ipatient}{ipart}{1}.starttime;
+
+        t.StartMonth(i)     = string(month(MuseStruct{ipatient}{ipart}{1}.starttime, 'name'));
+        t.StartDay(i)       = MuseStruct{ipatient}{ipart}{1}.starttime.Day;
+        t.StartTime(i)      = string(datetime(MuseStruct{ipatient}{ipart}{1}.starttime,'Format','HH:mm:ss'));
+        t.EndMonth(i)       = string(month(MuseStruct{ipatient}{ipart}{end}.endtime, 'name'));   
+        
+        t.EndDateTime(i)    = MuseStruct{ipatient}{ipart}{end}.endtime;
+        t.EndDay(i)         = MuseStruct{ipatient}{ipart}{end}.endtime.Day;      
+        t.Endtime(i)        = string(datetime(MuseStruct{ipatient}{ipart}{end}.endtime,'Format','HH:mm:ss'));        
+        t.totalHours(i)     = hours(MuseStruct{ipatient}{ipart}{end}.endtime - MuseStruct{ipatient}{ipart}{1}.starttime);
+
+        i = i + 1;
+    end
+end
+
+% save data to table for R
+fname   = fullfile(config{ipatient}.datasavedir, 'DataMUASUA');
+writetable(t, fname);
+
+% for methods paper Katia
+t = sortrows(t, "StartDateTime");
+fname   = fullfile(config{ipatient}.datasavedir, 'DataMUASUA.xls');
+writetable(t, fname);
+
+%% plot waveforms
+config = hspike_setparams;
+
+for ipatient = 3 : 4
+    SpikeWaveforms{ipatient} = readSpikeWaveforms(config{ipatient});
+    
     for ipart = 1 : 3
         figure;
         n = size(SpikeWaveforms{ipatient}{ipart}, 2);
         for iunit = 1 : n
-            subplot(ceil(sqrt(n)), ceil(sqrt(n)), iunit); hold on;  
+            subplot(ceil(sqrt(n)), ceil(sqrt(n)), iunit); hold on;
             y = vertcat(SpikeWaveforms{ipatient}{ipart}{iunit}.trial{:});
             i = randperm(size(y, 1), 20);
             plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, y(i, :), 'color', [0.5, 0.5, 0.5]);
             plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, mean(y), 'k');
             title(sprintf('P%d, p%d, u%d', ipatient, ipart, iunit));
             try
-            plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, -squeeze(SpikeRaw{ipatient}{ipart}.template{iunit})', 'r');
+                plot(SpikeWaveforms{ipatient}{ipart}{iunit}.time{1}, -squeeze(SpikeRaw{ipatient}{ipart}.template{iunit})', 'r');
             catch
             end
         end

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=hspike_spikestats
-#SBATCH --partition=bigmem
+#SBATCH --partition=normal
 #SBATCH --time=99:00:00
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=8

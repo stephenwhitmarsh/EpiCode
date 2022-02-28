@@ -1,34 +1,42 @@
-#install.packages("circular")
-#install.packages("ggplot2")
-#install.packages("units")
-#install.packages("reshape2")
-#install.packages("circlize")
-#install.packages("ggthemes")
-#install.packages("lemon")
-#install.packages("egg")
-#install.packages("readxl")
-#install.packages('Rcpp')
-#install.packages("equatiomatic")
-#install.packages("kableExtra")
+install.packages("circular")
+install.packages("ggplot2")
+install.packages("units")
+install.packages("reshape2")
+install.packages("circlize")
+install.packages("ggthemes")
+install.packages("lemon")
+install.packages("egg")
+install.packages("readxl")
+install.packages('Rcpp')
+install.packages("equatiomatic")
+install.packages("kableExtra")
+install.packages("CircStats")
+install.packages("emmeans")
+install.packages("lmerTest")
+install.packages("devtools")
+install.packages("sjPlot")
+install.packages("ggpubr")
+
+# library("sjPlot")
+
 #if(!require(devtools)) install.packages("devtools")
 #devtools::install_github("kassambara/ggpubr")
 #setTimeLimit(100000); setSessionTimeLimit(10000)
 #devtools::install_github("strengejacke/sjPlot")
-#install.packages("CircStats")
 
 # ggpval
 
-install.packages("spiralize")
-library(spiralize)
+# install.packages("spiralize")
+# library(spiralize)
 library(ggplot2)
 #library("cowplot")
 #library("gridExtra")
 library(plyr)
-library(reshape)
+library(reshape2)
 library(RColorBrewer)
 #library("ggthemes")
 #library(lemon)
-library("sjPlot")
+# library("sjPlot")
 library(emmeans)
 library(gridExtra)
 library(gtable)
@@ -104,6 +112,7 @@ kbl(data_clinical, "latex", booktabs = T, label = "clinical",
 ###############################################
 # Latex table: electrode anatomical locations #
 ###############################################
+
 options(knitr.kable.NA = '')
 
 macro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv")
@@ -131,35 +140,40 @@ kbl(locations, "latex", booktabs = T, linesep = "", label = 'anatomical',
 #########################
 # Detection performance #
 #########################
+
 options(knitr.kable.NA = '')
 data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/performance.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data$Patient[9] = "\\textit{Mean}"
 data$Patient[10] = "\\textit{Std.}"
-data[,1]  = round(data[,1],digits=1)
 data[,2]  = round(data[,2],digits=0)
 data[,3]  = round(data[,3],digits=0)
 data[,4]  = round(data[,4],digits=1)
 data[,5]  = round(data[,5],digits=1)
 data[,6]  = round(data[,6],digits=0)
-data[,7]  = round(data[,7],digits=0)
-data[,8]  = round(data[,8],digits=1)
-data[,9]  = round(data[,9],digits=1)
-data[,10] = round(data[,10],digits=0)
-data[,11] = round(data[,11],digits=1)
+data[,7]  = round(data[,7],digits=1)
+#data[,8]  = round(data[,8],digits=1)
+#data[,9]  = round(data[,9],digits=1)
+#data[,10] = round(data[,10],digits=0)
+#data[,11] = round(data[,11],digits=1)
+
 
 kbl(data, "latex", booktabs = T, linesep = "", label = 'performance', escape = FALSE,
-    col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total","24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
+    col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
+    # col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total","24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
     caption = "Template detection performance")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  kable_styling(latex_options = c("scale_down"))%>%
+ # kable_styling(latex_options = c("scale_down"))%>%
   row_spec(8, hline_after = TRUE)%>%
-  add_header_above(c(" " = 1, "Visual" = 1, "All templates" = 4, "Selected templates" = 4)) %>%
+  add_header_above(c(" " = 1, "Visual" = 1, "Automatic detection" = 4)) %>%
+#  add_header_above(c(" " = 1, "Visual" = 1, "All templates" = 4, "Selected templates" = 4)) %>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/performance.tex")
+
 
 ########################################
 # Latex table: Electrode locations MNI #
 ########################################
 
+options(knitr.kable.NA = '')
 data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/MNI_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data  <- data[!data$color == 0, ] # only make table of used contacts
 data  <- data[, c('patient','electrode','contact','X','Y','Z')]
@@ -189,19 +203,50 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'MNI',
 ###################################
 # Latex table: Time in sleepstage #
 ###################################
+options(knitr.kable.NA = '')
 
 # normalize by time spend in sleep stages
 data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data <- data[, c("patient", "part", "PHASE_3", "PHASE_2", "PHASE_1", "AWAKE", "REM")] 
 colnames(data) = c("Patient", "Night","S3", "S2", "S1", "Wake", "REM")
+
+df <- c("\\textit{Mean}", NA, mean(data$S3), mean(data$S2), mean(data$S1), mean(data$Wake), mean(data$REM))
+data <- rbind(data, df)
+df <- c("\\textit{Std.}", NA, sd(data$S3), sd(data$S2), sd(data$S1), sd(data$Wake), sd(data$REM))
+data <- rbind(data, df)
+
 clean.cols <- c("Patient")
 data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
-kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration',
+kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration', escape = FALSE,
     caption = "Time spend in sleep stages (hrs.)", digits=2) %>%
     kable_styling(latex_options = c("HOLD_position"))%>%
     add_header_above(c(" " = 2, "Sleep stage" = 5)) %>%
+    row_spec(24, hline_after = TRUE)%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stageduration.tex")
+
+
+####################################
+# Latex table: number of SUA / MUA #
+####################################
+
+options(knitr.kable.NA = '')
+
+data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/DataMUASUA.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data <- data[, c("PatientNr", "Part", "nrSUA", "nrMUA")]
+colnames(data) = c("Patient", "Night","SUA", "MUA")
+df <- c("\\textit{Sum}", NA, sum(data$SUA), sum(data$MUA))
+data <- rbind(data, df)
+
+clean.cols <- c("Patient")
+data[clean.cols] <- lapply(data[clean.cols], cleanf)
+
+kbl(data, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FALSE,
+    caption = "Number of putatively isolated single units (SUA) and number of multiunits (MUA)")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  row_spec(24, hline_after = TRUE)%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/SUAMUA.tex")
+
 
 #######################
 # LFP power circadian #
@@ -225,6 +270,8 @@ data_power <- bind_rows(data_power, temp)
 
 data_binned <- setNames(aggregate(data_power$power, c(list(data_power$Patient), list(data_power$bin), list(data_power$band)), mean), c("Patient", "bin", "band", "power"))
 data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(Npower = (power-min(power))/max(power-min(power)))) 
+
+# median(data_power$power[data_power$band == "Delta1"])
 
 # data_binned$rad <- data_binned$bin / 24 * pi
 # c <- circular(control, units = "degrees", template = "geographics") 
@@ -490,6 +537,7 @@ kbl(stat_IED, "latex", booktabs = T, linesep = "", label = 'circstat_IED',
   kable_styling(latex_options = c("HOLD_position"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_IED.tex")
 
+
 ######################
 # Seizures circadian #
 ###################### 
@@ -578,18 +626,18 @@ Seizurepolarplot  <-
   ylim(-2, 10)
 
 # save combined to pdf
-ggarrange(IEDpolarplot, Seizurepolarplot, 
-          labels = c("A","B"), 
-          vjust = 15, hjust = -1, 
-          legend = "right", 
-          common.legend = TRUE, 
-          font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
+# ggarrange(IEDpolarplot, Seizurepolarplot, 
+#          labels = c("A","B"), 
+#          vjust = 15, hjust = -1, 
+#          legend = "right", 
+#          common.legend = TRUE, 
+#          font.label = list(size = 14, color = "black", face = "bold")) %>%
+#  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
 
 
 # save combined to pdf
-ggarrange(IEDpolarplot, Seizurepolarplot, polardelta1power,
-          labels = c("A","B","C"), 
+ggarrange(IEDpolarplot, Seizurepolarplot, polardelta1power, polardelta2power,
+          labels = c("A","B","C", "D"), 
           vjust = 3, hjust = -1, 
           legend = "right", 
           common.legend = TRUE, 
@@ -818,10 +866,9 @@ data_pow_wide$patient  <- factor(data_pow_wide$patient, levels = c(8:1))
 data_pow_wide$night    <- factor(data_pow_wide$part)
 
 # add clinical data (not yet used here)
-data_clinical$patient <- data_clinical$Patient
-data_pow_wide <- merge(data_pow_wide, data_clinical)
-data_pow_wide$duration <- data_pow_wide$Age - data_pow_wide$Onset
-
+# data_clinical$patient <- data_clinical$Patient
+#data_pow_wide <- merge(data_pow_wide, data_clinical)
+#data_pow_wide$duration <- data_pow_wide$Age - data_pow_wide$Onset
 
 # normalize 
 d1   <- setNames(aggregate(data_pow_wide$Delta1, by = c(list(data_pow_wide$patient)), mean), c("patient", "Mdelta1"))
@@ -908,6 +955,7 @@ kbl(stats_delta1, "latex", booktabs = T, linesep = "", label = 'stats_delta1',
 ####
 # Delta2 explained by sleep stage
 ####
+
 l1 <- lmer(Zdelta2 ~ stage + (1 | night) + (1 | patient), data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
 # l1 <- lm(Zdelta ~ stage + duration, data_pow_wide, control = lmerControl(optimizer ='Nelder_Mead'))
 summary(l1)

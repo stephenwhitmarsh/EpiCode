@@ -137,7 +137,7 @@ for ipart = cfg.spikewaveform.part_list
         end
         diroffset       = [0; cumsumsample(1:end-1)];
         cumsumfile      = filelist{ipart}(:, chanindx);
-        spikes_idx_sel  = sort(randperm(size(SpikeRaw{ipart}.sample{iunit}, 2), cfg.spikewaveform.nspikes));
+        spikes_idx_sel  = sort(randperm(min(size(SpikeRaw{ipart}.sample{iunit}, 2), cfg.spikewaveform.nspikes)), cfg.spikewaveform.nspikes);
         fileidx         = nan(1, length(spikes_idx_sel));
   
         for idx = 1 : length(spikes_idx_sel)

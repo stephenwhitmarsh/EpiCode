@@ -41,9 +41,9 @@ for ipatient = 1:8
     config = hspike_setparams;
     config{ipatient}                            = addparts(config{ipatient});
     
-    [clusterindx{ipatient}, LFP_cluster{ipatient}] = clusterLFP(config{ipatient});
+    [clusterindx{ipatient}, trialindx{ipatient}, LFP_cluster{ipatient}] = clusterLFP(config{ipatient});
     LFP_cluster{ipatient} = LFP_cluster{ipatient}{1}.Hspike.kmedoids{6};
-    
+
     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}] = detectTemplate(config{ipatient});
     
     % get the averages
@@ -57,26 +57,18 @@ for ipatient = 1:8
     % read timestamps of aligned Hspike events
     MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
 
-    % read data of aligned Hspike events
-    config{ipatient}.LFP.postfix = '_aligned';
-    LFP_original_aligned{ipatient} = readLFP(config{ipatient}); 
 end
 
+%% select random examples
 for ipatient = 1:8
-
-    % select random repetitions
     cfgtemp                 = [];
     cfgtemp.trials          = randperm(size(LFP_original{ipatient}{1}.Hspike.trial, 2), min(nr_examples, size(LFP_original{ipatient}{1}.Hspike.trial, 2)));
     LFP_original_examples{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original{ipatient}{1}.Hspike);
-    
-    % demean
-    cfgtemp                 = [];    
-    cfgtemp.demean          = 'yes';
-    cfgtemp.baselinewindow  = [-0.3, -0.1];
-    LFP_original_examples{ipatient}{1}.Hspike = ft_preprocessing(cfgtemp, LFP_original_examples{ipatient}{1}.Hspike);
+end
 
-    % rereference to bipolar if needed
-    
+%% rereference random examples
+for ipatient = 1:8
+
     if ~contains(LFP_original_examples{ipatient}{1}.Hspike.label{1}, '-')
         labels_nonum    = regexprep(LFP_original_examples{ipatient}{1}.Hspike.label, '[0-9_]', '');
         [~, ~, indx]    = unique(labels_nonum);
@@ -92,12 +84,19 @@ for ipatient = 1:8
         LFP_original_examples{ipatient}{1}.Hspike = ft_appenddata([], group{:});
     end
     
-    % average
+end
+
+
+%% average original
+for ipatient = 1 : 8
     cfgtemp             = [];
     cfgtemp.avgoverrpt  = 'yes';
     LFP_original_avg{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original{ipatient}{1}.Hspike);
-    
-    % rereference to bipolar if needed
+end
+
+
+%% rereference original average
+for ipatient = 1 : 8
     if ~contains(LFP_original_avg{ipatient}{1}.Hspike.label{1}, '-')
         
         clear group
@@ -105,82 +104,26 @@ for ipatient = 1:8
             cfgtemp             = [];
             cfgtemp.reref       = 'yes';
             cfgtemp.refmethod   = 'bipolar';
-            cfgtemp.demean      = 'yes';
-            %                     cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
-            cfgtemp.baselinewindow = [-0.3, -0.1];
             cfgtemp.channel     = LFP_original_avg{ipatient}{1}.Hspike.label(indx==i);
             group{i}            = ft_preprocessing(cfgtemp, LFP_original_avg{ipatient}{1}.Hspike);
         end
         LFP_original_avg{ipatient}{1}.Hspike = ft_appenddata([], group{:});
     end
-    
-end
-               
-for ipatient = 1:8
-
-    % select random repetitions
-    cfgtemp                 = [];
-    cfgtemp.trials          = randperm(size(LFP_original_aligned{ipatient}{1}.Hspike.trial, 2), min(nr_examples, size(LFP_original_aligned{ipatient}{1}.Hspike.trial, 2)));
-    LFP_original_aligned_examples{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original_aligned{ipatient}{1}.Hspike);
-    
-    % demean
-    cfgtemp                 = [];    
-    cfgtemp.demean          = 'yes';
-    cfgtemp.baselinewindow  = [-0.3, -0.1];
-    LFP_original_aligned_examples{ipatient}{1}.Hspike = ft_preprocessing(cfgtemp, LFP_original_aligned_examples{ipatient}{1}.Hspike);
-    
-    % rereference to bipolar if needed
-    if ~contains(LFP_original_aligned_examples{ipatient}{1}.Hspike.label{1}, '-')    
-        if strcmp(config{ipatient}.template.reref, 'yes')
-            labels_nonum    = regexprep(LFP_original_aligned_examples{ipatient}{1}.Hspike.label, '[0-9_]', '');
-            [~, ~, indx]    = unique(labels_nonum);
-            clear group
-            for i = 1 : max(indx)
-                cfgtemp             = [];
-                cfgtemp.reref       = 'yes';
-                cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.channel     = LFP_original_aligned_examples{ipatient}{1}.Hspike.label(indx==i);
-                cfgtemp.trials      = randperm(size(LFP_original_aligned_examples{ipatient}{1}.Hspike.trial, 2), min(nr_examples, size(LFP_original_aligned_examples{ipatient}{1}.Hspike.trial, 2)));
-                group{i}            = ft_preprocessing(cfgtemp, LFP_original_aligned_examples{ipatient}{1}.Hspike);
-            end
-            LFP_original_aligned_examples{ipatient}{1}.Hspike = ft_appenddata([], group{:});
-        end
-    end
-    
-    % average
-    cfgtemp             = [];
-    cfgtemp.avgoverrpt  = 'yes';
-    LFP_original_aligned_examples_avg{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original_aligned_examples{ipatient}{1}.Hspike);
-    
-    % rereference to bipolar if needed
-    if ~contains(LFP_original_aligned_examples_avg{ipatient}{1}.Hspike.label{1}, '-')
-        if strcmp(config{ipatient}.template.reref, 'yes')
-            clear group
-            for i = 1 : max(indx)
-                cfgtemp             = [];
-                cfgtemp.reref       = 'yes';
-                cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.demean      = 'yes';
-                %                     cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
-                cfgtemp.baselinewindow = [-0.3, -0.1];
-                cfgtemp.channel     = LFP_original_aligned_examples_avg{ipatient}{1}.Hspike.label(indx==i);
-                group{i}            = ft_preprocessing(cfgtemp, LFP_original_aligned_examples_avg{ipatient}{1}.Hspike);
-            end
-        end
-    end
-    LFP_original_aligned_examples_avg{ipatient}{1}.Hspike = ft_appenddata([], group{:});
-    
 end
 
-%% rereference average data
+%% rereference template average
 for ipatient = 1:8
     for ipart = 1 : size(LFP_cluster_detected{ipatient}, 2)
         for markername = ["template1", "template2", "template3", "template4", "template5", "template6"]
             
-            LFPavg_reref{ipatient}{ipart}.(markername) = LFPavg{ipatient}{ipart}.(markername);
+            if ~isfield(LFPavg{ipatient}{ipart}, markername)
+                continue
+            end            
             if isempty(LFPavg{ipatient}{ipart}.(markername))
                 continue
             end
+            LFPavg_reref{ipatient}{ipart}.(markername) = LFPavg{ipatient}{ipart}.(markername);
+
             if strcmp(config{ipatient}.template.reref, 'yes') & ~contains(LFPavg{ipatient}{ipart}.(markername).label{1}, '-')
                 
                 labels_nonum    = regexprep(LFPavg{ipatient}{ipart}.(markername).label, '[0-9_]', '');
@@ -192,9 +135,6 @@ for ipatient = 1:8
                     cfgtemp             = [];
                     cfgtemp.reref       = 'yes';
                     cfgtemp.refmethod   = 'bipolar';
-                    cfgtemp.demean      = 'yes';
-                    %                     cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
-                    cfgtemp.baselinewindow = [-0.3, -0.1];
                     cfgtemp.channel     = LFPavg{ipatient}{ipart}.(markername).label(indx==i);
                     group{i}            = ft_preprocessing(cfgtemp, LFPavg{ipatient}{ipart}.(markername));
                 end
@@ -207,8 +147,11 @@ end
 %% rereference cluster
 for ipatient = 1 : 8
     % rereference to bipolar
-    if strcmp(config{ipatient}.cluster.reref, 'yes')
-        for itemplate = 1 : 6
+    for itemplate = 1 : 6
+        if strcmp(config{ipatient}.cluster.reref, 'yes')
+            if isempty(LFP_cluster{ipatient}{itemplate})
+                continue
+            end
             if contains(LFP_cluster{ipatient}{itemplate}.label, '-')
                 continue
             end
@@ -219,7 +162,6 @@ for ipatient = 1 : 8
                 cfgtemp             = [];
                 cfgtemp.reref       = 'yes';
                 cfgtemp.refmethod   = 'bipolar';
-                cfgtemp.demean      = 'yes';
                 cfgtemp.channel     = LFP_cluster{ipatient}{itemplate}.label(indx==i);
                 group{i}            = ft_preprocessing(cfgtemp, LFP_cluster{ipatient}{itemplate});
             end
@@ -228,19 +170,52 @@ for ipatient = 1 : 8
     end
 end
 
-%% baseline correct data
+%% baseline correct
+cfgtemp                 = [];
+cfgtemp.demean          = 'yes';
+cfgtemp.baselinewindow  = [-0.3, -0.1];
+
 for ipatient = 1 : 8
+    LFP_original_examples{ipatient}{1}.Hspike = ft_preprocessing(cfgtemp, LFP_original_examples{ipatient}{1}.Hspike);
+    LFP_original_avg{ipatient}{1}.Hspike      = ft_preprocessing(cfgtemp, LFP_original_avg{ipatient}{1}.Hspike);
+
     for ipart = 1 : size(LFP_cluster_detected{ipatient}, 2)
         for markername = ["template1", "template2", "template3", "template4", "template5", "template6"]
+           
+            if ~isfield(LFPavg{ipatient}{ipart}, markername)
+                continue
+            end
             if isempty(LFPavg{ipatient}{ipart}.(markername))
                 continue
             end
-            cfgtemp             = [];
-            cfgtemp.demean      = 'yes';
-            cfgtemp.baselinewindow = config{ipatient}.LFP.baselinewindow.(markername);
-            %                     cfgtemp.baselinewindow = [-0.3, -0.1];
+            
             LFPavg_reref{ipatient}{ipart}.(markername) = ft_preprocessing(cfgtemp, LFPavg_reref{ipatient}{ipart}.(markername));
         end
+
+        for itemplate = 1 : 6
+            if isempty(LFP_cluster{ipatient}{itemplate})
+                continue
+            end
+            LFP_cluster{ipatient}{itemplate} = ft_preprocessing(cfgtemp, LFP_cluster{ipatient}{itemplate});
+        end
+    end
+end
+
+%% select latency
+latency = [-0.2 0.5];
+cfgtemp = [];
+cfgtemp.latency = latency;
+for ipatient = 1 : 8
+    LFP_original_examples{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original_examples{ipatient}{1}.Hspike);
+    for itemplate = 1 : 6
+        for ipart = 1 : size(LFPavg_reref{ipatient}, 2)
+            if isfield(LFPavg_reref{ipatient}{ipart}, sprintf('template%d', itemplate))
+                if ~isempty(LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)))
+                LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)) = ft_selectdata(cfgtemp, LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)));
+                end
+            end
+        end
+        LFP_cluster{ipatient}{itemplate} = ft_selectdata(cfgtemp, LFP_cluster{ipatient}{itemplate});
     end
 end
 
@@ -257,24 +232,6 @@ for ipatient = 1:8
     end
 end
 
-%% select latency
-latency = [-0.2 0.5];
-cfgtemp = [];
-cfgtemp.latency = latency;
-for ipatient = 1 : 8
-    LFP_original_aligned_examples{ipatient}{1}.Hspike = ft_selectdata(cfgtemp, LFP_original_aligned_examples{ipatient}{1}.Hspike);
-    for itemplate = 1 : 6
-        for ipart = 1 : size(LFPavg_reref{ipatient}, 2)
-            if isfield(LFPavg_reref{ipatient}{ipart}, sprintf('template%d', itemplate))
-                if ~isempty(LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)))
-                LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)) = ft_selectdata(cfgtemp, LFPavg_reref{ipatient}{ipart}.(sprintf('template%d', itemplate)));
-                end
-            end
-        end
-        LFP_cluster{ipatient}{itemplate} = ft_selectdata(cfgtemp, LFP_cluster{ipatient}{itemplate});
-    end
-end
-
 %% plot figure
 for showrejected = [false, true]
     
@@ -288,45 +245,21 @@ for showrejected = [false, true]
     set(fig, 'PaperPosition', [0 0 1 1]);
     set(fig, 'Renderer', 'Painters');
     
-    if showrejected
-        ncol = 7;
-    else
-        ncol = 6; % depends on maximum amount of selected templates
-    end
+    ncol = 8; % depends on maximum amount of selected templates
     nrow = 8;
     ylims = [1000, 1000, 1000, 1500, 3000, 300, 300, 500] / 1000; % go to mV
 
     for ipatient = 1:8
         
-        %     % Original examples
-        %     subplot(nrow, ncol, 1 + (ipatient-1) * ncol);
-        %     hold on;
-        %     maxchan = find(~cellfun(@isempty, strfind(LFP_original_examples{ipatient}{1}.Hspike.label, config{ipatient}.align.zerochannel)), 1, 'first');
-        %     for itrial = 1 : min(100, size(LFP_original_examples{ipatient}{1}.Hspike.trial, 2))
-        %         x           = LFP_original_examples{ipatient}{1}.Hspike.time{itrial};
-        %         y           = LFP_original_examples{ipatient}{1}.Hspike.trial{itrial}(maxchan, :);
-        %         lh          = plot(x, y, 'k');
-        %         lh.Color    = [lh.Color 0.1];
-        %     end
-        %
-        %     % Original average
-        %     y = LFP_original_aligned_examples{ipatient}{1}.Hspike.trial{1}(maxchan, :);
-        %     x = LFP_original_aligned_examples{ipatient}{1}.Hspike.time{1};
-        %     plot(x, y, 'r', 'linewidth', 1);
-        %     xlim(config{ipatient}.cluster.latency);
-        %     ylim([-maxrange(ipatient)*1, maxrange(ipatient)*1]);
-        %
-        %     set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out')
-        %     ylabel(sprintf('Patient %d', ipatient));
         
-        % aligned originals
+        % originals
         subplot(nrow, ncol, 1 + (ipatient-1) * ncol);
         set(gca, 'clipping', 'on');
         hold on;
-        maxchan = find(~cellfun(@isempty, strfind(LFP_original_aligned_examples{ipatient}{1}.Hspike.label, config{ipatient}.align.zerochannel)), 1, 'first');
-        for itrial = 1 : min(100, size(LFP_original_aligned{ipatient}{1}.Hspike.trial, 2))
-            x           = LFP_original_aligned_examples{ipatient}{1}.Hspike.time{itrial};
-            y           = LFP_original_aligned_examples{ipatient}{1}.Hspike.trial{itrial}(maxchan, :) / 1000; % got to mV
+        maxchan = find(~cellfun(@isempty, strfind(LFP_original_examples{ipatient}{1}.Hspike.label, config{ipatient}.align.zerochannel)), 1, 'first');
+        for itrial = 1 : min(100, size(LFP_original_examples{ipatient}{1}.Hspike.trial, 2))
+            x           = LFP_original_examples{ipatient}{1}.Hspike.time{itrial};
+            y           = LFP_original_examples{ipatient}{1}.Hspike.trial{itrial}(maxchan, :) / 1000; % got to mV
             lh          = plot(x, y, 'k');
             lh.Color    = [lh.Color 0.05];
         end
@@ -342,8 +275,8 @@ for showrejected = [false, true]
         else
             xticks([latency(1), 0, latency(end)]);
             set(gca,'XTickLabels', [])
-%             set(gca,'XColor', 'none');
-        end  
+            %             set(gca,'XColor', 'none');
+        end
         
         ylim([-ylims(ipatient), ylims(ipatient)]);
         yticks([-ylims(ipatient), ylims(ipatient)]);
@@ -353,14 +286,6 @@ for showrejected = [false, true]
         lh.Position(1) = -0.1; % change horizontal position of ylabel
         lh.Position(2) = 0.5; % change vertical position of ylabel
         
-        %     % Original aligned average
-        %     y = LFP_original_aligned_examples_avg{ipatient}{1}.Hspike.trial{1}(maxchan, :);
-        %     x = LFP_original_aligned_examples_avg{ipatient}{1}.Hspike.time{1};
-        %     plot(x, y, 'r', 'linewidth', 1);
-        %     xlim(config{ipatient}.cluster.latency);
-        %     ylim([-maxrange(ipatient)*1, maxrange(ipatient)*1]);
-        %     set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'yticklabel', [], 'TickDir', 'out')
-        %
         
         % Recovered events
         row = 1;
@@ -401,7 +326,7 @@ for showrejected = [false, true]
             
             xlim(latency);
             xticks([latency(1), 0, latency(2)]);  
-            ylim([-ylims(ipatient), ylims(ipatient)]);
+%             ylim([-ylims(ipatient), ylims(ipatient)]);
             yticks([-ylims(ipatient), ylims(ipatient)]);
             
             if any(itemplate == config{ipatient}.template.rejected)

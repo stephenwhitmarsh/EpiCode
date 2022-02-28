@@ -13,6 +13,9 @@ function [config] = hspike_setparams(varargin)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% NEXTS PATIENT 3092, no PSG yet, no e yet but we can print out seizure list from technicians
+
+                                    
 disp('setting parameters');
 
 pc = ispc;
@@ -76,12 +79,6 @@ config{1}.hyp.spikewindowoverlap    = 0.5;
 
 config{1}.epoch.toi.Hspike          = [-0.5  1];
 config{1}.epoch.pad.Hspike          = 1;
-config{1}.epoch.toi.combined1       = [-0.5  1];
-config{1}.epoch.pad.combined1       = 1;
-config{1}.epoch.toi.combined2       = [-0.5  1];
-config{1}.epoch.pad.combined2       = 1;
-config{1}.epoch.toi.combined3       = [-0.5  1];
-config{1}.epoch.pad.combined3       = 1;
 config{1}.epoch.toi.template1       = [-0.5  1];
 config{1}.epoch.pad.template1       = 1;
 config{1}.epoch.toi.template2       = [-0.5  1];
@@ -104,16 +101,12 @@ config{1}.LFP.hpfilter                  = 'no';
 config{1}.LFP.hpfreq                    = 1;
 config{1}.LFP.resamplefs                = 250;
 config{1}.LFP.baseline                  = 'yes';
-config{1}.LFP.baselinewindow.combined1  = [-1, -0.5];
-config{1}.LFP.baselinewindow.combined2  = [-1, -0.5];
-config{1}.LFP.baselinewindow.combined3  = [-1, -0.5];
-config{1}.LFP.baselinewindow.Hspike     = [-1, -0.5];
-config{1}.LFP.baselinewindow.template1  = [-1, -0.5];
-config{1}.LFP.baselinewindow.template2  = [-1, -0.5];
-config{1}.LFP.baselinewindow.template3  = [-1, -0.5];
-config{1}.LFP.baselinewindow.template4  = [-1, -0.5];
-config{1}.LFP.baselinewindow.template5  = [-1, -0.5];
-config{1}.LFP.baselinewindow.template6  = [-1, -0.5];
+config{1}.LFP.baselinewindow.template1  = [-0.15, -0.05];
+config{1}.LFP.baselinewindow.template2  = [-0.15, -0.05];
+config{1}.LFP.baselinewindow.template3  = [-0.15, -0.05];
+config{1}.LFP.baselinewindow.template4  = [-0.15, -0.05];
+config{1}.LFP.baselinewindow.template5  = [-0.15, -0.05];
+config{1}.LFP.baselinewindow.template6  = [-0.15, -0.05];
 config{1}.LFP.baselinewindow.window     = [];
 
 config{1}.FFT.name                      = {'window'};
@@ -122,10 +115,6 @@ config{1}.FFT.foi.window                = 1:40;
 config{1}.TFR.name                      = {'Hspike'};
 config{1}.TFR.channel                   = 'all';
 config{1}.TFR.keeptrials                = 'no';
-config{1}.TFR.foi.combined1             = 1:1:100;
-config{1}.TFR.foi.combined2             = 1:1:100;
-config{1}.TFR.foi.combined3             = 1:1:100;
-config{1}.TFR.foi.Hspike                = 1:1:100;
 config{1}.TFR.foi.template1             = 1:1:100;
 config{1}.TFR.foi.template2             = 1:1:100;
 config{1}.TFR.foi.template3             = 1:1:100;
@@ -133,21 +122,13 @@ config{1}.TFR.foi.template4             = 1:1:100;
 config{1}.TFR.foi.template5             = 1:1:100;
 config{1}.TFR.foi.template6             = 1:1:100;
 
-config{1}.TFR.t_ftimwin.combined1    = 5./config{1}.TFR.foi.combined1;
-config{1}.TFR.t_ftimwin.combined2    = 5./config{1}.TFR.foi.combined2;
-config{1}.TFR.t_ftimwin.combined3    = 5./config{1}.TFR.foi.combined3;
-config{1}.TFR.t_ftimwin.Hspike       = 5./config{1}.TFR.foi.Hspike;
-config{1}.TFR.t_ftimwin.template1    = 5./config{1}.TFR.foi.combined1;
-config{1}.TFR.t_ftimwin.template2    = 5./config{1}.TFR.foi.combined2;
-config{1}.TFR.t_ftimwin.template3    = 5./config{1}.TFR.foi.combined3;
-config{1}.TFR.t_ftimwin.template4    = 5./config{1}.TFR.foi.combined1;
-config{1}.TFR.t_ftimwin.template5    = 5./config{1}.TFR.foi.combined2;
-config{1}.TFR.t_ftimwin.template6    = 5./config{1}.TFR.foi.combined3;
+config{1}.TFR.t_ftimwin.template1    = 5./config{1}.TFR.foi.template1;
+config{1}.TFR.t_ftimwin.template2    = 5./config{1}.TFR.foi.template2;
+config{1}.TFR.t_ftimwin.template3    = 5./config{1}.TFR.foi.template3;
+config{1}.TFR.t_ftimwin.template4    = 5./config{1}.TFR.foi.template4;
+config{1}.TFR.t_ftimwin.template5    = 5./config{1}.TFR.foi.template5;
+config{1}.TFR.t_ftimwin.template6    = 5./config{1}.TFR.foi.template6;
 
-config{1}.TFR.toi.combined1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
-config{1}.TFR.toi.combined2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
-config{1}.TFR.toi.combined3          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
-config{1}.TFR.toi.Hspike             = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template3          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
@@ -155,10 +136,6 @@ config{1}.TFR.toi.template4          = config{1}.epoch.toi.Hspike(1) : 0.005 : c
 config{1}.TFR.toi.template5          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template6          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 
-config{1}.TFR.bl.combined1           = [-0.5, -0.2];
-config{1}.TFR.bl.combined2           = [-0.5, -0.2];
-config{1}.TFR.bl.combined3           = [-0.5, -0.2];
-config{1}.TFR.bl.Hspike              = [-0.5, -0.2];
 config{1}.TFR.bl.template1           = [-0.5, -0.2];
 config{1}.TFR.bl.template2           = [-0.5, -0.2];
 config{1}.TFR.bl.template3           = [-0.5, -0.2];
@@ -190,7 +167,7 @@ config{1}.template.reref            = 'yes';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
 config{1}.template.resamplefs       = 250;
-config{1}.template.threshold        = 2.7;
+config{1}.template.threshold        = 3; %2.7;
 config{1}.template.selection        = [1:6];
 
 config{1}.circus.correct_chunk{1}               = false;
@@ -214,32 +191,21 @@ config{1}.circus.maxchan                        = 'phy';
 config{1}.spike.name                = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};  
 config{1}.spike.overlap             = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};                                    
 config{1}.spike.slidestep           = [0.01, 0.01, 0.001];
-config{1}.spike.toi.combined1       = [-0.5, 1];          
-config{1}.spike.toi.combined2       = [-0.5, 1];           
-config{1}.spike.toi.combined3       = [-0.5, 1];           
-config{1}.spike.toi.Hspike          = [-0.5, 1];    
-config{1}.spike.toi.template1       = [-0.5, 1];          
-config{1}.spike.toi.template2       = [-0.5, 1];           
-config{1}.spike.toi.template3       = [-0.5, 1];    
-config{1}.spike.toi.template4       = [-0.5, 1];          
-config{1}.spike.toi.template5       = [-0.5, 1];           
-config{1}.spike.toi.template6       = [-0.5, 1];    
+   
+config{1}.spike.toi.template1       = [-0.2, 1];          
+config{1}.spike.toi.template2       = [-0.2, 1];           
+config{1}.spike.toi.template3       = [-0.2, 1];    
+config{1}.spike.toi.template4       = [-0.2, 1];          
+config{1}.spike.toi.template5       = [-0.2, 1];           
+config{1}.spike.toi.template6       = [-0.2, 1];    
 
-config{1}.spike.bl.combined1        = [-0.5, -0.2];
-config{1}.spike.bl.combined2        = [-0.5, -0.2];
-config{1}.spike.bl.combined3        = [-0.5, -0.2];
-config{1}.spike.bl.Hspike           = [-0.5, -0.2];
-config{1}.spike.bl.template1        = [-0.5, -0.2];
-config{1}.spike.bl.template2        = [-0.5, -0.2];
-config{1}.spike.bl.template3        = [-0.5, -0.2];
-config{1}.spike.bl.template4        = [-0.5, -0.2];
-config{1}.spike.bl.template5        = [-0.5, -0.2];
-config{1}.spike.bl.template6        = [-0.5, -0.2];
+config{1}.spike.bl.template1        = [-0.15, -0.05];
+config{1}.spike.bl.template2        = [-0.15, -0.05];
+config{1}.spike.bl.template3        = [-0.15, -0.05];
+config{1}.spike.bl.template4        = [-0.15, -0.05];
+config{1}.spike.bl.template5        = [-0.15, -0.05];
+config{1}.spike.bl.template6        = [-0.15, -0.05];
 
-config{1}.spike.pad.combined1        = 0.1;
-config{1}.spike.pad.combined2        = 0.1;
-config{1}.spike.pad.combined3        = 0.1;
-config{1}.spike.pad.Hspike           = 0.1;
 config{1}.spike.pad.template1        = 0.1;
 config{1}.spike.pad.template2        = 0.1;
 config{1}.spike.pad.template3        = 0.1;
@@ -247,10 +213,6 @@ config{1}.spike.pad.template4        = 0.1;
 config{1}.spike.pad.template5        = 0.1;
 config{1}.spike.pad.template6        = 0.1;
 
-config{1}.spike.resamplefs.combined1 = 1000;
-config{1}.spike.resamplefs.combined2 = 1000;
-config{1}.spike.resamplefs.combined3 = 1000;
-config{1}.spike.resamplefs.Hspike    = 1000;
 config{1}.spike.resamplefs.template1 = 1000;
 config{1}.spike.resamplefs.template2 = 1000;
 config{1}.spike.resamplefs.template3 = 1000;
@@ -263,10 +225,7 @@ config{1}.spike.post                = 0.002;
 config{1}.spike.baseline            = [-0.001 -0.0005];
 config{1}.spike.ISIbins             = 0 : 0.0005 : 0.150; %in s
 config{1}.spike.nrsdfbins           = 100;
-config{1}.spike.psthbin.combined1   = 0.01; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.combined2   = 0.01; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.combined3   = 0.01; % depends a lot on pattern, default is too large
-config{1}.spike.psthbin.Hspike      = 0.01; % depends a lot on pattern, default is too large
+
 config{1}.spike.psthbin.template1   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.template2   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.template3   = 0.01; % depends a lot on pattern, default is too large
@@ -274,10 +233,6 @@ config{1}.spike.psthbin.template4   = 0.01; % depends a lot on pattern, default 
 config{1}.spike.psthbin.template5   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.template6   = 0.01; % depends a lot on pattern, default is too large
 
-config{1}.spike.sdftimwin.combined1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
-config{1}.spike.sdftimwin.combined2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
-config{1}.spike.sdftimwin.combined3 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
-config{1}.spike.sdftimwin.Hspike    = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template3 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
@@ -288,27 +243,21 @@ config{1}.spike.sdftimwin.template6 = [-0.01 0.01]; % depends a lot on pattern, 
 % config{1}.spikewin.windowsize       = 10; % to prevent too much data lost on overlaps with IEDs
 % config{1}.spikewin.windowoverlap    = 0.5;
 
-config{1}.stats.toi.combined1       = [-0.5, 1];
-config{1}.stats.toi.combined2       = [-0.5, 1];
-config{1}.stats.toi.combined3       = [-0.5, 1];
-config{1}.stats.toi.Hspike          = [-0.5, 1];
-config{1}.stats.toi.template1       = [-0.5, 1];
-config{1}.stats.toi.template2       = [-0.5, 1];
-config{1}.stats.toi.template3       = [-0.5, 1];
-config{1}.stats.toi.template4       = [-0.5, 1];
-config{1}.stats.toi.template5       = [-0.5, 1];
-config{1}.stats.toi.template6       = [-0.5, 1];
+config{1}.stats.toi.Hspike          = [-0.2, 1];
+config{1}.stats.toi.template1       = [-0.2, 1];
+config{1}.stats.toi.template2       = [-0.2, 1];
+config{1}.stats.toi.template3       = [-0.2, 1];
+config{1}.stats.toi.template4       = [-0.2, 1];
+config{1}.stats.toi.template5       = [-0.2, 1];
+config{1}.stats.toi.template6       = [-0.2, 1];
 
-config{1}.stats.bl.combined1        = [-0.5 -0.2];
-config{1}.stats.bl.combined2        = [-0.5 -0.2];
-config{1}.stats.bl.combined3        = [-0.5 -0.2];
-config{1}.stats.bl.Hspike           = [-0.5 -0.2];
-config{1}.stats.bl.template1        = [-0.5 -0.2];
-config{1}.stats.bl.template2        = [-0.5 -0.2];
-config{1}.stats.bl.template3        = [-0.5 -0.2];
-config{1}.stats.bl.template4        = [-0.5 -0.2];
-config{1}.stats.bl.template5        = [-0.5 -0.2];
-config{1}.stats.bl.template6        = [-0.5 -0.2];
+config{1}.stats.bl.template1        = [-0.2, -0.05];
+config{1}.stats.bl.template2        = [-0.2, -0.05];
+config{1}.stats.bl.template3        = [-0.2, -0.05];
+config{1}.stats.bl.template4        = [-0.2, -0.05];
+config{1}.stats.bl.template5        = [-0.2, -0.05];
+config{1}.stats.bl.template6        = [-0.2, -0.05];
+
 config{1}.stats.alpha               = 0.025;
 
 config{1}.plot.reref                = 'yes';
@@ -359,17 +308,11 @@ config{2}.cluster.refmethod         = 'bipolar';
 config{2}.template.threshold        = 3;
 config{2}.template.reref            = 'yes';
 config{2}.template.refmethod        = 'bipolar';
-
-% config{2}.circus.correct_chunk{1}   = false;
-% config{2}.circus.correct_chunk{2}   = true;
-% config{2}.circus.correct_chunk{3}   = true;
 config{2}.circus.channel            = {'mHaT1_7'};
 config{2}.circus.reref              = 'no';
 config{2}.circus.params.filtering.remove_median = 'False';
 config{2}.circus.params.detection.spike_thresh  = '6';
-
 config{2}.spike.name                = {'combined1'};
-% config{2}.spike.name                = {'Hspike'};
 
 config{2}.plot                      = [];
 config{2}.plot.unit{1}              = [-1,  -1,  -1,  -1,  -1];                     
@@ -444,6 +387,11 @@ config{4}.circus.channel            = {'mHaT2_3','mHaT2_5','mHaT2_7'}; % might j
 config{4}.circus.params.detection.spike_thresh  = '9';
 config{4}.circus.params.filtering.remove_median = 'False';
 
+config{4}.circus.correct_chunk{1}   = true;
+config{4}.circus.correct_chunk{2}   = true;
+config{4}.circus.correct_chunk{3}   = true;
+
+
 %% Patient 5
 % some clear cases for merging in mLMI1 & mLMS2
 config{5}                           = config{1};
@@ -486,7 +434,7 @@ config{6}.circus.channel            = {'mHaT2_6','mHaT2_7','mHaT2_8','mHmT2_3','
 config{6}.circus.channelname        = {'mHaT2',  'mHaT2',  'mHaT2',  'mHmT2',  'mHmT2'  ,'mHmT2',  'mHmT2'};
 config{6}.circus.params.detection.spike_thresh  = '6';
 config{6}.circus.params.filtering.remove_median = 'False';
-                                  
+
 %% Patient 7
 config{7}                           = config{1};
 config{7}.prefix                    = '2619-';
@@ -508,6 +456,11 @@ config{7}.circus.reref              = 'no';
 config{7}.circus.params.detection.spike_thresh  = '7';
 config{7}.circus.params.filtering.remove_median = 'False';
 
+config{7}.circus.correct_chunk{1}   = true;
+config{7}.circus.correct_chunk{2}   = true;
+config{7}.circus.correct_chunk{3}   = true;
+
+%% Patient 8
 config{8}                           = config{1};
 config{8}.prefix                    = '3046-';
 config{8}.rawdir                    = fullfile(rootpath_data, 'pat_03046_1482', 'eeg');
@@ -520,22 +473,22 @@ config{8}.align.zerochannel         = 'HaT2_2';
 config{8}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.cluster.reref             = 'yes';
 config{8}.cluster.refmethod         = 'bipolar';
-config{8}.template.threshold        = 2.5;
+config{8}.template.threshold        = 2.75; %3; %2.5
 config{8}.template.reref            = 'yes';
 config{8}.template.refmethod        = 'bipolar';
-config{8}.circus.channel            = {'_mHaT2_2', '_mHaT2_2','_mHaT2_7','_mHmT2_2','_mHmT2_5','_mHmT2_6','_mHmT2_7','_mHmT2_8'};
-config{8}.circus.channelname        = { 'mHaT2',    'mHaT2',   'mHaT2',   'mHmT2',   'mHmT2'   ,'mHmT2',   'mHmT2',   'mHmT2'};
+config{8}.circus.channel            = {'_mHmT2_2','_mHmT2_5','_mHmT2_6','_mHmT2_7','_mHmT2_8'};
 config{8}.circus.reref              = 'no';
+config{8}.circus.params.detection.spike_thresh  = '6';
 
 % Rejected templates
-config{1}.template.rejected         = [1];
-config{2}.template.rejected         = [1];
-config{3}.template.rejected         = [1];
-config{4}.template.rejected         = [4];
-config{5}.template.rejected         = [2,3,5,6];
-config{6}.template.rejected         = [1,3,5,6];
-config{7}.template.rejected         = [1,5,6];
-config{8}.template.rejected         = [1];
+config{1}.template.rejected         = [];
+config{2}.template.rejected         = [];
+config{3}.template.rejected         = [];
+config{4}.template.rejected         = [];
+config{5}.template.rejected         = [];
+config{6}.template.rejected         = [];
+config{7}.template.rejected         = [];
+config{8}.template.rejected         = [];
 
 %% DATA
 

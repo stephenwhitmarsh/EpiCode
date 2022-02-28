@@ -55,6 +55,7 @@ cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
 cfg.circus.maxchan       = ft_getopt(cfg.circus, 'maxchan', 'phy');
+
 % check if depencies is on path, if not add
 w = which('readNPY');
 
@@ -101,8 +102,8 @@ for ipart = cfg.circus.part_list
     
     % to correct maxchan for multiple channels
     channelcount(1) = 0; 
-    if size(channelname, 2) > 1
-        for i = 2 : size(channelname, 1)
+    if ~strcmp(channelname, 'none')    
+        for i = 2 : size(channelname, 2)
             channelcount(i) = channelcount(i-1) + sum(channelname{i-1} == string(cfg.circus.channelname));
         end
     end
@@ -138,7 +139,7 @@ for ipart = cfg.circus.part_list
             phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));    %id, amp, ch, depth, fr, group, n_spikes, sh
             phydata.spike_clusters      = readNPY(fullfile(phydir, 'spike_clusters.npy'));  %for each timing, which (merged) cluster. Include garbage clusters
             
-            %correct difference in field names depending on the Spyking-Circus' version
+            % correct difference in field names depending on the Spyking-Circus' version
             try
                 phydata.cluster_info.cluster_id = phydata.cluster_info.id;
             catch
@@ -148,7 +149,7 @@ for ipart = cfg.circus.part_list
             warning('Data were not checked on Phy : loading of all templates');
         end
         
-        %convert templates from 'whitened' to data units
+        % convert templates from 'whitened' to data units
         if size(phydata.templates, 3) ~= size(phydata.whitening_mat_inv, 2)
             disp('Size of templates does not match size of whitening matrix - did you accidentally enable ''sparse_export''?');
         else
@@ -158,7 +159,7 @@ for ipart = cfg.circus.part_list
             phydata.templates = permute(phydata.templates, [1 3 2]);             %permute to be consistent to SpikeRaw struct from MATLAB data
         end
         
-        %convert amplitudes from template-normalized to data units
+        % convert amplitudes from template-normalized to data units
         for itemplate = 1:size(phydata.templates, 1)
             timings_idx                     = find(phydata.spike_templates == itemplate-1); %-1 because template numerotation starts at zero
             template_amplitude              = max(max(phydata.templates(itemplate, :, :)))-min(min(phydata.templates(itemplate, :, :)));
