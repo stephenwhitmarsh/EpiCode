@@ -39,11 +39,11 @@ config = hspike_setparams;
 
 %% load data
 for ipatient = 1 : 8
-%     config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
-%     SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
-%     config{ipatient}.spike.name  = ["window"];
-%     SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
-%     SpikeDensity{ipatient}       = spikeTrialDensity(config{ipatient});
+    config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
+    config{ipatient}.spike.name  = ["window"];
+    SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
+    SpikeDensity{ipatient}       = spikeTrialDensity(config{ipatient});
     config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
     config{ipatient}.LFP.postfix = {'_all'};
     LFPavg{ipatient}             = readLFPavg(config{ipatient});
@@ -119,12 +119,12 @@ for ipatient = 1 : 8
         for iLFPtemplate = 1 : 6 % LFP clusters
             
             markername = sprintf('template%d', iLFPtemplate);
-            if ~isfield(SpikeDensity{ipatient}{ipart}.sdf_bar, markername) || isempty(SpikeTrials{ipatient}{ipart}.(markername))
+            if ~isfield(SpikeDensity{ipatient}{ipart}.psth, markername) || isempty(SpikeTrials{ipatient}{ipart}.(markername))
                 continue
             end
             
             % configure number and dimensions of plots
-            ntemplates  = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).label, 2);
+            ntemplates  = size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2);
             w           = 1/nLFPtemplate * 0.9;
             hratio      = 1/nLFPtemplate;
             vratio      = 1/(ntemplates+1) ;
@@ -159,29 +159,29 @@ for ipatient = 1 : 8
                 set(s1, 'XGrid', 'off', 'box', 'off', 'xticklabel', [], 'XColor', 'none', 'tickdir', 'out', 'Color', 'none');
                 
                 hold on
-                if size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).label, 2) == 1
-                    bar(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time, SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg, 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
+                if size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2) == 1
+                    bar(SpikeDensity{ipatient}{ipart}.psth.(markername).time, SpikeDensity{ipatient}{ipart}.psth.(markername).avg, 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
                 else
-                    bar(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time, SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, :), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
+                    bar(SpikeDensity{ipatient}{ipart}.psth.(markername).time, SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, :), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
                 end
                 
                 if isfield(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}, 'posclusters')
                     for ipos = 1 : size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.posclusters, 2)
                         if SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.posclusters(ipos).prob < config{ipatient}.stats.alpha
                             sel = find(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.posclusterslabelmat == ipos);
-                            if size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).label, 2) == 1
-                                lag = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg, 1) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
+                            if size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2) == 1
+                                lag = size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg, 1) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
                                 if length(sel) == 1
-                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg( sel+lag), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.psth.(markername).avg( sel+lag), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
                                 else
-                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
                                 end
                             else
-                                lag = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
+                                lag = size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg, 2) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
                                 if length(sel) == 1
-                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
                                 else
-                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
+                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag), 1, 'facecolor', [252/255,187/255,62/255], 'edgecolor', 'none');
                                 end
                             end
                         end
@@ -192,19 +192,19 @@ for ipatient = 1 : 8
                     for ineg = 1 : size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.negclusters, 2)
                         if SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.negclusters(ineg).prob < config{ipatient}.stats.alpha
                             sel = find(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.negclusterslabelmat == ineg);
-                            if size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).label, 2) == 1
-                                lag = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg, 1) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
+                            if size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2) == 1
+                                lag = size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg, 1) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
                                 if length(sel) == 1
-                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg( sel+lag), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.psth.(markername).avg( sel+lag), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
                                 else
-                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
                                 end
                             else
-                                lag = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg, 2) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
+                                lag = size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg, 2) - size(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.mask, 2);
                                 if length(sel) == 1
-                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                                    bar([SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)-0.001, SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel)+0.01], [SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag)], 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
                                 else
-                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
+                                    bar( SpikeDensity{ipatient}{ipart}.stat.(markername){itemp}.time(sel), SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, sel+lag), 1, 'facecolor', [70/255,93/255,250/255], 'edgecolor', 'none');
                                 end
                             end
                         end
@@ -299,37 +299,37 @@ for ipatient = 1 : 8
         for iLFPtemplate = 1 : 6 % LFP clusters
             
             markername = sprintf('template%d', iLFPtemplate);
-            if ~isfield(SpikeDensity{ipatient}{ipart}.sdf_bar, markername)
+            if ~isfield(SpikeDensity{ipatient}{ipart}.psth, markername)
                 continue
             end
             
             toinclude{ipatient}{ipart}.(markername) = [];
             
             % configure number and dimensions of plots
-            ntemplates  = size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).label, 2);
-            SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg;
+            ntemplates  = size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2);
+            SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.psth.(markername).avg;
             for itemp = 1 : ntemplates
 
-                if isempty(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername))
+                if isempty(SpikeDensity{ipatient}{ipart}.psth.(markername))
                     continue
                 end
                 
                 % select baseline
-                t       = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time >= config{ipatient}.stats.bl(1).(markername)(1) & SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time <= config{ipatient}.stats.bl(1).(markername)(2);
+                t       = SpikeDensity{ipatient}{ipart}.psth.(markername).time >= config{ipatient}.stats.bl(1).(markername)(1) & SpikeDensity{ipatient}{ipart}.psth.(markername).time <= config{ipatient}.stats.bl(1).(markername)(2);
                 if ntemplates == 1
-                    temp    = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(t);
+                    temp    = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(t);
                 else
-                    temp    = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, t);
+                    temp    = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, t);
                 end
                 temp(temp == 0) = nan;
                 bl = nanmean(temp);
                 
                 if ntemplates > 1
-                    SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm(itemp, :) = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, :) ./ bl;
-                    SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm(itemp, :) = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg(itemp, :) ./ bl;
+                    SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(itemp, :) = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, :) ./ bl;
+                    SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(itemp, :) = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, :) ./ bl;
                 else
-                    SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg ./ bl;
-                    SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm';
+                    SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.psth.(markername).avg ./ bl;
+                    SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm = SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm';
                 end
                 if isempty(SpikeDensity{ipatient}{ipart}.stat.(markername){itemp})
                     continue
@@ -347,23 +347,23 @@ end
 for ipatient = 1 : 8
     for ipart = 1  : 3
 
-        SpikeDensity{ipatient}{ipart}.sdf_bar_avg = [];
+        SpikeDensity{ipatient}{ipart}.psth_avg = [];
         for iLFPtemplate = 1 : 6 
             markername = sprintf('template%d', iLFPtemplate);
             
-            if ~isfield(SpikeDensity{ipatient}{ipart}.sdf_bar, markername)
+            if ~isfield(SpikeDensity{ipatient}{ipart}.psth, markername)
                 continue
             end
             if isempty(toinclude{ipatient}{ipart}.(markername))
                 continue
             end
             if size(toinclude{ipatient}{ipart}.(markername), 2) > 1
-                size(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :))
-                SpikeDensity{ipatient}{ipart}.sdf_bar_avg.(markername).avg      = nanmean(SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :));
+                size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :))
+                SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg      = nanmean(SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :));
             elseif toinclude{ipatient}{ipart}.(markername) ~= 1
-                SpikeDensity{ipatient}{ipart}.sdf_bar_avg.(markername).avg      = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :);
+                SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg      = SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :);
             elseif toinclude{ipatient}{ipart}.(markername) == 1
-                SpikeDensity{ipatient}{ipart}.sdf_bar_avg.(markername).avg      = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).avg_norm;
+                SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg      = SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm;
             end
         end
     end
@@ -371,17 +371,25 @@ end
 
 %% average over nights (parts)
 SpikeDensity_avg = [];
-clear temp_time
+clear temp_time temp_avg
 for ipatient = 1 : 8
     temp_time{ipatient} = [];
     for iLFPtemplate = 1 : 6
         markername = sprintf('template%d', iLFPtemplate);
         temp_avg = [];
         for ipart = 1 : 3
-            if isfield(SpikeDensity{ipatient}{ipart}.sdf_bar_avg, markername)
-                temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.sdf_bar_avg.(markername).avg];
+            
+            if isfield(SpikeDensity{ipatient}{ipart}.psth_avg, markername)
+                d = size(SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg);
+                if d(1) > d(2)
+                    temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg'];
+                else
+                    temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg];
+                    
+                end
+                
                 if isempty(temp_time{ipatient})
-                    temp_time{ipatient} = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time;
+                    temp_time{ipatient} = SpikeDensity{ipatient}{ipart}.psth.(markername).time;
                 end
             end
         end
@@ -403,7 +411,7 @@ papersize       = 1000;
 nLFPtemplate    = 6;
 
 for ipatient = 1 : 8
-       
+    
     
     for iLFPtemplate = 1 : 6 % LFP clusters
         
@@ -411,11 +419,11 @@ for ipatient = 1 : 8
         if ~isfield(SpikeDensity_avg{ipatient}, markername) || isempty(SpikeDensity_avg{ipatient}.(markername))
             continue
         end
-                
+        
         subplot(8, 6, iLFPtemplate + (ipatient-1) * 6);
-
+        
         yyaxis left
-        bar(temp_time{ipatient}, SpikeDensity_avg{ipatient}.(markername), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
+        bar(SpikeDensity{ipatient}{1}.psth.(markername).time, SpikeDensity_avg{ipatient}.(markername), 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
         xticks([]);
         y = ylim;
         yticks(floor(y(end)));
@@ -425,12 +433,11 @@ for ipatient = 1 : 8
             xlabel('Time');
             ylabel('Change vs. baseline');
         end
-         
+        
         yyaxis right
         hold;
         % plot LFP
-        %         try
-        if ~((ipatient == 1 && iLFPtemplate == 4) || (ipatient == 4 && iLFPtemplate == 3) || (ipatient == 5 && iLFPtemplate == 4) || (ipatient == 5 && iLFPtemplate == 6))
+        if isfield(LFPavg_reref{ipatient}{ipart}, markername)
             maxchan = find(~cellfun(@isempty, strfind(LFPavg_reref{ipatient}{ipart}.(markername).label, config{ipatient}.align.zerochannel)), 1, 'first');
             plot(LFPavg_reref{ipatient}{ipart}.(markername).time{1}, LFPavg_reref{ipatient}{ipart}.(markername).trial{1}(maxchan,:), 'k')
             axis tight;
@@ -445,7 +452,7 @@ for ipatient = 1 : 8
             y = ylim;
             yticks(sort([floor(y(1)), 0, floor(y(2))]));
         end
-
+        
         % labels
         if iLFPtemplate == 1 && ipatient ==8
             ylabel('Amplitude (mV)');
@@ -470,7 +477,7 @@ for ipatient = 1 : 8
         fname = fullfile(config{ipatient}.imagesavedir, sprintf('firingrates_patient%d_part%d', ipatient, ipart));
         % exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
         exportgraphics(fig, strcat(fname, '.pdf'));
-    end 
+    end
 end % ipatient
 
 
@@ -484,7 +491,7 @@ for ipatient = 1 : 8
         if isfield(SpikeDensity_avg{ipatient}, markername)
             temp_avg = [temp_avg; SpikeDensity_avg{ipatient}.(markername)];
             if isempty(temp_time)
-                temp_time = SpikeDensity{ipatient}{ipart}.sdf_bar.(markername).time;
+                temp_time = SpikeDensity{ipatient}{ipart}.psth.(markername).time;
             end
         end
     end

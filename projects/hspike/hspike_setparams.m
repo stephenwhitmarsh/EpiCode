@@ -258,7 +258,7 @@ config{1}.stats.bl.template4        = [-0.2, -0.05];
 config{1}.stats.bl.template5        = [-0.2, -0.05];
 config{1}.stats.bl.template6        = [-0.2, -0.05];
 
-config{1}.stats.alpha               = 0.025;
+config{1}.stats.alpha               = 0.01;
 
 config{1}.plot.reref                = 'yes';
 config{1}.plot.refmethod            = 'bipolar';                                  

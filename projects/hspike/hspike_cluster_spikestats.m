@@ -17,15 +17,15 @@ SpikeRaw{ipatient}                          = readSpikeRaw_Phy(config{ipatient},
 
 % segment into trials/segments
 config{ipatient}.spike.name                 = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'window'};
-SpikeTrials{ipatient}                       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, true);
+SpikeTrials{ipatient}                       = readSpikeTrials(config{ipatient}, MuseStruct{ipatient}, SpikeRaw{ipatient}, false);
 
 % statistics
-config{ipatient}.spike.name                 = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'window'};
-SpikeStats{ipatient}                        = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, true);
+% config{ipatient}.spike.name                 = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'window'};
+% SpikeStats{ipatient}                        = spikeTrialStats(config{ipatient}, SpikeTrials{ipatient}, false);
 
 % waveforms
 % SpikeWaveforms{ipatient}                    = readSpikeWaveforms(config{ipatient}, SpikeRaw{ipatient}, true);
 
 % spike density, not for window
 config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient}, SpikeTrials{ipatient}, true);
+SpikeDensity{ipatient}               = spikePSTH(config{ipatient}, SpikeTrials{ipatient}, true);
