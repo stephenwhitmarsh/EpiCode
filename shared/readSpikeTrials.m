@@ -255,9 +255,9 @@ for markername = string(cfg.spike.name)
                 trialcount_dir  = trialcount_dir + 1;
                 
                 % will be used to find overlap between events
-                trlstart        = Startsec_dir(ievent);
-                trlend          = Endsec_dir(ievent);
-                
+                trlstart                = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(1);
+                trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2);      
+
                 % find overlap
                 for iother = 1 : size(cfg.spike.overlap, 2)
                     
