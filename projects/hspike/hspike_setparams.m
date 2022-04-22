@@ -251,12 +251,12 @@ config{1}.stats.toi.template4       = [-0.2, 1];
 config{1}.stats.toi.template5       = [-0.2, 1];
 config{1}.stats.toi.template6       = [-0.2, 1];
 
-config{1}.stats.bl.template1        = [-0.2, -0.05];
-config{1}.stats.bl.template2        = [-0.2, -0.05];
-config{1}.stats.bl.template3        = [-0.2, -0.05];
-config{1}.stats.bl.template4        = [-0.2, -0.05];
-config{1}.stats.bl.template5        = [-0.2, -0.05];
-config{1}.stats.bl.template6        = [-0.2, -0.05];
+config{1}.stats.bl.template1        = [-0.3, -0.1];
+config{1}.stats.bl.template2        = [-0.3, -0.1];
+config{1}.stats.bl.template3        = [-0.3, -0.1];
+config{1}.stats.bl.template4        = [-0.3, -0.1];
+config{1}.stats.bl.template5        = [-0.3, -0.1];
+config{1}.stats.bl.template6        = [-0.3, -0.1];
 
 config{1}.stats.alpha               = 0.01;
 
