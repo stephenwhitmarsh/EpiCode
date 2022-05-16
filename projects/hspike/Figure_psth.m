@@ -44,12 +44,10 @@ for ipatient = 1 : 8
     config{ipatient}.spike.name  = ["window"];
     SpikeStats{ipatient}         = spikeTrialStats(config{ipatient}); %% formally: spikeTrialDensity(config{ipatient});
     
-
     config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
     config{ipatient}.LFP.postfix = {'_all'};
     LFPavg{ipatient}             = readLFPavg(config{ipatient});
-    SpikeDensity{ipatient}       = spikePSTH(config{ipatient});
-    
+    SpikeDensity{ipatient}       = spikePSTH(config{ipatient});    
     SpikeWaveforms{ipatient}     = readSpikeWaveforms(config{ipatient});
 end
 
@@ -136,24 +134,6 @@ for ipart = 1 : size(LFPavg_reref{ipatient}, 2)
         end
         LFPavg_reref{ipatient}{ipart}.(markername).trial{1} = -LFPavg_reref{ipatient}{ipart}.(markername).trial{1};
         
-    end
-end
-
-%% select latency PSTH
-latency = [-0.2 0.5];
-cfgtemp = [];
-cfgtemp.latency = latency;
-for ipatient = 1 : 8
-    for ipart = 1 : size(SpikeDensity{ipatient}, 2)
-        for template = ["template1","template2","template3","template4","template5","template6"]
-            if ~isfield(SpikeDensity{ipatient}{ipart}.psth, template)
-                continue
-            end
-            if isempty(SpikeDensity{ipatient}{ipart}.psth.(template))
-                continue
-            end
-            SpikeDensity{ipatient}{ipart}.psth.(template) = ft_selectdata(cfgtemp, SpikeDensity{ipatient}{ipart}.psth.(template));
-        end
     end
 end
 
@@ -382,8 +362,7 @@ for ipatient = 1 : 8
                     temp    = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, t);
                 end
                 temp(temp == 0) = nan;
-%                 bl = nanmean(temp);
-                bl = nanmedian(temp);
+                bl = nanmean(temp);
                 
                 if ntemplates > 1
                     SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(itemp, :) = SpikeDensity{ipatient}{ipart}.psth.(markername).avg(itemp, :) ./ bl;
@@ -401,9 +380,8 @@ for ipatient = 1 : 8
     end
 end
 
-%% plot normalized PSTH 
-% configure figure
-papersize       = 1000;
+%% plot normalized PSTH for each patient/part
+
 nLFPtemplate    = 6;
 
 for ipatient = 1 : 8
@@ -446,7 +424,8 @@ for ipatient = 1 : 8
             catch
             end
             axis tight;
-            xlim(config{ipatient}.spike.toi.(markername));
+            xlim([config{ipatient}.stats.bl.(markername)(1), config{ipatient}.spike.toi.(markername)(2)]);
+            
             y = ylim;
             yticks(floor(y(end)));
             xticks([]);
@@ -511,7 +490,6 @@ for ipatient = 1 : 8
                 end
                 
                 axis tight;
-%                 xlim(config{ipatient}.spike.toi.(markername));
                 xlim([config{ipatient}.stats.bl.(markername)(1), config{ipatient}.spike.toi.(markername)(2)]);
 
                 y = ylim;
@@ -589,12 +567,11 @@ for ipatient = 1 : 8
         end % iLFPtemplate
         
         fname = fullfile(config{ipatient}.imagesavedir, sprintf('firingrates_patient%d_part%d_normalized', ipatient, ipart));
-        % exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
         exportgraphics(fig, strcat(fname, '.pdf'));
     end % ipart
 end % ipatient
 
-%% average normalized PSTH of responsive neurons 
+%% average standardized PSTH of responsive neurons 
 for ipatient = 1 : 8
     for ipart = 1  : 3
         SpikeDensity{ipatient}{ipart}.psth_avg = [];
@@ -607,7 +584,6 @@ for ipatient = 1 : 8
                 continue
             end
             if size(toinclude{ipatient}{ipart}.(markername), 2) > 1
-                size(SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :))
                 SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg = nanmean(SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :));
             elseif toinclude{ipatient}{ipart}.(markername) ~= 1
                 SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg = SpikeDensity{ipatient}{ipart}.psth.(markername).avg_norm(toinclude{ipatient}{ipart}.(markername), :);
@@ -622,31 +598,30 @@ end
 SpikeDensity_avg = [];
 clear temp_time temp_avg
 for ipatient = 1 : 8
-    temp_time{ipatient} = [];
     for iLFPtemplate = 1 : 6
         markername = sprintf('template%d', iLFPtemplate);
         temp_avg = [];
         for ipart = 1 : 3
-            if isfield(SpikeDensity{ipatient}{ipart}.psth_avg, markername)
-                d = size(SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg);
-                if d(1) > d(2)
-                    temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg'];
-                else
-                    temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg];                  
-                end
-                
-                if isempty(temp_time{ipatient})
-                    temp_time{ipatient} = SpikeDensity{ipatient}{ipart}.psth.(markername).time;
-                end
+            
+            if ~isfield(SpikeDensity{ipatient}{ipart}.psth_avg, markername)
+                continue
+            end
+            
+            d = size(SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg);
+            if d(1) > d(2)
+                temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg'];
+            else
+                temp_avg = [temp_avg; SpikeDensity{ipatient}{ipart}.psth_avg.(markername).avg];
             end
         end
+        
         if size(temp_avg, 1) > 1
             SpikeDensity_avg{ipatient}.(markername) = nanmean(temp_avg);
         end
     end
 end
 
-%% plot averaged normalized PSTH of responsive neurons
+%% plot averaged normalized PSTH of responsive neurons for each template
 fig = figure('visible', true);
 set(fig, 'PaperPositionMode', 'auto');
 %     set(fig, 'position', get(0,'ScreenSize'));
@@ -724,19 +699,15 @@ fname = fullfile(config{ipatient}.imagesavedir, 'firingrates_patients');
 % exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
 exportgraphics(fig, strcat(fname, '.pdf'));
 
-%% average over templates
+%% average PSTH over templates
 
 SpikeDensity_avg_avg = [];
-temp_time = [];
 for ipatient = 1 : 8
     temp_avg = [];
     for iLFPtemplate = 1 : 6
         markername = sprintf('template%d', iLFPtemplate);
         if isfield(SpikeDensity_avg{ipatient}, markername)
             temp_avg = [temp_avg; SpikeDensity_avg{ipatient}.(markername)];
-            if isempty(temp_time)
-                temp_time = SpikeDensity{ipatient}{ipart}.psth.(markername).time;
-            end
         end
     end
     if size(temp_avg, 1) > 1
@@ -748,13 +719,10 @@ end
 latency = [-0.2 0.5];
 
 fig = figure('visible', true);
-% set(fig, 'PaperPositionMode', 'auto');
 set(fig, 'position', get(0,'ScreenSize'));
-% papersize       = 1000;
-%     set(fig, 'position', [20 -60  papersize papersize*sqrt(2)]);
 set(fig, 'Renderer', 'Painters');
 set(0,'DefaultAxesTitleFontWeight','normal');
-ylims = [600, 1000, 300, 500, 2000, 400, 250, 500] / 1000; % go to mV
+ylims = [600, 1000, 200, 700, 1700, 150, 250, 400] / 1000; % go to mV
 
 for ipatient = 1 : 8
     
@@ -763,14 +731,14 @@ for ipatient = 1 : 8
     
 %     yyaxis left
 %     bar(SpikeDensity{ipatient}{1}.psth.(markername).time, SpikeDensity_avg_avg{ipatient}, 1, 'facecolor', [127/255,127/255,127/255], 'edgecolor', 'none');
-    bar(SpikeDensity{ipatient}{1}.psth.(markername).time, SpikeDensity_avg_avg{ipatient}, 1, 'facecolor', 'k', 'edgecolor', 'none');
+    bar(SpikeDensity{ipatient}{1}.psth.template3.time, SpikeDensity_avg_avg{ipatient}, 1, 'facecolor', 'k', 'edgecolor', 'none');
     set(s1, 'XGrid', 'off', 'box', 'off', 'xticklabel', [], 'XColor', 'none', 'tickdir', 'out', 'Color', 'none');
 
     % zero line
     hold on
     
     % smooth line
-%     s = smooth(temp_time, smooth(SpikeDensity_avg_avg{ipatient}), 3, 'moving')';
+    s = smooth(SpikeDensity{ipatient}{1}.psth.template3.time, smooth(SpikeDensity_avg_avg{ipatient}), 3, 'moving')';
 %     plot(temp_time, s, 'k-');
    
     axis tight
@@ -792,27 +760,30 @@ for ipatient = 1 : 8
         yticks([1]);        
     end
     
-     % baseline line
-        if ipatient == 4
-            y = ylim;
-            y = 0.1;
-            x = xlim;
-%             config{ipatient}.stats.bl
-            line([-0.3, -0.1], [y, y], 'linewidth', 2, 'color', 'w');
-            text(-0.3, y, 'BL', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
-            
-            % time line
-            duration = 0.700;
-            t = sprintf('700 ms');
-            line([x(2) - duration, config{ipatient}.spike.toi.(markername)(end)], [y, y], 'linewidth', 2, 'color', 'w');
-            text(x(2) * 0.99, y, t, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');
-        end
+    % baseline line
+    if ipatient == 4
+        y = ylim;
+        y = 0.1;
+        x = xlim;
+        line([-0.3, -0.1], [y, y], 'linewidth', 2, 'color', 'w');
+        text(-0.2, y, 'BL', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
+        
+        % time line
+        duration = 0.300;
+        t = sprintf('300 ms');
+        line([x(2) - duration, config{ipatient}.spike.toi.(markername)(end)], [y, y], 'linewidth', 2, 'color', 'w');
+        text(x(2) * 0.99, y, t, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');
+    end
     
     % labels
     if ipatient == 1 || ipatient == 5
         % xlabel('Time');
-        ylabel('Change vs. baseline');
+        l = ylabel('Change vs. baseline');
+        pos = l.Position;
+        pos(1) = -0.4;
+        l.Position = pos;
     end
+    
     % plot average LFP
     yyaxis right
     temp_avg = [];
@@ -833,11 +804,11 @@ for ipatient = 1 : 8
     ylim([y(1), y(2)*3]);
     
     plot(LFPavg_reref{ipatient}{ipart}.(markername).time{1}, nanmean(temp_avg)/1000, 'k', 'linewidth', 1)
-    set(gca, 'ydir', 'reverse');
-    
+    set(gca, 'ydir', 'reverse'); 
     
     if ipatient ~= 7
         % positive area
+        temp_time = SpikeDensity{ipatient}{1}.psth.template3.time;
         indx = temp_time > -0.1 & temp_time < 1;
         [Ypk,Xpk,Wpk,Ppk] = findpeaks(s(indx), temp_time(indx), 'SortStr', 'descend', 'NPeaks',1);
         toi_pos{ipatient}(1) = Xpk-Wpk/2;
@@ -853,15 +824,6 @@ for ipatient = 1 : 8
         y = ylim;
         fill([toi_neg{ipatient}(1), toi_neg{ipatient}(2), toi_neg{ipatient}(2), toi_neg{ipatient}(1)],[y(1), y(1), y(2), y(2)], 'b','facealpha',0.1, 'edgecolor', 'none');
     end
-    
-    
-%     axis tight;
-%     y = ylim;
-%     ylim(round([-max(abs(y)+10), max(abs(y)+10)]));
-%     yticks(round([-max(abs(y)+10), 0, max(abs(y)+10)]));
-%     xlim([config{ipatient}.stats.bl.(markername)(1), config{ipatient}.spike.toi.(markername)(2)]);
-%     
-
     
     if ipatient == 4 || ipatient == 8
         ylabel('Amplitude (mV)');
@@ -879,6 +841,7 @@ exportgraphics(fig, strcat(fname, '.jpg'),  'Resolution', 300);
 exportgraphics(fig, strcat(fname, '.pdf'), 'ContentType', 'vector');
 
 %% Make table for R - PSTH table
+
 t = table;
 i = 1;
 hyplabels = ["PHASE_3", "PHASE_2", "PHASE_1", "AWAKE", "PRESLEEP", "POSTSLEEP", "REM", "NO_SCORE"];
@@ -891,8 +854,7 @@ for ipatient = [1:8]
                 continue
             end
             
-            indx_pos = SpikeDensity{ipatient}{ipart}.psth.(markername).time > toi_pos{ipatient}(1) & SpikeDensity{ipatient}{ipart}.psth.(markername).time < toi_pos{ipatient}(2);
-            indx_neg = SpikeDensity{ipatient}{ipart}.psth.(markername).time > toi_neg{ipatient}(1) & SpikeDensity{ipatient}{ipart}.psth.(markername).time < toi_neg{ipatient}(2);
+
             
             for iunit = 1 : size(SpikeDensity{ipatient}{ipart}.psth.(markername).label, 2)
                 
@@ -911,8 +873,15 @@ for ipatient = [1:8]
                         t.SUA(i) = 1;
                     else
                         t.SUA(i) = 0;
-                    end  
-
+                    end
+                    
+                    
+                    if ~isempty(toi_pos{ipatient}) || ~isempty(toi_neg{ipatient})
+    
+                    indx_pos = SpikeDensity{ipatient}{ipart}.psth.(markername).time > toi_pos{ipatient}(1) & SpikeDensity{ipatient}{ipart}.psth.(markername).time < toi_pos{ipatient}(2);
+                    indx_neg = SpikeDensity{ipatient}{ipart}.psth.(markername).time > toi_neg{ipatient}(1) & SpikeDensity{ipatient}{ipart}.psth.(markername).time < toi_neg{ipatient}(2);
+                    
+                    
                     indx          = SpikeDensity{ipatient}{ipart}.psth.(markername).trialinfo.hyplabel == hyplabel;
                     
                     trlcnt_pos    = permute(SpikeDensity{ipatient}{ipart}.psth.(markername).trial(indx, iunit, indx_pos), [1, 3, 2]);
@@ -926,6 +895,12 @@ for ipatient = [1:8]
                     avg_neg       = nanmean(trlavg_neg);
                     t.negcnt(i)   = avg_neg;
                     t.negrate(i)  = avg_neg / config{ipatient}.spike.psthbin.(markername);        
+                    else
+                        t.poscnt(i)  = nan;
+                        t.posrate(i) = nan;
+                        t.negcnt(i)  = nan;
+                        t.negrate(i) = nan;
+                    end
                     
                     switch hyplabel
                         case "PHASE_1"
@@ -957,7 +932,6 @@ end
 fname   = fullfile(config{ipatient}.datasavedir, 'psth_table');
 writetable(t, fname);
 
-disp('done');
 
 %% Make table for R (correlation between firing rates and LFP)
 t = table;

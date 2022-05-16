@@ -104,9 +104,9 @@ end
 
 %% Create figures
 Figure_hypnograms
-Figure_templates
+% Figure_templates done in Figure_LFP_stages
 Figure_FFT
-Figure_LFP_stages % also writes data for R
+Figure_LFP_stages % plot templates and write `data for R
 Figure_raster
 Figure_psth % also writes data for R
     
@@ -396,8 +396,6 @@ for ipatient = 1 : 8
 end
 
 for ipatient = 1 : 8
-    %     config{ipatient} = addparts(config{ipatient});
-    %     MuseStruct{ipatient} = readMuseMarkers(config{ipatient}, false);
     totalHours(ipatient) = hours(MuseStruct{ipatient}{end}{end}.endtime - MuseStruct{ipatient}{1}{1}.starttime);
 end
 
@@ -405,18 +403,10 @@ t = table;
 for ipatient = 1 : 8
     t.Patient(ipatient) = ipatient;
     t.Visual(ipatient)  = size(hit{ipatient}, 2);
-    
     t.Detections(ipatient) = size(FA{ipatient}, 2);
     t.Hitrate(ipatient) = mean(hit{ipatient})*100;
     t.FArate(ipatient)  = mean(FA{ipatient})*100;
     t.TotalDetections(ipatient) = tempsum(ipatient);
-
-%     t.DetectionsSelection(ipatient) = sum(hit_sel{ipatient}, 2);
-%     t.HitrateSelection(ipatient) = mean(hit_sel{ipatient})*100;
-%     t.FArateSelection(ipatient)  = mean(FA_sel{ipatient})*100;
-%     t.TotalDetectionsSelection(ipatient) = tempsum_sel(ipatient);
-    
-
     t.totalHours(ipatient) = totalHours(ipatient);
 end
 for fname = string(t.Properties.VariableNames)
@@ -606,13 +596,13 @@ for ipatient = 1:8
     %     SpikeRaw{ipatient}                                              = readSpikeRaw_Phy(config{ipatient}, false);
     
 %     % epoch to IEDs and sliding windows
-%     config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
-%     SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient});
+    config{ipatient}.spike.name                                     = ["template1", "template2", "template3", "template4", "template5", "template6", "window"];
+    SpikeTrials{ipatient}                                           = readSpikeTrials(config{ipatient});
 %     SpikeStats{ipatient}                                            = spikeTrialStats(config{ipatient});
 %     
     % spike density, not for window
     config{ipatient}.spike.psth.name     = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
-    SpikeDensity{ipatient}               = spikeTrialDensity(config{ipatient});
+    SpikeDensity{ipatient}               = spikePSTH(config{ipatient});
     
 end
 
@@ -629,7 +619,7 @@ clear timestring starttime
 
 for ipatient = 1 : 8
     
-    % get tot the data directory and get first dataset
+    % get to the data directory and get first dataset
     S = dir2(config{ipatient}.rawdir);
     S = S([S.isdir]);
     [~,idx] = sort([S.datenum]);
@@ -637,8 +627,6 @@ for ipatient = 1 : 8
     % get first file
     S           = S(1);
     S           = dir2(fullfile(S.folder, S.name, '*.txt'));
-    
-    
     [~, f, ~]   = fileparts(fullfile(S(1).folder, S(1).name));
     f           = fopen(fullfile(S(1).folder,[f,'.txt']));
 
@@ -729,7 +717,7 @@ fname   = fullfile(config{ipatient}.datasavedir, 'DataMUASUA');
 writetable(t, fname);
 
 % for methods paper Katia
-t = sortrows(t, "StartDateTime");
+t = sortrows(t, "PatientNr");
 fname   = fullfile(config{ipatient}.datasavedir, 'DataMUASUA.xls');
 writetable(t, fname);
 

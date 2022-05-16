@@ -98,7 +98,8 @@ end
 %% rereference original average
 for ipatient = 1 : 8
     if ~contains(LFP_original_avg{ipatient}{1}.Hspike.label{1}, '-')
-        
+        labels_nonum    = regexprep(LFP_original_examples{ipatient}{1}.Hspike.label, '[0-9_]', '');
+        [~, ~, indx]    = unique(labels_nonum);
         clear group
         for i = 1 : max(indx)
             cfgtemp             = [];

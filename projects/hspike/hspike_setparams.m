@@ -163,6 +163,7 @@ config{1}.cluster.kmeans            = 'no';
 config{1}.cluster.kmedoids          = 'yes';
 config{1}.cluster.N                 = 6; % can be list, e.g. p2 3 4 6]
 config{1}.cluster.align.latency     = [-0.2, 0.3];
+
 config{1}.template.reref            = 'yes';
 config{1}.template.refmethod        = 'bipolar';
 config{1}.template.latency          = [-0.2, 0.5];
@@ -468,8 +469,7 @@ config{8}.locfile                   = fullfile(rootpath_epiloc, 'pat_03046_1482'
 config{8}.hyp.micromedchannel       = '_HaT21';
 config{8}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
-config{8}.align.zerochannel         = 'HaT2_1';
-config{8}.align.zerochannel         = 'HaT2_2';
+config{8}.align.zerochannel         = 'HaT2_3'; % _2
 config{8}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.cluster.reref             = 'yes';
 config{8}.cluster.refmethod         = 'bipolar';

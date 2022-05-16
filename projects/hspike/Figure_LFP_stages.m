@@ -149,43 +149,43 @@ for ipatient = 1 : 8
     end
 end
 
-%% rename and clean up sleepstages over templates
+%% rename and clean up LFP sleepstage names over templates
 for ipatient = 1 : 8
-        if isempty(LFPstage_overtemplate_avg{ipatient})
-            continue
-        end
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_1")
-            LFPstage_overtemplate_avg{ipatient}.S1 = LFPstage_overtemplate_avg{ipatient}.PHASE_1;
-            LFPstage_overtemplate_avg{ipatient}    = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_1');
-        end
-        
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_2")
-            LFPstage_overtemplate_avg{ipatient}.S2      = LFPstage_overtemplate_avg{ipatient}.PHASE_2;
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_2');
-        end
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_3")
-            LFPstage_overtemplate_avg{ipatient}.S3      = LFPstage_overtemplate_avg{ipatient}.PHASE_3;
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_3');
-        end
-        
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "AWAKE")
-            LFPstage_overtemplate_avg{ipatient}.Wake    = LFPstage_overtemplate_avg{ipatient}.AWAKE;
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'AWAKE');
-        end
-        
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "POSTSLEEP")
-            LFPstage_overtemplate_avg{ipatient}.Post    = LFPstage_overtemplate_avg{ipatient}.POSTSLEEP;
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'POSTSLEEP');
-        end
-
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "PRESLEEP")
-            LFPstage_overtemplate_avg{ipatient}.Pre    = LFPstage_overtemplate_avg{ipatient}.PRESLEEP;
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PRESLEEP');
-        end
-        
-        if isfield(LFPstage_overtemplate_avg{ipatient}, "NO_SCORE")
-            LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'NO_SCORE');
-        end
+    if isempty(LFPstage_overtemplate_avg{ipatient})
+        continue
+    end
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_1")
+        LFPstage_overtemplate_avg{ipatient}.S1 = LFPstage_overtemplate_avg{ipatient}.PHASE_1;
+        LFPstage_overtemplate_avg{ipatient}    = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_1');
+    end
+    
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_2")
+        LFPstage_overtemplate_avg{ipatient}.S2      = LFPstage_overtemplate_avg{ipatient}.PHASE_2;
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_2');
+    end
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "PHASE_3")
+        LFPstage_overtemplate_avg{ipatient}.S3      = LFPstage_overtemplate_avg{ipatient}.PHASE_3;
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PHASE_3');
+    end
+    
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "AWAKE")
+        LFPstage_overtemplate_avg{ipatient}.Wake    = LFPstage_overtemplate_avg{ipatient}.AWAKE;
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'AWAKE');
+    end
+    
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "POSTSLEEP")
+        LFPstage_overtemplate_avg{ipatient}.Post    = LFPstage_overtemplate_avg{ipatient}.POSTSLEEP;
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'POSTSLEEP');
+    end
+    
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "PRESLEEP")
+        LFPstage_overtemplate_avg{ipatient}.Pre    = LFPstage_overtemplate_avg{ipatient}.PRESLEEP;
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'PRESLEEP');
+    end
+    
+    if isfield(LFPstage_overtemplate_avg{ipatient}, "NO_SCORE")
+        LFPstage_overtemplate_avg{ipatient} = rmfield(LFPstage_overtemplate_avg{ipatient}, 'NO_SCORE');
+    end
 end
 
 % flip polarity to align spike and wave
@@ -193,9 +193,6 @@ for ipatient = 6
     for hyplabel = ["S3", "S2", "S1", "REM", "Pre", "Post", "Wake"]
         if isfield(LFPstage_overtemplate_avg{ipatient}, hyplabel)
             LFPstage_overtemplate_avg{ipatient}.(hyplabel).trial{1} = -LFPstage_overtemplate_avg{ipatient}.(hyplabel).trial{1};
-            for itrial = 1 : size(LFPstage_overtemplate_avg{ipatient}.trial, 2)
-                LFPstage_overtemplate_avg{ipatient}.(hyplabel).trial{itrial} = -LFPstage_overtemplate_avg{ipatient}.(hyplabel).trial{itrial};
-            end
         end
     end
 end
@@ -360,9 +357,9 @@ save(strcat(config{ipatient}.datasavedir, "LFP_posneg"),'posindx','negindx');
 %% plot figure template timings
 nrow = 8;
 ncol = 6;
-ylims = [2000, 1000, 500, 1500, 3000, 1000, 300, 500] / 1000; % go to mV
+ylims = [2000, 1000, 800, 2000, 4000, 800, 200, 1200] / 1000; % go to mV
 
-for showrejected = [false, true]
+for showrejected = [false]
     
     fig = figure('visible', true);
     set(fig, 'PaperPositionMode', 'auto');
@@ -378,16 +375,13 @@ for showrejected = [false, true]
         
         col = 1;
         for itemplate = 1:6
-                      
-%             if ~isfield(LFPstageavg{ipatient}, sprintf('template%d', itemplate))
-%                 continue
-%             end
+
             if ~showrejected && any(itemplate == config{ipatient}.template.rejected)
                 continue
             end
             
             subplot(nrow, ncol, col + (ipatient-1) * ncol);
-            set(gca, 'clipping', 'off');
+%             set(gca, 'clipping', 'off');
             hold on
             
             for i = 1 : size(tpos{ipatient}{itemplate}, 2)
@@ -404,22 +398,25 @@ for showrejected = [false, true]
             end
             
             maxchan = find(~cellfun(@isempty, strfind(LFP_cluster{ipatient}{itemplate}.label, config{ipatient}.align.zerochannel)), 1, 'first');
-            
-            plot(LFP_cluster{ipatient}{itemplate}.time, LFP_cluster{ipatient}{itemplate}.avg/1000, 'color', [0.9, 0.9, 0.9]);
+
+%             plot(LFP_cluster{ipatient}{itemplate}.time, LFP_cluster{ipatient}{itemplate}.avg/1000, 'color', [0.8, 0.8, 0.8]);
             plot(LFP_cluster{ipatient}{itemplate}.time, LFP_cluster{ipatient}{itemplate}.avg(maxchan, :)'/1000, 'color', [0, 0, 0], 'linewidth', 1);
             plot(latency, [0, 0], ':k');
             
             ylim([-ylims(ipatient), ylims(ipatient)]);
             yticks([-ylims(ipatient), ylims(ipatient)]);
             set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out', 'TickLength', [0.03, 0.03]);
-            
+                
+            % for clinical montage flip Y-axis
+            set(gca, 'YDir','reverse')
+    
             if col == 1 && ipatient == 8
                 xlabel('Time (s)');
                 lh = ylabel('mV');
                 set(lh, 'units', 'normalized')
                 get(lh, 'position');
                 lh.Position(1) = -0.1; % change horizontal position of ylabel
-                lh.Position(2) = 0.5;  % change vertical position of ylabel
+                lh.Position(2) =  0.5; % change vertical position of ylabel
             end
             if col ~= 1
                 set(gca,'yticklabel', []);
@@ -441,7 +438,6 @@ for showrejected = [false, true]
             clear h
             h(1) = patch([0, 0], [0,0], [0, 0, 1], 'facealpha', 0.1, 'edgecolor', 'none');
             h(2) = patch([0, 0], [0,0], [1, 0, 0], 'facealpha', 0.1, 'edgecolor', 'none');
-            
             spos = get(gca, 'Position');
             l = legend(h, {'Positive', 'Negative'}, 'box', 'off', 'location', 'eastoutside');
             set(gca, 'Position', spos);
@@ -473,10 +469,9 @@ for showrejected = [false, true]
 end
 
 %% plot figure sleep stages
-hyplabels = ["S3", "S2", "S1", "REM", "Pre", "Post", "Wake"];
 hyplabels = ["S3", "S2", "S1", "REM", "Wake"];
 cm = cbrewer('qual', 'Set2', 8);
-ylims = [2000, 1000, 500, 1000, 3000, 500, 300, 1000] / 1000; % go to mV
+ylims = [2000, 1000, 500, 900, 2800, 500, 200, 1000] / 1000; % go to mV
 nrow = 8;
 ncol = 6;
     
@@ -619,7 +614,7 @@ set(0,'DefaultAxesTitleFontWeight','normal');
 hyplabels = ["S3", "S2", "S1", "REM", "Pre", "Post", "Wake"];
 hyplabels = ["S3", "S2", "S1", "REM", "Wake"];
 cm = cbrewer('qual', 'Set2', 8);
-ylims = [600, 1000, 300, 500, 2000, 400, 250, 500] / 1000; % go to mV
+ylims = [600, 1000, 300, 500, 2000, 400, 250, 900] / 1000; % go to mV
 
 for ipatient = 1 : 8
     
@@ -640,6 +635,9 @@ for ipatient = 1 : 8
     yticklabels([-ylims(ipatient), "", ylims(ipatient)]);
     set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out', 'TickLength', [0.03, 0.03]);
     
+    % for clinical montage flip Y-axis
+    set(gca, 'YDir','reverse')
+    
     if ipatient == 1 || ipatient == 5
         xlabel('Time (s)');
         lh = ylabel('\muV');
@@ -649,29 +647,29 @@ for ipatient = 1 : 8
         lh.Position(1) = -0.1; % change horizontal position of ylabel
         lh.Position(2) = 0.5; % change vertical position of ylabel
     end
-
+    
     xlim(latency);
     xticks([latency(1), 0, latency(2)]);
-        set(gca, 'xticklabel', [], 'XColor', 'none');
+    set(gca, 'xticklabel', [], 'XColor', 'none');
+    
+    % baseline line
+    if ipatient == 4
+        y = ylim;
+        y = y(2);
+        x = xlim;
+        line([-0.15, -0.05], [y, y], 'linewidth', 2, 'color', 'k');
+        text(-0.15, y, 'BL', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
         
-        % baseline line
-        if ipatient == 4
-            y = ylim;
-            y = y(1);
-            x = xlim;
-            line([-0.15, -0.05], [y, y], 'linewidth', 2, 'color', 'k');
-            text(-0.15, y, 'BL', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
-            
-            % time line
-            duration = 0.300;
-            t = sprintf('300 ms');
-            line([x(2) - duration, config{ipatient}.spike.toi.(markername)(end)], [y, y], 'linewidth', 2, 'color', 'k');
-            text(x(2) * 0.99, y, t, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');
-        end
-        
-        % plot for legend
-        if ipatient == 4
-            ic = 1;
+        % time line
+        duration = 0.300;
+        t = sprintf('300 ms');
+        line([x(2) - duration, config{ipatient}.spike.toi.template1(end)], [y, y], 'linewidth', 2, 'color', 'k');
+        text(x(2) * 0.99, y, t, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');
+    end
+    
+    % plot for legend
+    if ipatient == 4
+        ic = 1;
         clear h
         for hyplabel = hyplabels
             h(ic) = patch([0, 0], [0,0], cm(9-ic, :), 'facealpha', 1, 'edgecolor', 'none');
@@ -683,9 +681,10 @@ for ipatient = 1 : 8
         title(l, "Stage");
         l.Title.FontWeight = 'normal';
         set(gca, 'Position', spos);
-    end    
+    end
     
-     if ipatient == 8 
+    % plot legend (empty to keep horizontal stretch between rows)
+    if ipatient == 8
         ic = 1;
         clear h
         for hyplabel = hyplabels
@@ -698,10 +697,8 @@ for ipatient = 1 : 8
         title(l, "");
         l.Title.FontWeight = 'normal';
         set(gca, 'Position', spos);
-     end
-     
+    end
     
-        
     title(sprintf('Patient %d', ipatient));
     col = col + 1;
 end
@@ -712,7 +709,7 @@ if ~ispc
     fname = fullfile(config{1}.imagesavedir, 'LFP_stages');
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));
-else 
+else
     fname = fullfile('D:\Dropbox\Apps\Overleaf\Hspike\images', 'LFP_stages');
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));

@@ -33,15 +33,13 @@ ft_defaults
 config = hspike_setparams;
 
 for ipatient = 1 : 8
-%     SpikeRaw{ipatient}           = readSpikeRaw_Phy(config{ipatient}, false);
-%     config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
-%     SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
-%     SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
-%     config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
-%     LFP{ipatient}                = readLFP(config{ipatient});
-    LFPavg{ipatient}                = readLFPavg(config{ipatient});
-%     LFP{ipatient}               = rerefLFP(config{ipatient}, MuseStruct{ipatient}(1:3), false);    
-
+    SpikeRaw{ipatient}           = readSpikeRaw_Phy(config{ipatient});
+    config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
+    SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
+    config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    LFPavg{ipatient}             = readLFPavg(config{ipatient});
+    LFP{ipatient}                = rerefLFP(config{ipatient});    
 end
 
 % 

@@ -16,7 +16,8 @@ install.packages("lmerTest")
 install.packages("devtools")
 install.packages("sjPlot")
 install.packages("ggpubr")
-
+install.packages("viridis")
+install.packages("latex2exp")
 
 #if(!require(devtools)) install.packages("devtools")
 #devtools::install_github("kassambara/ggpubr")
@@ -51,6 +52,8 @@ library(equatiomatic)
 library(circular)
 library(kableExtra)
 library("sjPlot") # plot_model
+library(viridis)
+library(latex2exp)
 
 
 #####################
@@ -118,17 +121,17 @@ kbl(data_clinical, "latex", booktabs = T, label = "clinical",
 
 options(knitr.kable.NA = '')
 
-macro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv")
+macro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/macro_anatomical.csv", fileEncoding = 'UTF-8-BOM')
 macro$ID <- NULL
 macro$Label <- NULL
-clean.cols <- c("Patient")
-macro[clean.cols] <- lapply(macro[clean.cols], cleanf)
+# clean.cols <- c("Patient")
+# macro[clean.cols] <- lapply(macro[clean.cols], cleanf)
 
-micro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.csv")
+micro <- read.csv("D:/Dropbox/Apps/Overleaf/Hspike/tables/micro_anatomical.csv", fileEncoding = 'UTF-8-BOM')
 micro$ID <- NULL
 micro$Label <- NULL
-clean.cols <- c("Patient")
-micro[clean.cols] <- lapply(micro[clean.cols], cleanf)
+# clean.cols <- c("Patient")
+# micro[clean.cols] <- lapply(micro[clean.cols], cleanf)
 
 locations <- bind_rows(macro,micro)
 
@@ -137,6 +140,22 @@ kbl(locations, "latex", booktabs = T, linesep = "", label = 'anatomical',
     kable_styling(latex_options = c("HOLD_position"))%>%
     pack_rows("Macro contacts", 1, 14) %>% # latex_gap_space = "2em"
     pack_rows("Micro electrodes", 15, 27) %>%
+  row_spec(1, extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(3,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(5,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(7,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(9,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(11,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(13,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(15,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(16,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(18,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(20,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(21,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(23,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(24,  extra_latex_after = "\\cline{2-5}")  %>%
+  row_spec(25,  extra_latex_after = "\\cline{2-5}")  %>%
+  
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/anatomical.tex")
 
 
@@ -163,7 +182,7 @@ data[,7]  = round(data[,7],digits=1)
 kbl(data, "latex", booktabs = T, linesep = "", label = 'performance', escape = FALSE,
     col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
     # col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total","24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
-    caption = "Template detection performance")%>%
+    caption = "Automatic IED detection performance")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
  # kable_styling(latex_options = c("scale_down"))%>%
   row_spec(8, hline_after = TRUE)%>%
@@ -214,43 +233,99 @@ options(knitr.kable.NA = '')
 data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data <- data[, c("patient", "part", "PHASE_3", "PHASE_2", "PHASE_1", "AWAKE", "REM")] 
 colnames(data) = c("Patient", "Night","S3", "S2", "S1", "Wake", "REM")
+data <- round(data, digits=2)
 
-df <- c("\\textit{Mean}", NA, mean(data$S3), mean(data$S2), mean(data$S1), mean(data$Wake), mean(data$REM))
+df <- c("\\textit{Mean}", NA, round(mean(data$S3), digits = 2),  round(mean(data$S2), digits = 2),  round(mean(data$S1), digits = 2),  round(mean(data$Wake), digits = 2),  round(mean(data$REM), digits = 2))
 data <- rbind(data, df)
-df <- c("\\textit{Std.}", NA, sd(data$S3), sd(data$S2), sd(data$S1), sd(data$Wake), sd(data$REM))
+df <- c("\\textit{Std.}", NA, round(sd(data$S3), digits = 2), round(sd(data$S2), digits = 2), round(sd(data$S1), digits = 2), round(sd(data$Wake), digits = 2), round(sd(data$REM), digits = 2))
 data <- rbind(data, df)
 
 clean.cols <- c("Patient")
 data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
+
 kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration', escape = FALSE,
     caption = "Time spend in sleep stages (hrs.)", digits=2) %>%
     kable_styling(latex_options = c("HOLD_position"))%>%
     add_header_above(c(" " = 2, "Sleep stage" = 5)) %>%
-    row_spec(24, hline_after = TRUE)%>%
+  row_spec(3,  extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(6,  extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(9,  extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(12, extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(15, extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(18, extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(21, extra_latex_after = "\\cline{2-7}") %>%
+  row_spec(24, hline_after = TRUE) %>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stageduration.tex")
 
 
 ####################################
 # Latex table: number of SUA / MUA #
 ####################################
+# 
+# options(knitr.kable.NA = '')
+# 
+# data_MUA <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/DataMUASUA.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+# data_MUA <- data_MUA[, c("PatientNr", "Part", "nrSUA", "nrMUA")]
+# colnames(data_MUA) = c("Patient", "Night","SUA", "MUA")
+# df <- c("\\textit{Sum}", NA, sum(data_MUA$SUA), sum(data_MUA$MUA))
+# data_MUA <- rbind(data_MUA, df)
+# 
+# clean.cols <- c("Patient")
+# data_MUA[clean.cols] <- lapply(data_MUA[clean.cols], cleanf)
+# 
+# kbl(data_MUA, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FALSE,
+#     caption = "Number of putatively isolated single units (SUA) and number of multiunits (MUA)")%>%
+#   kable_styling(latex_options = c("HOLD_position"))%>%
+#   row_spec(3,  extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(6,  extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(9,  extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(12, extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(15, extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(18, extra_latex_after = "\\cline{2-4}") %>%
+#   row_spec(21, extra_latex_after = "\\cline{2-4}") %>%  
+#   row_spec(24, hline_after = TRUE)%>%
+#   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/SUAMUA.tex")
+# 
 
-options(knitr.kable.NA = '')
+#### ADD RESPONSIVE UNITS #######
+# prepare data
+data_psth <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_psth$hyplabel <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_psth$Type     <- factor(data_psth$SUA)
 
-data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/DataMUASUA.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data <- data[, c("PatientNr", "Part", "nrSUA", "nrMUA")]
-colnames(data) = c("Patient", "Night","SUA", "MUA")
-df <- c("\\textit{Sum}", NA, sum(data$SUA), sum(data$MUA))
-data <- rbind(data, df)
+data_sel <- setNames(aggregate(data_psth$responsive, by = c(list(data_psth$Patient, data_psth$part, data_psth$unit, data_psth$Type)), mean), c("Patient", "part", "unit", "Type", "responsive"))
+data_sel$responsive = as.integer(data_sel$responsive > 0)
+
+t = data_sel %>% count(Patient, part, responsive, Type)
+t2 <- pivot_wider(t, names_from = "Type", names_prefix = "SUA", values_from = "n")
+t3 <- pivot_wider(t2, names_from = "responsive", names_prefix = "responsive", values_from = c("SUA1", "SUA0"))
+t3[is.na(t3)] <- 0
+
+df <- c("\\textit{Sum}", NA, sum(t3$SUA1_responsive1), sum(t3$SUA1_responsive0), sum(t3$SUA0_responsive1), sum(t3$SUA0_responsive0))
+
+data_MUA <- rbind(t3, df)
+
+colnames(data_MUA) = c("Patient", "Night","Responsive", "Unresponsive", "Responsive", "Unresponsive")
 
 clean.cols <- c("Patient")
-data[clean.cols] <- lapply(data[clean.cols], cleanf)
+data_MUA[clean.cols] <- lapply(data_MUA[clean.cols], cleanf)
 
-kbl(data, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FALSE,
-    caption = "Number of putatively isolated single units (SUA) and number of multiunits (MUA)")%>%
+kbl(data_MUA, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FALSE,
+    caption = "Number of responsive or unresponsive putatively isolated single units (SUA) and multiunits (MUA)")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  row_spec(24, hline_after = TRUE)%>%
+  add_header_above(c(" ", " ", "SUA" = 2, "MUA" = 2)) %>%
+  row_spec(3,  extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(6,  extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(9,  extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(12, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(15, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(18, extra_latex_after = "\\cline{1-6}") %>%
+  row_spec(21, extra_latex_after = "\\cline{1-6}") %>%  
+  row_spec(24, hline_after = TRUE) %>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/SUAMUA.tex")
+
+
 
 
 #######################
@@ -270,8 +345,8 @@ data_power$part     <- factor(data_power$part)
 # data_power$bin <- as.integer(cut(data_power$minute, seq(0, 60*24, by = 1)))
 # data_binned_fine <- setNames(aggregate(data_power$power, c(list(data_power$Patient), list(data_power$bin), list(data_power$band)), mean), c("Patient", "bin", "band", "power"))
 # data_binned_fine <- as.data.frame(data_binned_fine %>% group_by(Patient, band) %>% mutate(Npower = (power-min(power))/max(power-min(power)))) 
-# ggplot(data=data_binned_fine[data_binned_fine$band == "Delta1" & data_binned_fine$Patient == 7, ], aes(x = bin, y = power, fill=Patient, col=Patient)) + 
-  geom_smooth()
+# ggplot(data=data_binned_fine[data_binned_fine$band == "Delta1" & data_binned_fine$Patient == 7, ], aes(x = bin, y = power, fill=Patient, col=Patient)) + geom_smooth()
+  
 
 # bin for polar representation
 data_power$bin <- as.integer(cut(data_power$minute, seq(0, 24*60, by = 60)))
@@ -647,10 +722,20 @@ Seizurepolarplot  <-
 #  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar_density_seizures.pdf") 
 
 
+# save combined to pdf, with power
+# ggarrange(IEDpolarplot, Seizurepolarplot, polardelta1power, polardelta2power,
+#           labels = c("A","B","C", "D"), 
+#           vjust = 3, hjust = -1, 
+#           legend = "right", 
+#           common.legend = TRUE, 
+#           font.label = list(size = 14, color = "black", face = "bold")) %>%
+#   ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar.pdf") 
+
 # save combined to pdf
-ggarrange(IEDpolarplot, Seizurepolarplot, polardelta1power, polardelta2power,
-          labels = c("A","B","C", "D"), 
-          vjust = 3, hjust = -1, 
+ggarrange(IEDpolarplot, Seizurepolarplot,
+          labels = c("A","B"), 
+          vjust = 15, hjust = -1, 
+          ncol = 2, nrow = 1,
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
@@ -992,55 +1077,199 @@ kbl(stats_delta2, "latex", booktabs = T, linesep = "", label = 'stats_delta2',
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_delta2.tex")
 
 
-# ###################################################################
-# # Mixed model with both sleep stage and power explaining IED rate #
-# ###################################################################
-# 
-# # to create p-values
-# detach(package:lmerTest)
-# library(lmerTest)
-# library(lme4)
-# 
-# # determine reference level
-# data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
-# l1 <- lmer(IEDsum ~ stage + Delta1 + Delta2 + (1 | night) + (1 | patient), data_pow_wide)
-# 
-# summary(l1)
-# plot_model(l1)
-# 
-# # # get mathematical description of the model and write to latex
-# # eq <- equatiomatic::extract_eq(l1)
-# # fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
-# # writeLines(c("$$",eq,"$$"), fileConn)
-# # close(fileConn)
-# 
-# # Coefficients to LaTeX table
-# temp = summary(l1)
-# coefs <- as.data.frame(temp$coefficients)
-# coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-# rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "Delta", "Theta", "Alpha")
-# 
-# # Post-hoc tests to LaTeX table
-# temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
-# ph1 <- as.data.frame(temp$`pairwise differences of stage`)
-# ph1 <- ph1[, -4] # remove df since they are at inf
-# ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
-# 
-# # Concatenate in one LaTeX table
-# coefs           <- data.frame(Predictor = row.names(coefs), coefs);
-# rownames(coefs) <- NULL
-# colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
-# colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
-# stats_IEDsum   <- bind_rows(coefs,ph1)
-# 
-# kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum',
-#     escape = FALSE, digits = 2,
-#     caption = "Effect of sleepstages on IEDrate")%>%
-#   kable_styling(latex_options = c("HOLD_position"))%>%
-#   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
-#   pack_rows("Power", 8, 9) %>%
-#   pack_rows("Post-hoc comparisons", 10, 30) %>%
-#   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+####################################################
+# Mixed model with sleep stage explaining IED rate #
+####################################################
+
+# to create p-values
+detach(package:lmerTest)
+library(lmerTest)
+library(lme4)
+
+# determine reference level
+data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
+l1 <- lmer(IEDsum ~ stage + (1 | night) + (1 | patient), data_pow_wide)
+
+summary(l1)
+plot_model(l1)
+
+# # get mathematical description of the model and write to latex
+# eq <- equatiomatic::extract_eq(l1)
+# fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
+# writeLines(c("$$",eq,"$$"), fileConn)
+# close(fileConn)
+
+# Coefficients to LaTeX table
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+
+# Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+# Concatenate in one LaTeX table
+coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+rownames(coefs) <- NULL
+colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+stats_IEDsum   <- bind_rows(coefs,ph1)
+
+kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum',
+    escape = FALSE, digits = 2,
+    caption = "Effect of sleepstages on IEDrate")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
+  pack_rows("Post-hoc comparisons", 8, 28) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+
+
+#########################################
+# correlation between power and IEDrate #
+#########################################
+
+# prepare data
+data_pow_wide <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow_wide <- data_pow_wide[!data_pow_wide$hyplabel == "NO_SCORE", ]
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_1"]   = "S1"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_2"]   = "S2"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_3"]   = "S3"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "Wake"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PRESLEEP"]  = "Pre"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "POSTSLEEP"] = "Post"
+data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_pow_wide$stage    <- data_pow_wide$hyplabel
+data_pow_wide$Patient  <- factor(data_pow_wide$patient)
+data_pow_wide$night    <- factor(data_pow_wide$part)
+data_pow_wide$Delta1_log <- log(data_pow_wide$Delta1)
+data_pow_wide$Delta2_log <- log(data_pow_wide$Delta2)
+data_pow_wide$IEDsum_log <- log(data_pow_wide$IEDsum)
+data_pow_wide$Patient  <- factor(data_pow_wide$patient, levels = c(8:1))
+
+# Delta 1
+data_pow_wide2 <- data_pow_wide %>% mutate(Delta_log_bin = cut(Delta1_log, breaks=seq(-1.5,10.5,1)))
+levels(data_pow_wide2$Delta_log_bin) <- seq(1:12)-2
+data_pow_wide2 <- data_pow_wide2 %>% group_by(Delta_log_bin, IEDsum)
+data_pow_wide2 <- data_pow_wide2 %>% summarise(count = n(), Patient)
+data_pow_wide2 <- data_pow_wide2[order(data_pow_wide2$Patient), ]
+
+# ggplot(data=data_pow_wide2[data_pow_wide2$IEDsum > 0, ], aes(x=Delta1_log_bin, y=IEDsum*6)) +
+D1 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
+  geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
+  scale_size_area(max_size = 3) +
+  # geom_smooth(data=data_pow_wide, aes(x=Delta1_log, y=IEDsum), method="lm",  fullrange = FALSE, color="red") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  theme(axis.text.y = element_blank()) +
+  theme_article() +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  xlab("") +
+  ylab("IEDs per minute") +
+  labs(size = "Proportion") +
+  # coord_cartesian(xlim = c(2,11)) +
+  # coord_cartesian(ylim = c(2,11)) +
+  # facet_wrap(~Patient, ncol = 4, scales="free_x")
+  facet_wrap(~Patient, ncol = 4)
+# ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta1_count.pdf", width = 7, height = 4, units = "in")
+
+# Delta 2
+data_pow_wide2 <- data_pow_wide %>% mutate(Delta_log_bin = cut(Delta2_log, breaks=seq(-1.5,10.5,1)))
+levels(data_pow_wide2$Delta_log_bin) <- seq(1:12)-2
+data_pow_wide2 <- data_pow_wide2 %>% group_by(Delta_log_bin, IEDsum)
+data_pow_wide2 <- data_pow_wide2 %>% summarise(count = n(), Patient)
+data_pow_wide2 <- data_pow_wide2[order(data_pow_wide2$Patient), ]
+
+# ggplot(data=data_pow_wide2[data_pow_wide2$IEDsum > 0, ], aes(x=Delta1_log_bin, y=IEDsum*6)) +
+D2 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
+  geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
+  scale_size_area(max_size = 3) +
+  # geom_smooth(data=data_pow_wide, aes(x=Delta1_log, y=IEDsum), method="lm",  fullrange = FALSE, color="red") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  theme(axis.text.y = element_blank()) +
+  theme_article() +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  # xlab("Delta2 power (log)") 
+  #xlab = expression(mu "Volts" / "Hertz" ^ 2) +
+  # xlab = expression("Force spaces with ~" ~ mu ~ pi * sigma ~ pi) +
+  # ylab( units~are~(mu*g)/L )
+  # xlab(TeX(r'($\alpha  x^\alpha$, where $\alpha \in \{1 \ldots 5\}$)')) +
+  # xlab(TeX(r'($log(\mu V/Hz^2$))')) +
+  xlab(TeX(r'(Delta power ($log(\mu V^2/Hz$)))')) +
+  ylab("IEDs per minute") +
+  labs(size = "Proportion") +
+  # coord_cartesian(xlim = c(2,11)) +
+  # coord_cartesian(ylim = c(2,11)) +
+  # facet_wrap(~Patient, ncol = 4, scales="free_x")
+  facet_wrap(~Patient, ncol = 4)
+# ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta2_count.pdf", width = 7, height = 4, units = "in")
+
+ggarrange(D1, D2,
+          ncol = 1, nrow = 2,
+          vjust = 1, hjust = 0, 
+          labels = c("A","B"), 
+          legend = "right", 
+          common.legend = TRUE, 
+          font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta_count.pdf")
+
+###################################################################
+# Mixed model with both sleep stage and power explaining IED rate #
+###################################################################
+
+# to create p-values
+detach(package:lmerTest)
+library(lmerTest)
+library(lme4)
+
+# determine reference level
+data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
+l1 <- lmer(IEDsum ~ stage + Delta1 + Delta2 + (1 | night) + (1 | patient), data_pow_wide)
+
+summary(l1)
+plot_model(l1)
+
+# # get mathematical description of the model and write to latex
+# eq <- equatiomatic::extract_eq(l1)
+# fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
+# writeLines(c("$$",eq,"$$"), fileConn)
+# close(fileConn)
+
+# Coefficients to LaTeX table
+temp = summary(l1)
+coefs <- as.data.frame(temp$coefficients)
+coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "Delta", "Theta", "Alpha")
+
+# Post-hoc tests to LaTeX table
+temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+ph1 <- ph1[, -4] # remove df since they are at inf
+ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+
+# Concatenate in one LaTeX table
+coefs           <- data.frame(Predi=ctor = row.names(coefs), coefs);
+rownames(coefs) <- NULL
+colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+stats_IEDsum   <- bind_rows(coefs,ph1)
+
+kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum_power',
+    escape = FALSE, digits = 2,
+    caption = "Effect of sleepstages on IEDrate")%>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
+  pack_rows("Power", 8, 9) %>%
+  pack_rows("Post-hoc comparisons", 10, 30) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+
 
 #################
 ## Plot models ##
@@ -1067,7 +1296,7 @@ plot_IEDrate_model <- plot_model(
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
                    labels=c("Post","REM","Wake","S1","S2","S3")) +
-  scale_y_continuous(breaks=c(-2, 8))
+  scale_y_continuous(breaks=c(-2, 0, 8))
 plot_IEDrate_model$data$title = "IED rate (count/minute) model"
 plot_IEDrate_model <- plot_IEDrate_model + facet_wrap(~title, scales="free_y")
 
@@ -1186,7 +1415,7 @@ data_amp_mean_sel    <- data_amp_mean[!data_amp_mean$hyplabel=="Pre", ]
 # plot
 data_amp_mean_sel$title1 = "Standardized spike amplitude"
 data_amp_mean_sel$title2 = "Standardized slow-wave amplitude"
-data_amp_mean_sel$title3 = "Difference standardized spike vs. slow-wave amplitude"
+data_amp_mean_sel$title3 = "Standardized spike vs. slow-wave amplitude"
 
 plot_amp_pos <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=Zposamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
@@ -1466,11 +1695,27 @@ data_psth$template <- factor(data_psth$template)
 data_psth$unit     <- factor(data_psth$unit)
 data_psth$Type     <- factor(data_psth$SUA)
 
+# data_sel <- data_psth[data_psth$hyplabel=="S1", ]
+data_sel <- setNames(aggregate(data_psth$responsive, by = c(list(data_psth$Patient, data_psth$part, data_psth$unit, data_psth$Type)), mean), c("Patient", "part", "unit", "Type", "responsive"))
+data_sel$responsive = as.integer(data_sel$responsive > 0)
+
+t = data_sel %>% count(Patient, part, responsive, Type)
+t2 <- pivot_wider(t, names_from = "Type", names_prefix = "SUA", values_from = "n")
+t3 <- pivot_wider(t2, names_from = "responsive", names_prefix = "responsive", values_from = c("SUA1", "SUA0"))
+# t4 <- pivot_wider(t, names_from = c("responsive", "Type"), values_from = c("n"))
+
+
+############# USE THISFOR TABLE OF SUA/MUA reporting!!! Check where some (silent?) units got lost ###############
+
+
+test <- setNames(aggregate(data_psth$responsive, by = c(list(data_psth$Patient, data_psth$unit, data_psth$template, data_psth$Type)), mean), c("Patient", "unit", "template", "Type", "responsive"))
+
 # select responsive units
 data_psth <- data_psth[c(data_psth$responsive == 1), ]
 
-# remove unresponsive patient
-data_psth <- data_psth[-c(data_psth$Patient == 7), ]
+
+# remove unresponsive patient - already done in MATLAB
+# data_psth <- data_psth[-c(data_psth$Patient == 7), ]
 
 # select SUA
 # data_psth <- data_psth[c(data_psth$SUA == 1), ]
@@ -1494,8 +1739,8 @@ data_psth_mean$Znegrate <- (data_psth_mean$negrate-data_psth_mean$Mnegrate)/data
 data_psth_mean$diffrate <- data_psth_mean$Zposrate - data_psth_mean$Znegrate
 
 # plot
-data_psth_mean$title1 = "Standardized spike count during LFP spike"
-data_psth_mean$title2 = "Standardized spike count during slow wave"
+data_psth_mean$title1 = "Standardized firingrate during spike"
+data_psth_mean$title2 = "Standardized firingrate during slow wave"
 data_psth_mean$title3 = "Relative difference"
 
 data_psth_mean_sel    <- data_psth_mean[!data_psth_mean$hyplabel=="Pre", ]
@@ -1511,8 +1756,9 @@ plot_cnt_pos <- ggplot(data=data_psth_mean_sel, aes(y=hyplabel, x=Zposrate)) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
   theme(legend.position="bottom") +
+  coord_cartesian(xlim = c(-2.5, 2.5)) +
+  scale_x_continuous(breaks = c(-2.5, 0, 2.5)) +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
-  # coord_cartesian(xlim = c(0, 1500)) +
   facet_wrap(~title1)
   
 plot_cnt_neg <- ggplot(data=data_psth_mean_sel, aes(y=hyplabel, x=Znegrate)) +
@@ -1525,7 +1771,8 @@ plot_cnt_neg <- ggplot(data=data_psth_mean_sel, aes(y=hyplabel, x=Znegrate)) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
   theme(legend.position="bottom") +
-  # coord_cartesian(xlim = c(0, 1500)) +
+  coord_cartesian(xlim = c(-2.5, 2.5)) +
+  scale_x_continuous(breaks = c(-2.5, 0, 2.5)) +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
   facet_wrap(~title2)
 
@@ -1540,7 +1787,8 @@ plot_cnt_diff <- ggplot(data=data_psth_mean_sel, aes(y=hyplabel, x=diffrate)) +
   theme_article() + 
   theme(legend.position="bottom") +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
-  # coord_cartesian(xlim = c(-2.5, 2.5)) +
+  coord_cartesian(xlim = c(-4, 4)) +
+  scale_x_continuous(breaks = c(-4, 0, 4)) +
   facet_wrap(~title3)
 
 
@@ -1567,7 +1815,7 @@ data_psth$diffrate   <- data_psth$posrate - data_psth$negrate
 data_psth <- data_psth[c(data_psth$responsive == 1), ]
 
 # remove unresponsive patient
-data_psth <- data_psth[-c(data_psth$Patient == 7), ]
+# data_psth <- data_psth[-c(data_psth$Patient == 7), ]
 
 # remove NaN
 data_psth <- data_psth[!is.nan(data_psth$posrate), ]
@@ -1581,9 +1829,31 @@ data_psth$stage <- factor(data_psth$hyplabel, levels =  c("Pre","S3", "S2", "S1"
 # fit model
 data_psth$stage = relevel(data_psth$stage, ref="Pre")
 
-lpos  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
-lneg  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
-ldiff <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+lpos_SUA  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 1, ], control = lmerControl(optimizer ='Nelder_Mead'))
+lneg_SUA  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 1, ], control = lmerControl(optimizer ='Nelder_Mead'))
+ldiff_SUA <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 1, ], control = lmerControl(optimizer ='Nelder_Mead'))
+
+lpos_MUA  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 0, ], control = lmerControl(optimizer ='Nelder_Mead'))
+lneg_MUA  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 0, ], control = lmerControl(optimizer ='Nelder_Mead'))
+ldiff_MUA <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 0, ], control = lmerControl(optimizer ='Nelder_Mead'))
+
+lpos  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+lneg  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+ldiff <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+
+summary(lpos_SUA)
+plot_model(lpos_SUA)
+summary(lneg_SUA)
+plot_model(lneg_SUA)
+summary(ldiff_SUA)
+plot_model(ldiff_SUA)
+
+summary(lpos_MUA)
+plot_model(lpos_MUA)
+summary(lneg_MUA)
+plot_model(lneg_MUA)
+summary(ldiff_MUA)
+plot_model(ldiff_MUA)
 
 summary(lpos)
 plot_model(lpos)
@@ -1600,6 +1870,10 @@ phpos$df <- NA
 
 temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
 phneg <- as.data.frame(temp$`pairwise differences of stage`)
+colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
+
+temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
+phneg <- as.data.frame(temp$`pairwise differences of stage`)
 colnames(phneg) <- c("Comparison","Estimate","SE","df","Z ratio","p")
 phneg$df <- NA
 
@@ -1607,12 +1881,6 @@ temp = emmeans(ldiff, list(pairwise ~ stage), adjust = "tukey")
 phdiff <- as.data.frame(temp$`pairwise differences of stage`)
 colnames(phdiff) <- c("Comparison","Estimate","SE","df","Z ratio","p")
 phdiff$df <- NA
-
-# Post-hoc comparisons to LaTeX table 
-temp = emmeans(lneg, list(pairwise ~ stage), adjust = "tukey")
-phneg <- as.data.frame(temp$`pairwise differences of stage`)
-colnames(phneg) <- c("Comparison","EstimateNeg","SENeg","dfNeg","Z ratioNeg","pNeg")
-
 
 #########################################
 # Model coefficients to table for LaTeX #
@@ -1641,38 +1909,54 @@ colnames(sdiff)  <- c("Predictor","Estimate","SD","df","t","p")
 sneg$id  <- 1:nrow(sneg)
 coef <- merge(sneg, spos, by="Predictor")
 coef <- merge(coef, sdiff, by="Predictor")
-
 coef <- coef[order(coef$id), ]
 coef <- coef[, c(-1, -7)] 
 rownames(coef)  <- NULL
 
-coef[,3] = round(coef[,3],digits=0)
-coef[,8] = round(coef[,8],digits=0)
-coef[,8] = round(coef[,13],digits=0)
+coef[,3]  = round(coef[,3],digits=0)
+coef[,8]  = round(coef[,8],digits=0)
+coef[,13] = round(coef[,13],digits=0)
 
 coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "Post", "REM")
 coef <- coef[, c(16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)]
 
 # posthoc coefficients
 phneg$id  <- 1:nrow(phneg)
-phneg$dfNeg <- NA
 
-ph <- merge(phneg,phpos)
+ph <- merge(phneg,phpos, by = "Comparison")
 ph <- merge(ph,phdiff, by = "Comparison")
 ph <- ph[order(ph$id), ]
 ph <- ph[, -7] 
 rownames(ph)  <- NULL
 
 # Concatenate in one LaTeX table
-colnames(ph)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
-colnames(coef) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+colnames(ph)   <- c("Predictor", 
+                    "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", 
+                    "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", 
+                    "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+colnames(coef) <- c("Predictor", 
+                    "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", 
+                    "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", 
+                    "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
 
 stats_cnt      <- bind_rows(coef,ph)
-colnames(stats_cnt) <- c("", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+colnames(stats_cnt) <- c("", "Coef $\\beta$","SE($\\beta$)","df", "z", 
+                         "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                         "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                         "\\textit{p}")
 
-stats_cnt[,6]  = ifelse(stats_cnt[,6] > .05, paste(round(stats_cnt[,6],digits=2),sep=""), ifelse(stats_cnt[,6] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_cnt[,6] < .001,"<.001\\textsuperscript{**}", ifelse(stats_cnt[,6] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-stats_cnt[,11] = ifelse(stats_cnt[,11] > .05, paste(round(stats_cnt[,11],digits=2),sep=""), ifelse(stats_cnt[,11] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_cnt[,11] < .001,"<.001\\textsuperscript{**}", ifelse(stats_cnt[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-stats_cnt[,16] = ifelse(stats_cnt[,16] > .05, paste(round(stats_cnt[,16],digits=2),sep=""), ifelse(stats_cnt[,16] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_cnt[,16] < .001,"<.001\\textsuperscript{**}", ifelse(stats_cnt[,16] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_cnt[,6]  = ifelse(stats_cnt[,6] > .05, paste(round(stats_cnt[,6],digits=2),sep=""), 
+                        ifelse(stats_cnt[,6] < .0001, "<.0001\\textsuperscript{***}", 
+                               ifelse(stats_cnt[,6] < .001,"<.001\\textsuperscript{**}", 
+                                      ifelse(stats_cnt[,6] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_cnt[,11] = ifelse(stats_cnt[,11] > .05, paste(round(stats_cnt[,11],digits=2),sep=""), 
+                        ifelse(stats_cnt[,11] < .0001, "<.0001\\textsuperscript{***}", 
+                               ifelse(stats_cnt[,11] < .001,"<.001\\textsuperscript{**}", 
+                                      ifelse(stats_cnt[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_cnt[,16] = ifelse(stats_cnt[,16] > .05, paste(round(stats_cnt[,16],digits=2),sep=""), 
+                        ifelse(stats_cnt[,16] < .0001, "<.0001\\textsuperscript{***}", 
+                               ifelse(stats_cnt[,16] < .001,"<.001\\textsuperscript{**}", 
+                                      ifelse(stats_cnt[,16] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 
 options(knitr.kable.NA = '')
 
@@ -1682,7 +1966,7 @@ kbl(stats_cnt, "latex", booktabs = T, linesep = "", label = 'unit_stats',
   kable_styling(latex_options = c("HOLD_position"))%>%
   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
   pack_rows("Post-hoc comparisons", 8, 28) %>%
-  add_header_above(c(" ", "Slow wave" = 5, "Peak" = 5, "Ratio" = 5)) %>%
+  add_header_above(c(" ", "Spike" = 5, "Wave" = 5, "Ratio" = 5)) %>%
   kable_styling(latex_options = c("scale_down"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/unit_stats.tex")
 
@@ -1708,10 +1992,11 @@ plot_cnt_pos_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5) +
-  ylim(-5, 6) +
-  font_size(labels.x = 9) +
-  scale_x_discrete(expand=expansion(mult=c(0.1,0.2))) +
-  theme( axis.text.y=element_blank())
+  # ylim(-5, 6) +
+  font_size(labels.y = 9, labels.x = 9) +
+  scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-6, 8), breaks = c(-6, 0, 8))
 plot_cnt_pos_model$data$title = "Model of spike count during LFP spike (vs. Pre-sleep)"
 plot_cnt_pos_model$data$title = "Model fixed effects"
 plot_cnt_pos_model <- plot_cnt_pos_model + facet_wrap(~title, scales="free_y")
@@ -1729,9 +2014,10 @@ plot_cnt_neg_model <- plot_model(
   value.offset = 0.5,
   value.size = 2.5) +
   ylim(-3, 2) +
-  font_size(labels.x = 9) +
-  scale_x_discrete(expand=expansion(mult=c(0.1,0.2))) +
-  theme( axis.text.y=element_blank())
+  font_size(labels.y = 9, labels.x = 9) +
+  scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-3, 2), breaks = c(-3, 0, 2))
 plot_cnt_neg_model$data$title = "Model of spike count during slow-wave (vs. Pre-sleep)"
 plot_cnt_neg_model$data$title = "Model fixed effects"
 plot_cnt_neg_model <- plot_cnt_neg_model + facet_wrap(~title, scales="free_y")
@@ -1749,12 +2035,14 @@ plot_cnt_diff_model <- plot_model(
   value.offset = 0.5,
   value.size = 2.5) +
   ylim(-5, 7) +
-  font_size(labels.x = 9) +
-  scale_x_discrete(expand=expansion(mult=c(0.1,0.2))) +
-  theme( axis.text.y=element_blank())
+  font_size(labels.y = 9, labels.x = 9) +
+  scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-5, 7), breaks = c(-5, 0, 7))
 plot_cnt_diff_model$data$title = "Model of spike count difference between LFP spike & slow wave (vs. Pre-sleep)"
 plot_cnt_diff_model$data$title = "Model fixed effects"
 plot_cnt_diff_model <- plot_cnt_diff_model + facet_wrap(~title, scales="free_y")
+
 
 ggarrange(plot_cnt_pos, plot_cnt_pos_model, plot_cnt_neg, plot_cnt_neg_model, plot_cnt_diff, plot_cnt_diff_model,
           ncol = 2, nrow = 3,
@@ -1763,7 +2051,7 @@ ggarrange(plot_cnt_pos, plot_cnt_pos_model, plot_cnt_neg, plot_cnt_neg_model, pl
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/unit_boxplots.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/unit_timelocked_boxplots.pdf")
 
 
 #########################################
@@ -1898,14 +2186,14 @@ data_mean$Bursts_rel <- (data_mean$Bursts-data_mean$Pre_Bursts) / (data_mean$Bur
 
 # plot
 data_mean_sel <- data_mean[!data_mean$hyplabel == "Pre", ] # Remove for plotting
-data_mean_sel$title_CV2   = "CV2 (spike intervals)"
-data_mean_sel$title_CV2_burst   = "CV2 (burst intervals)"
+data_mean_sel$title_CV2   = "CV2 (inter-spike intervals)"
+data_mean_sel$title_CV2_burst   = "CV2 (inter-burst intervals)"
 data_mean_sel$title_FR    = "Firing rate"
 data_mean_sel$title_FRcor = "Firing rate corrected"
-data_mean_sel$title_SUA_FRcor = "Firing rate corrected (SUA)"
-data_mean_sel$title_MUA_FRcor = "Firing rate corrected (MUA)"
-data_mean_sel$title_Amp   = "Amplitude"
-data_mean_sel$title_Burst = "Burst rate"
+data_mean_sel$title_SUA_FRcor = "Standardized firing rate (SUA)"
+data_mean_sel$title_MUA_FRcor = "Standardized firing rate (MUA)"
+data_mean_sel$title_Amp   = "Standardized amplitude"
+data_mean_sel$title_Burst = "Standardized burst rate"
 
 FR_plot <- 
   ggplot(data=data_mean_sel, aes(y=hyplabel, x=FR_rel )) +
@@ -1965,8 +2253,8 @@ Amp_plot <-
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
   facet_wrap(~title_Amp)
 
-CV2_plot <- 
-  ggplot(data=data_mean_sel[data_mean_sel$Type == "SUA", ], aes(y=hyplabel, x=CV2_rel)) +
+CV2_plot <- # original data, not relative, since CV2 is already standardized
+  ggplot(data=data_mean_sel[data_mean_sel$Type == "SUA", ], aes(y=hyplabel, x=CV2)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(size = 0.8, # shape = 17,
@@ -1974,13 +2262,15 @@ CV2_plot <-
              position = position_dodge(width = 0.5)) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
-  coord_cartesian(xlim = c(-0.1, 0.1)) +
-  scale_x_continuous(breaks = c(-0.1, 0, 0.1)) +
+  # coord_cartesian(xlim = c(-0.1, 0.1)) +
+  coord_cartesian(xlim = c(0.6, 1.3)) +
+  # scale_x_continuous(breaks = c(-0.1, 0, 0.1)) +
+  scale_x_continuous(breaks = c(0.6, 1, 1.3)) +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
   facet_wrap(~title_CV2)
 
-CV2_burst_plot <- 
-  ggplot(data=data_mean_sel[data_mean_sel$Type == "SUA", ], aes(y=hyplabel, x=CV2_burst_rel)) +
+CV2_burst_plot <- # original data, not relative, since CV2 is already standardized
+  ggplot(data=data_mean_sel[data_mean_sel$Type == "SUA", ], aes(y=hyplabel, x=CV2_burst)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
   geom_point(size = 0.8, # shape = 17,
@@ -1988,8 +2278,10 @@ CV2_burst_plot <-
              position = position_dodge(width = 0.5)) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
-  coord_cartesian(xlim = c(-0.6, 0.6)) +
-  scale_x_continuous(breaks = c(-0.6, 0, 0.6)) +
+  # coord_cartesian(xlim = c(-0.6, 0.6)) +
+  # scale_x_continuous(breaks = c(-0.6, 0, 0.6)) +
+  coord_cartesian(xlim = c(0, 1)) +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
   facet_wrap(~title_CV2_burst)
 
@@ -2003,8 +2295,8 @@ Burst_plot <- ggplot(data=data_mean_sel[data_mean_sel$Type == "SUA", ], aes(y=hy
   # scale_shape_discrete(label = c("MUA", "SUA")) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
-  # coord_cartesian(xlim = c(-1, 1)) +
-  scale_x_continuous(breaks = c(-1, 0, 1)) +
+  coord_cartesian(xlim = c(-0.8, 0.8)) +
+  scale_x_continuous(breaks = c(-0.8, 0, 0.8)) +
   scale_y_discrete(expand=expansion(mult=c(0.1,0.2))) +
   facet_wrap(~title_Burst)
 
@@ -2045,21 +2337,22 @@ data_sel$stage <- factor(data_sel$hyplabel, levels =  c("Pre","S3", "S2", "S1", 
 # fit model
 data_sel$stage = relevel(data_sel$stage, ref="Pre")
 
-lFR    <- lmer(FR             ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="MUA", ])
-lFRcor_SUA <- lmer(FRcor      ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="SUA", ])
-lFRcor_MUA <- lmer(FRcor      ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="MUA", ])
-lAmp   <- lmer(amplitude      ~ stage + (1 | Patient) + (1 | Unit), data_sel)
-lCV2   <- lmer(CV2_trial      ~ stage + (1 | Patient) + (1 | Unit), data_sel)
-lCV2_burst   <- lmer(CV2_intraburst_trial ~ stage + (1 | Patient) + (1 | Unit), data_sel)
-lBurst <- lmer(burst_trialsum ~ stage + (1 | Patient) + (1 | Unit), data_sel)
+lFR           <- lmer(FR                   ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="MUA", ])
+lFRcor_SUA    <- lmer(FRcor                ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="SUA", ])
+lFRcor_MUA    <- lmer(FRcor                ~ stage + (1 | Patient) + (1 | Unit), data_sel[data_sel$Type=="MUA", ])
+lAmp          <- lmer(amplitude            ~ stage + (1 | Patient) + (1 | Unit), data_sel)
+lCV2          <- lmer(CV2_trial            ~ stage + (1 | Patient) + (1 | Unit), data_sel)
+lCV2_burst    <- lmer(CV2_intraburst_trial ~ stage + (1 | Patient) + (1 | Unit), data_sel)
+lBurst        <- lmer(burst_trialsum       ~ stage + (1 | Patient) + (1 | Unit), data_sel)
 
-summary(lFR)
+summary(lFR) 
 summary(lFRcor_SUA)
 summary(lFRcor_MUA)
 summary(lAmp)
 summary(lCV2)
 summary(lCV2_burst)
 summary(lBurst)
+
 plot_model(lFR)
 plot_model(lFRcor_SUA)
 plot_model(lFRcor_MUA)
@@ -2098,6 +2391,11 @@ temp = emmeans(lCV2, list(pairwise ~ stage), adjust = "tukey")
 phCV2 <- as.data.frame(temp$`pairwise differences of stage`)
 colnames(phCV2) <- c("Comparison","Estimate","SE","df","Z ratio","p")
 phCV2$df <- NA
+
+temp = emmeans(lCV2_burst, list(pairwise ~ stage), adjust = "tukey")
+phCV2_burst <- as.data.frame(temp$`pairwise differences of stage`)
+colnames(phCV2_burst) <- c("Comparison","Estimate","SE","df","Z ratio","p")
+phCV2_burst$df <- NA
 
 temp = emmeans(lBurst, list(pairwise ~ stage), adjust = "tukey")
 phBurst <- as.data.frame(temp$`pairwise differences of stage`)
@@ -2139,6 +2437,12 @@ sCV2            <- data.frame(Predictor = row.names(sCV2), sCV2);
 rownames(sCV2)  <- NULL
 colnames(sCV2)  <- c("Predictor","Estimate","SD","df","t","p")
 
+temp = summary(lCV2_burst)
+sCV2_burst      <- temp$coefficients
+sCV2_burst      <- data.frame(Predictor = row.names(sCV2_burst), sCV2_burst);
+rownames(sCV2_burst)  <- NULL
+colnames(sCV2_burst)  <- c("Predictor","Estimate","SD","df","t","p")
+
 temp = summary(lBurst)
 sBurst          <- temp$coefficients
 sBurst          <- data.frame(Predictor = row.names(sBurst), sBurst);
@@ -2148,54 +2452,93 @@ colnames(sBurst)  <- c("Predictor","Estimate","SD","df","t","p")
 # Model coefficients to LaTeX table (and reorder)
 sFRcor_SUA$id <- 1:nrow(sFRcor_SUA)
 coef <- merge(sFRcor_SUA, sFRcor_MUA, by="Predictor")
-coef <- merge(coef, sBurst, by="Predictor")
-coef <- merge(coef, sAmp, by="Predictor")
-coef <- merge(coef, sCV2, by="Predictor")
+coef <- merge(coef, sBurst,           by="Predictor")
+coef <- merge(coef, sAmp,             by="Predictor")
+coef <- merge(coef, sCV2,             by="Predictor")
+coef <- merge(coef, sCV2_burst,       by="Predictor")
 
 coef <- coef[order(coef$id), ]
 coef <- coef[, c(-1, -7)] 
 rownames(coef)  <- NULL
 
-coef[,3] = round(coef[,3],digits=0)
-coef[,8] = round(coef[,8],digits=0)
+coef[,3]  = round(coef[,3],digits=0)
+coef[,8]  = round(coef[,8],digits=0)
 coef[,13] = round(coef[,13],digits=0)
 coef[,18] = round(coef[,18],digits=0)
+coef[,23] = round(coef[,23],digits=0)
 
 coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "REM", "Post")
-coef <- coef[, c(21,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)]
+coef <- coef[, c(31,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30)]
 
 # posthoc coefficients
+phFR_SUA$id  <- 1:nrow(phFR_SUA)
 
-phFRcor$id  <- 1:nrow(phFR)
-# phFR$dfNeg <- NA
-
-ph <- merge(phFRcor,phAmp, by = "Comparison")
-ph <- merge(ph,phCV2,   by = "Comparison")
-ph <- merge(ph,phBurst, by = "Comparison")
+ph <- merge(phFR_SUA, phFR_MUA, by="Comparison")
+ph <- merge(ph,phBurst,     by = "Comparison")
+ph <- merge(ph,phAmp,       by = "Comparison")
+ph <- merge(ph,phCV2,       by = "Comparison")
+ph <- merge(ph,phCV2_burst, by = "Comparison")
 ph <- ph[order(ph$id), ]
 ph <- ph[, -7] 
 rownames(ph)  <- NULL
 
 # Concatenate in one LaTeX table
-colnames(ph)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
-colnames(coef) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
+colnames(ph)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}")
+colnames(coef) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","df", "z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                    "\\textit{p}")
 
 stats_window <- bind_rows(coef,ph)
-colnames(stats_window) <- c("", "Coef $\\beta$","SE($\\beta$)","df", "z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", "\\textit{p}")
-stats_window[,6]  = ifelse(stats_window[,6]  > .05, paste(round(stats_window[,6], digits=2),sep=""), ifelse(stats_window[,6]  < .0001,  "<.0001\\textsuperscript{***}",  ifelse(stats_window[,6] < .001,"<.001\\textsuperscript{**}", ifelse(stats_window[,6]  < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-stats_window[,11] = ifelse(stats_window[,11] > .05, paste(round(stats_window[,11],digits=2),sep=""), ifelse(stats_window[,11] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_window[,11] < .001,"<.001\\textsuperscript{**}", ifelse(stats_window[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-stats_window[,16] = ifelse(stats_window[,16] > .05, paste(round(stats_window[,16],digits=2),sep=""), ifelse(stats_window[,16] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_window[,16] < .001,"<.001\\textsuperscript{**}", ifelse(stats_window[,16] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-stats_window[,21] = ifelse(stats_window[,21] > .05, paste(round(stats_window[,21],digits=2),sep=""), ifelse(stats_window[,21] < .0001, "<.0001\\textsuperscript{***}", ifelse(stats_window[,21] < .001,"<.001\\textsuperscript{**}", ifelse(stats_window[,21] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-
+colnames(stats_window) <- c("", "Coef $\\beta$","SE($\\beta$)","df", "z", 
+                            "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                            "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                            "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                            "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                            "\\textit{p}", "Coef $\\beta$","SE($\\beta$)","df","z", 
+                            "\\textit{p}")
+stats_window[,6]  = ifelse(stats_window[,6]  > .05, paste(round(stats_window[,6], digits=2),sep=""), 
+                           ifelse(stats_window[,6]  < .0001, "<.0001\\textsuperscript{***}",
+                                  ifelse(stats_window[,6]  < .001, "<.001\\textsuperscript{**}",
+                                         ifelse(stats_window[,6]  < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_window[,11] = ifelse(stats_window[,11] > .05, paste(round(stats_window[,11],digits=2),sep=""), 
+                           ifelse(stats_window[,11] < .0001, "<.0001\\textsuperscript{***}", 
+                                  ifelse(stats_window[,11] < .001,"<.001\\textsuperscript{**}", 
+                                         ifelse(stats_window[,11] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_window[,16] = ifelse(stats_window[,16] > .05, paste(round(stats_window[,16],digits=2),sep=""), 
+                           ifelse(stats_window[,16] < .0001, "<.0001\\textsuperscript{***}", 
+                                  ifelse(stats_window[,16] < .001,"<.001\\textsuperscript{**}", 
+                                         ifelse(stats_window[,16] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_window[,21] = ifelse(stats_window[,21] > .05, paste(round(stats_window[,21],digits=2),sep=""), 
+                           ifelse(stats_window[,21] < .0001, "<.0001\\textsuperscript{***}", 
+                                  ifelse(stats_window[,21] < .001,"<.001\\textsuperscript{**}", 
+                                         ifelse(stats_window[,21] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_window[,26] = ifelse(stats_window[,26] > .05, paste(round(stats_window[,26],digits=2),sep=""), 
+                           ifelse(stats_window[,26] < .0001, "<.0001\\textsuperscript{***}", 
+                                  ifelse(stats_window[,26] < .001,"<.001\\textsuperscript{**}", 
+                                         ifelse(stats_window[,26] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+stats_window[,31] = ifelse(stats_window[,31] > .05, paste(round(stats_window[,31],digits=2),sep=""), 
+                           ifelse(stats_window[,31] < .0001, "<.0001\\textsuperscript{***}", 
+                                  ifelse(stats_window[,31] < .001,"<.001\\textsuperscript{**}", 
+                                         ifelse(stats_window[,31] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 options(knitr.kable.NA = '')
 
 kbl(stats_window, "latex", booktabs = T, linesep = "", label = 'unit_window_stats',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleep stage on firing rates during IED")%>%
+    caption = "Effect of sleep stage on unit behaviour outside of IEDs")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
   pack_rows("Post-hoc comparisons", 8, 28) %>%
-  add_header_above(c(" ", "Firing Rate" = 5, "Amplitude" = 5, "CV2" = 5, "Bursts" = 5)) %>%
+  add_header_above(c(" ", "Firing Rate (SUA)" = 5, "Firing Rate (MUA)" = 5, "Bursts" = 5, "Amplitude" = 5, "CV2" = 5, "CV2 (bursts)" = 5)) %>%
   kable_styling(latex_options = c("scale_down"))%>%
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/unit_window_stats.tex")
 
@@ -2219,8 +2562,9 @@ FRcor_SUA_plot_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
- 
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-5, -1), breaks = c(-5, -1))
+
 FRcor_MUA_plot_model <- plot_model(
   lFRcor_MUA,  
   title = "",
@@ -2232,17 +2576,15 @@ FRcor_MUA_plot_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5) +
-  # axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
-  # ylim(-3, 0) + 
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-7, 1), breaks = c(-7, 0, 1))
 
 CV2_plot_model <- plot_model(
   lCV2,  
   title = "",
   colors = "bw",
-  # axis.labels = "",
   axis.title = "",
   show.values = TRUE,
   show.p = TRUE,
@@ -2252,15 +2594,15 @@ CV2_plot_model <- plot_model(
   value.size = 2.5,
   axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
-  ylim(-0.01, 0.1) + 
-  scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
+  scale_x_discrete(expand=expansion(mult=c(0.1, 0.2)), 
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(0, 0.15), breaks = c(0, 0.15))
+
 
 CV2_burst_plot_model <- plot_model(
   lCV2_burst,  
   title = "",
   colors = "bw",
-  # axis.labels = "",
   axis.title = "",
   show.values = TRUE,
   show.p = TRUE,
@@ -2271,15 +2613,14 @@ CV2_burst_plot_model <- plot_model(
   axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   ylim(-0.05, 0.05) +
-  # scale_y_continuous(breaks=c(-0.05, 0, 0.05)) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-0.04, 0.01), breaks = c(-0.04, 0, 0.01))
 
 Amp_plot_model <- plot_model(
   lAmp,  
   title = "",
   colors = "bw",
-  # axis.labels = "",
   axis.title = "",
   show.values = TRUE,
   show.p = TRUE,
@@ -2290,13 +2631,13 @@ Amp_plot_model <- plot_model(
   axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-2, 0.5), breaks = c(-2, 0, 0.5))
 
 Burst_plot_model <- plot_model(
   lBurst,  
   title = "",
   colors = "bw",
-  # axis.labels = "",
   axis.title = "",
   show.values = TRUE,
   show.p = TRUE,
@@ -2307,7 +2648,8 @@ Burst_plot_model <- plot_model(
   axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3"))
+                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-20, 0), breaks = c(-20, 0))
 
 Burst_plot_model$data$title = "Model fixed effects"
 Burst_plot_model <- Burst_plot_model + facet_wrap(~title, scales="free_y")
