@@ -53,17 +53,16 @@ if ~onPath
 end
 
 for ipart = 1:size(SpikeWaveforms)
-    for markername = string(fieldnames(SpikeWaveforms{ipart}))'
         ft_progress('init', 'text');
-        for icluster = 1:size(SpikeWaveforms{ipart}.(markername), 2)
+        for icluster = 1:size(SpikeWaveforms{ipart}, 2)
 
-            ft_progress(0, 'Compute waveform for part %d, %s, cluster %d/%d', ipart, char(markername), icluster, size(SpikeWaveforms{ipart}.(markername), 2));
+            ft_progress(0, 'Compute waveform for part %d, cluster %d/%d', ipart, icluster, size(SpikeWaveforms{ipart}, 2));
             ok = true;
 
-            if ~isempty(SpikeWaveforms{ipart}.(markername){icluster})
+            if ~isempty(SpikeWaveforms{ipart}{icluster})
 
                 %average waveform
-                evalc('waveformavg = ft_timelockanalysis([], SpikeWaveforms{ipart}.(markername){icluster});');%remove text output
+                evalc('waveformavg = ft_timelockanalysis([], SpikeWaveforms{ipart}{icluster});');%remove text output
 
                 %interpolate the averaged waveform to have more precise values
                 time_temp        = linspace(waveformavg.time(1),waveformavg.time(end),1000);
@@ -130,43 +129,43 @@ for ipart = 1:size(SpikeWaveforms)
 
             %store for output
             
-            if isempty(SpikeWaveforms{ipart}.(markername){icluster})
-                stats{ipart}.(markername).label{icluster}          = [];
-                stats{ipart}.(markername).waveformavg{icluster}    = [];
+            if isempty(SpikeWaveforms{ipart}{icluster})
+                stats{ipart}.label{icluster}          = [];
+                stats{ipart}.waveformavg{icluster}    = [];
             else
-                stats{ipart}.(markername).label{icluster}          = SpikeWaveforms{ipart}.(markername){icluster}.label{1};
-                stats{ipart}.(markername).waveformavg{icluster}    = waveformavg;
+                stats{ipart}.label{icluster}          = SpikeWaveforms{ipart}{icluster}.label{1};
+                stats{ipart}.waveformavg{icluster}    = waveformavg;
             end
             if ok
-                stats{ipart}.(markername).amplitude.val(icluster)  = amplitude.val;
-                stats{ipart}.(markername).amplitude.x(icluster)    = amplitude.x;
-                stats{ipart}.(markername).amplitude.y(icluster)    = amplitude.y;
-                stats{ipart}.(markername).halfwidth.val(icluster)  = halfwidth.val;
-                stats{ipart}.(markername).halfwidth.x(icluster,:)  = halfwidth.x;
-                stats{ipart}.(markername).halfwidth.y(icluster,:)  = halfwidth.y;
-                stats{ipart}.(markername).peaktrough.val(icluster) = peaktrough.val;
-                stats{ipart}.(markername).peaktrough.x(icluster,:) = peaktrough.x;
-                stats{ipart}.(markername).peaktrough.y(icluster,:) = peaktrough.y;
-                stats{ipart}.(markername).troughpeak.val(icluster) = troughpeak.val;
-                stats{ipart}.(markername).troughpeak.x(icluster,:) = troughpeak.x;
-                stats{ipart}.(markername).troughpeak.y(icluster,:) = troughpeak.y;
+                stats{ipart}.amplitude.val(icluster)  = amplitude.val;
+                stats{ipart}.amplitude.x(icluster)    = amplitude.x;
+                stats{ipart}.amplitude.y(icluster)    = amplitude.y;
+                stats{ipart}.halfwidth.val(icluster)  = halfwidth.val;
+                stats{ipart}.halfwidth.x(icluster,:)  = halfwidth.x;
+                stats{ipart}.halfwidth.y(icluster,:)  = halfwidth.y;
+                stats{ipart}.peaktrough.val(icluster) = peaktrough.val;
+                stats{ipart}.peaktrough.x(icluster,:) = peaktrough.x;
+                stats{ipart}.peaktrough.y(icluster,:) = peaktrough.y;
+                stats{ipart}.troughpeak.val(icluster) = troughpeak.val;
+                stats{ipart}.troughpeak.x(icluster,:) = troughpeak.x;
+                stats{ipart}.troughpeak.y(icluster,:) = troughpeak.y;
             else
-                stats{ipart}.(markername).amplitude.val(icluster)  = nan;
-                stats{ipart}.(markername).amplitude.x(icluster)    = nan;
-                stats{ipart}.(markername).amplitude.y(icluster)    = nan;
-                stats{ipart}.(markername).halfwidth.val(icluster)  = nan;
-                stats{ipart}.(markername).halfwidth.x(icluster,:)  = [nan nan];
-                stats{ipart}.(markername).halfwidth.y(icluster,:)  = [nan nan];
-                stats{ipart}.(markername).peaktrough.val(icluster) = nan;
-                stats{ipart}.(markername).peaktrough.x(icluster,:) = [nan nan];
-                stats{ipart}.(markername).peaktrough.y(icluster,:) = [nan nan];
-                stats{ipart}.(markername).troughpeak.val(icluster) = nan;
-                stats{ipart}.(markername).troughpeak.x(icluster,:) = [nan nan];
-                stats{ipart}.(markername).troughpeak.y(icluster,:) = [nan nan];
+                stats{ipart}.amplitude.val(icluster)  = nan;
+                stats{ipart}.amplitude.x(icluster)    = nan;
+                stats{ipart}.amplitude.y(icluster)    = nan;
+                stats{ipart}.halfwidth.val(icluster)  = nan;
+                stats{ipart}.halfwidth.x(icluster,:)  = [nan nan];
+                stats{ipart}.halfwidth.y(icluster,:)  = [nan nan];
+                stats{ipart}.peaktrough.val(icluster) = nan;
+                stats{ipart}.peaktrough.x(icluster,:) = [nan nan];
+                stats{ipart}.peaktrough.y(icluster,:) = [nan nan];
+                stats{ipart}.troughpeak.val(icluster) = nan;
+                stats{ipart}.troughpeak.x(icluster,:) = [nan nan];
+                stats{ipart}.troughpeak.y(icluster,:) = [nan nan];
             end
         end
         ft_progress('close');
-    end
+%     end
 end
 
 save(fname_out, 'stats', '-v7.3');
