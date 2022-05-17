@@ -96,7 +96,13 @@ for ipart = 1 : size(cfg.directorylist, 2)
                 
                 temp                            = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{ichan},'.ncs']));
                 fname                           = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
-                filelist{ipart}(idir, ichan)    = string(fname);
+                fname_filelist = fname;
+                if ispc %correct file name for its use with linux
+                    fname_filelist = strrep(fname_filelist, '\\lexport\iss01.', '/network/lustre/iss01/');
+                    fname_filelist = strrep(fname_filelist, '\\l2export\iss02.', '/network/lustre/iss02/');
+                    fname_filelist = strrep(fname_filelist, '\', '/');
+                end
+                filelist{ipart}(idir, ichan)    = string(fname_filelist);
                 
                 if ichan == 1
                     fprintf('Reading header & timestamps %s\n', fname)
@@ -118,7 +124,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
         subjdir     = cfg.prefix(1:end-1);
         partdir     = ['p', num2str(ipart)];
         fname       = fullfile(cfg.datasavedir, subjdir, partdir, chandir, 'filelist.txt');
-        
+       
         % if it doesnt exist, create directory
         if ~exist(fullfile(cfg.datasavedir, subjdir), 'dir')
             fprintf('Creating directory %s', fullfile(cfg.datasavedir, subjdir));
@@ -159,7 +165,13 @@ for ipart = 1 : size(cfg.directorylist, 2)
                     
                     temp                                    = dir(fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, ['*', cfg.circus.channel{chanlist(ichan)},'.ncs']));
                     fname                                   = fullfile(cfg.rawdir, cfg.directorylist{ipart}{idir}, temp.name);
-                    filelist{ipart}.(chandir)(idir, ichan) = string(fname);
+                    fname_filelist = fname;
+                    if ispc %correct file name for its use with linux
+                        fname_filelist = strrep(fname_filelist, '\\lexport\iss01.', '/network/lustre/iss01/');
+                        fname_filelist = strrep(fname_filelist, '\\lexport\iss02.', '/network/lustre/iss02/');
+                        fname_filelist = strrep(fname_filelist, '\', '/');
+                    end
+                    filelist{ipart}.(chandir)(idir, ichan) = string(fname_filelist);
                     
                     if ichan == 1
                         fprintf('Reading header & timestamps %s\n', fname)
