@@ -152,6 +152,7 @@ for ipart = 1 : size(SpikeTrials, 2)
 
                 % get timings and ISIs per trial
                 indx            = SpikeTrials{ipart}.(markername).trial{itemp} == itrial;
+                trial_length    = SpikeTrials{ipart}.(markername).trialtime(itrial, 2) - SpikeTrials{ipart}.(markername).trialtime(itrial, 1);
                 t               = SpikeTrials{ipart}.(markername).time{itemp}(indx);
                 isi_all         = diff(t);
                 amps            = SpikeTrials{ipart}.(markername).amplitude{itemp}(indx);
@@ -193,7 +194,7 @@ for ipart = 1 : size(SpikeTrials, 2)
                 
                 % basic descriptives
                 stats{ipart}.(markername){itemp}.trialavg_isi(itrial)              = nanmean(isi_all);
-                stats{ipart}.(markername){itemp}.trialfreq(itrial)                 = 1/nanmean(isi_all);
+                stats{ipart}.(markername){itemp}.trialfreq(itrial)                 = length(t) / trial_length;%1/nanmean(isi_all);
                 stats{ipart}.(markername){itemp}.trialfreq_corrected(itrial)       = 1/nanmean(stats{ipart}.(markername){itemp}.isi_corrected{itrial});
                 stats{ipart}.(markername){itemp}.spikecount(itrial)                = size(t, 2);
                 stats{ipart}.(markername){itemp}.spikecount_corrected(itrial)      = size(stats{ipart}.(markername){itemp}.t_corrected{itrial}, 2);
@@ -262,7 +263,17 @@ for ipart = 1 : size(SpikeTrials, 2)
             try
                 
                 % For trial data
-                
+                if length(spikedata{itrial}) < 2 
+                    %need at least 2 spike trains to compute synchrony
+                    stats{ipart}.(markername){itemp}.dist(:, itrial)            = nan;
+                    stats{ipart}.(markername){itemp}.dist_label                 = nan;
+                    stats{ipart}.(markername){itemp}.dist_perm(:, itrial)       = nan;
+                    stats{ipart}.(markername){itemp}.dist_spikenr(:, itrial)    = nan;
+                    stats{ipart}.(markername){itemp}.dist_isi(:, itrial)        = nan;
+                    stats{ipart}.(markername){itemp}.dist_pooled(:, itrial)     = nan;
+                    stats{ipart}.(markername){itemp}.dist_psth(:, itrial)       = nan;
+                    continue
+                end
                 spikes                  = spikedata{itrial};
                 ori_spikes              = spikes; %used to create control spikes data
                 para.tmin               = SpikeTrials{ipart}.(markername).trialtime(itrial,1);
