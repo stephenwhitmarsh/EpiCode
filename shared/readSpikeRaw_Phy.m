@@ -10,8 +10,8 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 %    [SpikeRaw] = readSpikeRaw_Phy(cfg, force, varargin)
 %
 % If data were checked with Phy, neurons are filtered and only the 'good' or
-% 'mua' are read. Otherwise (data never opened with Phy), all neurons are
-% read.
+% 'mua' are read. The data labeled with noise, or not labelled, are not loaded. 
+% Otherwise (data never opened with Phy), all neurons are read.
 %
 % Necessary input:
 % cfg.prefix            = prefix to output files
@@ -54,6 +54,7 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
 cfg.circus.channelname   = ft_getopt(cfg.circus, 'channelname', []);
+cfg.circus.maxchan       = ft_getopt(cfg.circus, 'maxchan', 'phy');
 
 % check if depencies is on path, if not add
 w = which('readNPY');
@@ -101,7 +102,7 @@ for ipart = cfg.circus.part_list
     
     % to correct maxchan for multiple channels
     channelcount(1) = 0; 
-    if size(channelname, 2) > 1
+    if ~strcmp(channelname, 'none')    
         for i = 2 : size(channelname, 2)
             channelcount(i) = channelcount(i-1) + sum(channelname{i-1} == string(cfg.circus.channelname));
         end
@@ -132,13 +133,17 @@ for ipart = cfg.circus.part_list
         phydata.templates               = readNPY(fullfile(phydir, 'templates.npy'));       %templates waveforms, before merging (merging in phy change clusters but not templates)
         phydata.amplitudes              = readNPY(fullfile(phydir, 'amplitudes.npy'));      %amplitude of each spike, relative to template
 
-        if exist(fullfile(phydir, 'cluster_info.tsv'), 'file') && exist(fullfile(phydir, 'spike_clusters.npy'), 'file')
+        if exist(fullfile(phydir, 'spike_clusters.npy'), 'file')
             ischecked                   = true;
             phydata.cluster_group       = tdfread(fullfile(phydir, 'cluster_group.tsv'));   %phy classification.
-            phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));    %id, amp, ch, depth, fr, group, n_spikes, sh
+            try %sometimes this file is not created, I do not understand why
+                phydata.cluster_info        = tdfread(fullfile(phydir, 'cluster_info.tsv'));    %id, amp, ch, depth, fr, group, n_spikes, sh
+            catch
+                phydata.cluster_info = [];
+            end
             phydata.spike_clusters      = readNPY(fullfile(phydir, 'spike_clusters.npy'));  %for each timing, which (merged) cluster. Include garbage clusters
             
-            %correct difference in field names depending on the Spyking-Circus' version
+            % correct difference in field names depending on the Spyking-Circus' version
             try
                 phydata.cluster_info.cluster_id = phydata.cluster_info.id;
             catch
@@ -148,7 +153,7 @@ for ipart = cfg.circus.part_list
             warning('Data were not checked on Phy : loading of all templates');
         end
         
-        %convert templates from 'whitened' to data units
+        % convert templates from 'whitened' to data units
         if size(phydata.templates, 3) ~= size(phydata.whitening_mat_inv, 2)
             disp('Size of templates does not match size of whitening matrix - did you accidentally enable ''sparse_export''?');
         else
@@ -158,7 +163,7 @@ for ipart = cfg.circus.part_list
             phydata.templates = permute(phydata.templates, [1 3 2]);             %permute to be consistent to SpikeRaw struct from MATLAB data
         end
         
-        %convert amplitudes from template-normalized to data units
+        % convert amplitudes from template-normalized to data units
         for itemplate = 1:size(phydata.templates, 1)
             timings_idx                     = find(phydata.spike_templates == itemplate-1); %-1 because template numerotation starts at zero
             template_amplitude              = max(max(phydata.templates(itemplate, :, :)))-min(min(phydata.templates(itemplate, :, :)));
@@ -212,13 +217,16 @@ for ipart = cfg.circus.part_list
             SpikeRaw{ipart}.timestamp{icluster}             = SpikeRaw{ipart}.sample{icluster}; % DUMMY TIMESTAMPS!
 
             % add Phy group info (good, mua)
+            try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id   == cluster_list(icluster)); 
+            catch; end %not always available, depending of the Spyking-Circus version
             if ischecked
                 SpikeRaw{ipart}.cluster_group{icluster}     = phydata.cluster_group.group(phydata.cluster_group.cluster_id  == cluster_list(icluster), :);
+            end
+            if strcmp(cfg.circus.maxchan, 'phy') && ~isempty(phydata.cluster_info)
                 SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster)) + channelcount(chandir == string(channelname));
-                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster));
-                try SpikeRaw{ipart}.purity(icluster)        = phydata.cluster_info.purity(phydata.cluster_info.cluster_id   == cluster_list(icluster)); catch; end
+                SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
             else
-                [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
+                [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 2));
                 SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1 + channelcount(chandir == string(channelname)); % -1 because chans idx begin at zero with Phy
                 SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = imaxchan - 1; % -1 because chans idx begin at zero with Phy
             end   
