@@ -142,16 +142,16 @@ end
 % % make background white
 % set(hfig,'Color','w');
 
-% set correct printing properties
-set(hfig,'PaperType','<custom>');
-%set(h,'PaperUnits','centimeters');
-if strcmpi(get(hfig,'PaperUnits'),'centimeters')
-    set(hfig,'PaperSize',[20 15]);
-    set(hfig,'PaperPosition',[0 0 20 15]);
-elseif strcmpi(get(hfig,'PaperUnits'),'inches')
-    set(hfig,'PaperSize',[8 6]);
-    set(hfig,'PaperPosition',[0 0 8 6]);
-end
+% % set correct printing properties
+% set(hfig,'PaperType','<custom>');
+% %set(h,'PaperUnits','centimeters');
+% if strcmpi(get(hfig,'PaperUnits'),'centimeters')
+%     set(hfig,'PaperSize',[20 15]);
+%     set(hfig,'PaperPosition',[0 0 20 15]);
+% elseif strcmpi(get(hfig,'PaperUnits'),'inches')
+%     set(hfig,'PaperSize',[8 6]);
+%     set(hfig,'PaperPosition',[0 0 8 6]);
+% end
 
 % set output
 if nargout > 0

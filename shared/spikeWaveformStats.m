@@ -134,6 +134,7 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.waveformavg{icluster}    = [];
             else
                 stats{ipart}.label{icluster}          = SpikeWaveforms{ipart}{icluster}.label{1};
+                stats{ipart}.cluster_group{icluster}  = SpikeWaveforms{ipart}{icluster}.cluster_group;
                 stats{ipart}.waveformavg{icluster}    = waveformavg;
             end
             if ok
@@ -149,6 +150,7 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.troughpeak.val(icluster) = troughpeak.val;
                 stats{ipart}.troughpeak.x(icluster,:) = troughpeak.x;
                 stats{ipart}.troughpeak.y(icluster,:) = troughpeak.y;
+                stats{ipart}.peak_direction(icluster) = -flip;
             else
                 stats{ipart}.amplitude.val(icluster)  = nan;
                 stats{ipart}.amplitude.x(icluster)    = nan;
@@ -162,6 +164,7 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.troughpeak.val(icluster) = nan;
                 stats{ipart}.troughpeak.x(icluster,:) = [nan nan];
                 stats{ipart}.troughpeak.y(icluster,:) = [nan nan];
+                stats{ipart}.peak_direction(icluster) = nan;
             end
         end
         ft_progress('close');

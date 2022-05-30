@@ -1,4 +1,4 @@
-function [FFT] = FFTtrials(cfg, force)
+function [FFT] = FFTtrials(cfg, LFP, force)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -80,8 +80,8 @@ end
 
 if ~isempty(cfg.FFT.name)
     
-    cfg.LFP.name = cfg.FFT.name;
-    LFP = readLFP(cfg);
+%     cfg.LFP.name = cfg.FFT.name;
+%     LFP = readLFP(cfg);
     
     % loop over markers
     for markername = string(cfg.FFT.name)
@@ -118,7 +118,7 @@ if ~isempty(cfg.FFT.name)
             cfgtemp.output                  = 'pow';
             cfgtemp.taper                   = 'hanning';
             cfgtemp.keeptrials              = cfg.FFT.keeptrials;
-            cfgtemp.foi                     = 0:0.1:5;
+            cfgtemp.foi                     = cfg.FFT.foi.(markername);
             cfgtemp.pad                     = 'nextpow2';
             FFT{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
             
