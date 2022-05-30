@@ -313,7 +313,17 @@ for markername = string(cfg.LFP.name)
                 for ievent = 1 : size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2)
                     
                     ss = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * dat.fsample);
-                    es = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) * dat.fsample);
+                    if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
+                        es = ss;
+                        idx_end = ievent;
+                    else
+                        idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
+                        es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) * dat.fsample);
+                    end
+                    
+                    if isempty(es)
+                        continue
+                    end
                     
                     Startsample(ievent) = ss + cfg.epoch.toi.(markername)(1) * dat.fsample - cfg.epoch.pad.(markername) * dat.fsample;
                     Endsample(ievent)   = es + cfg.epoch.toi.(markername)(2) * dat.fsample + cfg.epoch.pad.(markername) * dat.fsample;
@@ -324,13 +334,13 @@ for markername = string(cfg.LFP.name)
                     Filenr(ievent)          = ifile;
                     Directory(ievent,:)     = cfg.directorylist{ipart}{idir};
                     StartTrialnr(ievent)    = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(ievent);
-                    EndTrialnr(ievent)      = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(ievent);
+                    EndTrialnr(ievent)      = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(idx_end);
                     Starttime(ievent)       = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.epoch.toi.(markername)(1));
-                    Endtime(ievent)         = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent)   + seconds(cfg.epoch.toi.(markername)(2));
+                    Endtime(ievent)         = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx_end)   + seconds(cfg.epoch.toi.(markername)(2));
                     
                     % will be used to find overlap between events
                     trlstart                = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(1);
-                    trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2);       
+                    trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) + cfg.epoch.toi.(markername)(2);       
 
                     % find overlap
                     for iother = 1 : size(cfg.LFP.overlap, 2)
