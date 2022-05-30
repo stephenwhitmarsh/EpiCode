@@ -1,4 +1,4 @@
-function dtx_savefigure(fig, fname, varargin)
+function savefigure_own(fig, fname, varargin)
 %dtx_savefigure(fig,fname, varargin)
 
 %default close_fig is false, will become true later if some varargin == 'close'
