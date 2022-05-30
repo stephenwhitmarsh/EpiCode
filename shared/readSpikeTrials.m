@@ -210,6 +210,7 @@ for markername = string(cfg.spike.name)
                 continue
             end
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
+
                 continue
             end
             

@@ -211,6 +211,10 @@ config{4}.plot.micro    = {'mLMI1_1', 'mLMI1_7'};
 config{4}.plot.ipart    = 1;
 config{4}.plot.postfix  = [];
 config{4}.plot.ievent   = 14;
+MuseStruct{ipatient} = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
+
+%request katia 21feb
+Figure0(config{3}, MuseStruct{3});
 
 config                  = pnh_setparams;
 config{5} = config{1};

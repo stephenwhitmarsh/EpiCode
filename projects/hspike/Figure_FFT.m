@@ -33,9 +33,10 @@ ft_defaults
 
 %% load data
 for ipatient = 1:8
-    config                      = hspike_setparams;
-    config{ipatient}.FFT.name   = {'window'};
-    FFT{ipatient}               = FFTtrials(config{ipatient}, false);
+    config                          = hspike_setparams;
+    config{ipatient}.FFT.name       = {'window'};
+    config{ipatient}.FFT.postfix    = {'_noWelch'};    
+    FFT{ipatient}                   = FFTtrials(config{ipatient}, false);
 end
 
 %% average over channels - all stages
@@ -112,7 +113,8 @@ FFT_all.Post    = FFT_all.POSTSLEEP;    FFT_all = rmfield(FFT_all, 'POSTSLEEP');
 FFT_all = rmfield(FFT_all, 'NO_SCORE');
 FFT_all = rmfield(FFT_all, 'PRESLEEP');
 
-hyplabels = ["S3", "S2", "S1", "REM", "Post", "Wake"];
+% hyplabels = ["S3", "S2", "S1", "REM", "Post", "Wake"];
+hyplabels = ["S3", "S2", "S1", "REM", "Wake"];
 
 %% plot
 
@@ -127,16 +129,26 @@ set(fig, 'PaperPosition', [0 0 1 1]);
 set(fig, 'Renderer', 'Painters');
 hold on;
 set(gca, 'clipping', 'on');    
+ylim([-0.6, 2.8]); 
 
 
 cm = cbrewer('qual', 'Set2', size(fields(FFT_all), 1));
+cm(strcmp(hyplabels, 'Wake'), :) = [0, 0, 0];
 
 % plot variance
 ic = 1;
 for hyplabel = hyplabels
     m = mean(FFT_all.(hyplabel));
     sem = std(FFT_all.(hyplabel)) / sqrt(size(FFT_all.(hyplabel), 1));
-    patch([x, x(end:-1:1)], [m - sem, m(end:-1:1) + sem(end:-1:1)], cm(ic, :), 'facealpha', 0.5, 'edgecolor', 'none');
+    m = smooth(m)';
+    sem = smooth(sem)';    
+    [~, indx] = max(m);
+    maxfreq.(hyplabel) = x(indx); 
+    maxindx.(hyplabel) = indx; 
+    maxpow.(hyplabel)  = m(indx); 
+    if ~strcmp(hyplabel, 'Wake')
+        p = patch([x, x(end:-1:1)], [m - sem, m(end:-1:1) + sem(end:-1:1)], cm(ic, :), 'facealpha', 0.5, 'edgecolor', 'none'); uistack(p, 'bottom');
+    end
     ic = ic + 1;
 end
 
@@ -144,41 +156,45 @@ end
 ic = 1;
 for hyplabel = hyplabels
     m = mean(FFT_all.(hyplabel));
-    sem = std(FFT_all.(hyplabel)) / sqrt(size(FFT_all.(hyplabel), 1));
-    plot(x, m, 'color', cm(ic, :), 'LineWidth', 2);
-    ic = ic + 1;
-end
-
-% plot for legend
-ic = 1;
-for hyplabel = hyplabels
-    h(ic) = patch([0, 0], [0,0], cm(ic, :), 'facealpha', 1, 'edgecolor', 'none');
+    m = smooth(m);
+    %     plot(x, m, 'color', cm(ic, :), 'LineWidth', 2);
+    if ~strcmp(hyplabel, 'Wake')
+        l = plot(x, m, 'color', cm(ic, :), 'LineWidth', 2); uistack(l, 'bottom');
+    else
+        l = plot(x, m, 'color', cm(ic, :), 'LineWidth', 1, 'LineStyle', '--'); uistack(l, 'bottom');
+    end
     ic = ic + 1;
 end
 
 ax = axis;
 
 % add zero line
-l = plot([ax(1), ax(2)], [0, 0], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+% l = plot([ax(1), ax(2)], [0, 0], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+
+% plot max freq lines
+for hyplabel = ["S3", "REM"]
+%     l = plot([maxfreq.(hyplabel), maxfreq.(hyplabel)], [ax(3), maxpow.(hyplabel)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+    l = plot([maxfreq.(hyplabel), maxfreq.(hyplabel)], [ax(3),ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+end
 
 % add patches for frequency bands
-
 l = plot([2.5, 2.5],    [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
 l = plot([4, 4],        [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-text(1.25,  2.2, 'Delta1', 'HorizontalAlignment', 'center');
-text(3.25,  2.2, 'Delta2', 'HorizontalAlignment', 'center');
-xticks([0.1, 2.5, 4, 5]);
-xlim([0.1, 5]);
+% text(1.25,  -0.5, 'Delta1', 'HorizontalAlignment', 'center');
+% text(3.25,  -0.5, 'Delta2', 'HorizontalAlignment', 'center');
 
-% l = plot([4, 4],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-% l = plot([7, 7],   [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-% l = plot([14, 14], [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-% text(2.5,  2.2, 'Delta', 'HorizontalAlignment', 'center');
-% text(5.5,  2.2, 'Theta', 'HorizontalAlignment', 'center');
-% text(10.5, 2.2, 'Alpha', 'HorizontalAlignment', 'center');
-% xticks([1, 4, 7, 14, 20]);
-
+xticks(sort([0.1, 2.5, 4, 5, maxfreq.REM, maxfreq.S3]));
+xtickformat('%.1f')
+xlim([0.1, 4]);
 yticks([-1, 0, 1, 2]);
+
+% plot for legend
+ic = 1;
+clear h
+for hyplabel = hyplabels
+    h(ic) = patch([0, 0], [0,0], cm(ic, :), 'facealpha', 1, 'edgecolor', 'none');
+    ic = ic + 1;
+end
 
 xlabel('Frequency (Hz)');
 ylabel('Log power relative to pre-sleep');
@@ -187,8 +203,8 @@ legend(h, hyplabels, 'box', 'off');
 % xlim([1, 20]);
 set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out', 'TickLength', [0.01, 0.01])
 set(findall(gcf, '-property', 'FontSize'), 'Fontsize', 18);
-
-% write to figure for article (if not on Desktop PC)
+axis square
+%% write to figure for article (if not on Desktop PC)
 if ~ispc
     fname = fullfile(config{1}.imagesavedir, 'FFT');
     isdir_or_mkdir(fileparts(fname));
