@@ -1,4 +1,4 @@
-function varargout = ft_pimpplot(hfig,cmap,pimp)
+function varargout = ft_pimpplot(hfig,cmap,pimp,set_printing_properties)
 %--------------------------------------------------------------------------
 % FT_PIMPPLOT can pimp single channel time frequency representations and
 % topographical representations created by FieldTrip. Basically, it
@@ -13,6 +13,7 @@ function varargout = ft_pimpplot(hfig,cmap,pimp)
 %--------------------------------------------------------------------------
 
 % check input
+if nargin < 4,      set_printing_properties = true; end 
 if nargin < 3,      pimp = true;    end
 if isempty(pimp),	pimp = true;	end
 if nargin < 2,      cmap = @jet;    end
@@ -142,16 +143,18 @@ end
 % % make background white
 % set(hfig,'Color','w');
 
-% % set correct printing properties
-% set(hfig,'PaperType','<custom>');
-% %set(h,'PaperUnits','centimeters');
-% if strcmpi(get(hfig,'PaperUnits'),'centimeters')
-%     set(hfig,'PaperSize',[20 15]);
-%     set(hfig,'PaperPosition',[0 0 20 15]);
-% elseif strcmpi(get(hfig,'PaperUnits'),'inches')
-%     set(hfig,'PaperSize',[8 6]);
-%     set(hfig,'PaperPosition',[0 0 8 6]);
-% end
+if set_printing_properties
+    % set correct printing properties
+    set(hfig,'PaperType','<custom>');
+    %set(h,'PaperUnits','centimeters');
+    if strcmpi(get(hfig,'PaperUnits'),'centimeters')
+        set(hfig,'PaperSize',[20 15]);
+        set(hfig,'PaperPosition',[0 0 20 15]);
+    elseif strcmpi(get(hfig,'PaperUnits'),'inches')
+        set(hfig,'PaperSize',[8 6]);
+        set(hfig,'PaperPosition',[0 0 8 6]);
+    end
+end
 
 % set output
 if nargout > 0
