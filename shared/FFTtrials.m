@@ -1,5 +1,11 @@
-function [FFT] = FFTtrials(cfg, LFP, force)
-
+function [FFT] = FFTtrials(cfg, force, LFP)
+% 
+% Use as : 
+%       [FFT] = FFTtrials(cfg, force, LFP)
+% 
+% The LFP argument is optional. If LFP is not in the input, then it is 
+% loaded with the function readLFP.m.
+% 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -78,10 +84,16 @@ elseif ~force
     cfg.FFT.name = missing;
 end
 
+if nargin < 3
+    load_LFP = true;
+end
+
 if ~isempty(cfg.FFT.name)
     
-%     cfg.LFP.name = cfg.FFT.name;
-%     LFP = readLFP(cfg);
+    if load_LFP
+        cfg.LFP.name = cfg.FFT.name;
+        LFP = readLFP(cfg);
+    end
     
     % loop over markers
     for markername = string(cfg.FFT.name)
@@ -97,21 +109,7 @@ if ~isempty(cfg.FFT.name)
                 fprintf('No LFP for %s part %d', markername, ipart);
                 continue
             end
-            
-            
-%             cfgtemp                         = [];
-%             cfgtemp.channel                 = 'all';
-%             cfgtemp.method                  = 'mtmconvol';
-%             cfgtemp.output                  = 'pow';
-%             cfgtemp.taper                   = 'hanning';
-%             cfgtemp.keeptrials              = cfg.FFT.keeptrials;
-%             cfgtemp.foi                     = cfg.FFT.foi.(markername);
-%             cfgtemp.t_ftimwin               = ones(size(cfgtemp.foi, 2));
-%             cfgtemp.toi                     = 0.5 : 1 : cfg.window.length-0.5;
-%             cfgtemp.pad                     = 'nextpow2';
-%             FFT{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
-            
-                        
+                                    
             cfgtemp                         = [];
             cfgtemp.channel                 = 'all';
             cfgtemp.method                  = 'mtmfft';
@@ -122,22 +120,11 @@ if ~isempty(cfg.FFT.name)
             cfgtemp.pad                     = 'nextpow2';
             FFT{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
             
-            
             % to save memory, remove cfg if not already done
             if isfield(FFT{ipart},'cfg')
                 FFT{ipart} = rmfield(FFT{ipart}, 'cfg');
             end
-            
-%             % average over time (Welch method)
-%             fprintf('Averaging data over time (Welch method)')            
-%             cfgtemp                         = [];
-%             cfgtemp.avgovertime             = 'yes';
-%             cfgtemp.nanmean                 = 'yes';            
-%             FFT{ipart}.(markername)         = ft_selectdata(cfgtemp,  FFT{ipart}.(markername));
-            
-            
-            
-            
+                      
         end % ipart
     end % markername
     
@@ -146,4 +133,3 @@ if ~isempty(cfg.FFT.name)
         saveMarker_FFT(FFT, markername, fname_out)
     end
 end
-
