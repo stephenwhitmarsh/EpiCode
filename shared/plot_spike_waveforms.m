@@ -12,6 +12,9 @@ function plot_spike_waveforms(cfg, markerlist, spikewaveformstats, spikestats, s
 % - cfg.spike.RPV            : time for refractory period violation
 % - cfg.plotspike.plotraw    : true/false, whether to plot raw spike waveforms
 %                             (default = true)
+% cfg.plotspike.max_nr_of_spikes : maximum number of raw spikes plotted. If
+%                              there are more spikes, then a random subselection 
+%                              of spikes is done (default = 1000) 
 % - cfg.plotspike.plotavg    : true/false, whether to plot the mean of the
 %                              spike waveforms (default = true)
 % - cfg.plotspike.plotstd    : true/false, whether to plot the std of the
@@ -33,14 +36,15 @@ function plot_spike_waveforms(cfg, markerlist, spikewaveformstats, spikestats, s
 % - spikestats               : output from readSpikeTrials
 % - spikewaveforms (optional): output from readSpikeWaveforms
 
-cfg.plotspike            = ft_getopt(cfg, 'plotspike', []);
-cfg.plotspike.plotraw    = ft_getopt(cfg.plotspike, 'plotraw', true);
-cfg.plotspike.plotavg    = ft_getopt(cfg.plotspike, 'plotavg', true);
-cfg.plotspike.plotstd    = ft_getopt(cfg.plotspike, 'plotstd', true);
-cfg.plotspike.isi_lim    = ft_getopt(cfg.plotspike, 'isi_lim', [0 0.05]);
-cfg.plotspike.suffix     = ft_getopt(cfg.plotspike, 'suffix', []);
-cfg.plotspike.invert     = ft_getopt(cfg.plotspike, 'invert', false);
-cfg.plotspike.img_format = ft_getopt(cfg.plotspike, 'img_format', "png");
+cfg.plotspike                  = ft_getopt(cfg, 'plotspike', []);
+cfg.plotspike.plotraw          = ft_getopt(cfg.plotspike, 'plotraw', true);
+cfg.plotspike.max_nr_of_spikes = ft_getopt(cfg.plotspike, 'max_nr_of_spikes', 1000);
+cfg.plotspike.plotavg          = ft_getopt(cfg.plotspike, 'plotavg', true);
+cfg.plotspike.plotstd          = ft_getopt(cfg.plotspike, 'plotstd', true);
+cfg.plotspike.isi_lim          = ft_getopt(cfg.plotspike, 'isi_lim', [0 0.05]);
+cfg.plotspike.suffix           = ft_getopt(cfg.plotspike, 'suffix', []);
+cfg.plotspike.invert           = ft_getopt(cfg.plotspike, 'invert', false);
+cfg.plotspike.img_format       = ft_getopt(cfg.plotspike, 'img_format', "png");
 
 if istrue(cfg.plotspike.invert)
     flip = -1;
@@ -114,10 +118,10 @@ for ipart = 1:size(spikewaveformstats,2)
                 
                 if isfield(spikewaveformstats{ipart}.waveformavg{i_unit}, 'time')
                     if istrue(cfg.plotspike.plotraw)
-                        %plot only 1000 randomly selected trials if there
-                        %are more than 1000 trials
-                        if size(spikewaveforms{ipart}{i_unit}.trial, 2) > 1000
-                            trial_list = randperm(size(spikewaveforms{ipart}{i_unit}.trial,2),1000);
+                        %plot only randomly selected trials if there
+                        %are more than cfg.plotspike.max_nr_of_spikes trials
+                        if size(spikewaveforms{ipart}{i_unit}.trial, 2) > cfg.plotspike.max_nr_of_spikes
+                            trial_list = randperm(size(spikewaveforms{ipart}{i_unit}.trial,2),cfg.plotspike.max_nr_of_spikes);
                         else
                             trial_list = 1:length(spikewaveforms{ipart}{i_unit}.trial);
                         end
