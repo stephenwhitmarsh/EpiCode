@@ -26,7 +26,7 @@ function [SpikeWaveforms] = readSpikeWaveforms(cfg, SpikeRaw, force)
 % cfg.spikewaveform.hpfilttype  = Default = 'but', same as Spiking Circus
 % cfg.spikewaveform.hpfiltord   = Default = 3, same as Spyking Circus
 % cfg.spikewaveform.lpfreq      = low pass filter frequency to apply to
-%                                 raw data. Default = 3000.
+%                                 raw data. Default = 6000.
 % cfg.spikewaveform.part_list   = list of parts to analyse. Can be an array
 %                                 of integers, or 'all'. Default = 'all'.
 %

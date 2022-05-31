@@ -89,7 +89,6 @@ for ipart = cfg.circus.part_list
     for chandir = string(channelname)
         
         %% find spiking-circus output path, which is based on the name of the first datafile
-        %FIXME : toremove:
         [~,datadir] = fileparts(cfg.datasavedir);
         if ~strcmp(datadir, 'data')
             datasavedir = fileparts(cfg.datasavedir);

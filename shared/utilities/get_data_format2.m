@@ -1,14 +1,14 @@
 function data_format = get_data_format2(cfg)
 
-% get_data_format returns 1 in the respective variable if the format corresponds
-% Otherwise returns 0.
+% get_data_format2 returns the name of the data format found in the data files 
+% indicated in cfg.rawdir and cfg.directorylist. 
+% It can be neuralynx (.ncs files), ced (.smr or .smrx files), brainvision 
+% (.eeg files), or micromed (.TRC files). An error occur if there is none
+% of these data formats, or if several of them are found.
+% 
 % Use as
-%   [isNeuralynx, isMicromed, isBrainvision] = get_data_format(cfg)
+%   dataformat = get_data_format(cfg)
 %
-% Format used : Neuralynx (.ncs), Micromed (.TRC), Brainvision (.eeg), CED
-% (.smr or .smrx)
-% Error if format is different
-
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
 %
@@ -70,9 +70,9 @@ elseif isCED
 end
 
 if isNeuralynx + isMicromed + isBrainvision + isCED == 0
-    error('Cannot detect good data format in datapath = %s \nData have to be Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)\n', datapath);
+    error('Cannot detect good data format in datapath = %s \nData have to be Neuralynx (.ncs), Micromed (.TRC), CED(.smr or .smrx) or Brainvision (.eeg)\n', datapath);
 elseif isNeuralynx + isMicromed + isBrainvision + isCED >1
-    error('Several data formats are detected in datapath = %s \nData are Neuralynx (.ncs), Micromed (.TRC) or Brainvision (.eeg)\n', datapath);
+    error('Several data formats are detected in datapath = %s \nData are Neuralynx (.ncs), Micromed (.TRC), CED(.smr or .smrx) or Brainvision (.eeg)\n', datapath);
 end
 
 
