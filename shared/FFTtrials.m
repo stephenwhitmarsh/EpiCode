@@ -86,6 +86,8 @@ end
 
 if nargin < 3
     load_LFP = true;
+else
+    load_LFP = false;
 end
 
 if ~isempty(cfg.FFT.name)
