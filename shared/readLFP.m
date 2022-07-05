@@ -317,7 +317,7 @@ for markername = string(cfg.LFP.name)
                         es = ss;
                         idx_end = ievent;
                     else
-                        idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
+                        idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) > ss, 1, 'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) * dat.fsample);
                     end
                     
