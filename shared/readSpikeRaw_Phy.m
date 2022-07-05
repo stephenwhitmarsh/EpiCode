@@ -230,7 +230,7 @@ for ipart = cfg.circus.part_list
                 SpikeRaw{ipart}.template_maxchan(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id       == cluster_list(icluster)) + channelcount(chandir == string(channelname));
                 SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = phydata.cluster_info.ch(phydata.cluster_info.cluster_id == cluster_list(icluster));
             else
-                [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 2));
+                [~, imaxchan] = max(mean(abs(SpikeRaw{ipart}.template{icluster}), 3));
                 SpikeRaw{ipart}.template_maxchan(icluster)  = imaxchan - 1 + channelcount(chandir == string(channelname)); % -1 because chans idx begin at zero with Phy
                 SpikeRaw{ipart}.template_maxchan_bundle(icluster)  = imaxchan - 1; % -1 because chans idx begin at zero with Phy
             end   
