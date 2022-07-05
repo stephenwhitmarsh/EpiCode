@@ -21,10 +21,12 @@ function [SpikeWaveforms] = readSpikeWaveforms(cfg, SpikeRaw, force)
 %                                 Can be 'all'. If there are more spikes
 %                                 than nspikes, a random selection of
 %                                 spikes is done. Default = 1000.
+% cfg.spikewaveform.hpfilter    = 'yes', 'no', wheter or not to apply high pass filter
 % cfg.spikewaveform.hpfreq      = high pass filter frequency to apply to
 %                                 raw data. Default = 300.
 % cfg.spikewaveform.hpfilttype  = Default = 'but', same as Spiking Circus
 % cfg.spikewaveform.hpfiltord   = Default = 3, same as Spyking Circus
+% cfg.spikewaveform.lpfilter    = 'yes', 'no', wheter or not to apply low pass filter
 % cfg.spikewaveform.lpfreq      = low pass filter frequency to apply to
 %                                 raw data. Default = 6000.
 % cfg.spikewaveform.part_list   = list of parts to analyse. Can be an array
@@ -99,15 +101,17 @@ cfg.circus.timestamps           = false;
 cfg.spikewaveform               = ft_getopt(cfg, 'spikewaveform', []);
 cfg.spikewaveform.toi           = ft_getopt(cfg.spikewaveform, 'toi'    	, [-0.0015 0.0015]);
 cfg.spikewaveform.nspikes       = ft_getopt(cfg.spikewaveform, 'nspikes' 	, 1000);
+cfg.spikewaveform.hpfilter      = ft_getopt(cfg.spikewaveform, 'hpfilter'	, 'no');
 cfg.spikewaveform.hpfilttype    = ft_getopt(cfg.spikewaveform, 'hpfilttype'	, 'but');
 cfg.spikewaveform.hpfiltord     = ft_getopt(cfg.spikewaveform, 'hpfiltord'  , 3);
 cfg.spikewaveform.hpfreq        = ft_getopt(cfg.spikewaveform, 'hpfreq'     , 300);
+cfg.spikewaveform.lpfilter      = ft_getopt(cfg.spikewaveform, 'lpfilter'	, 'no');
 cfg.spikewaveform.lpfreq        = ft_getopt(cfg.spikewaveform, 'lpfreq'     , 6000);
 cfg.spikewaveform.lpfilttype    = ft_getopt(cfg.spikewaveform, 'lpfilttype'	, 'but');
 cfg.spikewaveform.lpfiltord     = ft_getopt(cfg.spikewaveform, 'lpfiltord'  , 3);
 cfg.spikewaveform.part_list     = ft_getopt(cfg.spikewaveform , 'part_list' , 'all');
 cfg.circus.channelname          = ft_getopt(cfg.circus, 'channelname', []);
-cfg.circus.correct_chunk        = ft_getopt(cfg.circus, 'correct_chunk', false);
+cfg.circus.correct_chunk        = ft_getopt(cfg.circus, 'correct_chunk', {false});
 
 if strcmp(cfg.spikewaveform.part_list, 'all')
     cfg.spikewaveform.part_list = 1:size(SpikeRaw, 2);
@@ -159,16 +163,16 @@ for ipart = cfg.spikewaveform.part_list
             cfgtemp                         = [];
             cfgtemp.dataset                 = datafile;
             
-            cfgtemp.hpfilter                = 'yes';
+            cfgtemp.hpfilter                = cfg.spikewaveform.hpfilter; 
             cfgtemp.hpfilttype              = cfg.spikewaveform.hpfilttype;
             cfgtemp.hpfiltord               = cfg.spikewaveform.hpfiltord;
             cfgtemp.hpfreq                  = cfg.spikewaveform.hpfreq;
             
-            cfgtemp.lpfilter                = 'yes';
+            cfgtemp.lpfilter                = cfg.spikewaveform.lpfilter; 
             cfgtemp.lpfreq                  = cfg.spikewaveform.lpfreq;
             cfgtemp.lpfilttype              = cfg.spikewaveform.lpfilttype;
             cfgtemp.lpfiltord               = cfg.spikewaveform.lpfiltord;
-            
+
             chandata                        = ft_preprocessing(cfgtemp);
             
             % define Fieldtrip trials
@@ -198,6 +202,11 @@ for ipart = cfg.spikewaveform.part_list
             cfgtemp.trl                             = [int64(Startsample), int64(Endsample), int64(Offset)];
             cfgtemp.trl                             = cfgtemp.trl(full_trial, :); % so not to read before BOF or after EOFs
             temp{filecnt}                           = ft_redefinetrial(cfgtemp, chandata);
+            
+            cfgtemp                = [];
+            cfgtemp.demean         = 'yes'; 
+            cfgtemp.baselinewindow = [-1.5 -0.5]/1000; 
+            temp{filecnt}          = ft_preprocessing(cfgtemp, temp{filecnt});
             
             temp{filecnt}.label                     = [];
             temp{filecnt}.label{1}                  = SpikeRaw{ipart}.label{iunit};
