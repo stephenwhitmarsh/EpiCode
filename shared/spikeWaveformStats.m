@@ -150,7 +150,7 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.troughpeak.val(icluster) = troughpeak.val;
                 stats{ipart}.troughpeak.x(icluster,:) = troughpeak.x;
                 stats{ipart}.troughpeak.y(icluster,:) = troughpeak.y;
-                stats{ipart}.peak_direction(icluster) = -flip;
+                stats{ipart}.peak_direction(icluster) = flip;
             else
                 stats{ipart}.amplitude.val(icluster)  = nan;
                 stats{ipart}.amplitude.x(icluster)    = nan;
