@@ -219,12 +219,12 @@ for ipart = 1 : size(cfg.directorylist,2)
             sprintf('Creating directory %s', cfg.imagesavedir);
             mkdir(cfg.imagesavedir);
         end
-        if ~exist(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)), 'dir')
-            sprintf('Creating directory %s', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
-            mkdir(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
-        end
+%         if ~exist(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)), 'dir')
+%             sprintf('Creating directory %s', fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
+%             mkdir(fullfile(cfg.imagesavedir, cfg.prefix(1:end-1)));
+%         end
         
-        fname_fig = fullfile(cfg.imagesavedir, 'templates', 'alignment', strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png'));
+        fname_fig = fullfile(cfg.imagesavedir, 'alignment_xcorr', strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr.png'));
         isdir_or_mkdir(fileparts(fname_fig));
         exportgraphics(fig, fname_fig);
         
@@ -281,7 +281,7 @@ for ipart = 1 : size(cfg.directorylist,2)
                 set(fig,'PaperUnits','normalized');
                 set(fig,'PaperPosition', [0 0 1 1]);
                 
-                fname_fig = fullfile(cfg.imagesavedir, 'templates', 'alignment', strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr_page', num2str(ipage), '.png'));
+                fname_fig = fullfile(cfg.imagesavedir, 'alignment_Xcorr', strcat(cfg.prefix, 'p', num2str(ipart), '_', markername, '_alignmentXcorr_page', num2str(ipage), '.png'));
                 isdir_or_mkdir(fileparts(fname_fig));
                 exportgraphics(fig, fname_fig);
                 
