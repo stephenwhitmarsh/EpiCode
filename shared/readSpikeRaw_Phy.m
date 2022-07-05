@@ -85,7 +85,11 @@ end
 for ipart = cfg.circus.part_list
     
     temp        = sum(samples_separate{ipart});
-    samples     = [1 temp(2)];
+    if size(temp, 2) == 1
+        samples     = [1 temp];
+    else
+        samples     = [1 temp(2)];
+    end
     clear temp
     
     % use dummy timestamps, 1 per sample, because SC ignores timestamps
