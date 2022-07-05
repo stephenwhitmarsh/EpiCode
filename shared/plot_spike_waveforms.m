@@ -143,10 +143,10 @@ for ipart = 1:size(spikewaveformstats,2)
                         plot(spikewaveformstats{ipart}.troughpeak.x(i_unit,:), [0, 0], '-x', 'color', color_avg);
                         axis tight
                     end
-                    if istrue(cfg.plotspike.plotraw)
-                        %avoid aberrant scaling due to outlier spikes
-                        ylim([min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg)*3 max(spikewaveformstats{ipart}.waveformavg{i_unit}.avg)]*2);
-                    end
+%                     if istrue(cfg.plotspike.plotraw)
+%                         %avoid aberrant scaling due to outlier spikes
+%                         ylim([min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*2 max(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*3]);
+%                     end
                 end
                 xticklabels(xticks.*1000);
                 %xlabel('Time (ms)');
@@ -157,7 +157,7 @@ for ipart = 1:size(spikewaveformstats,2)
             ft_progress('close');
             
             %print figure to file
-            figname = fullfile(cfg.imagesavedir, '..', 'plot_spike_waveforms', sprintf('%sp%d_%s_spikewaveforms_%s%s', cfg.prefix, ipart, markername, itype, cfg.plotspike.suffix));
+            figname = fullfile(cfg.imagesavedir, 'plot_spike_waveforms', sprintf('%sp%d_%s_spikewaveforms_%s%s', cfg.prefix, ipart, markername, itype, cfg.plotspike.suffix));
             savefigure_own(fig, figname, 'portrait', cfg.plotspike.img_format{:}, 'close');
             
         end %itype
