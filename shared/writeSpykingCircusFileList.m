@@ -168,7 +168,7 @@ for ipart = 1 : size(cfg.directorylist, 2)
                     fname_filelist = fname;
                     if ispc %correct file name for its use with linux
                         fname_filelist = strrep(fname_filelist, '\\lexport\iss01.', '/network/lustre/iss01/');
-                        fname_filelist = strrep(fname_filelist, '\\lexport\iss02.', '/network/lustre/iss02/');
+                        fname_filelist = strrep(fname_filelist, '\\l2export\iss02.', '/network/lustre/iss02/');
                         fname_filelist = strrep(fname_filelist, '\', '/');
                     end
                     filelist{ipart}.(chandir)(idir, ichan) = string(fname_filelist);
