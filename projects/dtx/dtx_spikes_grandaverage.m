@@ -5,19 +5,19 @@ if ispc
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\development'));
     addpath \\lexport\iss01.charpier\analyses\lgi1\Git-Paul\fieldtrip;
     ft_defaults
-    addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx'));
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\shared'));
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\NeuralynxMatlabImportExport_v6.0.0'));
     addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\external'));
+    addpath (genpath('\\lexport\iss01.charpier\analyses\lgi1\Git-Paul\EpiCode\projects\dtx'));
 elseif isunix
     addpath (genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/EpiCode/development'));
     addpath /network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/fieldtrip/
     ft_defaults
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/EpiCode/projects/dtx'));
     addpath (genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/EpiCode/shared'))
     addpath (genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/NeuralynxMatlabImportExport_v6.0.0'));
     addpath(genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/EpiCode/external'));
     addpath /network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/Nlx2Mat_release-v7_Dec2015/binaries
+    addpath(genpath('/network/lustre/iss01/charpier/analyses/lgi1/Git-Paul/EpiCode/projects/dtx'));
 end
 
 %remove fieldtrip's output
@@ -58,7 +58,7 @@ for irat = to_reload
         %sanity check
         for igroup = string(unique(neurons_table{irat}.group))'
             if ~ismember(igroup, ["mua", "sua", "noise"])
-                error('wrong group name : %s');
+                error('wrong group name : %s', igroup);
             end
         end
         
@@ -113,6 +113,7 @@ for irat = 1:size(config,2)
                 end
             end
         end
+        
         %concatenate all clusters and select toi
         if size(sel_neg, 1) > 1
             sel_neg = any(sel_neg);
@@ -124,14 +125,18 @@ for irat = 1:size(config,2)
         neurons_table{irat}.pval_neg{i_unit}          = max(SpikeStats_timelocked{irat}{ipart}.stat.SlowWave{i_unit}.prob(sel_neg));
         neurons_table{irat}.pval_nochange{i_unit}     = min(SpikeStats_timelocked{irat}{ipart}.stat.SlowWave{i_unit}.prob(~(sel_pos | sel_neg)));
         
-        %sustained
-        if sum(sel_pos) > 0 && sum(sel_neg) == 0 && sum(sel_pos)/length(sel_pos) >= 0.9
+        
+        sel_pos(t<0 | t>1.8) = [];
+        sel_neg(t<-0.3 | t>0.3) = [];
+        
+        %prolonged
+        if sum(sel_pos) > 0 && sum(sel_neg) == 0 && sum(sel_pos)/length(sel_pos) >= 0.95
             neurons_table{irat}.sw_code(i_unit) = 1;
             %transient
         elseif sum(sel_pos) > 0 && sum(sel_neg) > 0
             neurons_table{irat}.sw_code(i_unit) = 2;
             %transient
-        elseif sum(sel_pos) > 0 && sum(sel_neg) == 0 && sum(sel_pos)/length(sel_pos) < 0.9
+        elseif sum(sel_pos) > 0 && sum(sel_neg) == 0 && sum(sel_pos)/length(sel_pos) < 0.95
             neurons_table{irat}.sw_code(i_unit) = 3;
             %decrease
         elseif  sum(sel_pos) == 0 && sum(sel_neg) > 0
@@ -186,7 +191,7 @@ for behav_list = {1,[2 3],[4 5]}
     xlim([-2 2]);
     title(sprintf('%d units', sum(behaviour_count(behav_list{1}))));
     fig_name = fullfile(config{irat}.imagesavedir, '..', 'sdf_OL_zoomed', sprintf('allrats_%d%d', behav_list{1}));
-    %dtx_savefigure(fig, fig_name, 'pdf', 'png', 'close');
+    dtx_savefigure(fig, fig_name, 'png', 'close');
 end
 
 %% raster example for each group
@@ -250,7 +255,7 @@ for unitname = ["cluster_6_E07", "cluster_7_E14", "cluster_0_E10"]
     clear y
     
     figname = fullfile(config{irat}.imagesavedir, '..', 'raster_examples', sprintf('%s%s_raster', config{irat}.prefix, unitname));
-    %dtx_savefigure(fig, figname, 'png', 'pdf', 'close');
+    dtx_savefigure(fig, figname, 'png', 'close');
 end
 
 %% output table 
@@ -301,11 +306,12 @@ for behav_list = {1,[2 3],[4 5], [1 2 3 4 5]}
     writetable(tableout, fname, 'writemode', 'overwritesheet');
 end
 
+
 %% stats baseline versus TDW
-data_all                = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_sua_group_1_2_3_4_5.xlsx'));
-data_transcient         = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_sua_group_2_3.xlsx'));
-data_prolonged          = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_sua_group_1.xlsx'));
-data_nochange_decrease  = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_sua_group_4_5.xlsx'));
+data_all                = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_group_1_2_3_4_5.xlsx'));
+data_transcient         = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_group_2_3.xlsx'));
+data_prolonged          = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_group_1.xlsx'));
+data_nochange_decrease  = readtable(fullfile(config{1}.datasavedir, 'allrats-slowwavebehavior_group_4_5.xlsx'));
 
 %mean bl VS mean TDW
 p(1) = signrank(data_all.meanfreq_baseline, data_all.meanfreq_TDW);

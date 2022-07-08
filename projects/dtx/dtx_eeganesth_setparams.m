@@ -254,7 +254,7 @@ config{6}.imagesavedir              = fullfile(imagesavedir,'DTX31');
 config{6}.directorylist{1}          = []; %automatically found at the end of this script
 
 config{6}.labels.macro              = {'EEG M1G'};
-config{6}.injectiontime             = datetime('13-Jul-2019 15:48:53');
+config{6}.injectiontime             = datetime('13-Jul-2019 15:35:53');
 config{6}.LFP.channel               = config{6}.labels.macro;
 
 config{6}.align.channel.SlowWave = 'EEG M1G';
@@ -277,7 +277,7 @@ config{7}.imagesavedir              = fullfile(imagesavedir,'DTX32');
 config{7}.directorylist{1}          = []; %automatically found at the end of this script
 
 config{7}.labels.macro              = {'ECoG-M1G'};
-config{7}.injectiontime             = datetime('01-Aug-2019 13:10:06');
+config{7}.injectiontime             = datetime('01-Aug-2019 14:10:06');
 config{7}.LFP.channel               = config{7}.labels.macro;
 
 config{7}.align.channel.SlowWave = 'ECoG-M1G';
@@ -323,7 +323,7 @@ config{9}.imagesavedir              = fullfile(imagesavedir,'DTX34');
 config{9}.directorylist{1}          = []; %automatically found at the end of this script
 
 config{9}.labels.macro              = {'ECoG-M1G'};
-config{9}.injectiontime             = datetime('12-Aug-2019 12:28:2');
+config{9}.injectiontime             = datetime('12-Aug-2019 13:28:2');
 config{9}.LFP.channel               = config{9}.labels.macro;
 
 config{9}.align.channel.SlowWave = 'ECoG-M1G';
@@ -507,7 +507,7 @@ config{17}.imagesavedir              = fullfile(imagesavedir,'DTX24');
 config{17}.directorylist{1}          = []; %automatically found at the end of this script
 
 config{17}.labels.macro              = {'EEG M1G'};
-config{17}.injectiontime             = datetime('03-Jun-2019 14:44:20');
+config{17}.injectiontime             = datetime('03-Jun-2019 13:44:20');
 config{17}.LFP.channel               = config{17}.labels.macro;
 
 config{17}.align.channel.SlowWave       = 'EEG M1G';
