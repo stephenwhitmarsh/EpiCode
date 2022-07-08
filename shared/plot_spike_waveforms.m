@@ -46,12 +46,6 @@ cfg.plotspike.suffix           = ft_getopt(cfg.plotspike, 'suffix', []);
 cfg.plotspike.invert           = ft_getopt(cfg.plotspike, 'invert', false);
 cfg.plotspike.img_format       = ft_getopt(cfg.plotspike, 'img_format', "png");
 
-if istrue(cfg.plotspike.invert)
-    flip = -1;
-else
-    flip = 1;
-end
-
 if nargin == 4
     cfg.plotspike.plotraw = false;
 elseif nargin < 4
@@ -87,7 +81,7 @@ for ipart = 1:size(spikewaveformstats,2)
                 end
                 
                 iplot = iplot+2;
-                rpv = spikestats{ipart}.(markername){i_unit}.RPV * 100;
+                rpv   = spikestats{ipart}.(markername){i_unit}.RPV * 100;
                 
                 subplot(ceil(n_units/n_subplots),2*n_subplots,iplot);hold on;
                 
@@ -117,6 +111,7 @@ for ipart = 1:size(spikewaveformstats,2)
                 end
                 
                 if isfield(spikewaveformstats{ipart}.waveformavg{i_unit}, 'time')
+                    flip  = -spikewaveformstats{ipart}.peak_direction(i_unit);
                     if istrue(cfg.plotspike.plotraw)
                         %plot only randomly selected trials if there
                         %are more than cfg.plotspike.max_nr_of_spikes trials
