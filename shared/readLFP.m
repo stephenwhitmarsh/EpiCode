@@ -230,6 +230,7 @@ for markername = string(cfg.LFP.name)
                 cfgtemp.hpfreq          = ft_getopt(cfg.LFP, 'hpfreq', []);
                 cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
                 cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);
+                cfgtemp.bsinstabilityfix = ft_getopt(cfg.LFP, 'bsinstabilityfix', []);
                 dat                     = ft_preprocessing(cfgtemp, dat);
                 
                 % append EMG data (if any)
