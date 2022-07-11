@@ -84,10 +84,10 @@ end
 % loop through parts
 for ipart = cfg.circus.part_list
     
-    temp        = sum(samples_separate{ipart});
-    if size(temp, 2) == 1
-        samples     = [1 temp];
+    if size(samples_separate{ipart}, 1) == 1
+        samples     = [1 samples_separate{ipart}(2)];
     else
+        temp        = sum(samples_separate{ipart});
         samples     = [1 temp(2)];
     end
     clear temp
