@@ -20,11 +20,11 @@ function plot_spike_waveforms(cfg, markerlist, spikewaveformstats, spikestats, s
 % - cfg.plotspike.plotstd    : true/false, whether to plot the std of the
 %                              spike waveforms (default = true)
 % - cfg.plotspike.isi_lim    : x limits of the isi plot (default = [0 0.05]
+% - cfg.plotspike.adapt_y    : 'yes', 'no', wheter to adapt y scaling in
+%                               case of outlier raw spike traces (dafault = yes).
 % - cfg.plotspike.suffix     : suffix used in the name of the image, usefull
 %                              if you need to apply this function with different
 %                              parameters (default = [])
-% - cfg.plotspike.invert     : true/false, whether to invert spike waveform
-%                             (default = false)
 % - cfg.plotspike.img_format : format used to save the plot. See :
 %                              savefigure_own.m (default = "png"). Can be a 
 %                              list of formats, ie : ["png", "pdf"];
@@ -42,8 +42,8 @@ cfg.plotspike.max_nr_of_spikes = ft_getopt(cfg.plotspike, 'max_nr_of_spikes', 10
 cfg.plotspike.plotavg          = ft_getopt(cfg.plotspike, 'plotavg', true);
 cfg.plotspike.plotstd          = ft_getopt(cfg.plotspike, 'plotstd', true);
 cfg.plotspike.isi_lim          = ft_getopt(cfg.plotspike, 'isi_lim', [0 0.05]);
+cfg.plotspike.adapt_y          = ft_getopt(cfg.plotspike, 'adapt_y', 'yes');
 cfg.plotspike.suffix           = ft_getopt(cfg.plotspike, 'suffix', []);
-cfg.plotspike.invert           = ft_getopt(cfg.plotspike, 'invert', false);
 cfg.plotspike.img_format       = ft_getopt(cfg.plotspike, 'img_format', "png");
 
 if nargin == 4
@@ -140,13 +140,27 @@ for ipart = 1:size(spikewaveformstats,2)
                     end
 %                     if istrue(cfg.plotspike.plotraw)
 %                         %avoid aberrant scaling due to outlier spikes
-%                         ylim([min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*2 max(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*3]);
+                        ylim([min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*2 max(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*10]);
 %                     end
                 end
                 xticklabels(xticks.*1000);
                 %xlabel('Time (ms)');
                 %ylabel('uV');
                 set(gca, 'XGrid', 'on', 'YGrid', 'on', 'box', 'off', 'TickDir', 'out', 'FontSize', 5);
+                
+                %scale y limits if needed
+                if istrue(cfg.plotspike.adapt_y)
+                    yinf = min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*2;
+                    ysup = max(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*10;
+                    y = ylim;
+                    if y(1) < yinf * 3
+                        ylim([yinf, y(2)]);
+                    end
+                    y = ylim;
+                    if y(2) > ysup * 3
+                        ylim([y(1), ysup]);
+                    end
+                end
                 
             end %iunit
             ft_progress('close');
