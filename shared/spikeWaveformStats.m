@@ -126,9 +126,13 @@ for ipart = 1:size(SpikeWaveforms)
             else
                 ok = false;
             end %isempty
-
-            %store for output
             
+            %remove aberrant detections
+            if halfwidth.val < 0.1 * 10^-3 || troughpeak.val < 0.1 * 10^-3 || peaktrough.val < 0.1 * 10^-3
+                ok = false;
+            end
+            
+            %store for output
             if isempty(SpikeWaveforms{ipart}{icluster})
                 stats{ipart}.label{icluster}          = [];
                 stats{ipart}.waveformavg{icluster}    = [];
