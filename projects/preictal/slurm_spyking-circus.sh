@@ -5,8 +5,8 @@
 #SBATCH --mem=120G
 #SBATCH --cpus-per-task=28
 #SBATCH --chdir=.
-#SBATCH --output=/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/slurm_output/output-%j_%a-%x.txt
-#SBATCH --error=/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/slurm_output/error-%j_%a-%x.txt
-#SBATCH --array=15
+#SBATCH --output=/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/slurm_output/output-%j_%a-%x.txt
+#SBATCH --error=/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/slurm_output/error-%j_%a-%x.txt
+#SBATCH --array=5
 
-eval $(sed -n "$SLURM_ARRAY_TASK_ID"p /network/lustre/iss01/charpier/analyses/vn_preictal/data/preictal_slurm_job_list.txt)
+eval $(sed -n "$SLURM_ARRAY_TASK_ID"p /network/lustre/iss02/charpier/analyses/vn_preictal/data/preictal_slurm_job_list.txt)
