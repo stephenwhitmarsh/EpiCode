@@ -9,7 +9,7 @@ if ispc
     addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\EpiCode\projects\preictal'))
     addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\SPIKY_apr_2021'))
     addpath \\l2export\iss02.charpier\analyses\vn_preictal\scripts\fieldtrip-20200607
-    
+
 elseif isunix
     addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/shared'))
     addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/external'))
@@ -78,7 +78,7 @@ preictal_gather_data(config{ielec}, redo_analysis, MuseStruct, LFP, FFT, wavefor
 for markername = ["window_60", "window_3"]
     iunit = 1:size(SpikeStats{ipart}.(markername), 2); % spike to plot
     ipart = 1;
-    
+
     cfg                 = [];
     cfg.ipart           = ipart;
     cfg.filename        = fullfile(config{ielec}.imagesavedir, 'data_overview', sprintf('%sp%d_data_overview_%s.jpg', config{ielec}.prefix, ipart, markername));
@@ -95,16 +95,16 @@ for markername = ["window_60", "window_3"]
         x1 = offset - seconds(300);
         x2 = offset + seconds(120);
     end
-    
+
     cfg.xlim            = seconds([x1, x2] - offset);
     % cfg.xlim            = seconds([MuseStruct{1}{1}.starttime, MuseStruct{1}{2}.endtime] - MuseStruct{1}{2}.markers.CriseStart.clock);
     cfg.orientation     = 'landscape';
     cfg.offset          = offset;
-    
+
     cfg.type{1}         = 'trialinfo';
     cfg.title{1}        = sprintf('BAD duration (s) (trial removed if artefacts > %g s)',cfg.minbadlength);
     cfg.metric{1}       = 'BAD_sec';
-    
+
     cfg.type{2}         = 'power';
     cfg.frequency{2}    = [1, 7];
     cfg.channel{2}      = config{ielec}.LFP.channel{1};
@@ -115,7 +115,7 @@ for markername = ["window_60", "window_3"]
     % cfg.marker_indx{1}  = FFT{ipart}.(markername).trialinfo.BAD_cnt>0;
     % cfg.marker_sign{1}  = '.r';
     % cfg.marker_label{1} = 'artefact';
-    
+
     cfg.type{3}         = 'power';
     cfg.frequency{3}    = [8, 14];
     cfg.channel{3}      = config{ielec}.LFP.channel{1};
@@ -123,7 +123,7 @@ for markername = ["window_60", "window_3"]
     cfg.plotart(3)      = true;
     cfg.log(3)          = true;
     cfg.hideart(3)      = true;
-    
+
     cfg.type{4}         = 'relpower';
     cfg.frequency1{4}   = [1, 7];
     cfg.frequency2{4}   = [8, 14];
@@ -132,7 +132,7 @@ for markername = ["window_60", "window_3"]
     cfg.plotart(4)      = true;
     cfg.log(4)          = false;
     cfg.hideart(4)      = true;
-    
+
     cfg.type{5}         = 'spike';
     cfg.title{5}        = sprintf('Firing rate unit %d-%d (log(Hz))', iunit(1), iunit(end));
     cfg.metric{5}       = 'trialfreq';
@@ -140,14 +140,14 @@ for markername = ["window_60", "window_3"]
     cfg.plotart(5)      = true;
     cfg.log(5)          = true;
     cfg.hideart(5)      = true;
-    
+
     cfg.type{6}         = 'spike';
     cfg.title{6}        = sprintf('Nr. of bursts per min, unit %d-%d', iunit(1), iunit(end));
     cfg.metric{6}       = 'burst_trialsum';
     cfg.unit{6}         = iunit;
     cfg.plotart(6)      = true;
     cfg.hideart(6)      = true;
-    
+
     cfg.type{7}        = 'spike';
     cfg.title{7}       = sprintf('CV2 unit %d-%d', iunit(1), iunit(end));
     cfg.metric{7}      = 'CV2_trial';
@@ -155,14 +155,14 @@ for markername = ["window_60", "window_3"]
     cfg.plotart(7)     = true;
     cfg.log(7)         = false;
     cfg.hideart(7)      = true;
-    
+
     cfg.type{8}         = 'spike';
     cfg.title{8}        = sprintf('CV unit %d-%d', iunit(1), iunit(end));
     cfg.metric{8}       = 'CV_trial';
     cfg.unit{8}         = iunit;
     cfg.plotart(8)      = true;
     cfg.hideart(8)      = true;
-    
+
     plotWindowedData(cfg, MuseStruct, markername, SpikeTrials, SpikeStats, FFT);
     close all;
 end
@@ -173,7 +173,7 @@ end
 for markername = ["window_60", "window_3"]
     iunit = 1:size(SpikeStats{ipart}.(markername), 2); % spike to plot
     ipart = 1;
-    
+
     cfg                 = [];
     cfg.ipart           = ipart;
     cfg.filename        = fullfile(config{ielec}.imagesavedir, 'spike_distance', sprintf('%sp%d_spike_distance_%s.jpg', config{ielec}.prefix, ipart, markername));
@@ -193,11 +193,11 @@ for markername = ["window_60", "window_3"]
     cfg.xlim            = seconds([x1, x2] - offset);
     cfg.orientation     = 'landscape';
     cfg.offset          = offset;
-    
+
     cfg.type{1}         = 'trialinfo';
     cfg.title{1}        = sprintf('BAD duration (s) (trial removed if artefacts > %g s)',cfg.minbadlength);
     cfg.metric{1}       = 'BAD_sec';
-    
+
     cfg.type{2}         = 'spike';
     cfg.title{2}        = sprintf('Firing rate unit %d-%d (log(Hz))', iunit(1), iunit(end));
     cfg.metric{2}       = 'trialfreq';
@@ -205,7 +205,7 @@ for markername = ["window_60", "window_3"]
     cfg.plotart(2)      = true;
     cfg.log(2)          = true;
     cfg.hideart(2)      = true;
-    
+
     i = 2;
     if size(SpikeStats{ipart}.(markername), 2) > 1
         for i_dist = 1:size(SpikeStats{ipart}.(markername), 2)
@@ -227,10 +227,10 @@ for markername = ["window_60", "window_3"]
         cfg.plotart(3)      = false;
         cfg.unit{3}         = [];
     end
-    
+
     plotWindowedData(cfg, MuseStruct, markername, SpikeTrials, SpikeStats, FFT);
     close all;
-    
+
 end
 
 %% plot spike waveform
