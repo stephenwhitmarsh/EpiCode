@@ -35,7 +35,20 @@ function plot_spike_waveforms(cfg, markerlist, spikewaveformstats, spikestats, s
 % - spikewaveformstats       : output from spikeWaveformStats.m
 % - spikestats               : output from readSpikeTrials
 % - spikewaveforms (optional): output from readSpikeWaveforms
-
+%
+%   EpiCode is free software: you can redistribute it and/or modify
+%   it under the terms of the GNU General Public License as published by
+%   the Free Software Foundation, either version 3 of the License, or
+%   (at your option) any later version.
+%
+%   EpiCode is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%   GNU General Public License for more details.
+%
+%   You should have received a copy of the GNU General Public License
+%   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
+% 
 cfg.plotspike                  = ft_getopt(cfg, 'plotspike', []);
 cfg.plotspike.plotraw          = ft_getopt(cfg.plotspike, 'plotraw', true);
 cfg.plotspike.max_nr_of_spikes = ft_getopt(cfg.plotspike, 'max_nr_of_spikes', 1000);
@@ -147,7 +160,7 @@ for ipart = 1:size(spikewaveformstats,2)
                 %xlabel('Time (ms)');
                 %ylabel('uV');
                 set(gca, 'XGrid', 'on', 'YGrid', 'on', 'box', 'off', 'TickDir', 'out', 'FontSize', 5);
-                
+                axis tight 
                 %scale y limits if needed
                 if istrue(cfg.plotspike.adapt_y)
                     yinf = min(spikewaveformstats{ipart}.waveformavg{i_unit}.avg*flip)*2;
