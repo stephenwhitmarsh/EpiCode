@@ -98,6 +98,11 @@ for ipart = 1:size(SpikeWaveforms)
                     halfwidth.x   = x_intersect([idx, idx+1]);
                     halfwidth.y   = y_intersect([idx, idx+1]);
                     %scatter(halfwidth.x, halfwidth.y, 'xk');
+                    
+                    %remove aberrant detections
+                    if halfwidth.val < 0.15 * 10^-3
+                        ok = false;
+                    end
 
                     % Find throughs
                     [Yneg,Xneg_temp] = findpeaks(-waveformavg.avg.*flip,waveformavg.time);
@@ -117,6 +122,11 @@ for ipart = 1:size(SpikeWaveforms)
                         %scatter(peaktrough.x, peaktrough.y, 'xk');
                         %scatter(troughpeak.x, troughpeak.y, 'xk');
                         
+                        %remove aberrant detections
+                        if troughpeak.val < 0.15 * 10^-3 || peaktrough.val < 0.15 * 10^-3
+                            ok = false;
+                        end
+                        
                     else
                         ok = false;
                     end
@@ -126,11 +136,6 @@ for ipart = 1:size(SpikeWaveforms)
             else
                 ok = false;
             end %isempty
-            
-            %remove aberrant detections
-            if halfwidth.val < 0.1 * 10^-3 || troughpeak.val < 0.1 * 10^-3 || peaktrough.val < 0.1 * 10^-3
-                ok = false;
-            end
             
             %store for output
             if isempty(SpikeWaveforms{ipart}{icluster})
