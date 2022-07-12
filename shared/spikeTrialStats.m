@@ -141,7 +141,7 @@ for ipart = 1 : size(SpikeTrials, 2)
                 end
             end
             
-            ft_progress('init','text', fprintf('Starting on "%s", part %d of %d, unit %d of %d', markername, ipart, size(SpikeTrials, 2), itemp, size(SpikeTrials{ipart}.(markername).label, 2)));
+            ft_progress('init','text', sprintf('Starting on "%s", part %d of %d, unit %d of %d', markername, ipart, size(SpikeTrials, 2), itemp, size(SpikeTrials{ipart}.(markername).label, 2)));
               
             % add trialinfo so that trials can later be selected
             stats{ipart}.(markername){itemp}.trialinfo = SpikeTrials{ipart}.(markername).trialinfo;
