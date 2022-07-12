@@ -9,7 +9,7 @@ function 	stats = spikeWaveformStats(cfg, SpikeWaveforms, force)
 %   stats = spikeWaveformStats(cfg, SpikeWaveforms, force)
 %
 % Note :
-% - spikes must be peak-aligned to zero (automatically done by SpyKING-Circus)
+% - spikes must be aligned so they can be averaged
 % - spikes can be positive or negative
 %
 % This file is part of EpiCode, see
@@ -75,7 +75,7 @@ for ipart = 1:size(SpikeWaveforms)
                 %scatter(waveformavg.time, waveformavg.avg, '.');
 
                 %search if AP is positive or negative
-                flip = sign(waveformavg.avg(nearest(waveformavg.time, 0)));
+                flip = sign(min(waveformavg.avg) + max(waveformavg.avg));
 
                 %amplitude
                 bl               = min(waveformavg.avg.*flip);
@@ -92,9 +92,9 @@ for ipart = 1:size(SpikeWaveforms)
                 y2 = ones(size(x)) .* halfamp .* flip;
                 [x_intersect, y_intersect] = intersections(x,y1,x,y2,true);
                 
-                if length(x_intersect) >= 2 && any(x_intersect <0) && any(x_intersect >0)
+                if length(x_intersect) >= 2 && any(x_intersect < amplitude.x) && any(x_intersect > amplitude.x)
                   
-                    idx = find(x_intersect <0, 1, 'last');
+                    idx = find(x_intersect < amplitude.x, 1, 'last');
                     halfwidth.val = diff(x_intersect([idx, idx+1]));
                     halfwidth.x   = x_intersect([idx, idx+1]);
                     halfwidth.y   = y_intersect([idx, idx+1]);
@@ -103,10 +103,10 @@ for ipart = 1:size(SpikeWaveforms)
                     % Find throughs
                     [Yneg,Xneg_temp] = findpeaks(-waveformavg.avg.*flip,waveformavg.time);
                     
-                    if length(Xneg_temp) >= 2 && any(Xneg_temp-amplitude.x < 0) && any(Xneg_temp-amplitude.x > 0)
+                    if length(Xneg_temp) >= 2 && any(Xneg_temp < amplitude.x) && any(Xneg_temp > amplitude.x)
                         % Search first through before and after peak
-                        [Xneg(1),x_idx] = max(Xneg_temp(Xneg_temp-amplitude.x < 0));
-                        Xneg(2)         = min(Xneg_temp(Xneg_temp-amplitude.x > 0));
+                        [Xneg(1),x_idx] = max(Xneg_temp(Xneg_temp < amplitude.x));
+                        Xneg(2)         = min(Xneg_temp(Xneg_temp > amplitude.x));
                         Yneg            = Yneg([x_idx, x_idx+1]);
 
                         peaktrough.val  = abs(amplitude.x-Xneg(1));
@@ -155,14 +155,14 @@ for ipart = 1:size(SpikeWaveforms)
                 stats{ipart}.(markername).amplitude.x(icluster)    = nan;
                 stats{ipart}.(markername).amplitude.y(icluster)    = nan;
                 stats{ipart}.(markername).halfwidth.val(icluster)  = nan;
-                stats{ipart}.(markername).halfwidth.x(icluster,:)  = nan;
-                stats{ipart}.(markername).halfwidth.y(icluster,:)  = nan;
+                stats{ipart}.(markername).halfwidth.x(icluster,:)  = [nan nan];
+                stats{ipart}.(markername).halfwidth.y(icluster,:)  = [nan nan];
                 stats{ipart}.(markername).peaktrough.val(icluster) = nan;
-                stats{ipart}.(markername).peaktrough.x(icluster,:) = nan;
-                stats{ipart}.(markername).peaktrough.y(icluster,:) = nan;
+                stats{ipart}.(markername).peaktrough.x(icluster,:) = [nan nan];
+                stats{ipart}.(markername).peaktrough.y(icluster,:) = [nan nan];
                 stats{ipart}.(markername).troughpeak.val(icluster) = nan;
-                stats{ipart}.(markername).troughpeak.x(icluster,:) = nan;
-                stats{ipart}.(markername).troughpeak.y(icluster,:) = nan;
+                stats{ipart}.(markername).troughpeak.x(icluster,:) = [nan nan];
+                stats{ipart}.(markername).troughpeak.y(icluster,:) = [nan nan];
             end
         end
         ft_progress('close');

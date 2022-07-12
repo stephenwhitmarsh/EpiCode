@@ -25,6 +25,8 @@ function [SpikeWaveforms] = readSpikeWaveforms(cfg, SpikeRaw, force)
 %                                 raw data. Default = 300.
 % cfg.spikewaveform.hpfilttype  = Default = 'but', same as Spiking Circus
 % cfg.spikewaveform.hpfiltord   = Default = 3, same as Spyking Circus
+% cfg.spikewaveform.lpfreq      = low pass filter frequency to apply to
+%                                 raw data. Default = 6000.
 % cfg.spikewaveform.part_list   = list of parts to analyse. Can be an array
 %                                 of integers, or 'all'. Default = 'all'.
 %
@@ -100,6 +102,9 @@ cfg.spikewaveform.nspikes       = ft_getopt(cfg.spikewaveform, 'nspikes' 	, 1000
 cfg.spikewaveform.hpfilttype    = ft_getopt(cfg.spikewaveform, 'hpfilttype'	, 'but');
 cfg.spikewaveform.hpfiltord     = ft_getopt(cfg.spikewaveform, 'hpfiltord'  , 3);
 cfg.spikewaveform.hpfreq        = ft_getopt(cfg.spikewaveform, 'hpfreq'     , 300);
+cfg.spikewaveform.lpfreq        = ft_getopt(cfg.spikewaveform, 'lpfreq'     , 6000);
+cfg.spikewaveform.lpfilttype    = ft_getopt(cfg.spikewaveform, 'lpfilttype'	, 'but');
+cfg.spikewaveform.lpfiltord     = ft_getopt(cfg.spikewaveform, 'lpfiltord'  , 3);
 cfg.spikewaveform.part_list     = ft_getopt(cfg.spikewaveform , 'part_list' , 'all');
 cfg.circus.channelname          = ft_getopt(cfg.circus, 'channelname', []);
 cfg.circus.correct_chunk        = ft_getopt(cfg.circus, 'correct_chunk', false);
@@ -153,10 +158,17 @@ for ipart = cfg.spikewaveform.part_list
             
             cfgtemp                         = [];
             cfgtemp.dataset                 = datafile;
+            
             cfgtemp.hpfilter                = 'yes';
             cfgtemp.hpfilttype              = cfg.spikewaveform.hpfilttype;
             cfgtemp.hpfiltord               = cfg.spikewaveform.hpfiltord;
             cfgtemp.hpfreq                  = cfg.spikewaveform.hpfreq;
+            
+            cfgtemp.lpfilter                = 'yes';
+            cfgtemp.lpfreq                  = cfg.spikewaveform.lpfreq;
+            cfgtemp.lpfilttype              = cfg.spikewaveform.lpfilttype;
+            cfgtemp.lpfiltord               = cfg.spikewaveform.lpfiltord;
+            
             chandata                        = ft_preprocessing(cfgtemp);
             
             % define Fieldtrip trials
@@ -203,6 +215,7 @@ for ipart = cfg.spikewaveform.part_list
         end % ifile
 
         SpikeWaveforms{ipart}{iunit} = ft_appenddata([], temp{:});
+        SpikeWaveforms{ipart}{iunit}.cluster_group = SpikeRaw{ipart}.cluster_group{iunit};
         
 %         if iunit == 2
 %             figure; plot(SpikeWaveforms{ipart}{iunit}.time{1}, mean(vertcat(SpikeWaveforms{ipart}{iunit}.trial{:})));

@@ -96,6 +96,10 @@ elseif ~force
                 try
                     temp = load(fname);
                     for ipart = 1 : size(temp.SpikeTrials, 2)
+                        if ~isfield(temp.SpikeTrials{ipart}, markername)
+                            missing = [missing, markername];
+                            continue
+                        end
                         SpikeTrials{ipart}.(markername) = temp.SpikeTrials{ipart}.(markername);
                     end
                 catch ME
@@ -198,6 +202,17 @@ for markername = string(cfg.spike.name)
             if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime)
                 continue
             end
+            if ~isfield(MuseStruct{ipart}{idir}.markers, char(cfg.muse.endmarker.(markername)))
+                fprintf('No events ending with %s found in filenr %d\n', cfg.muse.endmarker.(markername), idir);
+                continue
+            end
+            if ~isfield(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)), 'synctime')
+                continue
+            end
+            if isempty(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime)
+
+                continue
+            end
             
             % starting trialcount fresh at every directory
             trialcount_dir = 1;
@@ -229,7 +244,17 @@ for markername = string(cfg.spike.name)
                     'Processing event %d from %d', ievent, size(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime, 2))
                 
                 ss  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) * hdr{idir}.Fs);
-                es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) * hdr{idir}.Fs);
+                if strcmp(cfg.muse.startmarker.(markername), cfg.muse.endmarker.(markername))
+                    es = ss;
+                    idx_end = ievent;
+                else
+                    idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * hdr{idir}.Fs) > ss, 1, 'first');
+                    es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) * hdr{idir}.Fs);
+                end
+                
+                if isempty(es)
+                    continue
+                end
                 
                 Startsample     = [Startsample;  int64(ss + (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
                 Endsample       = [Endsample;    int64(es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr{idir}.Fs) + dirOnset];
@@ -239,14 +264,14 @@ for markername = string(cfg.spike.name)
                 Startsample_dir = [Startsample_dir;  int64(ss + (cfg.spike.toi.(markername)(1) - cfg.spike.pad.(markername)) * hdr{idir}.Fs)];
                 Endsample_dir   = [Endsample_dir;    int64(es + (cfg.spike.toi.(markername)(2) + cfg.spike.pad.(markername)) * hdr{idir}.Fs)];
                 Startsec_dir    = [Startsec_dir;  MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent)];
-                Endsec_dir      = [Endsec_dir;    MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent)];
+                Endsec_dir      = [Endsec_dir;    MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end)];
                 t0              = [t0; ss];
                 t1              = [t1; es];
                 TrialDirOnset   = [TrialDirOnset; dirOnset];
                 StartTrialnr    = [StartTrialnr; MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).trialnr(ievent)];
-                EndTrialnr      = [EndTrialnr;   MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(ievent)];
+                EndTrialnr      = [EndTrialnr;   MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).trialnr(idx_end)];
                 Starttime       = [Starttime;    MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).clock(ievent) + seconds(cfg.spike.toi.(markername)(1))];
-                Endtime         = [Endtime;      MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(ievent)   + seconds(cfg.spike.toi.(markername)(2))];
+                Endtime         = [Endtime;      MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).clock(idx_end)   + seconds(cfg.spike.toi.(markername)(2))];
                 Trialnr_dir     = [Trialnr_dir;  trialcount_dir];
                 Trialnr         = [Trialnr;      trialcount];
                 Filenr          = [Filenr;       idir];
@@ -256,7 +281,7 @@ for markername = string(cfg.spike.name)
                 
                 % will be used to find overlap between events
                 trlstart                = MuseStruct{ipart}{idir}.markers.(cfg.muse.startmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(1);
-                trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(ievent) + cfg.epoch.toi.(markername)(2);      
+                trlend                  = MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) + cfg.epoch.toi.(markername)(2);      
 
                 % find overlap
                 for iother = 1 : size(cfg.spike.overlap, 2)

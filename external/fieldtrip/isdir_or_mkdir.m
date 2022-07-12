@@ -5,6 +5,11 @@ function isdir_or_mkdir(p)
 %
 % See also FOPEN_OR_ERROR
 
+if~isfolder(p)
+    ft_notice('creating directory %s', p);
+    mkdir(p);
+end
+
 % add trailing file separator (slash or backslash)
 p = char(p);
 p_full=[p filesep];

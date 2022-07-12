@@ -5,18 +5,18 @@ if ismac
     error('Platform not supported')
 elseif isunix
     rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/lgi1/DTX-spikes/';
-    rootpath_data       = '/network/lustre/iss01/epimicro/rodents/raw/DTX-raw/';
+    rootpath_data       = '/network/lustre/iss01/charpier/raw/lgi1/DTX-raw/';
     os                  = 'unix';
 elseif ispc
     rootpath_analysis	= '\\lexport\iss01.charpier\analyses\lgi1\DTX-spikes\';
-    rootpath_data       = '\\lexport\iss01.epimicro\rodents\raw\DTX-raw\';
+    rootpath_data       = '\\lexport\iss01.charpier\raw\lgi1\DTX-raw\';
     os                  = 'windows';
 else
     error('Platform not supported')
 end
 
-datasavedir = fullfile(rootpath_analysis, 'data'); 
-imagesavedir = fullfile(rootpath_analysis, 'image');
+datasavedir = fullfile(rootpath_analysis, 'data', 'reviewer_answers'); 
+imagesavedir = fullfile(rootpath_analysis, 'image', 'reviewer_answers');
 
 %% Config common for all experiments
 configcommon.datasavedir               = datasavedir;
@@ -51,8 +51,6 @@ configcommon.circus.channelname = {}; %set for each rat, analyse each channel in
 
 configcommon.spike.RPV                 = 0.002; %refractory period violation, in seconds
 configcommon.spike.ISIbins             = [0:0.0005:0.050]; %in s
-configcommon.spikewin.windowsize       = 60;
-configcommon.spikewin.windowoverlap    = 0;
 
 configcommon.stats.alpha = 0.05;
 
@@ -61,69 +59,107 @@ configcommon.spikewaveform.toi         = [-0.0015 0.0015];
 configcommon.spikewaveform.cutoff      = 500; 
 configcommon.spikewaveform.nspikes     = 'all'; %maximum number of spike waveforms to load. Can be 'all'. 
 
-configcommon.minbadtime.window         = 1;
-configcommon.minbadtime.SlowWave       = 0;
-configcommon.minbadtime.Interictal     = 1;
 
-configcommon.type                      = 'dtx';
-configcommon.name                      = {'SlowWave', 'Interictal'};
-configcommon.spike.events_name         = {'SlowWave'};
-configcommon.spike.baseline_name       = 'Interictal';
+%% config dtx
+configdtx = configcommon;
+configctrl.type                     = 'dtx';
+configdtx.minbadtime.window         = 1;
+configdtx.minbadtime.SlowWave       = 0;
+configdtx.minbadtime.Interictal     = 1;
 
-configcommon.seizuretimings.marker_start     = "SlowWave";
-configcommon.seizuretimings.marker_end       = "SlowWave";
-configcommon.seizuretimings.analysis_start = 'Analysis_Start';
-configcommon.seizuretimings.analysis_end   = 'Analysis_End';
-configcommon.seizuretimings.winsize        = 3600;%s
-configcommon.seizuretimings.winstep        = 1200;%s
+configdtx.type                      = 'dtx';
+configdtx.name                      = {'SlowWave', 'Interictal'};
+configdtx.spike.events_name         = {'SlowWave'};
+configdtx.spike.baseline_name       = 'Interictal';
+
+configdtx.seizuretimings.marker_start     = "SlowWave";
+configdtx.seizuretimings.marker_end       = "SlowWave";
+configdtx.seizuretimings.analysis_start = 'Analysis_Start';
+configdtx.seizuretimings.analysis_end   = 'Analysis_End';
+configdtx.seizuretimings.winsize        = 3600;%s
+configdtx.seizuretimings.winstep        = 1200;%s
 
 %read LFP
-configcommon.LFP.name                  = {'SlowWave','Interictal'};
+configdtx.LFP.name                  = {'SlowWave','Interictal'};
 
 %add bad markers for spiking cricus
-configcommon.bad.markerStart           = 'Crise_Start';
-configcommon.bad.markerEnd             = 'Crise_End';
-configcommon.bad.time_from_begin       = -3;
-configcommon.bad.time_from_end         = 3;    
+configdtx.bad.markerStart           = 'Crise_Start';
+configdtx.bad.markerEnd             = 'Crise_End';
+configdtx.bad.time_from_begin       = -3;
+configdtx.bad.time_from_end         = 3;    
 
 %SlowWave
-configcommon.muse.startmarker.SlowWave      = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.muse.endmarker.SlowWave        = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.epoch.toi.SlowWave             = [-2, 2];
-configcommon.epoch.pad.SlowWave             = 2;
-configcommon.spike.toi.SlowWave             = [-2, 2];
+configdtx.muse.startmarker.SlowWave      = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.muse.endmarker.SlowWave        = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.epoch.toi.SlowWave             = [-2, 2];
+configdtx.epoch.pad.SlowWave             = 2;
+configdtx.spike.toi.SlowWave             = [-2, 2];
 
-configcommon.align.name                         = {'SlowWave'};
-configcommon.align.method.SlowWave              = 'max';                                                              
-configcommon.align.filter.SlowWave              = 'lp';
-configcommon.align.freq.SlowWave                = 10;                                                                               
-configcommon.align.thresh.value.SlowWave        = 1;
-configcommon.align.thresh.method.SlowWave       = 'trial';%,'trial','trial'};%'medianbl','both';
-configcommon.align.toiplot.SlowWave             = [-1,  1];                                           
-configcommon.align.toiactive.SlowWave           = [-0.5, 0.5];                                           
-configcommon.align.toibaseline.SlowWave         = [-1, -0.5];
-configcommon.align.maxtimeshift.SlowWave        = 0.3;
-configcommon.align.demean.SlowWave              = 'yes';
+configdtx.align.name                         = {'SlowWave'};
+configdtx.align.method.SlowWave              = 'max';                                                              
+configdtx.align.filter.SlowWave              = 'lp';
+configdtx.align.freq.SlowWave                = 10;                                                                               
+configdtx.align.thresh.value.SlowWave        = 1;
+configdtx.align.thresh.method.SlowWave       = 'trial';%,'trial','trial'};%'medianbl','both';
+configdtx.align.toiplot.SlowWave             = [-1,  1];                                           
+configdtx.align.toiactive.SlowWave           = [-0.5, 0.5];                                           
+configdtx.align.toibaseline.SlowWave         = [-1, -0.5];
+configdtx.align.maxtimeshift.SlowWave        = 0.3;
+configdtx.align.demean.SlowWave              = 'yes';
 
-configcommon.LFP.baselinewindow.SlowWave  = [-2, -1];
-configcommon.stats.bl.SlowWave            = [-2, -1];
-configcommon.spike.resamplefs.SlowWave    = 1000;
-configcommon.spike.psthbin.SlowWave       = 1/50; %s
-configcommon.spike.sdftimwin.SlowWave     = [-0.05 0.05];
-configcommon.spike.nrsdfbins.SlowWave     = 200;
+configdtx.LFP.baselinewindow.SlowWave  = [-2, -1];
+configdtx.stats.bl.SlowWave            = [-2, -1];
+configdtx.spike.resamplefs.SlowWave    = 1000;
+configdtx.spike.psthbin.SlowWave       = 1/50; %s
+configdtx.spike.sdftimwin.SlowWave     = [-0.05 0.05];
+configdtx.spike.nrsdfbins.SlowWave     = 200;
     
 %Interictal
-configcommon.muse.startmarker.Interictal      = 'Crise_End';   % start and end Muse marker. For defining trials
-configcommon.muse.endmarker.Interictal        = 'SlowWave';   % start and end Muse marker. For defining trials
-configcommon.epoch.toi.Interictal             = [2, -1];
-configcommon.epoch.pad.Interictal             = 2;
-configcommon.spike.toi.Interictal             = [2, -1];
-configcommon.LFP.baselinewindow.Interictal    = [2, 12];
-configcommon.stats.bl.Interictal              = [];%set automatically. all but the last 60 seconds
-configcommon.spike.resamplefs.Interictal      = 1;
-configcommon.spike.psthbin.Interictal         = 1;%in s
-configcommon.spike.sdftimwin.Interictal       = [-5 5];
-configcommon.spike.nrsdfbins.Interictal       = 200;
+configdtx.muse.startmarker.Interictal      = 'Crise_End';   % start and end Muse marker. For defining trials
+configdtx.muse.endmarker.Interictal        = 'SlowWave';   % start and end Muse marker. For defining trials
+configdtx.epoch.toi.Interictal             = [2, -1];
+configdtx.epoch.pad.Interictal             = 2;
+configdtx.spike.toi.Interictal             = [2, -1];
+configdtx.LFP.baselinewindow.Interictal    = [2, 12];
+configdtx.stats.bl.Interictal              = [];%set automatically. all but the last 60 seconds
+configdtx.spike.resamplefs.Interictal      = 1;
+configdtx.spike.psthbin.Interictal         = 1;%in s
+configdtx.spike.sdftimwin.Interictal       = [-5 5];
+configdtx.spike.nrsdfbins.Interictal       = 200;
+
+configdtx.spikewin.windowsize       = 60;
+configdtx.spikewin.windowoverlap    = 0;
+
+%% Config for control experiments
+% no seizure-time-locked trials
+configctrl = configcommon;
+
+configctrl.type                      = 'ctrl';
+configctrl.name                      = {'Control'};
+configctrl.spike.baseline_name        = 'Control';
+configctrl.spike.events_name          = {};
+configctrl.minbadtime.window        = 1;
+
+configctrl.LFP.name                  = []; %do not load LFP
+configctrl.LFP.channel               = []; %do not load LFP
+configctrl.align.name                = []; %do not align muse markers
+configctrl.align.channel             = []; %do not align muse markers
+
+configctrl.muse.write                = true;
+configctrl.muse.startmarker.Control  = 'no';
+configctrl.muse.endmarker.Control  = 'no';
+configctrl.circus.reref              = 'no';
+configctrl.circus.outputdir          = fullfile(rootpath_analysis, 'data', 'dtx', 'SpykingCircus');
+configctrl.circus.hpfilter           = 'no'; % hp before writing data for SC, does not change the hp of SC
+configctrl.circus.postfix            = [];%'-final';
+
+configctrl.bad.markerStart           = [];
+configctrl.bad.markerEnd             = [];
+
+configctrl.spike.triallength         = 240; %seconds
+configctrl.spikewin.windowsize       = 240;
+configctrl.spikewin.windowoverlap    = 0;
+
 
 %% Rodent 1
 config{1}                           = configcommon;
@@ -249,3 +285,55 @@ config{5}.circus.channel            = {'E07','E08','E09','E10','E11','E12','E13'
 config{5}.circus.channelname        = {'E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
 
 config{5}.probeoffset = 250;
+
+%% Rodent 6
+config{6}                           = configctrl;
+config{6}.prefix                    = 'DTX43-';
+config{6}.rawdir                    = fullfile(rootpath_data, 'DTX43_2020-05-22-PROBE-CONTROLE', '2020_05_22_DTX43-ctrl');
+config{6}.imagesavedir              = fullfile(imagesavedir,'DTX43');       % where to print images
+config{6}.directorylist{1}          =  {'2020-05-22_14-05',...
+    '2020-05-22_16-05',...
+    '2020-05-22_18-05',...
+    '2020-05-22_20-05',...
+    '2020-05-22_22-05'};
+
+config{6}.labels.micro              = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{6}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+    'ECoGM1G','ECoGM1D','ECoGPtA'};
+
+config{6}.injectiontime             = datetime('22-May-2020 15:08:02');
+
+config{6}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{6}.circus.channelname        = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+
+config{6}.probeoffset = 315;
+
+%% Rodent 7
+%oblig� de reref avant de lancer spyking circus, car sinon trop d'artefacts
+%+++, et il y a un canal sans spike qui contient uniquement les artefacts.
+config{7}                           = configctrl;
+config{7}.prefix                    = 'DTX44-';
+config{7}.rawdir                    = fullfile(rootpath_data, 'DTX44_2020-05-24-Probe-controle', '2020_05_24_DTX44-ctrl-probe');
+config{7}.imagesavedir              = fullfile(imagesavedir,'DTX44');       % where to print images
+config{7}.directorylist{1}          =  {'2020-05-24_13-10',...
+    '2020-05-24_15-10',...
+    '2020-05-24_17-10',...
+    '2020-05-24_19-10',...
+    '2020-05-24_21-10',...
+    '2020-05-24_23-10',...
+    '2020-05-25_01-10'};
+
+config{7}.labels.micro              = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15','E16'};
+config{7}.labels.macro              = {'E06LFP','E07LFP','E08LFP','E09LFP','E10LFP','E11LFP','E12LFP','E13LFP','E14LFP','E15LFP','E16LFP',...
+    'ECoGM1G','ECoGM1D','ECoGPtA'};
+
+
+
+config{7}.injectiontime             = datetime('24-May-2020 14:14:02');
+
+config{7}.circus.channel            = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15'};
+config{7}.circus.channelname        = {'E06','E07','E08','E09','E10','E11','E12','E13','E14','E15'};
+config{7}.circus.reref              = 'yes';
+config{7}.circus.refchan            = 'E16';
+
+config{7}.probeoffset = 246;
