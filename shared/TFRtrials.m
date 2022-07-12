@@ -1,4 +1,4 @@
-function [TFR] = TFRtrials(cfg, force)
+function [TFR] = TFRtrials(cfg, force, Trialdata)
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -77,8 +77,8 @@ elseif ~force
     cfg.TFR.name = missing;
 end
 
-if ~isempty(cfg.TFR.name)
-    LFP = readLFP(cfg);
+if nargin < 3 && ~isempty(cfg.TFR.name) 
+    Trialdata = readLFP(cfg);
 end
 
 % loop over markers
@@ -102,7 +102,7 @@ for markername = string(cfg.TFR.name)
     % loop over parts within subject
     for ipart = 1 : size(cfg.directorylist, 2)
         
-        if ~isempty(LFP{ipart}.(markername))
+        if ~isempty(Trialdata{ipart}.(markername))
             cfgtemp                         = [];
             cfgtemp.channel                 = 'all';
             cfgtemp.method                  = 'mtmconvol';
@@ -116,7 +116,7 @@ for markername = string(cfg.TFR.name)
             cfgtemp.t_ftimwin               = cfg.TFR.t_ftimwin.(markername);
             cfgtemp.toi                     = cfg.TFR.toi.(markername);
             cfgtemp.feedback                = 'off';
-            TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp, LFP{ipart}.(markername));
+            TFR{ipart}.(markername)         = ft_freqanalysis(cfgtemp, Trialdata{ipart}.(markername));
             
             % to save memory, remove if not already done
             if isfield(TFR{ipart},'cfg')
