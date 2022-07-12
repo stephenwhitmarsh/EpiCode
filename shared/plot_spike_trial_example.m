@@ -1,7 +1,8 @@
-function plot_spike_trial_example(cfg, spiketrials, waveformstats, ipart, markername, itrial, maxsize)
+function plot_spike_trial_example(cfg, spiketrials, waveformstats, ipart, markername, itrial, toi)
 
 % Use as : 
 %       plot_spike_trial_example(cfg, spiketrials, waveformstats, ipart, markername, itrial, maxsize)
+% 
 % plot_spike_trial_example plots, for one trial, the raw LFP, the LFP
 % high-pass filtered, and the LFP high-pass filtered colored at the moments
 % where Spiking-Circus found spikes.
@@ -12,8 +13,8 @@ function plot_spike_trial_example(cfg, spiketrials, waveformstats, ipart, marker
 % - ipart         : nr. of the part to use
 % - markername    : name of the analysis to use
 % - itrial        : number of the trial to use 
-% - maxsize       : (optional, default = inf) if trial is longer than maxsize, then 
-%                    the first maxsize seconds are displayed
+% - maxsize       : (optional, default = "all") time to plot in the trial,
+%                   see cfg.latency in  ft_selectdata
 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -33,7 +34,7 @@ function plot_spike_trial_example(cfg, spiketrials, waveformstats, ipart, marker
 % 
 
 if nargin < 7
-    maxsize = inf;
+    toi = "all";
 end
 
 for ichannel = 1:size(cfg.circus.channel, 2)
@@ -46,7 +47,6 @@ for ichannel = 1:size(cfg.circus.channel, 2)
         channame = channame(2:end);
     end
     datapath = fullfile(temp.folder, temp.name);
-    Fs       = spiketrials{ipart}.(markername).hdr.Fs;
     
     cfgtemp             = [];
     cfgtemp.trl(1)      = spiketrials{ipart}.(markername).trialinfo.begsample_dir(itrial);
@@ -54,10 +54,6 @@ for ichannel = 1:size(cfg.circus.channel, 2)
     cfgtemp.trl(3)      = spiketrials{ipart}.(markername).trialinfo.offset(itrial);
     cfgtemp.dataset     = datapath;
     
-    %shorten trial if it is too long
-    if cfgtemp.trl(2) - cfgtemp.trl(1) > maxsize * Fs
-        cfgtemp.trl(2) = cfgtemp.trl(1) + maxsize * Fs;
-    end
     cfgtemp.bsfilter    = 'yes';
     cfgtemp.bsfreq      = [49 51];
     cfgtemp.bsinstabilityfix = 'reduce';
@@ -66,7 +62,9 @@ for ichannel = 1:size(cfg.circus.channel, 2)
     cfgtemp.hpfilter    = 'yes';
     cfgtemp.hpfreq      = 300;
     cfgtemp.hpfiltord   = 3;
-    dat_hpfilt          = ft_preprocessing(cfgtemp);
+    dat_hpfilt          = ft_preprocessing(cfgtemp, dat);
+    
+    Fs       = dat.fsample;
     
     iplot = 1;
     fig = figure;
@@ -81,6 +79,9 @@ for ichannel = 1:size(cfg.circus.channel, 2)
     set(gca, 'tickdir', 'out', 'fontsize', 15);
     ylabel('uV');
     axis tight
+    if string(toi) ~= "all"
+        xlim(toi);
+    end
     
     %plot MUA without and with higlights
     for do_highlight = [false true]
@@ -129,7 +130,9 @@ for ichannel = 1:size(cfg.circus.channel, 2)
         set(gca, 'tickdir', 'out', 'fontsize', 15);
         ylabel('uV');
         axis tight
-        
+        if string(toi) ~= "all"
+            xlim(toi);
+        end
     end
     
     xlabel('time (s)');
