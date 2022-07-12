@@ -1,4 +1,4 @@
-function [stats] = spikePSTH(cfg, SpikeTrials, force)
+function [stats] = spikePSTH(cfg, SpikeTrials, force, LFP)
 
 % SPIKERATESTATSEVENTS calculates spike statistics
 %
@@ -6,6 +6,10 @@ function [stats] = spikePSTH(cfg, SpikeTrials, force)
 %   [stats] = spikeTrialDensity(cfg, SpikeTrials, force)
 % or, if need to only load precomputed data :
 %   [stats] = spikeTrialDensity(cfg)
+% 
+% cfg.spike.psthbin.(markername) : bin size of the psth in seconds
+% cfg.spike.psthoutputunit : output of the psth, either 'rate' (default), 
+% 'spikecount' or 'proportion' (see ft_spike_psth for detailed documentation)
 % 
 % This file is part of EpiCode, see
 % http://www.github.com/stephenwhitmarsh/EpiCode for documentation and details.
@@ -63,18 +67,20 @@ if exist(fname, 'file') && force == false
     return
 end
 
-cfg.spike.part_list = ft_getopt(cfg.spike, 'part_list', 'all');
+cfg.spike.part_list      = ft_getopt(cfg.spike, 'part_list', 'all');
+cfg.spike.psthoutputunit = ft_getopt(cfg.spike, 'psthoutputunit', 'rate');
 
 if strcmp(cfg.spike.part_list, 'all')
     cfg.spike.part_list = 1:size(cfg.directorylist, 2);
 end
 stats = {};
 
-
-% read LFP for correlation later on
-cfgtemp             = cfg;
-cfgtemp.LFP.name    = cfg.spike.name;
-LFP                 = readLFP(cfgtemp);
+if nargin < 4
+    % read LFP for correlation later on
+    cfgtemp             = cfg;
+    cfgtemp.LFP.name    = cfg.spike.name;
+    LFP                 = readLFP(cfgtemp);
+end
 
 for ipart = cfg.spike.part_list
     
@@ -96,7 +102,7 @@ for ipart = cfg.spike.part_list
         if isfield(cfg.spike, 'psthbin')
             cfgtemp.binsize             = cfg.spike.psthbin.(markername);
         end
-        cfgtemp.outputunit              = 'spikecount';
+        cfgtemp.outputunit              = cfg.spike.psthoutputunit;
         cfgtemp.keeptrials              = 'yes';
         psth_event                      = ft_spike_psth(cfgtemp, SpikeTrials{ipart}.(markername));
         stats{ipart}.psth.(markername)  = psth_event;
