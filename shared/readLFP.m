@@ -230,6 +230,7 @@ for markername = string(cfg.LFP.name)
                 cfgtemp.hpfreq          = ft_getopt(cfg.LFP, 'hpfreq', []);
                 cfgtemp.bpfreq          = ft_getopt(cfg.LFP, 'bpfreq', []);
                 cfgtemp.bsfreq          = ft_getopt(cfg.LFP, 'bsfreq', []);
+                cfgtemp.bsinstabilityfix = ft_getopt(cfg.LFP, 'bsinstabilityfix', []);
                 dat                     = ft_preprocessing(cfgtemp, dat);
                 
                 % append EMG data (if any)
@@ -317,7 +318,7 @@ for markername = string(cfg.LFP.name)
                         es = ss;
                         idx_end = ievent;
                     else
-                        idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) >= ss, 1, 'first');
+                        idx_end = find(round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime * dat.fsample) > ss, 1, 'first');
                         es  = round(MuseStruct{ipart}{idir}.markers.(cfg.muse.endmarker.(markername)).synctime(idx_end) * dat.fsample);
                     end
                     

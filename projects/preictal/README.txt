@@ -1,0 +1,5 @@
+- ajouter un patient dans le setparams
+- lancer preictal_prepare_spykingcircus.m (en local)
+- sur le cluster : sbatch slurm_spykingcircus.sh
+- lire les résultats du spike sorting sur Phy
+- sur le cluster : sbatch preictal_project_slurm.sh

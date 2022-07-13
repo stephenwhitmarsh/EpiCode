@@ -32,62 +32,73 @@ function [config, MuseStruct] = addSlidingWindows(config, MuseStruct)
 
 % get the default cfg options
 config.window                  = ft_getopt(config,        'window', []);
-config.window.length           = ft_getopt(config.window, 'length', 60);
-config.window.overlap          = ft_getopt(config.window, 'overlap', 0);
+config.window.name             = ft_getopt(config.window, 'name', {'window'});
+config.window.length           = ft_getopt(config.window, 'length', []);
+config.window.overlap          = ft_getopt(config.window, 'overlap', []);
 
-% window is symmetrical around 0
-length = config.window.length;
-
-for ipart = 1 : size(config.directorylist, 2)
-    for idir = 1 : size(config.directorylist{ipart}, 2)
-        sprintf('Adding part %d, dir %d\n', ipart, idir)
-        temp = dir(fullfile(config.rawdir, config.directorylist{ipart}{idir}, ['*', config.circus.channel{1}, '.ncs']));
-        hdr  = ft_read_header(fullfile(config.rawdir, config.directorylist{ipart}{idir}, temp.name));
-        MuseStruct{ipart}{idir}.markers.window__START__.synctime = 0 : (length - length * config.window.overlap) : (hdr.nSamples / hdr.Fs - length / 2);
-        MuseStruct{ipart}{idir}.markers.window__START__.clock    = seconds(MuseStruct{ipart}{idir}.markers.window__START__.synctime) + MuseStruct{ipart}{idir}.starttime;
-        MuseStruct{ipart}{idir}.markers.window__START__.events   = size(MuseStruct{ipart}{idir}.markers.window__START__.synctime, 2);
-        MuseStruct{ipart}{idir}.markers.window__END__.synctime   = MuseStruct{ipart}{idir}.markers.window__START__.synctime + length;
-        MuseStruct{ipart}{idir}.markers.window__END__.clock      = MuseStruct{ipart}{idir}.markers.window__START__.clock + seconds(length);
-        MuseStruct{ipart}{idir}.markers.window__END__.events     = size(MuseStruct{ipart}{idir}.markers.window__END__.synctime, 2);
+for markername = string(config.window.name)
+    
+    % window is symmetrical around 0
+    length = config.window.length.(markername);
+    start_name = sprintf('%s__START__', markername);
+    end_name   = sprintf('%s__END__', markername);
+    for ipart = 1 : size(config.directorylist, 2)
+        for idir = 1 : size(config.directorylist{ipart}, 2)
+            
+            ft_info('Adding %s in part %d, dir %d\n', markername, ipart, idir)
+            
+            temp = dir(fullfile(config.rawdir, config.directorylist{ipart}{idir}, ['*', config.circus.channel{1}, '.ncs']));
+            hdr  = ft_read_header(fullfile(config.rawdir, config.directorylist{ipart}{idir}, temp.name));
+            
+            MuseStruct{ipart}{idir}.markers.(start_name).synctime = 0 : (length - length * config.window.overlap.(markername)) : (hdr.nSamples / hdr.Fs - length / 2);
+            MuseStruct{ipart}{idir}.markers.(start_name).clock    = seconds(MuseStruct{ipart}{idir}.markers.(start_name).synctime) + MuseStruct{ipart}{idir}.starttime;
+            MuseStruct{ipart}{idir}.markers.(start_name).events   = size(MuseStruct{ipart}{idir}.markers.(start_name).synctime, 2);
+            MuseStruct{ipart}{idir}.markers.(end_name).synctime   = MuseStruct{ipart}{idir}.markers.(start_name).synctime + length;
+            MuseStruct{ipart}{idir}.markers.(end_name).clock      = MuseStruct{ipart}{idir}.markers.(start_name).clock + seconds(length);
+            MuseStruct{ipart}{idir}.markers.(end_name).events     = size(MuseStruct{ipart}{idir}.markers.(end_name).synctime, 2);
+            
+        end
+    end
+    
+    config.muse.startmarker.(markername)  = start_name;
+    config.muse.endmarker.(markername)    = end_name;
+    
+    config.epoch.toi.(markername)         = [0 config.window.length.(markername)];
+    config.epoch.pad.(markername)         = 0;
+    
+    % add window configuration to settings
+    
+    if isfield(config, 'LFP')
+        if isfield(config.LFP, 'name')
+            config.LFP.toi.(markername)           = [0 0];
+            config.LFP.pad.(markername)           = 0;
+            config.epoch.toi.(markername)         = [0 0];
+            config.epoch.pad.(markername)         = 0;
+        end
+    end
+    
+    if isfield(config, 'FFT')
+        if isfield(config.FFT, 'name')
+            config.FFT.toi.(markername)           = [0 0];
+            config.FFT.pad.(markername)           = 0;
+        end
+    end
+    
+    if isfield(config, 'TFR')
+        if isfield(config.TFR, 'name')
+            config.TFR.toi.(markername)           = [0 0];
+            config.TFR.pad.(markername)           = 0;
+        end
+    end
+    
+    if isfield(config, 'spike')
+        if isfield(config.spike, 'name')
+            config.spike.toi.(markername)         = [0 0];
+            config.spike.pad.(markername)         = 0;
+        end
     end
 end
 
-config.muse.startmarker.window  = 'window__START__';
-config.muse.endmarker.window    = 'window__END__';
-
-config.epoch.toi.window         = [0 config.window.length];
-config.epoch.pad.window         = 0;
-
-% add window configuration to settings 
-
-if isfield(config, 'LFP')
-    if isfield(config.LFP, 'name')
-        config.LFP.toi.window           = [0 0];
-        config.LFP.pad.window           = 0;
-        config.epoch.toi.window         = [0 0];
-        config.epoch.pad.window         = 0;        
-    end
+if isempty(markername)
+    warning('No sliding window was added');
 end
-
-if isfield(config, 'FFT')
-    if isfield(config.FFT, 'name')
-        config.FFT.toi.window           = [0 0];
-        config.FFT.pad.window           = 0;
-    end
-end
-
-if isfield(config, 'TFR')
-    if isfield(config.TFR, 'name')
-        config.TFR.toi.window           = [0 0];
-        config.TFR.pad.window           = 0;
-    end
-end
-
-if isfield(config, 'spike')
-    if isfield(config.spike, 'name')
-        config.spike.toi.window         = [0 0];
-        config.spike.pad.window         = 0;
-    end
-end
-
-

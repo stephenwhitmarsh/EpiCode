@@ -2,23 +2,23 @@ function preictal_project_LC
 
 restoredefaultpath
 if ispc
-    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\external'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\templates'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\EpiCode\projects\preictal'))
-    addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\SPIKY_apr_2021'))
+    addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\EpiCode\shared'))
+    addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\EpiCode\external'))
+    addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\EpiCode\templates'))
+    addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\EpiCode\projects\preictal'))
+    addpath (genpath('\\l2export\iss02.charpier\analyses\vn_preictal\scripts\SPIKY_apr_2021'))
     %     addpath (genpath('\\lexport\iss01.charpier\analyses\vn_preictal\scripts\SPIKY_Dec_2019'))
 
-    addpath \\lexport\iss01.charpier\analyses\vn_preictal\scripts\fieldtrip-20200607
+    addpath \\l2export\iss02.charpier\analyses\vn_preictal\scripts\fieldtrip-20200607
     
 elseif isunix
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/shared'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/external'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/templates'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/EpiCode/projects/preictal'))
-    addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/SPIKY_apr_2021'))
+    addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/shared'))
+    addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/external'))
+    addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/templates'))
+    addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/EpiCode/projects/preictal'))
+    addpath (genpath('/network/lustre/iss02/charpier/analyses/vn_preictal/scripts/SPIKY_apr_2021'))
     %     addpath (genpath('/network/lustre/iss01/charpier/analyses/vn_preictal/scripts/SPIKY_Dec_2019'))
-    addpath /network/lustre/iss01/charpier/analyses/vn_preictal/scripts/fieldtrip-20200607
+    addpath /network/lustre/iss02/charpier/analyses/vn_preictal/scripts/fieldtrip-20200607
 end
 ft_defaults
 
@@ -27,8 +27,14 @@ config = preictal_setparams;
 %% prepare data for Spyking Circus
 % write a new joblist for the cluster
 preictal_spikes_slurm_joblist
+<<<<<<< Updated upstream
+
+for ielec = 12 % à définir
+
+=======
     
-for ielec = 18  % à définir (1 : n si plusieurs patients)
+for ielec = 5  % à définir (1 : n si plusieurs patients)
+>>>>>>> Stashed changes
     
     ipart = 1; 
     
@@ -42,15 +48,27 @@ for ielec = 18  % à définir (1 : n si plusieurs patients)
 
     % add (sliding) timewindow add window marker
     [config{ielec}, MuseStruct]     = addSlidingWindows(config{ielec}, MuseStruct);
+<<<<<<< Updated upstream
     
     % template LFP
     config{ielec}.LFP.name   = {'window'};    
     LFP               = readLFP(config{ielec}, MuseStruct, true);
     
+=======
+    
+    % template LFP
+    config{ielec}.LFP.name   = {'window'};    
+    LFP               = readLFP(config{ielec}, MuseStruct, true);
+    
+>>>>>>> Stashed changes
     % calculate FFT on sliding timewindow
     config{ielec}.FFT.name  = {'window'};
     FFT              = FFTtrials(config{ielec}, true);   % take a look i guess
  
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     % write artefacts to file
     writeSpykingCircusDeadfiles(config{ielec}, MuseStruct, true, '_SeizuresNotRemoved');
     
@@ -91,7 +109,7 @@ end
 
 % plotting Figure XXX of the article
 
-for ielec  = 2 : 3
+for ielec  = 1
     
     % read settings
     config = preictal_setparams;
@@ -119,7 +137,7 @@ for ielec  = 2 : 3
     
     % calculate statistics per window
     SpikeStats                    = spikeTrialStats(config{ielec}, SpikeTrials, false);
-    
+
     % you can plot any metric shown here: SpikeStats{1}.window{1}
     iunit = 1:size(SpikeStats{ipart}.window, 2); % spike to plot
     tunit = 3; % for spike distance
