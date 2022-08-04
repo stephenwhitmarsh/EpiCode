@@ -5,8 +5,8 @@
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=8
 #SBATCH --chdir=.
-#SBATCH --error=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_error.txt
-#SBATCH --output=/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_output.txt
+#SBATCH --error=/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_error.txt
+#SBATCH --output=/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/slurm/SpikeStats_%A_%a_%j-%x_output.txt
 #SBATCH --array=1-8
 
 module load MATLAB/R2020b

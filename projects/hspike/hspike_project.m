@@ -5,8 +5,8 @@
 set(0, 'DefaultFigurePosition', [2500 100  1000 1000]);
 set(0, 'DefaultFigurePosition', [200  300  1000 500]);
 
-addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+addpath /network/lustre/iss02/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
+addpath Z:\analyses\stephen.whitmarsh\EpiCode\projects\hspike
 
 hspike_setpaths;
 

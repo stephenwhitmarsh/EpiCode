@@ -16,21 +16,22 @@ if isunix
 end
 
 if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\git\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epishare-master'));
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
-    addpath          \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
+    addpath Z:\analyses\stephen.whitmarsh\git\fieldtrip
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\shared\utilities
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\subaxis    
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer         
+    addpath Z:\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031
+    addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\epishare-master'));
+    addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
+    addpath          Z:\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
 end
 ft_defaults
-
+set(0,'defaulttextinterpreter','none')
 %% load data
 for ipatient = 1:8
     config                          = hspike_setparams;
@@ -82,7 +83,6 @@ for ipatient = 1:8
     end
 end
 
-
 figure;
 cm = cool(size(fields(FFTavg_stage_norm{ipatient}), 1));
 for ipatient = 1 : 8
@@ -94,7 +94,6 @@ for ipatient = 1 : 8
         ic = ic + 1;
     end
 end
-
 
 %% average over patients
 for ipatient = 1 : 8
@@ -130,7 +129,6 @@ set(fig, 'Renderer', 'Painters');
 hold on;
 set(gca, 'clipping', 'on');    
 ylim([-0.6, 2.8]); 
-
 
 cm = cbrewer('qual', 'Set2', size(fields(FFT_all), 1));
 cm(strcmp(hyplabels, 'Wake'), :) = [0, 0, 0];
@@ -172,16 +170,23 @@ ax = axis;
 % l = plot([ax(1), ax(2)], [0, 0], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
 
 % plot max freq lines
-for hyplabel = ["S3", "REM"]
-%     l = plot([maxfreq.(hyplabel), maxfreq.(hyplabel)], [ax(3), maxpow.(hyplabel)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-    l = plot([maxfreq.(hyplabel), maxfreq.(hyplabel)], [ax(3),ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
+ic = 1;
+for hyplabel = ["S3", "S2", "S1", "REM"]
+    l = plot([maxfreq.(hyplabel), maxfreq.(hyplabel)], [ax(3),maxpow.(hyplabel)], 'color', [0.5, 0.5, 0.5], 'LineStyle', '--'); uistack(l, 'bottom');
+    p = plot(maxfreq.(hyplabel), maxpow.(hyplabel), 'o-','MarkerFaceColor', cm(ic, :),'MarkerEdgeColor', cm(ic, :));
+    ic = ic + 1;
 end
 
+
 % add patches for frequency bands
-l = plot([2.5, 2.5],    [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-l = plot([4, 4],        [ax(3), ax(4)], 'color', [0.9, 0.9, 0.9]); uistack(l, 'bottom');
-% text(1.25,  -0.5, 'Delta1', 'HorizontalAlignment', 'center');
-% text(3.25,  -0.5, 'Delta2', 'HorizontalAlignment', 'center');
+% l = plot([2.5, 2.5],    [ax(3), ax(4)], 'color', [0.5, 0.5, 0.5], 'LineStyle', '-'); uistack(l, 'bottom');
+% l = plot([4, 4],        [ax(3), ax(4)], 'color', [0.5, 0.5, 0.5]); uistack(l, 'bottom');
+cshade = [0.8, 0.8, 0.8];
+fill([0.1, 2.45, 2.45, 0.1], [2.6, 2.6, 3, 3], 'r', 'FaceColor', cshade, 'EdgeColor', cshade);
+fill([2.55, 4, 4, 2.55],     [2.6, 2.6, 3, 3], 'b', 'FaceColor', cshade, 'EdgeColor', cshade);
+
+text(1.30,  2.7, 'Slow Wave Activity', 'HorizontalAlignment', 'center');
+text(3.25,  2.7, 'Delta', 'HorizontalAlignment', 'center');
 
 xticks(sort([0.1, 2.5, 4, 5, maxfreq.REM, maxfreq.S3]));
 xtickformat('%.1f')
@@ -197,13 +202,15 @@ for hyplabel = hyplabels
 end
 
 xlabel('Frequency (Hz)');
-ylabel('Log power relative to pre-sleep');
-legend(h, hyplabels, 'box', 'off'); 
+ylabel('Power relative to pre-sleep');
+legend(h, hyplabels, 'box', 'off', 'location', 'eastoutside'); 
 
 % xlim([1, 20]);
 set(gca,'TickLabelInterpreter', 'none', 'box', 'off', 'TickDir', 'out', 'TickLength', [0.01, 0.01])
-set(findall(gcf, '-property', 'FontSize'), 'Fontsize', 18);
+set(findall(gcf, '-property', 'FontSize'), 'Fontsize', 12);
+set(findall(gcf, '-property', 'FontName'), 'FontName', 'Tahoma');
 axis square
+
 %% write to figure for article (if not on Desktop PC)
 if ~ispc
     fname = fullfile(config{1}.imagesavedir, 'FFT');

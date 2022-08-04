@@ -1001,6 +1001,7 @@ detach(package:lmerTest)
 library(lmerTest)
 library(lme4)
 
+
 ###################################
 # Delta1 explained by sleep stage #
 ###################################
@@ -1220,6 +1221,7 @@ ggarrange(D1, D2,
           font.label = list(size = 14, color = "black", face = "bold")) %>%
   ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta_count.pdf")
 
+
 ###################################################################
 # Mixed model with both sleep stage and power explaining IED rate #
 ###################################################################
@@ -1271,9 +1273,7 @@ kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum_pow
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
 
 
-#################
-## Plot models ##
-#################
+# Plot models
 
 set_theme(
   base = theme_article(),
@@ -1341,9 +1341,7 @@ plot_delta2_model$data$title = "Delta2 (2.5-4.0 Hz) model"
 plot_delta2_model <- plot_delta2_model + facet_wrap(~title, scales="free_y")
 
 
-###############################
-# Boxplots together in Figure #
-###############################
+# Boxplots together in Figure
 
 ggarrange(plot_IED_rate, plot_IEDrate_model, plot_delta1, plot_delta1_model, plot_delta2, plot_delta2_model,
           ncol = 2, nrow = 3,
@@ -1450,6 +1448,33 @@ plot_amp_diff <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=diffamp)) +
   facet_wrap(~title3)
 
 
+# plot pos vs neg in count scatter plot
+
+data_bin <- data_amp %>% group_by(Patient) %>% mutate(pos_bin = cut(posamp, 20))
+data_bin <- data_bin %>% group_by(Patient) %>% mutate(neg_bin = cut(negamp, 20))
+
+ggplot(data=data_bin, aes(y=pos_bin, x=neg_bin)) +
+  geom_count(aes(color = Patient)) +
+  # scale_size_area(max_size = 3) +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  theme(axis.text.y = element_blank()) +
+  theme_article() +
+  # coord_fixed() +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank(),
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank()
+    ) +
+  ylab("Peak amplitude") +
+  xlab("Slow wave amplitude") +
+  # labs(size = "Proportion") +
+  facet_wrap(~Patient, ncol = 4, scales = "free") +
+  theme(aspect.ratio = 1) 
+ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/amp_corr.pdf", width = 7, height = 4, units = "in")
+
+
 #########################
 ## STATISTICS LFP peaks #
 #########################
@@ -1484,6 +1509,10 @@ data_amp$Zdiffamp <- data_amp$Zposamp - data_amp$Znegamp
 
 # fit model
 data_amp$stage = relevel(data_amp$stage, ref="Pre")
+
+# lpos  <- lmer(posamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
+# lneg  <- lmer(negamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
+# ldiff <- lmer(Zdiffamp ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 
 lpos  <- lmer(posamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 lneg  <- lmer(negamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))

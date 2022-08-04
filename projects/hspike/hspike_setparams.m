@@ -32,11 +32,11 @@ if nargin == 1
 end
 
 if pc
-    rootpath_analysis	= '\\lexport\iss01.charpier\analyses\stephen.whitmarsh';
+    rootpath_analysis	= '\\l2export\iss02.charpier\analyses\stephen.whitmarsh';
     rootpath_data       = '\\l2export\iss02.epimicro\patients\raw';
     rootpath_epiloc   	= '\\l2export\iss02.epimicro\patients\epiloc\analyse';       
 else
-    rootpath_analysis   = '/network/lustre/iss01/charpier/analyses/stephen.whitmarsh';
+    rootpath_analysis   = '/network/lustre/iss02/charpier/analyses/stephen.whitmarsh';
     rootpath_data       = '/network/lustre/iss02/epimicro/patients/raw';
     rootpath_epiloc     = '/network/lustre/iss02/epimicro/patients/epiloc/analyse';
 end
