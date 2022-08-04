@@ -39,10 +39,20 @@ for ipatient = 1:8
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
-    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+    [clusterindx{ipatient}, ~, LFP_cluster{ipatient}]               = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
     
+    [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
+
     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
+    
+    % combine templates into single IED detection markers
+    config{ipatient}.editmarkerfile.torename = {'template1', 'detection'; 'template2', 'detection'; 'template3', 'detection'; 'template4', 'detection'; 'template5', 'detection'; 'template6', 'detection'};
+    MuseStruct{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct{ipatient});
+
+end
+
+
+    
     
     % exportHypnogram(config{ipatient})
     

@@ -46,32 +46,53 @@ for ipart = 1 : size(MuseStruct_orig, 2)
     for idir = 1 : size(MuseStruct_orig{ipart}, 2)
         
         % rename marker
-        for imarker = 1 : size(cfg.editmarkerfile.torename,1)
-            if isfield(MuseStruct_orig{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1})
-                nr_renamed = nr_renamed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime, 2);
-                
-                % add to existing markers if already exists
-                if isfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,2})   
-                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).synctime = [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).synctime, MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime];
-                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).clock    = [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).clock,    MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).clock];                    
-                else
-                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}) = MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1});
-                end
-                MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1});
+        for imarker = 1 : size(cfg.editmarkerfile.torename, 1)
+            
+            if ~isfield(MuseStruct_orig{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker, 1})
+                continue
             end
+
+            if ~isfield(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1}), 'synctime')
+                continue
+            end
+
+            nr_renamed = nr_renamed + size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,1}).synctime, 2);
+            
+            % add to existing markers if already exists
+            if isfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker, 2})
+                
+                % sometimes there is a dimension switch when empty
+                if isempty(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1}).clock)
+                    MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1}).clock = [];
+                end
+                if isempty(MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).clock)
+                    MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).clock = [];
+                end
+                
+                MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).synctime = ...
+                    [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).synctime, ...
+                    MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1}).synctime];
+                MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).clock    = ...
+                    [MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).clock, ...
+                    MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1}).clock];
+                MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}).events   = size(MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker,2}).clock, 2);
+            else
+                MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 2}) = MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.torename{imarker, 1});
+            end
+            MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers, cfg.editmarkerfile.torename{imarker,1});
         end
         
         % remove marker
-        for imarker = 1 : size(cfg.editmarkerfile.toremove,2)
+        for imarker = 1 : size(cfg.editmarkerfile.toremove, 2)
             if isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker})
-                nr_removed = nr_removed + 1;%size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.toremove{imarker,1}).synctime, 2);    
+                nr_removed = nr_removed + 1;%size(MuseStruct_orig{ipart}{idir}.markers.(cfg.editmarkerfile.toremove{imarker,1}).synctime, 2);
                 
                 MuseStruct_new{ipart}{idir}.markers = rmfield(MuseStruct_new{ipart}{idir}.markers,cfg.editmarkerfile.toremove{imarker});
             end
         end
         
         % add marker
-        for imarker = 1 : size(cfg.editmarkerfile.toadd,2)
+        for imarker = 1 : size(cfg.editmarkerfile.toadd, 2)
             if ~isfield(MuseStruct_orig{ipart}{idir}.markers,cfg.editmarkerfile.toadd{imarker})
                 nr_added = nr_added + 1;
                 MuseStruct_new{ipart}{idir}.markers.(cfg.editmarkerfile.toadd{imarker}).events          = 0;

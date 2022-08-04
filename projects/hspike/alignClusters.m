@@ -25,7 +25,7 @@ for imarker = 1 : size(LFP, 2)
     cfg_temp.latency = cfg.cluster.latency;
     LFP{imarker} = ft_selectdata(cfg_temp, LFP{imarker});
     
-    chani       = find(contains(LFP{imarker}.label, cfg.align.zerochannel));
+    chani       = find(contains(LFP{imarker}.label, cfg.align.zerochannel), 1);
     subplot(2, size(LFP, 2), imarker); hold;
     
     plot(LFP{imarker}.time, LFP{imarker}.avg', 'k');
