@@ -10,7 +10,7 @@
 #SBATCH --mail-user=paul.baudin@icm-institute.org
 #SBATCH --mail-type=ALL
 
-module load MATLAB/R2019b
+module load MATLAB/R2020b
 
 matlab -nodesktop -softwareopengl -nosplash -nodisplay -r "dtx_spikes_grandaverage;"
 
