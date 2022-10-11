@@ -1,36 +1,5 @@
 function [config] = Figure_LFP_stages
 
-restoredefaultpath
-if isunix
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/git/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/shared/utilities
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/subaxis
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/fieldtrip
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/sigstar-master
-    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/cbrewer/cbrewer
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/epishare-master'));
-    addpath(genpath('/network/lustre/iss01/charpier/analyses/stephen.whitmarsh/scripts/SPIKY_apr_2021'))
-end
-
-if ispc
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\git\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
-    addpath \\lexport\iss01.charpier\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\epishare-master'));
-    addpath(genpath('\\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
-    addpath          \\lexport\iss01.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
-end
-
-ft_defaults
 
 %% load data
 config = hspike_setparams;
@@ -474,7 +443,8 @@ cm = cbrewer('qual', 'Set2', 8);
 ylims = [2000, 1000, 500, 900, 2800, 500, 200, 1000] / 1000; % go to mV
 nrow = 8;
 ncol = 6;
-    
+
+
 for showrejected = [false, true]
     
     fig = figure('visible', true);
@@ -626,6 +596,9 @@ for ipatient = 1 : 8
         sem         = LFPstage_overtemplate_avg{ipatient}.(hyplabel).sem(maxchan, :) / 1000;
         x           = LFPstage_overtemplate_avg{ipatient}.(hyplabel).time{1};
         y           = LFPstage_overtemplate_avg{ipatient}.(hyplabel).trial{1}(maxchan, :) / 1000; % go to mV
+        if ipatient == 6
+            y = -y;
+        end
         patch([x, x(end:-1:1)], [y-sem, y(end:-1:1)+sem(end:-1:1)], cm(9-find(hyplabels == hyplabel), :), 'edgecolor', 'none', 'facealpha', 0.3);
         lh          = plot(x, y, 'color', cm(9-find(hyplabels == hyplabel), :), 'linewidth', 1);
     end
@@ -677,7 +650,7 @@ for ipatient = 1 : 8
         end
         
         spos = get(gca, 'Position');
-        l = legend(h, hyplabels, 'box', 'off', 'location', 'eastoutside');
+        l = legend(h, ["S3", "S2", "S1", "REM", "WASO"], 'box', 'off', 'location', 'eastoutside');
         title(l, "Stage");
         l.Title.FontWeight = 'normal';
         set(gca, 'Position', spos);
@@ -710,7 +683,7 @@ if ~ispc
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));
 else
-    fname = fullfile('D:\Dropbox\Apps\Overleaf\Hspike\images', 'LFP_stages');
+    fname = fullfile('D:\Dropbox\Apps\Overleaf\Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep\images', 'LFP_stages');
     isdir_or_mkdir(fileparts(fname));
     exportgraphics(fig, strcat(fname, '.pdf'));
 end

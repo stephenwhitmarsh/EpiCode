@@ -7,7 +7,6 @@ set(0, 'DefaultFigurePosition', [200  300  1000 500]);
 
 addpath /network/lustre/iss02/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
 addpath Z:\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-
 hspike_setpaths;
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
@@ -108,8 +107,8 @@ Figure_hypnograms
 Figure_FFT
 Figure_LFP_stages % plot templates and write `data for R
 Figure_raster
-Figure_psth % also writes data for R
-    
+Figure_psth % also writes data for R   
+
 %% Plot locations with BrainNetViewer
 
 % per patient
@@ -218,9 +217,17 @@ for ipatient = 1 : 8
         t_temp.part = ipart;
         t_temp.patient = ipatient;
         t_summary = [t_summary; t_temp];
-        
+
     end
 end
+
+t_summary.TOTAL   = t_summary.PHASE_1 + t_summary.PHASE_2 + t_summary.PHASE_3 + t_summary.REM + t_summary.AWAKE;
+t_summary.WASO    = t_summary.AWAKE;
+t_summary.pPHASE_1 = t_summary.PHASE_1 ./ t_summary.TOTAL * 100;
+t_summary.pPHASE_2 = t_summary.PHASE_2 ./ t_summary.TOTAL * 100;
+t_summary.pPHASE_3 = t_summary.PHASE_3 ./ t_summary.TOTAL * 100;
+t_summary.pREM     = t_summary.REM     ./ t_summary.TOTAL * 100;
+t_summary.pWASO    = t_summary.AWAKE   ./ t_summary.TOTAL * 100;
 
 fname   = fullfile(config{ipatient}.datasavedir, 'hypnogram_duration');
 writetable(t_summary, fname);
@@ -271,7 +278,7 @@ writetable(t, fname);
 fname   = fullfile(config{ipatient}.datasavedir, 'offset_table');
 writetable(t_position, fname);
 
-%% Hitrate template detection
+%% Create table for R: Hitrate template detection
 
 config = hspike_setparams;
 
@@ -606,7 +613,7 @@ for ipatient = 1:8
     
 end
 
-%% Table for R: number of MUA/SUA
+%% Create table for R: number of MUA/SUA
 config = hspike_setparams;
 
 for ipatient = 1 : 8
@@ -721,7 +728,7 @@ t = sortrows(t, "PatientNr");
 fname   = fullfile(config{ipatient}.datasavedir, 'DataMUASUA.xls');
 writetable(t, fname);
 
-%% plot waveforms
+%% Plot spike waveforms
 config = hspike_setparams;
 
 for ipatient = 3 : 4
@@ -767,11 +774,7 @@ config  = hspike_setparams;
 for ipatient = 1:8
     config{ipatient}                                                = addparts(config{ipatient});
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient});
-      
-    % FFT sliding timewindow
-    config{ipatient}.FFT.name   = {'window'};
-    FFT{ipatient}               = FFTtrials(config{ipatient});
-    
+
     % spike data trials/segments
     config{ipatient}.spike.name = {'window'};
     SpikeTrials{ipatient}       = readSpikeTrials(config{ipatient});
@@ -837,6 +840,20 @@ t.minute = hour(t.starttime + (t.endtime-t.starttime)/2)*60 + minute(t.starttime
 % save data to table for R
 fname   = fullfile(config{ipatient}.datasavedir, 'window_spike_table');
 writetable(t, fname);
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
 
 
             % LFP & power date
@@ -921,7 +938,7 @@ writetable(t, fname);
 % writetable(t_binned, fname);
 % t_binned = readtable(fname);
 
-%% plotting overview of each patient / night
+%% Plot overview of each patient / night
 
 for ipatient = 3 : 7
     config = hspike_setparams;
@@ -1077,21 +1094,14 @@ for ipatient = 3 : 7
 %     clear SpikeRaw SpikeTrials SpikeStats SpikeDensity
     
 end
-% plot eventrelated LFP, TFR, raster and psth
+
+%% Plot eventrelated LFP, TFR, raster and psth
 config{ipatient}.plot.ncols         = 6;
 config{ipatient}.plot.name          = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
 plot_patterns_multilevel_examples(config{ipatient});
+plotstats(config_trimmed{ipatient});
 
-
-
-
-
-  
-    
-
-    plotstats(config_trimmed{ipatient});
-
-    %     SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
+% SpikeWaveforms{ipatient}              = readSpikeWaveforms(config_trimmed{ipatient}, SpikeTrials_windowed{ipatient}, true);
     
 
 
@@ -1167,7 +1177,6 @@ end
 %         end
 %     end
 % end
-
 
 
 

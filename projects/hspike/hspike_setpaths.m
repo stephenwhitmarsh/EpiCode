@@ -13,7 +13,8 @@ if isunix
     addpath /network/lustre/iss02/charpier/analyses/stephen.whitmarsh/scripts/BrainNetViewer_20191031
     addpath(genpath('/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/scripts/releaseDec2015/'));    
     addpath(genpath('/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/scripts/epishare-master'));
-    addpath(genpath('/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/scripts/SPIKY_apr_2021'))    
+    addpath(genpath('/network/lustre/iss02/charpier/analyses/stephen.whitmarsh/scripts/SPIKY_apr_2021'));  
+    addpath /network/lustre/iss01/charpier/analyses/stephen.whitmarsh/EpiCode/external/cbrewer/cbrewer    
 end
 
 if ispc
@@ -29,6 +30,7 @@ if ispc
     addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\epishare-master'));
     addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
     addpath          Z:\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
+    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer    
 end
 
 ft_defaults

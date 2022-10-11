@@ -77,27 +77,7 @@ data_clinical$ID <- NULL
 data_clinical$Label <- NULL
 colnames(data_clinical) <- c("Patient","Sex","Age","Onset","Type","SOZ","MRI","PET","SPECT","Medication","Implantation","Pre-implantation surgery" )
 kbl(data_clinical, "latex", booktabs = T, label = "clinical",
-    caption = "Clinical summary.
-    SOZ: Seizure Onset Zone,
-    MRI: Indications from Magnetic Resonance Imaging ,
-    AED: Antiepileptic drugs,
-    IEDs: Interictal Epileptiform discharges,
-    FSWLA:  Focal seizures without loss of awareness,
-    FSLA: Focal seizures with loss of awareness,
-    FTBS: Focal to bilateral seizures, 
-    PNH: Periventricular Nodular Heterotopia. 
-    PMG: Polymicrogyria, 
-    SNH: Subcortical Nodular Heterotopia,
-    CBZ: Carbamazepine,
-    LCS: Lacosamide,
-    LTG: Lamotrigine, 
-    ZNG: Zonisamide,
-    ESL: Eslicarabazepine, 
-    VPA: Valproic Acid,
-    OXC: Oxicarbazepine,
-    PER: Percntanel, 
-    TPM: Topiramate",
-    )%>%
+    caption = "Clinical summary")%>%
   kable_styling(latex_options = c("scale_down"))%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
   column_spec(1, width = "3em")  %>%
@@ -112,6 +92,30 @@ kbl(data_clinical, "latex", booktabs = T, label = "clinical",
   column_spec(10, width = "5em")  %>%
   column_spec(11, width = "5em")  %>%
   collapse_rows(columns = 1) %>%
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("
+    AED: Antiepileptic drugs,
+    CBZ: Carbamazepine,
+    ESL: Eslicarabazepine, 
+    FBTCS: Focal to Bilateral Tonic-Clonic Seizures, 
+    FIAS: Focal Impaired Awareness Seizure,
+    FSWLA: Focal seizures without loss of awareness,
+    IEDs: Interictal Epileptiform discharges,
+    LCS: Lacosamide,
+    LTG: Lamotrigine,
+    MRI: Indications from Magnetic Resonance Imaging,
+    OXC: Oxicarbazepine,
+    PER: Perampanel, 
+    PMG: Polymicrogyria, 
+    PNH: Periventricular Nodular Heterotopia, 
+    SNH: Subcortical Nodular Heterotopia,
+    SOZ: Seizure Onset Zone,
+    TPM: Topiramate
+    VPA: Valproic Acid,
+    ZNG: Zonisamide."))%>%  
   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/clinical.tex")
 
 
@@ -164,7 +168,7 @@ kbl(locations, "latex", booktabs = T, linesep = "", label = 'anatomical',
 #########################
 
 options(knitr.kable.NA = '')
-data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/performance.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data  <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/performance.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data$Patient[9] = "\\textit{Mean}"
 data$Patient[10] = "\\textit{Std.}"
 data[,2]  = round(data[,2],digits=0)
@@ -180,7 +184,7 @@ data[,7]  = round(data[,7],digits=1)
 
 
 kbl(data, "latex", booktabs = T, linesep = "", label = 'performance', escape = FALSE,
-    col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
+    col.names = c("Patient","24 hrs.", "24 hrs.","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
     # col.names = c("Patient","24hrs", "24hrs","Hit (\\%)","FA (\\%)", "Total","24hrs","Hit (\\%)","FA (\\%)", "Total", "Total hrs."),
     caption = "Automatic IED detection performance")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
@@ -196,7 +200,7 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'performance', escape = F
 ########################################
 
 options(knitr.kable.NA = '')
-data  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/MNI_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data  <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/hspike/MNI_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data  <- data[!data$color == 0, ] # only make table of used contacts
 data  <- data[, c('patient','electrode','contact','X','Y','Z')]
 colnames(data) = c('Patient','Electrode','Contact', 'X', 'Y', 'Z')
@@ -230,33 +234,33 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'MNI',
 options(knitr.kable.NA = '')
 
 # normalize by time spend in sleep stages
-data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data <- data[, c("patient", "part", "PHASE_3", "PHASE_2", "PHASE_1", "AWAKE", "REM")] 
-colnames(data) = c("Patient", "Night","S3", "S2", "S1", "Wake", "REM")
-data <- round(data, digits=2)
+data <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data <- data[, c("patient", "part", "TOTAL", "pPHASE_3", "pPHASE_2", "pPHASE_1", "pREM", "pWASO")] 
+colnames(data) = c("Patient", "Night","Total (hrs.)", "S3", "S2", "S1", "REM", "WASO")
+data <- round(data, digits=1)
 
-df <- c("\\textit{Mean}", NA, round(mean(data$S3), digits = 2),  round(mean(data$S2), digits = 2),  round(mean(data$S1), digits = 2),  round(mean(data$Wake), digits = 2),  round(mean(data$REM), digits = 2))
+df <- c("\\textit{Mean}", NA, round(mean(data$Total), digits = 1), round(mean(data$S3), digits = 1),  round(mean(data$S2), digits = 1),  round(mean(data$S1), digits = 1),  round(mean(data$REM), digits = 1),  round(mean(data$WASO), digits = 1))
 data <- rbind(data, df)
-df <- c("\\textit{Std.}", NA, round(sd(data$S3), digits = 2), round(sd(data$S2), digits = 2), round(sd(data$S1), digits = 2), round(sd(data$Wake), digits = 2), round(sd(data$REM), digits = 2))
-data <- rbind(data, df)
+# df <- c("\\textit{Std.}", NA, round(mean(data$Total), digits = 1), round(sd(data$S3), digits = 0), round(sd(data$S2), digits = 0), round(sd(data$S1), digits = 0), round(sd(data$REM), digits = 0), round(sd(data$WASO), digits = 0))
+# data <- rbind(data, df)
 
 clean.cols <- c("Patient")
 data[clean.cols] <- lapply(data[clean.cols], cleanf)
 
-
+library(dplyr)
 kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration', escape = FALSE,
-    caption = "Time spend in sleep stages (hrs.)", digits=2) %>%
-    kable_styling(latex_options = c("HOLD_position"))%>%
-    add_header_above(c(" " = 2, "Sleep stage" = 5)) %>%
-  row_spec(3,  extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(6,  extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(9,  extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(12, extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(15, extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(18, extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(21, extra_latex_after = "\\cline{2-7}") %>%
-  row_spec(24, hline_after = TRUE) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stageduration.tex")
+    caption = "Time spend in sleep stages.", digits=2) %>%
+  kable_styling(latex_options = c("HOLD_position"))%>%
+  add_header_above(c(" " = 3, "Sleep stage (%)" = 5)) %>%
+  row_spec(3,  extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(6,  extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(9,  extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(12, extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(15, extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(18, extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(21, extra_latex_after = "\\cline{2-8}") %>%
+  row_spec(24, hline_after = TRUE) %>% 
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stageduration.tex")
 
 
 ####################################
@@ -265,7 +269,7 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration', escape =
 # 
 # options(knitr.kable.NA = '')
 # 
-# data_MUA <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/DataMUASUA.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+# data_MUA <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/hspike/DataMUASUA.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 # data_MUA <- data_MUA[, c("PatientNr", "Part", "nrSUA", "nrMUA")]
 # colnames(data_MUA) = c("Patient", "Night","SUA", "MUA")
 # df <- c("\\textit{Sum}", NA, sum(data_MUA$SUA), sum(data_MUA$MUA))
@@ -289,8 +293,10 @@ kbl(data, "latex", booktabs = T, linesep = "", label = 'stageduration', escape =
 # 
 
 #### ADD RESPONSIVE UNITS #######
+library(tidyr)
+
 # prepare data
-data_psth <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_psth <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_psth$hyplabel <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
 data_psth$Type     <- factor(data_psth$SUA)
 
@@ -323,9 +329,7 @@ kbl(data_MUA, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FA
   row_spec(18, extra_latex_after = "\\cline{1-6}") %>%
   row_spec(21, extra_latex_after = "\\cline{1-6}") %>%  
   row_spec(24, hline_after = TRUE) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/SUAMUA.tex")
-
-
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/SUAMUA.tex")
 
 
 #######################
@@ -333,7 +337,7 @@ kbl(data_MUA, "latex", booktabs = T, linesep = "", label = 'SUAMUA', escape = FA
 #######################
 
 # prepare data
-data_power          <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_power          <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_power$hyplabel <- factor(data_power$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
 # data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
 data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("Delta1", "Delta2"))
@@ -382,8 +386,8 @@ data_binned <- as.data.frame(data_binned %>% group_by(Patient, band) %>% mutate(
 ####
 
 # plot
-data_binned$title1 = "Delta1 (0.1-2.5 Hz)"
-data_binned$title2 = "Delta2 (2.5-4 Hz)"
+data_binned$title1 = "Slow waves (0.1-2.5 Hz)"
+data_binned$title2 = "Delta (2.5-4 Hz)"
 # data_binned$title2 = "Theta (5-7Hz)"
 # data_binned$title3 = "Alpha (8-14Hz)"
 # data_binned$title4 = "Delta (1-4Hz) / Alpha (8-14Hz)"
@@ -531,7 +535,7 @@ ggarrange(plotlist=polarpowerplots[c(1,2,3)], widths = c(1,1,1,1), heights = c(1
 # IED rate circadian #
 ######################
 
-data_IED                <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_IED                <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_IED[data_IED$hyplabel == "PRE_SLEEP", ] = "AWAKE"
 data_IED[data_IED$hyplabel == "POST_SLEEP", ] = "AWAKE"
 data_IED$hyplabel       <- factor(data_IED$hyplabel, ordered = TRUE, levels = c("REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
@@ -573,13 +577,13 @@ for (ipatient in 1:8) {
 
 # format data for plotting
 dist_IED$Khour = dist_IED$rad / (pi * 2) * 24
-dist_IED$Patient = factor(dist_IED$Patient, levels = c(1:8)) # reversed order in plot
+dist_IED$Patient = factor(dist_IED$Patient, levels = c(8:1)) # reversed order in plot
 stat_IED <- as.data.frame(stat_IED)
-stat_IED$Patient <- factor(stat_IED$Patient, levels = c(1:8))
+stat_IED$Patient <- factor(stat_IED$Patient, levels = c(8:1))
 
 # add some offset in degrees so it shows up from behind the rest
 stat_IED$medianplot <- stat_IED$median
-stat_IED$medianplot[1] = stat_IED$median[1] - 0.18 
+stat_IED$medianplot[1] = stat_IED$median[1] - 0.25 
 stat_IED$medianplot[6] = stat_IED$median[6] + 0.2
 stat_IED$medianplot[stat_IED$p >= 0.05] = NA # all are significant though
 
@@ -598,7 +602,7 @@ IEDpolarplot <-
   coord_polar(theta = "x", start = 0, direction = 1, clip = 'off') + 
   scale_x_continuous(breaks = seq(0, 21, by = 3), 
                      labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
-  scale_fill_brewer(palette = "Set2", direction=-1) + scale_color_brewer(palette = "Set2", direction=-1) +
+  scale_fill_brewer(palette = "Set2", direction=1) + scale_color_brewer(palette = "Set2", direction=1) +
   theme_article() +
   theme(panel.border = element_blank(),
         #legend.key   = element_blank(),
@@ -620,9 +624,14 @@ stat_IED[,4] = ifelse(stat_IED[,4] > .05, paste(round(stat_IED[,4],digits=2),sep
 kbl(stat_IED, "latex", booktabs = T, linesep = "", label = 'circstat_IED',
     col.names = c("Patient","Median angle (HH:mm)","Rayleigh", "\\textit{p}"),
     escape = FALSE, digits = 2,
-    caption = "Circular statistics of circadian IED rate")%>%
-  kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_IED.tex")
+    caption = "Circular statistics of circadian IED rate") %>%
+    footnote(general_title = "", 
+             footnote_as_chunk = TRUE,
+             threeparttable = TRUE,
+             escape = FALSE,
+             general = c("$. = p<0.05$, $* = p<0.01$, $** = p<0.001$, $*** = p<0.0001$"))%>%    
+  kable_styling(latex_options = c("HOLD_position")) %>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/circstat_IED.tex")
 
 
 ######################
@@ -630,7 +639,7 @@ kbl(stat_IED, "latex", booktabs = T, linesep = "", label = 'circstat_IED',
 ###################### 
 
 # load data: Patients x Units x time window
-data_seizures           <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_seizures           <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 
 # prepare data
 data_seizures$Patient   <- factor(data_seizures$patient, levels = c(1:8))
@@ -699,7 +708,7 @@ Seizurepolarplot  <-
   coord_polar(theta = "x", start = 0, direction = 1, clip = 'off') + 
   scale_x_continuous(breaks = seq(0, 21, by = 3),
                      labels = c("0" = "00:00", "3" = "", "6" = "06:00", "9" = "", "12" = "12:00", "15" = "", "18" = "18:00", "21" = "")) +
-  scale_fill_brewer(palette = "Set2", direction = -1) + scale_color_brewer(palette = "Set2", direction = -1) +
+  scale_fill_brewer(palette = "Set2", direction = 1) + scale_color_brewer(palette = "Set2", direction = 1) +
   theme_article() +
   theme(panel.border = element_blank(),
         #legend.key   = element_blank(),
@@ -739,8 +748,7 @@ ggarrange(IEDpolarplot, Seizurepolarplot,
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/polar.pdf") 
-
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/polar.pdf") 
 
 # LaTeX table
 library(stringr)
@@ -752,8 +760,13 @@ kbl(stat_seizures, "latex", booktabs = T, linesep = "", label = 'circstat_seizur
     col.names = c("Patient","Median angle (HH:mm)","Rayleigh", "\\textit{p}"),
     escape = FALSE, digits = 2,
     caption = "Circular statistics of circadian seizure occurance")%>%
+    footnote(general_title = "", 
+             footnote_as_chunk = TRUE,
+             threeparttable = TRUE,
+             escape = FALSE,
+             general = c("$. = p<0.05$, $* = p<0.01$, $** = p<0.001$, $*** = p<0.0001$"))%>%    
   kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstat_seizures.tex")
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/circstat_seizures.tex")
 
 # combined table 
 temp <- stat_seizures
@@ -766,7 +779,12 @@ kbl(combined, "latex", booktabs = T, linesep = "", label = 'circstats',
     caption = "Circular statistics of circadian epileptic activity")%>%
     add_header_above(c(" ", "Interictal activity" = 3, "Seizures" = 3)) %>%
     kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/circstats.tex")
+    footnote(general_title = "", 
+             footnote_as_chunk = TRUE,
+             threeparttable = TRUE,
+             escape = FALSE,
+             general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%    
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/circstats.tex")
 
 
 #############################
@@ -774,16 +792,16 @@ kbl(combined, "latex", booktabs = T, linesep = "", label = 'circstats',
 #############################
 
 # prepare data
-data_pow  <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow  <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_pow  <- data_pow[!data_pow$part > 3, ] # hypnogram is only scored on first three nights
 data_pow  <- data_pow[!data_pow$hyplabel == "NO_SCORE", ]
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_1"]   = "S1"
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_2"]   = "S2"
 data_pow$hyplabel[data_pow$hyplabel == "PHASE_3"]   = "S3"
-data_pow$hyplabel[data_pow$hyplabel == "AWAKE"]     = "Wake"
+data_pow$hyplabel[data_pow$hyplabel == "AWAKE"]     = "WASO"
 data_pow$hyplabel[data_pow$hyplabel == "PRESLEEP"]  = "Pre"
 data_pow$hyplabel[data_pow$hyplabel == "POSTSLEEP"] = "Post"
-data_pow$hyplabel <- factor(data_pow$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_pow$hyplabel <- factor(data_pow$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_pow$band     <- factor(data_pow$band, ordered = TRUE, levels = c("Delta1", "Delta2"))
 data_pow$patient  <- factor(data_pow$patient, levels = c(8:1))
 data_pow$part     <- factor(data_pow$part)
@@ -803,8 +821,8 @@ data_pow_avg$patient       <- factor(data_pow_avg$patient, levels = c(8:1))
 data_pow_avg$part          <- factor(data_pow_avg$part)
 
 # plot
-data_pow_sel$title1 = "Delta1 (0.1-2.5 Hz) power (ratio vs. Pre-Sleep)"
-data_pow_sel$title2 = "Delta2 (2.5-4.0 Hz) power (ratio vs. Pre-Sleep)"
+data_pow_sel$title1 = "SWA (0.1-2.5 Hz) power"
+data_pow_sel$title2 = "Delta (2.5-4.0 Hz) power"
 
 plot_delta1 <- 
   ggplot(data=data_pow_sel[data_pow_sel$band == "Delta1",], aes(y = hyplabel, x = Zpower)) +
@@ -840,29 +858,29 @@ plot_delta2 <-
 ##########################
 
 # prepare data
-data_IED <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_IED <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/IED_table_PSG.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_IED <- data_IED[!data_IED$hyplabel == "NO_SCORE", ]
 data_IED$hyplabel[data_IED$hyplabel == "PHASE_1"]   = "S1"
 data_IED$hyplabel[data_IED$hyplabel == "PHASE_2"]   = "S2"
 data_IED$hyplabel[data_IED$hyplabel == "PHASE_3"]   = "S3"
-data_IED$hyplabel[data_IED$hyplabel == "AWAKE"]     = "Wake"
+data_IED$hyplabel[data_IED$hyplabel == "AWAKE"]     = "WASO"
 data_IED$hyplabel[data_IED$hyplabel == "PRESLEEP"]  = "Pre"
 data_IED$hyplabel[data_IED$hyplabel == "POSTSLEEP"] = "Post"
-data_IED$hyplabel <- factor(data_IED$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_IED$hyplabel <- factor(data_IED$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_IED$Patient  <- factor(data_IED$patient, levels = c(8:1))
 data_IED$part     <- factor(data_IED$part)
 data_IED$marker   <- factor(data_IED$marker)
 data_IED$hour     <- data_IED$minute / (60)
 
 # normalize by time spend in sleep stages
-data_duration <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_duration <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/hypnogram_duration.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_duration <- data_duration %>% rename(
   'S1' = 'PHASE_1',
   'S2' = 'PHASE_2',
   'S3' = 'PHASE_3',
-  'Wake' = 'AWAKE',
   'Pre' = 'PRESLEEP',
-  'Post' = 'POSTSLEEP')
+  'Post' = 'POSTSLEEP',
+  'Total' = 'TOTAL')
 
 data_duration <- melt(data_duration, id = c('patient','part'))
 colnames(data_duration) = c('Patient','part','hyplabel','duration')
@@ -872,7 +890,8 @@ data_IEDrate <- na.omit(data_IED %>% dplyr::count(Patient, part, hyplabel))
 
 # normalize by time spend in sleep stages
 data_IEDrate <- merge(data_IEDrate, data_duration)
-data_IEDrate$IEDrate = data_IEDrate$n / data_IEDrate$duration / 60 # count is per 10 seconds
+
+data_IEDrate$IEDrate = data_IEDrate$n / data_IEDrate$duration / 60 # original rate is in Hz, now in minute
 
 # normalize rate by Pre rate 
 i <- data_IEDrate[data_IEDrate$hyplabel == 'Pre',]
@@ -949,14 +968,14 @@ summary(lIEDrate)
 plot_model(lIEDrate)
 
 # Coefficients
-temp = summary(lDelta1)
+temp = summary(lIEDrate)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
 rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
 
 # Post-hoc tests
-temp = emmeans(lDelta1, list(pairwise ~ stage), adjust = "tukey")
-phIEDrate <- as.data.frame(temp$`pairwise differences of stage`)
+temp = emmeans(lIEDrate, list(pairwise ~ hyplabel), adjust = "tukey")
+phIEDrate <- as.data.frame(temp$`pairwise differences of hyplabel`)
 phIEDrate <- phIEDrate[, -4] # remove df since they are at inf
 phIEDrate[,5] = ifelse(phIEDrate[,5] > .05, paste(round(phIEDrate[,5],digits=2),sep=""), ifelse(phIEDrate[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(phIEDrate[,5] < .001,"<.001\\textsuperscript{**}", ifelse(phIEDrate[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
 
@@ -971,27 +990,31 @@ options(knitr.kable.NA = '')
 
 kbl(stats_IEDrate, "latex", booktabs = T, linesep = "", label = 'stats_IEDrate',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleep stages on Delta1 (0.1-2.5Hz) power")%>%
+    caption = "Effect of sleep stages on Slow Wave activity (0.1-2.5Hz)")%>%
   pack_rows("Coefficients", 1, 7) %>%
   pack_rows("Post-hoc comparisons", 8, 28) %>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDrate.tex")
-
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$. = p<0.05$, $* = p<0.01$, $** = p<0.001$, $*** = p<0.0001$"))%>%    
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/stats_IEDrate.tex")
 
 #################################
 # IED rate vs. power STATISTICS #
 #################################
 
 # prepare data
-data_pow_wide <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow_wide <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_pow_wide <- data_pow_wide[!data_pow_wide$hyplabel == "NO_SCORE", ]
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_1"]   = "S1"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_2"]   = "S2"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_3"]   = "S3"
-data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "Wake"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "WASO"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PRESLEEP"]  = "Pre"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "POSTSLEEP"] = "Post"
-data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "WASO", "REM", "Post"))
 data_pow_wide$stage    <- data_pow_wide$hyplabel
 data_pow_wide$Patient  <- factor(data_pow_wide$patient, levels = c(8:1))
 data_pow_wide$night    <- factor(data_pow_wide$part)
@@ -1014,7 +1037,7 @@ plot_model(lDelta1)
 temp = summary(lDelta1)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "WASO", "REM", "Post")
 
 # Post-hoc tests
 temp = emmeans(lDelta1, list(pairwise ~ stage), adjust = "tukey")
@@ -1033,11 +1056,16 @@ options(knitr.kable.NA = '')
 
 kbl(stats_delta1, "latex", booktabs = T, linesep = "", label = 'stats_delta1',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleep stages on Delta1 (0.1-2.5Hz) power")%>%
+    caption = "Effect of sleep stage on Slow Wave (0.1-2.5Hz) power")%>%
     pack_rows("Coefficients", 1, 7) %>%
     pack_rows("Post-hoc comparisons", 8, 28) %>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_delta1.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%    
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stats_delta1.tex")
 
 
 ###################################
@@ -1052,7 +1080,7 @@ plot_model(lDelta2)
 temp = summary(lDelta2)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "WASO", "REM", "Post")
 
 # Post-hoc tests
 temp = emmeans(lDelta2, list(pairwise ~ stage), adjust = "tukey")
@@ -1071,11 +1099,16 @@ options(knitr.kable.NA = '')
 
 kbl(stats_delta2, "latex", booktabs = T, linesep = "", label = 'stats_delta2',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleep stages on Delta2 (2.5-4 Hz) power")%>%
+    caption = "Effect of sleep stage on Delta (2.5-4 Hz) power")%>%
   pack_rows("Coefficients", 1, 7) %>%
   pack_rows("Post-hoc comparisons", 8, 28) %>%
   kable_styling(latex_options = c("HOLD_position"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_delta2.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%    
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stats_delta2.tex")
 
 
 ####################################################
@@ -1094,7 +1127,7 @@ l1 <- lmer(IEDsum ~ stage + (1 | night) + (1 | patient), data_pow_wide)
 summary(l1)
 plot_model(l1)
 
-# # get mathematical description of the model and write to latex
+# get mathematical description of the model and write to latex
 # eq <- equatiomatic::extract_eq(l1)
 # fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
 # writeLines(c("$$",eq,"$$"), fileConn)
@@ -1104,7 +1137,7 @@ plot_model(l1)
 temp = summary(l1)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post")
+rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "WASO", "REM", "Post")
 
 # Post-hoc tests to LaTeX table
 temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
@@ -1121,11 +1154,16 @@ stats_IEDsum   <- bind_rows(coefs,ph1)
 
 kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleepstages on IEDrate")%>%
+    caption = "Effect of sleep stage on IEDs rate")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
   pack_rows("Post-hoc comparisons", 8, 28) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%    
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stats_IEDsum.tex")
 
 
 #########################################
@@ -1133,15 +1171,15 @@ kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum',
 #########################################
 
 # prepare data
-data_pow_wide <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_pow_wide <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/power_table_wide.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_pow_wide <- data_pow_wide[!data_pow_wide$hyplabel == "NO_SCORE", ]
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_1"]   = "S1"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_2"]   = "S2"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PHASE_3"]   = "S3"
-data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "Wake"
+data_pow_wide$hyplabel[data_pow_wide$hyplabel == "AWAKE"]     = "WASO"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "PRESLEEP"]  = "Pre"
 data_pow_wide$hyplabel[data_pow_wide$hyplabel == "POSTSLEEP"] = "Post"
-data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_pow_wide$hyplabel <- factor(data_pow_wide$hyplabel, levels = c("Pre","S3", "S2", "S1", "WASE", "REM", "Post"))
 data_pow_wide$stage    <- data_pow_wide$hyplabel
 data_pow_wide$Patient  <- factor(data_pow_wide$patient)
 data_pow_wide$night    <- factor(data_pow_wide$part)
@@ -1157,10 +1195,19 @@ data_pow_wide2 <- data_pow_wide2 %>% group_by(Delta_log_bin, IEDsum)
 data_pow_wide2 <- data_pow_wide2 %>% summarise(count = n(), Patient)
 data_pow_wide2 <- data_pow_wide2[order(data_pow_wide2$Patient), ]
 
+# # Delta 1 for S3
+# data_pow_wide2 <- data_pow_wide[data_pow_wide$hyplabel == "S3", ] %>% mutate(Delta_log_bin = cut(Delta1_log, breaks=seq(-1.5,10.5,1)))
+# levels(data_pow_wide2$Delta_log_bin) <- seq(1:12)-2
+# data_pow_wide2 <- data_pow_wide2 %>% group_by(Delta_log_bin, IEDsum)
+# data_pow_wide2 <- data_pow_wide2 %>% summarise(count = n(), Patient)
+# data_pow_wide2 <- data_pow_wide2[order(data_pow_wide2$Patient), ]
+
 # ggplot(data=data_pow_wide2[data_pow_wide2$IEDsum > 0, ], aes(x=Delta1_log_bin, y=IEDsum*6)) +
-D1 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
-  geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
-  scale_size_area(max_size = 3) +
+
+D1 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6, color = Patient)) +
+  geom_count() +
+  # geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
+  # scale_size_area(max_size = 3) +
   # geom_smooth(data=data_pow_wide, aes(x=Delta1_log, y=IEDsum), method="lm",  fullrange = FALSE, color="red") +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   theme(axis.text.y = element_blank()) +
@@ -1171,12 +1218,13 @@ D1 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
   ) +
   xlab("") +
   ylab("IEDs per minute") +
-  labs(size = "Proportion") +
+  # labs(size = "Proportion") +
   # coord_cartesian(xlim = c(2,11)) +
   # coord_cartesian(ylim = c(2,11)) +
   # facet_wrap(~Patient, ncol = 4, scales="free_x")
   facet_wrap(~Patient, ncol = 4)
 # ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta1_count.pdf", width = 7, height = 4, units = "in")
+
 
 # Delta 2
 data_pow_wide2 <- data_pow_wide %>% mutate(Delta_log_bin = cut(Delta2_log, breaks=seq(-1.5,10.5,1)))
@@ -1186,9 +1234,10 @@ data_pow_wide2 <- data_pow_wide2 %>% summarise(count = n(), Patient)
 data_pow_wide2 <- data_pow_wide2[order(data_pow_wide2$Patient), ]
 
 # ggplot(data=data_pow_wide2[data_pow_wide2$IEDsum > 0, ], aes(x=Delta1_log_bin, y=IEDsum*6)) +
-D2 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
-  geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
-  scale_size_area(max_size = 3) +
+D2 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6, color = Patient)) +
+  # geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
+  geom_count() +
+  # scale_size_area(max_size = 3) +
   # geom_smooth(data=data_pow_wide, aes(x=Delta1_log, y=IEDsum), method="lm",  fullrange = FALSE, color="red") +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   theme(axis.text.y = element_blank()) +
@@ -1203,9 +1252,9 @@ D2 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6)) +
   # ylab( units~are~(mu*g)/L )
   # xlab(TeX(r'($\alpha  x^\alpha$, where $\alpha \in \{1 \ldots 5\}$)')) +
   # xlab(TeX(r'($log(\mu V/Hz^2$))')) +
-  xlab(TeX(r'(Delta power ($log(\mu V^2/Hz$)))')) +
+  xlab(TeX(r'($log(\mu V^2/Hz$))')) +
   ylab("IEDs per minute") +
-  labs(size = "Proportion") +
+  labs(size = "Observations") +
   # coord_cartesian(xlim = c(2,11)) +
   # coord_cartesian(ylim = c(2,11)) +
   # facet_wrap(~Patient, ncol = 4, scales="free_x")
@@ -1219,12 +1268,13 @@ ggarrange(D1, D2,
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta_count.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/IEDrate_Delta_count.pdf")
 
 
-###################################################################
-# Mixed model with both sleep stage and power explaining IED rate #
-###################################################################
+
+###############################################
+# Mixed model with  power explaining IED rate #
+###############################################
 
 # to create p-values
 detach(package:lmerTest)
@@ -1233,7 +1283,7 @@ library(lme4)
 
 # determine reference level
 data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
-l1 <- lmer(IEDsum ~ stage + Delta1 + Delta2 + (1 | night) + (1 | patient), data_pow_wide)
+l1 <- lmer(IEDsum ~ Delta1 + Delta2 + (1 | night) + (1 | patient), data_pow_wide)
 
 summary(l1)
 plot_model(l1)
@@ -1248,29 +1298,71 @@ plot_model(l1)
 temp = summary(l1)
 coefs <- as.data.frame(temp$coefficients)
 coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
-rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "Delta", "Theta", "Alpha")
+rownames(coefs) <- c("\\textit{Intercept}", "Slow Wave", "Delta")
 
-# Post-hoc tests to LaTeX table
-temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
-ph1 <- as.data.frame(temp$`pairwise differences of stage`)
-ph1 <- ph1[, -4] # remove df since they are at inf
-ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
-
-# Concatenate in one LaTeX table
-coefs           <- data.frame(Predi=ctor = row.names(coefs), coefs);
-rownames(coefs) <- NULL
-colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
-colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
-stats_IEDsum   <- bind_rows(coefs,ph1)
-
-kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum_power',
+kbl(coefs, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum_vs_power',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleepstages on IEDrate")%>%
-  kable_styling(latex_options = c("HOLD_position"))%>%
-  pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
-  pack_rows("Power", 8, 9) %>%
-  pack_rows("Post-hoc comparisons", 10, 30) %>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
+    caption = "Effect of Slow Wave activity (0.1-2.5Hz) and Delta power (2.5-4Hz) on rate of IEDs")%>%
+  kable_styling(latex_options = c("HOLD_position")) %>%
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%  
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stats_IEDsum_vs_power.tex")
+
+
+
+
+# ###################################################################
+# # Mixed model with both sleep stage and power explaining IED rate #
+# ###################################################################
+# 
+# # to create p-values
+# detach(package:lmerTest)
+# library(lmerTest)
+# library(lme4)
+# 
+# # determine reference level
+# data_pow_wide$hyplabel = relevel(data_pow_wide$stage, ref="Pre")
+# l1 <- lmer(IEDsum ~ stage + Delta1 + Delta2 + (1 | night) + (1 | patient), data_pow_wide)
+# 
+# summary(l1)
+# plot_model(l1)
+# 
+# # # get mathematical description of the model and write to latex
+# # eq <- equatiomatic::extract_eq(l1)
+# # fileConn<-file("D:/Dropbox/Apps/Overleaf/Hspike/formula/model1.tex")
+# # writeLines(c("$$",eq,"$$"), fileConn)
+# # close(fileConn)
+# 
+# # Coefficients to LaTeX table
+# temp = summary(l1)
+# coefs <- as.data.frame(temp$coefficients)
+# coefs[,5] = ifelse(coefs[,5] > .05, paste(round(coefs[,5],digits=2),sep=""), ifelse(coefs[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(coefs[,5] < .001,"<.001\\textsuperscript{**}", ifelse(coefs[,5] < .01, "<.01\\textsuperscript{*}", "<.05\\textsuperscript{.}"))))
+# rownames(coefs) <- c("\\textit{Intercept}", "S3", "S2", "S1", "Wake", "REM", "Post", "SW", "Delta")
+# 
+# # Post-hoc tests to LaTeX table
+# temp = emmeans(l1, list(pairwise ~ stage), adjust = "tukey")
+# ph1 <- as.data.frame(temp$`pairwise differences of stage`)
+# ph1 <- ph1[, -4] # remove df since they are at inf
+# ph1[,5] = ifelse(ph1[,5] > .05, paste(round(ph1[,5],digits=2),sep=""), ifelse(ph1[,5] < .0001, "<.0001\\textsuperscript{***}", ifelse(ph1[,5] < .001,"<.001\\textsuperscript{**}", ifelse(ph1[,5] < .01, "<.01\\textsuperscript{*}", "<.05"))))
+# 
+# # Concatenate in one LaTeX table
+# coefs           <- data.frame(Predictor = row.names(coefs), coefs);
+# rownames(coefs) <- NULL
+# colnames(ph1)   <- c("Predictor", "Coef $\\beta$","SE($\\beta$)","z", "\\textit{p}")
+# colnames(coefs) <- c("Predictor", "Coef $\\beta$","SE($\\beta$)", "df", "z","\\textit{p}")
+# stats_IEDsum   <- bind_rows(coefs,ph1)
+# 
+# kbl(stats_IEDsum, "latex", booktabs = T, linesep = "", label = 'stats_IEDsum_power',
+#     escape = FALSE, digits = 2,
+#     caption = "Effect of sleepstages on IEDrate")%>%
+#   kable_styling(latex_options = c("HOLD_position"))%>%
+#   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
+#   pack_rows("Power", 8, 9) %>%
+#   pack_rows("Post-hoc comparisons", 10, 30) %>%
+#   save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_IEDsum.tex")
 
 
 # Plot models
@@ -1295,7 +1387,7 @@ plot_IEDrate_model <- plot_model(
   ylim(-3, 9) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(breaks=c(-2, 0, 8))
 plot_IEDrate_model$data$title = "IED rate (count/minute) model"
 plot_IEDrate_model <- plot_IEDrate_model + facet_wrap(~title, scales="free_y")
@@ -1312,12 +1404,12 @@ plot_delta1_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5) +
-  # ylim(0, 30) +
+  ylim(0, 300) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
-  scale_y_continuous(breaks=c(0, 250))
-plot_delta1_model$data$title = "Delta1 (0.1-2.5 Hz) model"
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
+  scale_y_continuous(expand=expansion(mult=c(0.1,0.1)), breaks=c(0, 270))
+plot_delta1_model$data$title = "SWA (0.1-2.5 Hz) model"
 plot_delta1_model <- plot_delta1_model + facet_wrap(~title, scales="free_y")
 
 plot_delta2_model <- plot_model(
@@ -1335,9 +1427,9 @@ plot_delta2_model <- plot_model(
   ylim(-1, 41) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(breaks=c(0, 40))
-plot_delta2_model$data$title = "Delta2 (2.5-4.0 Hz) model"
+plot_delta2_model$data$title = "Delta (2.5-4.0 Hz) model"
 plot_delta2_model <- plot_delta2_model + facet_wrap(~title, scales="free_y")
 
 
@@ -1350,7 +1442,7 @@ ggarrange(plot_IED_rate, plot_IEDrate_model, plot_delta1, plot_delta1_model, plo
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_delta_boxplots.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/IEDrate_delta_boxplots.pdf")
 
 
 ###############################
@@ -1358,13 +1450,13 @@ ggarrange(plot_IED_rate, plot_IEDrate_model, plot_delta1, plot_delta1_model, plo
 ###############################
 
 # prepare data
-data_amp <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/amplitude_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_amp <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/amplitude_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
 data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_1"]   = "S1"
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_2"]   = "S2"
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_3"]   = "S3"
-data_amp$hyplabel[data_amp$hyplabel == "AWAKE"]     = "Wake"
+data_amp$hyplabel[data_amp$hyplabel == "AWAKE"]     = "WASO"
 data_amp$hyplabel[data_amp$hyplabel == "PRESLEEP"]  = "Pre"
 data_amp$hyplabel[data_amp$hyplabel == "POSTSLEEP"] = "Post"
 data_amp$stage    <- factor(data_amp$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
@@ -1372,10 +1464,16 @@ data_amp$Patient  <- factor(data_amp$patient, levels = c(8:1))
 data_amp$night    <- factor(data_amp$part)
 data_amp$Template <- factor(data_amp$template)
 
-# average over patient/part/sleepstage/template for plotting
-posamp   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$part, data_amp$Template, data_amp$hyplabel)), mean), c("Patient", "part", "Template", "hyplabel", "posamp"))
-negamp   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$part, data_amp$Template, data_amp$hyplabel)), mean), c("Patient", "part", "Template", "hyplabel", "negamp"))
+# # average over patient/part/sleepstage/template for plotting
+# posamp   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$night, data_amp$Template, data_amp$hyplabel)), mean), c("Patient", "part", "Template", "hyplabel", "posamp"))
+# negamp   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$night, data_amp$Template, data_amp$hyplabel)), mean), c("Patient", "part", "Template", "hyplabel", "negamp"))
+# data_amp_mean <- merge(posamp, negamp)
+
+# do not separate into templates
+posamp   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$night, data_amp$hyplabel)), mean), c("Patient", "night", "hyplabel", "posamp"))
+negamp   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$night, data_amp$hyplabel)), mean), c("Patient", "night", "hyplabel", "negamp"))
 data_amp_mean <- merge(posamp, negamp)
+
 
 # # relative to pre-sleep
 # temp_pos        <- setNames(aggregate(data_amp$posamp, by = list(data_amp$patient, data_amp$part, data_amp$Template, data_amp$hyplabel), mean), c("Patient", "part", "Template", "hyplabel", "Pre_pos"))
@@ -1390,11 +1488,19 @@ data_amp_mean <- merge(posamp, negamp)
 # data_amp_mean$Znegamp <- (data_amp_mean$negamp-data_amp_mean$Pre_neg)
 # data_amp_mean$diffamp <- data_amp_mean$Zposamp + data_amp_mean$Znegamp
 
-# Normalized over all trials
-y1   <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), mean), c("Patient", "Template", "Mposamp"))
-y1sd <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), sd),   c("Patient", "Template", "SDposamp"))
-y2   <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), mean), c("Patient", "Template", "Mnegamp"))
-y2sd <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), sd),   c("Patient", "Template", "SDnegamp"))
+# # Normalized over all trials
+# y1   <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), mean), c("Patient", "Template", "Mposamp"))
+# y1sd <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), sd),   c("Patient", "Template", "SDposamp"))
+# y2   <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), mean), c("Patient", "Template", "Mnegamp"))
+# y2sd <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient, data_amp_mean$Template)), sd),   c("Patient", "Template", "SDnegamp"))
+
+
+# do not separate into templates
+y1   <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient)), mean), c("Patient", "Mposamp"))
+y1sd <- setNames(aggregate(data_amp_mean$posamp, by = c(list(data_amp_mean$Patient)), sd),   c("Patient", "SDposamp"))
+y2   <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient)), mean), c("Patient", "Mnegamp"))
+y2sd <- setNames(aggregate(data_amp_mean$negamp, by = c(list(data_amp_mean$Patient)), sd),   c("Patient", "SDnegamp"))
+
 
 data_amp_mean <- merge(data_amp_mean,y1)
 data_amp_mean <- merge(data_amp_mean,y2)
@@ -1406,7 +1512,7 @@ data_amp_mean$Znegamp <- (data_amp_mean$negamp-data_amp_mean$Mnegamp)/data_amp_m
 data_amp_mean$diffamp <- data_amp_mean$Zposamp - data_amp_mean$Znegamp
 
 data_amp_mean$Patient <- as.factor(data_amp_mean$Patient)
-data_amp_mean$hyplabel <- factor(data_amp_mean$hyplabel, levels = c("Pre","Post", "REM", "Wake", "S1", "S2", "S3"))
+data_amp_mean$hyplabel <- factor(data_amp_mean$hyplabel, levels = c("Pre","Post", "REM", "WASO", "S1", "S2", "S3"))
 
 data_amp_mean_sel    <- data_amp_mean[!data_amp_mean$hyplabel=="Pre", ]
 
@@ -1414,11 +1520,12 @@ data_amp_mean_sel    <- data_amp_mean[!data_amp_mean$hyplabel=="Pre", ]
 data_amp_mean_sel$title1 = "Standardized spike amplitude"
 data_amp_mean_sel$title2 = "Standardized slow-wave amplitude"
 data_amp_mean_sel$title3 = "Standardized spike vs. slow-wave amplitude"
+data_amp_mean_sel$Patient  <- factor(data_amp_mean_sel$Patient, levels = c(8:1))
 
 plot_amp_pos <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=Zposamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
-  geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.5), size = 1) +
+  geom_point(aes(group = interaction(Patient, night), col = Patient), position=position_dodge(width=0.5), size = 1) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
   theme(legend.position="bottom") +
@@ -1428,7 +1535,7 @@ plot_amp_pos <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=Zposamp)) +
 plot_amp_neg <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=Znegamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
-  geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.5),size = 1) +
+  geom_point(aes(group = interaction(Patient, night), col = Patient), position=position_dodge(width=0.5),size = 1) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
   theme(legend.position="bottom") +
@@ -1439,7 +1546,7 @@ plot_amp_neg <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=Znegamp)) +
 plot_amp_diff <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=diffamp)) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   geom_boxplot(outlier.shape = NA) +
-  geom_point(aes(group = interaction(Patient, part), col = Patient), position=position_dodge(width=0.5), size = 1) +
+  geom_point(aes(group = interaction(Patient, night), col = Patient), position=position_dodge(width=0.5), size = 1) +
   ylab(NULL) + xlab(NULL) + 
   theme_article() + 
   theme(legend.position="bottom") +
@@ -1449,17 +1556,14 @@ plot_amp_diff <- ggplot(data=data_amp_mean_sel, aes(y=hyplabel, x=diffamp)) +
 
 
 # plot pos vs neg in count scatter plot
-
 data_bin <- data_amp %>% group_by(Patient) %>% mutate(pos_bin = cut(posamp, 20))
 data_bin <- data_bin %>% group_by(Patient) %>% mutate(neg_bin = cut(negamp, 20))
 
 ggplot(data=data_bin, aes(y=pos_bin, x=neg_bin)) +
   geom_count(aes(color = Patient)) +
-  # scale_size_area(max_size = 3) +
   scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
   theme(axis.text.y = element_blank()) +
   theme_article() +
-  # coord_fixed() +
   theme(
     strip.background = element_blank(),
     strip.text.x = element_blank(),
@@ -1480,25 +1584,25 @@ ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/amp_corr.pdf", width = 7, height 
 #########################
 
 # prepare data
-data_amp <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/amplitude_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_amp <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/amplitude_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
 data_amp <- data_amp[!data_amp$hyplabel == "NO_SCORE", ]
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_1"]   = "S1"
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_2"]   = "S2"
 data_amp$hyplabel[data_amp$hyplabel == "PHASE_3"]   = "S3"
-data_amp$hyplabel[data_amp$hyplabel == "AWAKE"]     = "Wake"
+data_amp$hyplabel[data_amp$hyplabel == "AWAKE"]     = "WASO"
 data_amp$hyplabel[data_amp$hyplabel == "PRESLEEP"]  = "Pre"
 data_amp$hyplabel[data_amp$hyplabel == "POSTSLEEP"] = "Post"
-data_amp$stage    <- factor(data_amp$hyplabel, levels = c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_amp$stage    <- factor(data_amp$hyplabel, levels = c("Pre","S3", "S2", "S1", "WASO", "REM", "Post"))
 data_amp$Patient  <- factor(data_amp$patient, levels = c(8:1))
 data_amp$night    <- factor(data_amp$part)
 data_amp$template <- factor(data_amp$template)
 
 # Standardize data 
-y1   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$template)), mean), c("patient", "template", "Mposamp"))
-y2   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$template)), mean), c("patient", "template", "Mnegamp"))
-y1sd <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$template)), sd),   c("patient", "template", "SDposamp"))
-y2sd <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$template)), sd),   c("patient", "template", "SDnegamp"))
+y1   <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$night, data_amp$template)), mean), c("patient", "night", "template", "Mposamp"))
+y2   <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$night, data_amp$template)), mean), c("patient", "night", "template", "Mnegamp"))
+y1sd <- setNames(aggregate(data_amp$posamp, by = c(list(data_amp$patient, data_amp$night, data_amp$template)), sd),   c("patient", "night", "template", "SDposamp"))
+y2sd <- setNames(aggregate(data_amp$negamp, by = c(list(data_amp$patient, data_amp$night, data_amp$template)), sd),   c("patient", "night", "template", "SDnegamp"))
 data_amp <- merge(data_amp,y1)
 data_amp <- merge(data_amp,y2)
 data_amp <- merge(data_amp,y1sd)
@@ -1510,12 +1614,13 @@ data_amp$Zdiffamp <- data_amp$Zposamp - data_amp$Znegamp
 # fit model
 data_amp$stage = relevel(data_amp$stage, ref="Pre")
 
-# lpos  <- lmer(posamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
-# lneg  <- lmer(negamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
-# ldiff <- lmer(Zdiffamp ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
+# to create p-values
+detach(package:lmerTest)
+library(lmerTest)
+library(lme4)
 
-lpos  <- lmer(posamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
-lneg  <- lmer(negamp  ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
+lpos  <- lmer(posamp   ~ stage + (1 | patient) + (1 | night), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
+lneg  <- lmer(negamp   ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 ldiff <- lmer(Zdiffamp ~ stage + (1 | night) + (1 | template) + (1 | patient), data_amp, control = lmerControl(optimizer ='Nelder_Mead'))
 
 summary(lpos)
@@ -1580,7 +1685,7 @@ coef[, 3] = round(coef[,3],digits=0)
 coef[, 8] = round(coef[,8],digits=0)
 coef[,13] = round(coef[,8],digits=0)
 
-coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "Post", "REM")
+coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "WASO", "Post", "REM")
 coef <- coef[, c(16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)]
 
 # Post-hoc comparisons
@@ -1619,15 +1724,21 @@ stats_amp[,16] = ifelse(stats_amp[,16] > .05, paste(round(stats_amp[,16],digits=
 
 options(knitr.kable.NA = '')
 
+
 kbl(stats_amp, "latex", booktabs = T, linesep = "", label = 'stats_amp',
     escape = FALSE, digits = 2,
     caption = "Effect of sleep stage on ERP peak amplitude")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
   pack_rows("Post-hoc comparisons", 8, 28) %>%
-  add_header_above(c(" ", "Positive peaks" = 5, "Negative peaks" = 5, "Peak difference" = 5)) %>%
+  add_header_above(c(" ", "Spike amplitude" = 5, "Slow wave amplitude" = 5, "Difference amplitude" = 5)) %>%
   kable_styling(latex_options = c("scale_down"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/stats_amp.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/stats_amp.tex")
 
 
 #################
@@ -1653,7 +1764,7 @@ plot_amp_pos_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(breaks=c(-20, 0, 50, 100, 150))
 plot_amp_pos_model$data$title = "Model fixed effects"
 plot_amp_pos_model <- plot_amp_pos_model + facet_wrap(~title, scales="free_y")
@@ -1672,7 +1783,7 @@ plot_amp_neg_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(breaks=c(0, 50, 100, 150))
 plot_amp_neg_model$data$title = "Model fixed effects"
 plot_amp_neg_model <- plot_amp_neg_model + facet_wrap(~title, scales="free_y")
@@ -1691,7 +1802,7 @@ plot_amp_diff_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.x = 9, labels.y = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(breaks=c(-0.4, -0.2, 0, 0.2, 0.4))
 plot_amp_diff_model$data$title = "Model fixed effects"
 plot_amp_diff_model <- plot_amp_diff_model + facet_wrap(~title, scales="free_y")
@@ -1708,7 +1819,7 @@ ggarrange(plot_amp_pos, plot_amp_pos_model, plot_amp_neg, plot_amp_neg_model, pl
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/amp_boxplots.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/amp_boxplots.pdf")
 
 
 ######################################
@@ -1716,8 +1827,10 @@ ggarrange(plot_amp_pos, plot_amp_pos_model, plot_amp_neg, plot_amp_neg_model, pl
 ######################################
 
 # prepare data
-data_psth <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_psth$hyplabel <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_psth <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_psth$hyplabel[data_psth$hyplabel == "Wake"] = "WASO"
+
+data_psth$hyplabel <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_psth$Patient  <- factor(data_psth$Patient, levels = c(8:1))
 data_psth$part     <- factor(data_psth$part)
 data_psth$template <- factor(data_psth$template)
@@ -1733,21 +1846,20 @@ t2 <- pivot_wider(t, names_from = "Type", names_prefix = "SUA", values_from = "n
 t3 <- pivot_wider(t2, names_from = "responsive", names_prefix = "responsive", values_from = c("SUA1", "SUA0"))
 # t4 <- pivot_wider(t, names_from = c("responsive", "Type"), values_from = c("n"))
 
-
-############# USE THISFOR TABLE OF SUA/MUA reporting!!! Check where some (silent?) units got lost ###############
-
-
-test <- setNames(aggregate(data_psth$responsive, by = c(list(data_psth$Patient, data_psth$unit, data_psth$template, data_psth$Type)), mean), c("Patient", "unit", "template", "Type", "responsive"))
-
-# select responsive units
-data_psth <- data_psth[c(data_psth$responsive == 1), ]
-
-
-# remove unresponsive patient - already done in MATLAB
-# data_psth <- data_psth[-c(data_psth$Patient == 7), ]
-
-# select SUA
-# data_psth <- data_psth[c(data_psth$SUA == 1), ]
+# 
+# ############# USE THISFOR TABLE OF SUA/MUA reporting ###############
+# 
+# 
+# test <- setNames(aggregate(data_psth$responsive, by = c(list(data_psth$Patient, data_psth$unit, data_psth$template, data_psth$Type)), mean), c("Patient", "unit", "template", "Type", "responsive"))
+# 
+# # select responsive units
+# data_psth <- data_psth[c(data_psth$responsive == 1), ]
+# 
+# # remove unresponsive patient - already done in MATLAB
+# # data_psth <- data_psth[-c(data_psth$Patient == 7), ]
+# 
+# # select SUA
+# # data_psth <- data_psth[c(data_psth$SUA == 1), ]
 
 posrate   <- setNames(aggregate(data_psth$posrate, by = c(list(data_psth$Patient, data_psth$unit, data_psth$template, data_psth$hyplabel, data_psth$Type)), mean), c("Patient", "unit", "template", "hyplabel", "Type", "posrate"))
 negrate   <- setNames(aggregate(data_psth$negrate, by = c(list(data_psth$Patient, data_psth$unit, data_psth$template, data_psth$hyplabel, data_psth$Type)), mean), c("Patient", "unit", "template", "hyplabel", "Type", "negrate"))
@@ -1831,11 +1943,13 @@ library(lmerTest)
 library(lme4)
 
 # prepare data
-data_psth            <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_psth$hyplabel   <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_psth            <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/psth_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_psth$hyplabel[data_psth$hyplabel == "Wake"] = "WASO"
+data_psth$hyplabel   <- factor(data_psth$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_psth$Patient    <- factor(data_psth$Patient,  levels = c(8:1))
 data_psth$part       <- factor(data_psth$part)
-data_psth$template   <- factor(data_psth$template)
+
+data_psth$template   <- factor(as.integer(data_psth$template) + as.integer(data_psth$part) * 100 + as.integer(data_psth$Patient) * 1000) # beacuse template nr. resets for each night/patient
 data_psth$unit       <- factor(data_psth$unit)
 data_psth$responsive <- factor(data_psth$responsive)
 data_psth$diffrate   <- data_psth$posrate - data_psth$negrate
@@ -1853,7 +1967,7 @@ data_psth <- data_psth[!is.nan(data_psth$posrate), ]
 data_psth$night <- factor(data_psth$part)
 
 # Reorder for table
-data_psth$stage <- factor(data_psth$hyplabel, levels =  c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_psth$stage <- factor(data_psth$hyplabel, levels =  c("Pre","S3", "S2", "S1", "WASO", "REM", "Post"))
 
 # fit model
 data_psth$stage = relevel(data_psth$stage, ref="Pre")
@@ -1866,9 +1980,9 @@ lpos_MUA  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit)
 lneg_MUA  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 0, ], control = lmerControl(optimizer ='Nelder_Mead'))
 ldiff_MUA <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | unit), data_psth[data_psth$SUA == 0, ], control = lmerControl(optimizer ='Nelder_Mead'))
 
-lpos  <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
-lneg  <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
-ldiff <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+lpos      <- lmer(posrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+lneg      <- lmer(negrate  ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
+ldiff     <- lmer(diffrate ~ stage + (1 | Patient) + (1 | template) + (1 | SUA), data_psth, control = lmerControl(optimizer ='Nelder_Mead'))
 
 summary(lpos_SUA)
 plot_model(lpos_SUA)
@@ -1946,7 +2060,7 @@ coef[,3]  = round(coef[,3],digits=0)
 coef[,8]  = round(coef[,8],digits=0)
 coef[,13] = round(coef[,13],digits=0)
 
-coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "Post", "REM")
+coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "WASO", "Post", "REM")
 coef <- coef[, c(16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)]
 
 # posthoc coefficients
@@ -1997,7 +2111,12 @@ kbl(stats_cnt, "latex", booktabs = T, linesep = "", label = 'unit_stats',
   pack_rows("Post-hoc comparisons", 8, 28) %>%
   add_header_above(c(" ", "Spike" = 5, "Wave" = 5, "Ratio" = 5)) %>%
   kable_styling(latex_options = c("scale_down"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/unit_stats.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/unit_stats.tex")
 
 
 #################
@@ -2024,7 +2143,7 @@ plot_cnt_pos_model <- plot_model(
   # ylim(-5, 6) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-6, 8), breaks = c(-6, 0, 8))
 plot_cnt_pos_model$data$title = "Model of spike count during LFP spike (vs. Pre-sleep)"
 plot_cnt_pos_model$data$title = "Model fixed effects"
@@ -2045,7 +2164,7 @@ plot_cnt_neg_model <- plot_model(
   ylim(-3, 2) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-3, 2), breaks = c(-3, 0, 2))
 plot_cnt_neg_model$data$title = "Model of spike count during slow-wave (vs. Pre-sleep)"
 plot_cnt_neg_model$data$title = "Model fixed effects"
@@ -2066,7 +2185,7 @@ plot_cnt_diff_model <- plot_model(
   ylim(-5, 7) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-5, 7), breaks = c(-5, 0, 7))
 plot_cnt_diff_model$data$title = "Model of spike count difference between LFP spike & slow wave (vs. Pre-sleep)"
 plot_cnt_diff_model$data$title = "Model fixed effects"
@@ -2080,15 +2199,14 @@ ggarrange(plot_cnt_pos, plot_cnt_pos_model, plot_cnt_neg, plot_cnt_neg_model, pl
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/unit_timelocked_boxplots.pdf")
-
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/unit_timelocked_boxplots.pdf")
 
 #########################################
 # Plot correlation between LFP and PSTH #
 #########################################
 
 # prepare data
-data_rho <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/rho_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_rho <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/hspike/rho_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 data_rho$Patient  <- factor(data_rho$Patient, levels = c(8:1))
 data_rho$part     <- factor(data_rho$part)
 data_rho$template <- factor(data_rho$template)
@@ -2117,7 +2235,7 @@ final_plot = ggarrange(plot_rho,
 
 
 ##########
-Combine:
+# Combine:
   
 data_psth 
 data_amp
@@ -2126,8 +2244,9 @@ data_amp
 # Unit baseline behaviour #
 ###########################
 
-data_window            <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/window_spike_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_window$hyplabel   <- factor(data_window$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_window            <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/window_spike_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_window$hyplabel[data_window$hyplabel == "Wake"] = "WASO"
+data_window$hyplabel   <- factor(data_window$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_window$Patient    <- factor(data_window$patient,  levels = c(8:1))
 data_window$Night      <- factor(data_window$part)
 data_window$Unit       <- factor(data_window$unit)
@@ -2230,7 +2349,7 @@ FR_plot <-
   geom_boxplot(outlier.shape = NA) +
   geom_point(size = 0.8,
              aes(group = interaction(Patient, unit), col = Patient, shape = Type, fill = Patient), 
-             position = position_dodge(width = 0.5), alpha = data_mean_sel$alphaval) +
+             position = position_dodge(width = 0.5)) +
   scale_shape_manual(name = "Unit type", labels = c("MUA", "SUA"), values = c(15, 17)) +
   scale_alpha(guide = 'none') +
   ylab(NULL) + xlab(NULL) + 
@@ -2340,11 +2459,12 @@ library(lmerTest)
 library(lme4)
 
 # load and prepare data
-data_window            <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/window_spike_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
-data_window$hyplabel   <- factor(data_window$hyplabel, levels = c("Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_window            <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/window_spike_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_window$hyplabel[data_window$hyplabel == "Wake"] = "WASO"
+data_window$hyplabel   <- factor(data_window$hyplabel, levels = c("Pre", "Post", "REM", "WASO", "S1", "S2", "S3"))
 data_window$Patient    <- factor(data_window$patient,  levels = c(8:1))
 data_window$Night      <- factor(data_window$part)
-data_window$Unit       <- factor(data_window$unit)
+data_window$Unit       <- factor(data_window$unit + data_window$part * 100) # add becaue template nr repeats over nights
 data_window$responsive <- factor(data_window$responsive)
 data_window$Type       <- factor(data_window$Type)
 data_window$FR         <- data_window$trialfreq
@@ -2357,11 +2477,8 @@ data_sel <- na.omit(data_window)              # remove rows with missing data
 data_sel <- data_sel[data_sel$BAD_cnt == 0, ] # remove rows with artefacts
 data_sel <- data_sel[data_sel$IEDsum == 0, ]  # remove windows with IEDs
 
-# Rename for plotting
-data_sel$night <- factor(data_sel$part)
-
 # Reorder for table
-data_sel$stage <- factor(data_sel$hyplabel, levels =  c("Pre","S3", "S2", "S1", "Wake", "REM", "Post"))
+data_sel$stage <- factor(data_sel$hyplabel, levels =  c("Pre","S3", "S2", "S1", "WASO", "REM", "Post"))
 
 # fit model
 data_sel$stage = relevel(data_sel$stage, ref="Pre")
@@ -2496,7 +2613,7 @@ coef[,13] = round(coef[,13],digits=0)
 coef[,18] = round(coef[,18],digits=0)
 coef[,23] = round(coef[,23],digits=0)
 
-coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "Wake", "REM", "Post")
+coef$Predictor  <- c("\\textit{Intercept}","S3", "S2", "S1", "WASO", "REM", "Post")
 coef <- coef[, c(31,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30)]
 
 # posthoc coefficients
@@ -2563,13 +2680,18 @@ options(knitr.kable.NA = '')
 
 kbl(stats_window, "latex", booktabs = T, linesep = "", label = 'unit_window_stats',
     escape = FALSE, digits = 2,
-    caption = "Effect of sleep stage on unit behaviour outside of IEDs")%>%
+    caption = "Effect of sleep stage on spontanious neuronal behaviour")%>%
   kable_styling(latex_options = c("HOLD_position"))%>%
   pack_rows("Sleep stages", 1, 7) %>% # latex_gap_space = "2em"
   pack_rows("Post-hoc comparisons", 8, 28) %>%
   add_header_above(c(" ", "Firing Rate (SUA)" = 5, "Firing Rate (MUA)" = 5, "Bursts" = 5, "Amplitude" = 5, "CV2" = 5, "CV2 (bursts)" = 5)) %>%
   kable_styling(latex_options = c("scale_down"))%>%
-  save_kable("D:/Dropbox/Apps/Overleaf/Hspike/tables/unit_window_stats.tex")
+  footnote(general_title = "", 
+           footnote_as_chunk = TRUE,
+           threeparttable = TRUE,
+           escape = FALSE,
+           general = c("$.=p<0.05$, $*=p<0.01$, $**=p<0.001$, $***=p<0.0001$"))%>%  
+  save_kable("D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/tables/unit_window_stats.tex")
 
 
 set_theme(
@@ -2591,8 +2713,8 @@ FRcor_SUA_plot_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
-  scale_y_continuous(limits = c(-5, -1), breaks = c(-5, -1))
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-4.2, -1.8), breaks = c(-4, -2))
 
 FRcor_MUA_plot_model <- plot_model(
   lFRcor_MUA,  
@@ -2607,7 +2729,7 @@ FRcor_MUA_plot_model <- plot_model(
   value.size = 2.5) +
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-7, 1), breaks = c(-7, 0, 1))
 
 CV2_plot_model <- plot_model(
@@ -2621,11 +2743,11 @@ CV2_plot_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5,
-  axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
+  axis.labels = c("REM","Post","WASO","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1, 0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
-  scale_y_continuous(limits = c(0, 0.15), breaks = c(0, 0.15))
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
+  scale_y_continuous(limits = c(0, 0.12), breaks = c(0, 0.1))
 
 
 CV2_burst_plot_model <- plot_model(
@@ -2639,11 +2761,11 @@ CV2_burst_plot_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5,
-  axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
+  axis.labels = c("REM","Post","WASO","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   ylim(-0.05, 0.05) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-0.04, 0.01), breaks = c(-0.04, 0, 0.01))
 
 Amp_plot_model <- plot_model(
@@ -2657,11 +2779,11 @@ Amp_plot_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5,
-  axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
+  axis.labels = c("REM","Post","WASO","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
-  scale_y_continuous(limits = c(-2, 0.5), breaks = c(-2, 0, 0.5))
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
+  scale_y_continuous(limits = c(-1, 2), breaks = c(-1, 0, 2))
 
 Burst_plot_model <- plot_model(
   lBurst,  
@@ -2674,16 +2796,16 @@ Burst_plot_model <- plot_model(
   digits = 2,
   value.offset = 0.5,
   value.size = 2.5,
-  axis.labels = c("REM","Post","Wake","S1","S2","S3")) +  
+  axis.labels = c("REM","Post","WASO","S1","S2","S3")) +  
   font_size(labels.y = 9, labels.x = 9) +
   scale_x_discrete(expand=expansion(mult=c(0.1,0.2)), 
-                   labels=c("Post","REM","Wake","S1","S2","S3")) +
+                   labels=c("Post","REM","WASO","S1","S2","S3")) +
   scale_y_continuous(limits = c(-20, 0), breaks = c(-20, 0))
 
 Burst_plot_model$data$title = "Model fixed effects"
 Burst_plot_model <- Burst_plot_model + facet_wrap(~title, scales="free_y")
-FR_plot_model$data$title = "Model fixed effects"
-FR_plot_model <- FR_plot_model + facet_wrap(~title, scales="free_y")
+# FR_plot_model$data$title = "Model fixed effects"
+# FR_plot_model <- FR_plot_model + facet_wrap(~title, scales="free_y")
 FRcor_SUA_plot_model$data$title = "Model fixed effects"
 FRcor_SUA_plot_model <- FRcor_SUA_plot_model + facet_wrap(~title, scales="free_y")
 FRcor_MUA_plot_model$data$title = "Model fixed effects"
@@ -2702,7 +2824,7 @@ ggarrange(FRcor_SUA_plot, FRcor_SUA_plot_model, FRcor_MUA_plot, FRcor_MUA_plot_m
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/window_FR_boxplots.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/window_FR_boxplots.pdf")
 
 
 ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, CV2_burst_plot_model,
@@ -2712,14 +2834,121 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
           legend = "right", 
           common.legend = TRUE, 
           font.label = list(size = 14, color = "black", face = "bold")) %>%
-  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/window_CV2_boxplots.pdf")
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Neuronal mechanisms underlying the modulation of interictal epileptic activity during sleep/images/window_CV2_boxplots.pdf")
+
 
 ##########################################################################
+### Combine spike and power data
 ##########################################################################
-##########################################################################
-##########################################################################
-##########################################################################
-##########################################################################
+
+
+
+# load and prepare data
+data_window            <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/window_spike_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_window$hyplabel   <- factor(data_window$hyplabel, levels = c("NO_SCORE", "Pre", "Post", "REM", "Wake", "S1", "S2", "S3"))
+data_window$Patient    <- factor(data_window$patient,  levels = c(8:1))
+data_window$Night      <- factor(data_window$part)
+data_window$Unit       <- factor(data_window$unit + data_window$part * 100) # add becaue template nr repeats over nights
+data_window$responsive <- factor(data_window$responsive)
+data_window$Type       <- factor(data_window$Type)
+data_window$FR         <- data_window$trialfreq
+data_window$FRcor      <- data_window$trialfreq_corrected
+levels(data_window$Type)[levels(data_window$Type)=="good"] <- "SUA"
+levels(data_window$Type)[levels(data_window$Type)=="mua"] <- "MUA"
+data_window$Type       <- ordered(data_window$Type, levels = c("MUA", "SUA"))
+
+
+# prepare data
+data_power          <- read.csv(file="Z:/analyses/stephen.whitmarsh/data/hspike/power_table_long.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+data_power$hyplabel <- factor(data_power$hyplabel, ordered = TRUE, levels = c("NO_SCORE", "REM", "AWAKE", "PHASE_1", "PHASE_2", "PHASE_3"))
+# data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("delta", "theta", "alpha", "beta", "delta_div_alpha"))
+data_power$band     <- factor(data_power$band, ordered = TRUE, levels = c("Delta1", "Delta2"))
+data_power$Patient  <- factor(data_power$patient, levels = c(8:1))
+data_power$part     <- factor(data_power$part)
+data_power$power_log <- log(data_power$power)
+
+# data_sel <- na.omit(data_window)              # remove rows with missing data
+# data_sel <- data_sel[data_sel$BAD_cnt == 0, ] # remove rows with artefacts
+# data_sel <- data_sel[data_sel$IEDsum == 0, ]  # remove windows with IEDs
+
+d <- merge(data_window, data_power, by = "starttime")
+d <- d[d$band == "Delta2", ]
+
+d2 <- d %>% mutate(power_bin = cut(power, breaks=seq(-1.5,10.5,1)))
+levels(d2$power_bin) <- seq(1:12)-2
+
+d$IEDsum.x[105:108] - d$IEDsum.y[105:108]
+d$IEDsum.x[665:672] - d$IEDsum.y[665:672]
+d$IEDsum.x
+d$IEDsum.y
+
+test <- d$IEDsum.x - d$IEDsum.y
+hist(test[test != 0])
+
+h1 <- hist(d$IEDsum.y[d$IEDsum.y != 0])
+h2 <- hist(d$IEDsum.x[d$IEDsum.x != 0])
+h3 <- hist(d$IEDsum.x - d$IEDsum.y, 10)
+
+d[104:109, ]
+
+# bin data
+
+# prepare datastructure
+d2 <- d2 %>% group_by(power_bin, IEDsum)
+d2 <- d2 %>% summarise(count = n(), Patient)
+d2 <- d2[order(data_pow_wide2$Patient), ]
+
+# ggplot(data=data_pow_wide2[data_pow_wide2$IEDsum > 0, ], aes(x=Delta1_log_bin, y=IEDsum*6)) +
+D2 <- ggplot(data=data_pow_wide2, aes(x=Delta_log_bin, y=IEDsum*6, color = Patient)) +
+  # geom_count(aes(size = after_stat(prop), group = Delta_log_bin, color = Patient)) +
+  geom_count() +
+  # scale_size_area(max_size = 3) +
+  # geom_smooth(data=data_pow_wide, aes(x=Delta1_log, y=IEDsum), method="lm",  fullrange = FALSE, color="red") +
+  scale_fill_brewer(palette = "Set2") + scale_color_brewer(palette = "Set2") +
+  theme(axis.text.y = element_blank()) +
+  theme_article() +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  # xlab("Delta2 power (log)") 
+  #xlab = expression(mu "Volts" / "Hertz" ^ 2) +
+  # xlab = expression("Force spaces with ~" ~ mu ~ pi * sigma ~ pi) +
+  # ylab( units~are~(mu*g)/L )
+  # xlab(TeX(r'($\alpha  x^\alpha$, where $\alpha \in \{1 \ldots 5\}$)')) +
+  # xlab(TeX(r'($log(\mu V/Hz^2$))')) +
+  xlab(TeX(r'($log(\mu V^2/Hz$))')) +
+  ylab("IEDs per minute") +
+  labs(size = "Observations") +
+  # coord_cartesian(xlim = c(2,11)) +
+  # coord_cartesian(ylim = c(2,11)) +
+  # facet_wrap(~Patient, ncol = 4, scales="free_x")
+  facet_wrap(~Patient, ncol = 4)
+# ggsave("D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta2_count.pdf", width = 7, height = 4, units = "in")
+
+ggarrange(D1, D2,
+          ncol = 1, nrow = 2,
+          vjust = 1, hjust = 0, 
+          labels = c("A","B"), 
+          legend = "right", 
+          common.legend = TRUE, 
+          font.label = list(size = 14, color = "black", face = "bold")) %>%
+  ggexport(filename = "D:/Dropbox/Apps/Overleaf/Hspike/images/IEDrate_Delta_count.pdf")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 
 # ## POLAR ##
 # 
@@ -2773,7 +3002,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # data_binned_melt$variable <- factor(data_binned_melt$variable, labels = c("\u03B4 power (1-4Hz)","\u03B8 power (5-7Hz)","\u03B1 power (8-14Hz)","\u03B2 power (15-25Hz)"))
 # data_binned_melt$patient  <- factor(data_binned_melt$patient, levels = c(8:1))
 # 
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_power_combined.pdf")
+# pdf(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_power_combined.pdf")
 # 
 # ggplot(data=data_binned_melt, aes(x = bin, y = value, fill=patient, col=patient)) +
 #   ggtitle("Normalized circadian LFP power") +
@@ -2808,7 +3037,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # 
 # 
 # # load data: Patients x Units x time window
-# data_IED <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/hypdata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+# data_IED <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/hspike/hypdata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 # 
 # # prepare data
 # data_IED$patient      <- factor(data_IED$patient, levels = c(8:1))
@@ -2816,7 +3045,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # data_IED$part         <- factor(data_IED$part,)
 # 
 # # load data: Patients x Units x time window
-# data_seizures <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
+# data_seizures <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/hspike/seizuredata_table.txt", sep=',', header=TRUE, dec='.', na.strings = " ")
 # 
 # # prepare data
 # data_seizures$patient  <- factor(data_seizures$patient, levels = c(8:1))
@@ -2826,7 +3055,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # 
 # # display.brewer.all(colorblindFriendly = TRUE)
 # 
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_combined.pdf")
+# pdf(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_combined.pdf")
 # 
 # ggplot(data=data_IED, aes(x=hour, fill=patient, col=patient)) +
 #   ggtitle("Circadian interictal density & seizure occurance") +
@@ -2906,7 +3135,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # 
 # 
 # 
-# pdf(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_per patient.pdf")
+# pdf(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/images/hspike/R/polar_density_per patient.pdf")
 # 
 # ggplot(data=data, aes(x=hour, fill=patient, col=patient)) +
 #   ggtitle("Circadian interictal density per patient") +
@@ -2950,7 +3179,7 @@ ggarrange(Amp_plot, Amp_plot_model, CV2_plot, CV2_plot_model,  CV2_burst_plot, C
 # 
 # 
 # 
-# data <- read.csv(file="//lexport/iss01.charpier/analyses/stephen.whitmarsh/data/aurelie/statAH.csv", sep=';', header=TRUE, dec=',', na.strings = " ")
+# data <- read.csv(file="//lexport/iss02.charpier/analyses/stephen.whitmarsh/data/aurelie/statAH.csv", sep=';', header=TRUE, dec=',', na.strings = " ")
 # data$P <- data$ï..Patient
 # 
 # # get some p-values

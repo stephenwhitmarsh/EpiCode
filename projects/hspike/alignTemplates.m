@@ -21,7 +21,22 @@ for ipart = 1 : size(LFP, 2)
         if isempty(LFP{ipart}{imarker})
             continue
         end
-        chani       = find(strcmp(LFP{ipart}{imarker}.label, cfg.align.zerochannel));
+        
+        % FIXME: because detectTemplate removed the underscores...
+        try
+            for i = 1 : size(LFP{ipart}{imarker}.label, 1)
+                temp = strsplit(LFP{ipart}{imarker}.label{i}, '-');
+                if size(temp, 2) == 1
+                    LFP{ipart}{imarker}.label{i} = ['_', LFP{ipart}{imarker}.label{i}];
+                else
+                    LFP{ipart}{imarker}.label{i} = char(strcat("_", temp{1}, "-_", temp{2}));
+                end
+            end
+        catch
+        end
+            
+        chani = find(strcmp(LFP{ipart}{imarker}.label, cfg.align.zerochannel));
+        
         %         subplot(size(LFP, 2), size(LFP{ipart}, 2), imarker + (ipart-1) * size(LFP{ipart}, 2)); hold;
         subplot(1, size(LFP{ipart}, 2), imarker); hold;
         

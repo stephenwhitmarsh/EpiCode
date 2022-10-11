@@ -92,11 +92,12 @@ config{1}.epoch.pad.template5       = 1;
 config{1}.epoch.toi.template6       = [-0.5  1];
 config{1}.epoch.pad.template6       = 1;
 
-config{1}.window.length             = 10;
-config{1}.window.overlap            = 0;
+config{1}.window.length.window      = 10;
+config{1}.window.overlap.window     = 0;
 
 config{1}.LFP.name                      = {'Hspike'};
 config{1}.LFP.channel                   = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
+config{1}.LFP.overlap                   = {'template1', 'template2', 'template3' ,'template4', 'template5', 'template6'};                                    
 config{1}.LFP.hpfilter                  = 'no';
 config{1}.LFP.hpfreq                    = 1;
 config{1}.LFP.resamplefs                = 250;
@@ -110,7 +111,7 @@ config{1}.LFP.baselinewindow.template6  = [-0.15, -0.05];
 config{1}.LFP.baselinewindow.window     = [];
 
 config{1}.FFT.name                      = {'window'};
-config{1}.FFT.foi.window                = 1:40;
+config{1}.FFT.foi.window                = [1:0.1:40];
 
 config{1}.TFR.name                      = {'Hspike'};
 config{1}.TFR.channel                   = 'all';
@@ -349,8 +350,7 @@ config{3}.hyp.micromedchannel       = 'Ha2g1';
 config{3}.LFP.channel               = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.channel             = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.align.latency.Hspike      = [-0.1 0.1];
-config{3}.align.zerochannel         = '_Hm2g_2';
-config{3}.align.zerochannel         = '_Ha2g_2';
+config{3}.align.zerochannel         = '_Ha2g_2'; % '_Hm2g_2' peak is much larger but does not show a clear slow wave
 config{3}.cluster.channel           = {'_Ha2g_1','_Ha2g_2','_Ha2g_3','_Ha2g_4','_Ha2g_5','_Hm2g_1','_Hm2g_2','_Hm2g_3','_Hm2g_4','_Hm2g_5'};
 config{3}.cluster.align.latency     = [-0.2 0.5];
 config{3}.cluster.reref             = 'no';
@@ -470,6 +470,7 @@ config{8}.hyp.micromedchannel       = '_HaT21';
 config{8}.LFP.channel               = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.align.zerochannel         = 'HaT2_3'; % _2
+config{8}.align.zerochannel         = '_HaT2_2-_HaT2_3'; % _2 13-SEPTEMBER 2022
 config{8}.cluster.channel           = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HmT2_1','_HmT2_2','_HmT2_3','_HmT2_4'};
 config{8}.cluster.reref             = 'yes';
 config{8}.cluster.refmethod         = 'bipolar';
