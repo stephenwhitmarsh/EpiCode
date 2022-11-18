@@ -1,3 +1,9 @@
+The EpiCode repository has been moved to the Paris Brain Institute (ICM), where we can better maintain and further develop it. 
+Please update your links to: https://gitlab.com/icm-institute/iconics/EpiCode
+
+Thank you, and see you there!
+             
+             
              _            _        _           _             _            _            _      
             /\ \         /\ \     /\ \       /\ \           /\ \         /\ \         /\ \    
            /  \ \       /  \ \    \ \ \     /  \ \         /  \ \       /  \ \____   /  \ \   
