@@ -58,55 +58,21 @@ cfg.LFP.rerefmethod = ft_getopt(cfg.LFP, 'rerefmethod', []);
 cfg.LFP.refchannel  = ft_getopt(cfg.LFP, 'refchannel', []);
 cfg.LFP.postfix     = ft_getopt(cfg.LFP, 'postfix', []);
 
-if nargin == 1
-    for markername = string(cfg.LFP.name)
-        fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFPavg_', markername, cfg.LFP.postfix, '.mat'));
-        try
-        if exist(fname, 'file')
-            fprintf('Reading %s\n', fname);
-            count = 0;
-            err_count = 0;
-%             while count == err_count
-%                 try
-                    temp = load(fname);
-                    for ipart = 1 : size(cfg.directorylist, 2)
-                        LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
-                    end
-                    clear temp
-%                 catch ME
-%                     err_count = err_count + 1;
-%                 end
-%                 count = count + 1;
-%             end
-        else
-            fprintf('Will be (re-) computing LFP data for %s\n', markername);
-        end
-        catch
-            fprintf('Problem reading %s\n', fname);
 
-        end
-    end
-    return
-elseif ~force
-    missing = [];
+if nargin == 1
+    force = false;
+end
+
+if ~force
     for markername = string(cfg.LFP.name)
         fname = fullfile(cfg.datasavedir, strcat(cfg.prefix, 'LFPavg_', markername, cfg.LFP.postfix, '.mat'));
         if exist(fname, 'file')
             fprintf('Reading %s\n', fname);
-            count = 0;
-            err_count = 0;
-            while count == err_count
-                try
-                    temp = load(fname);
-                    for ipart = 1 : size(cfg.directorylist, 2)
-                        LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
-                    end
-                    clear temp
-                catch ME
-                    err_count = err_count + 1;
-                end
-                count = count + 1;
+            temp = load(fname);
+            for ipart = 1 : size(cfg.directorylist, 2)
+                LFP{ipart}.(markername) = temp.LFP{ipart}.(markername);
             end
+            clear temp
         else
             fprintf('Will be (re-) computing LFP data for %s\n', markername);
             missing = [missing, markername];

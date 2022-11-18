@@ -171,7 +171,7 @@ for ipart = cfg.spike.part_list
             
             cfgtemp.design(:, 1)                            = [ones(1, trialcount) ones(1, trialcount) * 2];
             cfgtemp.design(:, 2)                            = [1 : trialcount 1 : trialcount];
-            cfgtemp.numrandomization                        = 2000;
+            cfgtemp.numrandomization                        = 10000;
             dat_sel                                         = stats{ipart}.psth.(markername);
             dat_sel.trial                                   = dat_sel.trial(cleanindx, :, :);
             dat_bl_sel                                      = psth_bl;

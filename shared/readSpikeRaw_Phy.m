@@ -50,6 +50,10 @@ function [SpikeRaw] = readSpikeRaw_Phy(cfg, force)
 %   You should have received a copy of the GNU General Public License
 %   along with EpiCode. If not, see <http://www.gnu.org/licenses/>.
 
+if nargin == 1
+    force = false;
+end
+
 % get the default cfg options
 cfg.circus.postfix       = ft_getopt(cfg.circus, 'postfix', []);
 cfg.circus.part_list     = ft_getopt(cfg.circus, 'part_list', 'all');
@@ -71,6 +75,7 @@ if strcmp(cfg.circus.part_list, 'all')
 end
 
 fname = fullfile(cfg.datasavedir, [cfg.prefix, 'SpikeRaw_Phy', cfg.circus.postfix, '.mat']);
+
 
 if exist(fname, 'file') && force == false
     fprintf('Load precomputed SpikeRaw data\n');
