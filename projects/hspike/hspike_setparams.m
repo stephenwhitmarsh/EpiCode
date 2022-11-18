@@ -66,6 +66,8 @@ config{1}.muse.startmarker.template5    = "template5";
 config{1}.muse.endmarker.template5      = "template5";
 config{1}.muse.startmarker.template6    = "template6";
 config{1}.muse.endmarker.template6      = "template6";
+config{1}.muse.startmarker.combined     = "combined";
+config{1}.muse.endmarker.combined       = "combined";
 config{1}.muse.backupdir                = fullfile(rootpath_analysis, 'markerbackup');
 
 config{1}.hyp.imagesavedir          = fullfile(rootpath_analysis, 'images', 'hspike');
@@ -91,6 +93,8 @@ config{1}.epoch.toi.template5       = [-0.5  1];
 config{1}.epoch.pad.template5       = 1;
 config{1}.epoch.toi.template6       = [-0.5  1];
 config{1}.epoch.pad.template6       = 1;
+config{1}.epoch.toi.combined        = [-0.5  1];
+config{1}.epoch.pad.combined        = 1;
 
 config{1}.window.length.window      = 10;
 config{1}.window.overlap.window     = 0;
@@ -109,6 +113,7 @@ config{1}.LFP.baselinewindow.template4  = [-0.15, -0.05];
 config{1}.LFP.baselinewindow.template5  = [-0.15, -0.05];
 config{1}.LFP.baselinewindow.template6  = [-0.15, -0.05];
 config{1}.LFP.baselinewindow.window     = [];
+config{1}.LFP.baselinewindow.combined   = [-0.15, -0.05];
 
 config{1}.FFT.name                      = {'window'};
 config{1}.FFT.foi.window                = [1:0.1:40];
@@ -122,6 +127,7 @@ config{1}.TFR.foi.template3             = 1:1:100;
 config{1}.TFR.foi.template4             = 1:1:100;
 config{1}.TFR.foi.template5             = 1:1:100;
 config{1}.TFR.foi.template6             = 1:1:100;
+config{1}.TFR.foi.combined              = 1:1:100;
 
 config{1}.TFR.t_ftimwin.template1    = 5./config{1}.TFR.foi.template1;
 config{1}.TFR.t_ftimwin.template2    = 5./config{1}.TFR.foi.template2;
@@ -129,6 +135,7 @@ config{1}.TFR.t_ftimwin.template3    = 5./config{1}.TFR.foi.template3;
 config{1}.TFR.t_ftimwin.template4    = 5./config{1}.TFR.foi.template4;
 config{1}.TFR.t_ftimwin.template5    = 5./config{1}.TFR.foi.template5;
 config{1}.TFR.t_ftimwin.template6    = 5./config{1}.TFR.foi.template6;
+config{1}.TFR.t_ftimwin.combined     = 5./config{1}.TFR.foi.combined;
 
 config{1}.TFR.toi.template1          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template2          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
@@ -136,6 +143,7 @@ config{1}.TFR.toi.template3          = config{1}.epoch.toi.Hspike(1) : 0.005 : c
 config{1}.TFR.toi.template4          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template5          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 config{1}.TFR.toi.template6          = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
+config{1}.TFR.toi.combined           = config{1}.epoch.toi.Hspike(1) : 0.005 : config{1}.epoch.toi.Hspike(2);
 
 config{1}.TFR.bl.template1           = [-0.5, -0.2];
 config{1}.TFR.bl.template2           = [-0.5, -0.2];
@@ -143,6 +151,7 @@ config{1}.TFR.bl.template3           = [-0.5, -0.2];
 config{1}.TFR.bl.template4           = [-0.5, -0.2];
 config{1}.TFR.bl.template5           = [-0.5, -0.2];
 config{1}.TFR.bl.template6           = [-0.5, -0.2];
+config{1}.TFR.bl.combined            = [-0.5, -0.2];
 
 config{1}.align.name                = {'Hspike'};
 config{1}.align.channel             = {'_HaT2_1','_HaT2_2','_HaT2_3','_HaT2_4','_HaT2_5'};
@@ -200,6 +209,7 @@ config{1}.spike.toi.template3       = [-0.2, 1];
 config{1}.spike.toi.template4       = [-0.2, 1];          
 config{1}.spike.toi.template5       = [-0.2, 1];           
 config{1}.spike.toi.template6       = [-0.2, 1];    
+config{1}.spike.toi.combined        = [-0.2, 1];    
 
 config{1}.spike.bl.template1        = [-0.15, -0.05];
 config{1}.spike.bl.template2        = [-0.15, -0.05];
@@ -207,6 +217,7 @@ config{1}.spike.bl.template3        = [-0.15, -0.05];
 config{1}.spike.bl.template4        = [-0.15, -0.05];
 config{1}.spike.bl.template5        = [-0.15, -0.05];
 config{1}.spike.bl.template6        = [-0.15, -0.05];
+config{1}.spike.bl.combined         = [-0.15, -0.05];
 
 config{1}.spike.pad.template1        = 0.1;
 config{1}.spike.pad.template2        = 0.1;
@@ -214,6 +225,7 @@ config{1}.spike.pad.template3        = 0.1;
 config{1}.spike.pad.template4        = 0.1;
 config{1}.spike.pad.template5        = 0.1;
 config{1}.spike.pad.template6        = 0.1;
+config{1}.spike.pad.combined         = 0.1;
 
 config{1}.spike.resamplefs.template1 = 1000;
 config{1}.spike.resamplefs.template2 = 1000;
@@ -221,6 +233,7 @@ config{1}.spike.resamplefs.template3 = 1000;
 config{1}.spike.resamplefs.template4 = 1000;
 config{1}.spike.resamplefs.template5 = 1000;
 config{1}.spike.resamplefs.template6 = 1000;
+config{1}.spike.resamplefs.combined  = 1000;
 
 config{1}.spike.pre                 = 0.001;
 config{1}.spike.post                = 0.002;
@@ -234,6 +247,7 @@ config{1}.spike.psthbin.template3   = 0.01; % depends a lot on pattern, default 
 config{1}.spike.psthbin.template4   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.template5   = 0.01; % depends a lot on pattern, default is too large
 config{1}.spike.psthbin.template6   = 0.01; % depends a lot on pattern, default is too large
+config{1}.spike.psthbin.combined    = 0.01; % depends a lot on pattern, default is too large
 
 config{1}.spike.sdftimwin.template1 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template2 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
@@ -241,6 +255,7 @@ config{1}.spike.sdftimwin.template3 = [-0.01 0.01]; % depends a lot on pattern, 
 config{1}.spike.sdftimwin.template4 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template5 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 config{1}.spike.sdftimwin.template6 = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
+config{1}.spike.sdftimwin.combined  = [-0.01 0.01]; % depends a lot on pattern, default is 0.05
 
 % config{1}.spikewin.windowsize       = 10; % to prevent too much data lost on overlaps with IEDs
 % config{1}.spikewin.windowoverlap    = 0.5;
@@ -252,6 +267,7 @@ config{1}.stats.toi.template3       = [-0.2, 1];
 config{1}.stats.toi.template4       = [-0.2, 1];
 config{1}.stats.toi.template5       = [-0.2, 1];
 config{1}.stats.toi.template6       = [-0.2, 1];
+config{1}.stats.toi.combined        = [-0.2, 1];
 
 config{1}.stats.bl.template1        = [-0.3, -0.1];
 config{1}.stats.bl.template2        = [-0.3, -0.1];
@@ -259,6 +275,7 @@ config{1}.stats.bl.template3        = [-0.3, -0.1];
 config{1}.stats.bl.template4        = [-0.3, -0.1];
 config{1}.stats.bl.template5        = [-0.3, -0.1];
 config{1}.stats.bl.template6        = [-0.3, -0.1];
+config{1}.stats.bl.combined         = [-0.3, -0.1];
 
 config{1}.stats.alpha               = 0.01;
 

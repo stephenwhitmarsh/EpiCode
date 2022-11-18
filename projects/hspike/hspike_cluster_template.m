@@ -28,9 +28,19 @@ MuseStruct{ipatient}                        = padHypnogram(MuseStruct{ipatient})
 [MuseStruct{ipatient}, ~, ~]                = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false);
 [config{ipatient}, MuseStruct{ipatient}]    = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
 
+% Combine different templates (based on clusters) into single template
+config{ipatient}.editmarkerfile.torename = {'template1', 'combined'; ...
+                                            'template2', 'combined'; ...
+                                            'template3', 'combined'; ...
+                                            'template4', 'combined'; ...
+                                            'template5', 'combined'; ...
+                                            'template6', 'combined'};                                        
+MuseStruct{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct{ipatient});
+
 %% LFP averages of templates
 config{ipatient}.LFP.postfix                = {'_all'};
 config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+config{ipatient}.LFP.name                   = {'combined'};
 LFPavg{ipatient}                            = readLFPavg(config{ipatient}, MuseStruct{ipatient}, true);
 
 % %% LFP of sliding timewindow
@@ -48,9 +58,11 @@ config{ipatient}.directorylist              = config{ipatient}.directorylist(1:3
 MuseStruct{ipatient}                        = MuseStruct{ipatient}(1:3);
 config{ipatient}.LFP.postfix                = [];
 config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+config{ipatient}.LFP.name                   = {'combined'};
 LFP{ipatient}                               = readLFP(config{ipatient}, MuseStruct{ipatient}, true);
 
 %% rereference
 config{ipatient}.LFP.name                   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6'};
+config{ipatient}.LFP.name                   = {'combined'};
 LFP{ipatient}                               = rerefLFP(config{ipatient}, MuseStruct{ipatient}(1:3), true);
 

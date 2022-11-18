@@ -6,7 +6,7 @@ set(0, 'DefaultFigurePosition', [2500 100  1000 1000]);
 set(0, 'DefaultFigurePosition', [200  300  1000 500]);
 
 addpath /network/lustre/iss02/charpier/analyses/stephen.whitmarsh/EpiCode/projects/hspike/
-addpath Z:\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
 hspike_setpaths;
 
 feature('DefaultCharacterSet', 'CP1252') % To fix bug for weird character problems in reading neurlynx
@@ -33,16 +33,32 @@ LFP_cluster{8} = [];
 LFP_cluster_detected{8} = [];
 
 for ipatient = 1:8
+    
+    % Set parameters
     config                                                          = hspike_setparams;
+    
+    % Add all other files beyond first 24 hours to config
     config{ipatient}                                                = addparts(config{ipatient});
+    
+    % Read all annotations
     MuseStruct{ipatient}                                            = readMuseMarkers(config{ipatient}, false);
+    
+    % Add 2 hours before and after hypnogram (pre-sleep and post-sleep)
     MuseStruct{ipatient}                                            = padHypnogram(MuseStruct{ipatient});   
+    
+    % Align annotations based on cross-correlation of LFPs
     MuseStruct{ipatient}                                            = alignMuseMarkersXcorr(config{ipatient}, MuseStruct{ipatient}, false);
-    [clusterindx{ipatient}, LFP_cluster{ipatient}]                  = clusterLFP(config{ipatient}, MuseStruct{ipatient}, true);
+    
+    % Cluster LFPs
+    [clusterindx{ipatient}, ~, LFP_cluster{ipatient}]               = clusterLFP(config{ipatient}, MuseStruct{ipatient}, false);
+    
+    % Align annotations within clusters 
     [config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}] = alignClusters(config{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6});
     
+    % Detect templates in data
     [MuseStruct{ipatient}, ~, LFP_cluster_detected{ipatient}]       = detectTemplate(config{ipatient}, MuseStruct{ipatient}, LFP_cluster{ipatient}{1}.Hspike.kmedoids{6}, false); 
     
+    % Export the hypnogram from micromed data
     % exportHypnogram(config{ipatient})
     
     % get hypnogram data
@@ -51,8 +67,26 @@ for ipatient = 1:8
     % add (sliding) timewindow
     [config{ipatient}, MuseStruct{ipatient}] = addSlidingWindows(config{ipatient}, MuseStruct{ipatient});
     
+    % Combine different templates (based on clusters) into single template
+    config{ipatient}.editmarkerfile.torename = {'template1', 'combined'; ...
+                                                'template2', 'combined'; ...
+                                                'template3', 'combined'; ...
+                                                'template4', 'combined'; ...
+                                                'template5', 'combined'; ...
+                                                'template6', 'combined'};
+%     config{ipatient}.editmarkerfile.toremove = {'template1', ...
+%                                                 'template2', ...
+%                                                 'template3', ...
+%                                                 'template4', ...
+%                                                 'template5', ...
+%                                                 'template6',};                                            
+    MuseStruct_combined{ipatient} = editMuseMarkers(config{ipatient}, MuseStruct{ipatient});
+
+
+    
+    
     % template LFP
-    config{ipatient}.LFP.name   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'window'};
+    config{ipatient}.LFP.name   = {'template1', 'template2', 'template3', 'template4', 'template5', 'template6', 'combined', 'window'};
     LFP{ipatient}               = readLFP(config{ipatient}, MuseStruct{ipatient}, false);
     
     % template TFR

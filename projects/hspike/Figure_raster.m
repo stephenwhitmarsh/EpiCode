@@ -35,9 +35,11 @@ config = hspike_setparams;
 for ipatient = 1 : 8
     SpikeRaw{ipatient}           = readSpikeRaw_Phy(config{ipatient});
     config{ipatient}.spike.name  = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    config{ipatient}.spike.name  = ["combined"];
     SpikeTrials{ipatient}        = readSpikeTrials(config{ipatient});
     SpikeStats{ipatient}         = spikeTrialStats(config{ipatient});
     config{ipatient}.LFP.name    = ["template1", "template2", "template3", "template4", "template5", "template6"];
+    config{ipatient}.LFP.name    = ["combined"];
     LFPavg{ipatient}             = readLFPavg(config{ipatient});
     LFP{ipatient}                = rerefLFP(config{ipatient});    
 end

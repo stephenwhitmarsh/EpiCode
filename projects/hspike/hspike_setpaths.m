@@ -18,19 +18,19 @@ if isunix
 end
 
 if ispc
-    addpath Z:\analyses\stephen.whitmarsh\git\fieldtrip
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\projects\hspike
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\shared
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\shared\utilities
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\subaxis    
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
-    addpath Z:\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031
-    addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\epishare-master'));
-    addpath(genpath('Z:\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
-    addpath          Z:\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
-    addpath Z:\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer    
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\git\fieldtrip
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\projects\hspike
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\shared
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\shared\utilities
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\external\altmany-export_fig-8b0ba13\
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\external\subaxis    
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\external\fieldtrip    
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\external\sigstar-master
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\scripts\BrainNetViewer_20191031
+    addpath(genpath('\\l2export\iss02.charpier\analyses\stephen.whitmarsh\scripts\epishare-master'));
+    addpath(genpath('\\l2export\iss02.charpier\analyses\stephen.whitmarsh\scripts\SPIKY_apr_2021'));
+    addpath          \\l2export\iss02.charpier\analyses\stephen.whitmarsh\scripts\MatlabImportExport_v6.0.0
+    addpath \\l2export\iss02.charpier\analyses\stephen.whitmarsh\EpiCode\external\cbrewer\cbrewer    
 end
 
 ft_defaults
